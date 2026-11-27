@@ -34,6 +34,24 @@
       "bytes": 1009575
     },
     {
+      "local": "wardrobe/atlas-02368b595d596ffd3903.png",
+      "source": "assets/wardrobe/v5/atlas-02368b595d596ffd3903.png",
+      "sha256": "02368b595d596ffd3903b460a78359da5655efec4efd46ddd1c71a3951e14d6b",
+      "bytes": 67807
+    },
+    {
+      "local": "wardrobe/atlas-0466bee1ab3e313f5382.png",
+      "source": "assets/wardrobe/v5/atlas-0466bee1ab3e313f5382.png",
+      "sha256": "0466bee1ab3e313f53823213dd720b384c20dc22797855d7bb6cff5749ec7a16",
+      "bytes": 91068
+    },
+    {
+      "local": "wardrobe/atlas-0bba30cb0c41422e8bc1.png",
+      "source": "assets/wardrobe/v5/atlas-0bba30cb0c41422e8bc1.png",
+      "sha256": "0bba30cb0c41422e8bc172def14f29ffad7293e5df3d73be183928ed6ca4e3a3",
+      "bytes": 75528
+    },
+    {
       "local": "wardrobe/atlas-0fa3a59003576738367c.png",
       "source": "assets/wardrobe/v5/atlas-0fa3a59003576738367c.png",
       "sha256": "0fa3a59003576738367ceff5cf7db499d562cb7cd22d5b06965921fab762fa2a",
@@ -46,10 +64,34 @@
       "bytes": 69278
     },
     {
+      "local": "wardrobe/atlas-18ff865c142343834519.png",
+      "source": "assets/wardrobe/v5/atlas-18ff865c142343834519.png",
+      "sha256": "18ff865c1423438345193dd8cee6a56e7677572131d14201bdc166f30c54eb9d",
+      "bytes": 61528
+    },
+    {
       "local": "wardrobe/atlas-1b30a02d82813205c3c5.png",
       "source": "assets/wardrobe/v5/atlas-1b30a02d82813205c3c5.png",
       "sha256": "1b30a02d82813205c3c58d2843536e28707c5e876ac8d684b4ef19173a956bae",
       "bytes": 61846
+    },
+    {
+      "local": "wardrobe/atlas-1c73c41cf5714e41e76b.png",
+      "source": "assets/wardrobe/v5/atlas-1c73c41cf5714e41e76b.png",
+      "sha256": "1c73c41cf5714e41e76b86b31d7080f562b89fc9166a25ac09862b166e3deef7",
+      "bytes": 70656
+    },
+    {
+      "local": "wardrobe/atlas-28fd8d89871e2997417a.png",
+      "source": "assets/wardrobe/v5/atlas-28fd8d89871e2997417a.png",
+      "sha256": "28fd8d89871e2997417ab503f0a873fcb7803c410d57186d4f177da9b5f82aef",
+      "bytes": 67456
+    },
+    {
+      "local": "wardrobe/atlas-2fc2c542937f2af6a6d0.png",
+      "source": "assets/wardrobe/v5/atlas-2fc2c542937f2af6a6d0.png",
+      "sha256": "2fc2c542937f2af6a6d0a58698e420522c12e5409800876731f000edadecc591",
+      "bytes": 67551
     },
     {
       "local": "wardrobe/atlas-328a1cb92f3355fee41c.png",
@@ -82,6 +124,18 @@
       "bytes": 2268
     },
     {
+      "local": "wardrobe/atlas-622669f5fd47521b368a.png",
+      "source": "assets/wardrobe/v5/atlas-622669f5fd47521b368a.png",
+      "sha256": "622669f5fd47521b368a361572025c1f9e0cd024a30bd0d20a3c5eb14494fa30",
+      "bytes": 86948
+    },
+    {
+      "local": "wardrobe/atlas-63d9372c4ff6a8234dbe.png",
+      "source": "assets/wardrobe/v5/atlas-63d9372c4ff6a8234dbe.png",
+      "sha256": "63d9372c4ff6a8234dbe6a9a864528b6fa5bd5c71416a75b0069886037d68de9",
+      "bytes": 72075
+    },
+    {
       "local": "wardrobe/atlas-6b9c14d8fe41d6ec5d96.png",
       "source": "assets/wardrobe/v5/atlas-6b9c14d8fe41d6ec5d96.png",
       "sha256": "6b9c14d8fe41d6ec5d9615456ee68d3a3e4b4f1e8566e0423c0639e11062803a",
@@ -106,6 +160,12 @@
       "bytes": 67277
     },
     {
+      "local": "wardrobe/atlas-afb308c78bfd4aeabfa1.png",
+      "source": "assets/wardrobe/v5/atlas-afb308c78bfd4aeabfa1.png",
+      "sha256": "afb308c78bfd4aeabfa1e8e374a7d09016c0e6b17b00f00f66d3387cfa1452d9",
+      "bytes": 66499
+    },
+    {
       "local": "wardrobe/atlas-c311b5198020fdbf3eaa.png",
       "source": "assets/wardrobe/v5/atlas-c311b5198020fdbf3eaa.png",
       "sha256": "c311b5198020fdbf3eaa730469facb76ebeb81a55d71d12d834028bddcbe4445",
@@ -116,6 +176,18 @@
       "source": "assets/wardrobe/v5/atlas-c6e9ffe0db795248620a.png",
       "sha256": "c6e9ffe0db795248620aa1881e535478c18f8ce482d3ae8ca61dd63af88b177d",
       "bytes": 63623
+    },
+    {
+      "local": "wardrobe/atlas-ce3b2f49024bf58995b8.png",
+      "source": "assets/wardrobe/v5/atlas-ce3b2f49024bf58995b8.png",
+      "sha256": "ce3b2f49024bf58995b84df558d080b571b997fc6d46e253bb32b1bab05fe557",
+      "bytes": 80574
+    },
+    {
+      "local": "wardrobe/atlas-d1487eaaec19f3cd4ac1.png",
+      "source": "assets/wardrobe/v5/atlas-d1487eaaec19f3cd4ac1.png",
+      "sha256": "d1487eaaec19f3cd4ac13b60e9e5df1a41941aa412abcdeb156e4720cef715f7",
+      "bytes": 69698
     },
     {
       "local": "wardrobe/atlas-d52465ab115dfa0a809c.png",
@@ -130,6 +202,18 @@
       "bytes": 63460
     },
     {
+      "local": "wardrobe/poses-0823c90cc0f7b75e0490.json",
+      "source": "assets/wardrobe/v5/poses-0823c90cc0f7b75e0490.json",
+      "sha256": "0823c90cc0f7b75e0490225dfe5af31c403fb4d4dbbb955ae7b1427b681c7800",
+      "bytes": 11197
+    },
+    {
+      "local": "wardrobe/poses-0b25e9e0c01f66f86688.json",
+      "source": "assets/wardrobe/v5/poses-0b25e9e0c01f66f86688.json",
+      "sha256": "0b25e9e0c01f66f86688c7b66072089254e79742e8d3e6c76c5acbc24b5fff0e",
+      "bytes": 10435
+    },
+    {
       "local": "wardrobe/poses-0bcefc0cc2affd46f2a8.json",
       "source": "assets/wardrobe/v5/poses-0bcefc0cc2affd46f2a8.json",
       "sha256": "0bcefc0cc2affd46f2a8c0b8d258b7f2b9c33e94bd22549717c0b28119b52b14",
@@ -140,6 +224,12 @@
       "source": "assets/wardrobe/v5/poses-1312aebe8bf4327da429.json",
       "sha256": "1312aebe8bf4327da4290906b8946cad883aeb562beeea44fc24e0e044823275",
       "bytes": 11466
+    },
+    {
+      "local": "wardrobe/poses-16411a301d9b38935993.json",
+      "source": "assets/wardrobe/v5/poses-16411a301d9b38935993.json",
+      "sha256": "16411a301d9b389359938c6c98227e42326de9ed79c40eae6aa68cda9ed4dfdc",
+      "bytes": 9453
     },
     {
       "local": "wardrobe/poses-1a1e8dbcbc67ab97139f.json",
@@ -166,10 +256,22 @@
       "bytes": 10537
     },
     {
+      "local": "wardrobe/poses-491854053065ab6e27a1.json",
+      "source": "assets/wardrobe/v5/poses-491854053065ab6e27a1.json",
+      "sha256": "491854053065ab6e27a11360a7140fb57ebda728f9dbf249c371b51b9cdde964",
+      "bytes": 11088
+    },
+    {
       "local": "wardrobe/poses-652cf2a6ddf4858526a4.json",
       "source": "assets/wardrobe/v5/poses-652cf2a6ddf4858526a4.json",
       "sha256": "652cf2a6ddf4858526a4a52555be5623b8cb6ff526eb63100d6d0fb0081cdb98",
       "bytes": 10728
+    },
+    {
+      "local": "wardrobe/poses-6582108654aa66a18ce0.json",
+      "source": "assets/wardrobe/v5/poses-6582108654aa66a18ce0.json",
+      "sha256": "6582108654aa66a18ce0a4282149884266071049cfbde13f00d483fe0788439e",
+      "bytes": 10127
     },
     {
       "local": "wardrobe/poses-6c9b9bc88fdaf54a48a5.json",
@@ -184,6 +286,12 @@
       "bytes": 9177
     },
     {
+      "local": "wardrobe/poses-762806ecf8f23eebd39f.json",
+      "source": "assets/wardrobe/v5/poses-762806ecf8f23eebd39f.json",
+      "sha256": "762806ecf8f23eebd39f1781b33f1cdb5d17c0709864e22c4f9741735768a338",
+      "bytes": 9940
+    },
+    {
       "local": "wardrobe/poses-7a1f463ab75c4be2d674.json",
       "source": "assets/wardrobe/v5/poses-7a1f463ab75c4be2d674.json",
       "sha256": "7a1f463ab75c4be2d674f7e3dbaf4b587f8a6f91f19f1ba2a25bc2e5a5d571c7",
@@ -196,10 +304,34 @@
       "bytes": 11251
     },
     {
+      "local": "wardrobe/poses-afa2703049d2b3d22074.json",
+      "source": "assets/wardrobe/v5/poses-afa2703049d2b3d22074.json",
+      "sha256": "afa2703049d2b3d2207494596300d3688f6dd0095ead55789c4c608d354c82d9",
+      "bytes": 10022
+    },
+    {
       "local": "wardrobe/poses-b1039314111bfacaaf2b.json",
       "source": "assets/wardrobe/v5/poses-b1039314111bfacaaf2b.json",
       "sha256": "b1039314111bfacaaf2b6e8c58585fe63efc07cf0dc43b299eb558a23ada1551",
       "bytes": 51757
+    },
+    {
+      "local": "wardrobe/poses-b8b1fd970cb4cfb8d77e.json",
+      "source": "assets/wardrobe/v5/poses-b8b1fd970cb4cfb8d77e.json",
+      "sha256": "b8b1fd970cb4cfb8d77e07a17bd66787cc1af10a1571f6a8f873fcfbca4fe757",
+      "bytes": 10481
+    },
+    {
+      "local": "wardrobe/poses-c551a42410a6aa6f3706.json",
+      "source": "assets/wardrobe/v5/poses-c551a42410a6aa6f3706.json",
+      "sha256": "c551a42410a6aa6f3706aadcbb4aa0ab283675392bca07cba1d8b6228e868fb7",
+      "bytes": 9209
+    },
+    {
+      "local": "wardrobe/poses-c77c79fe8ce6fdd8d360.json",
+      "source": "assets/wardrobe/v5/poses-c77c79fe8ce6fdd8d360.json",
+      "sha256": "c77c79fe8ce6fdd8d36005167d29c57fab085cb85e8ec158061451ac881c4c6b",
+      "bytes": 9647
     },
     {
       "local": "wardrobe/poses-ce077864a4910282bd4f.json",
@@ -224,6 +356,18 @@
       "source": "assets/wardrobe/v5/poses-f932e1175e9efccd573a.json",
       "sha256": "f932e1175e9efccd573af38ce85569d154338ef8e63ced625176f7f1f0707bbd",
       "bytes": 9705
+    },
+    {
+      "local": "wardrobe/poses-fc55d594d203ad1ec865.json",
+      "source": "assets/wardrobe/v5/poses-fc55d594d203ad1ec865.json",
+      "sha256": "fc55d594d203ad1ec86591cb7c6904a72b6f452814911fef234c6c02725252ad",
+      "bytes": 11114
+    },
+    {
+      "local": "wardrobe/poses-feb67737cf12e7caa55d.json",
+      "source": "assets/wardrobe/v5/poses-feb67737cf12e7caa55d.json",
+      "sha256": "feb67737cf12e7caa55d2252b6b009062d199d14becb2b3f6b9c14f2fc0dce2d",
+      "bytes": 9669
     },
     {
       "local": "wardrobe/source-catalog.json",

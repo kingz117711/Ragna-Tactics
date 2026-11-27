@@ -41,7 +41,7 @@ priority and an explicit way to return to the previous assignment.
 ## Provisional foundation rules (not additional owner commitments)
 
 - Novice job change at **Job Lv. 10**, at camp. Six first jobs are implemented;
-  first-job choices currently cannot be reset. Second jobs are not implemented.
+  first-job choices currently cannot be reset. At first Job Lv. 40 a character can advance at camp to their corresponding second job.
 - Starting names Aren/Lyra; rename at any time. Default original male/female looks.
 - Third/fourth/fifth roster slots are earned from three independent achievements:
   one boss clear, 35 Willow Wood kills, three boss clears. Each adds a slot.

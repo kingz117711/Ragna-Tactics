@@ -1,5 +1,15 @@
 # Milestone handoff — 2026-11-27
 
+## Second jobs and forging
+
+At first Job Lv. 40, use Job path at camp to become a Knight, Wizard, Hunter,
+Priest, Blacksmith, or Assassin. Each has its native wardrobe and a combat skill.
+Shared storage contains forge recipes for Iron armaments and Guard insignias.
+A living Blacksmith at camp halves the Zeny fee.
+
+Next content milestone: build a new farming field with original monsters, a
+collectible monster card, and a camp slotting interface.
+
 ## Hunt area controls
 
 Open Hunt area on a farming field. Choose a radius of 3, 6, or 10 world units.
@@ -8,7 +18,7 @@ to use the first selected adventurer on this field. Farm resumes the saved
 area after a manual order. The original default is 6. Browser tests now launch a
 dedicated checkout-specific server to avoid picking up another worktree.
 
-Next milestone: play the first expedition through third recruitment using fresh
+Additional playtest: play the first expedition through third recruitment using fresh
 guilds, measure starter pair performance and fix the most consequential friction.
 Use the manual gameplay gate in TESTING.md.
 

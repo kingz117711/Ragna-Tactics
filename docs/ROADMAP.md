@@ -48,7 +48,7 @@ cannot become trapped behind scenery or abandon a party without visible feedback
 ## Then: progression and content
 
 - More maps with distinct tactical/resource purposes.
-- Second-job trees, thoughtfully scoped skills, and character build experimentation.
+- Expand skill choices for the six playable second jobs and introduce card builds.
 - Proper equipment slots, stable item instances, cards, and crafting sinks.
 - Better character naming/appearance onboarding using available native art.
 - Per-map expedition reports, offline material/equipment summaries, and balance tools.

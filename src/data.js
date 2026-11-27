@@ -17,6 +17,23 @@ export const JOBS = {
   merchant: { name: 'Merchant', native: 5, role: 'Sustain · supplies', hp: 155, atk: 15, def: 3, range: 1.8, speed: 3, interval: 1.1, skill: 'Mammonite', cost: 8, cooldown: 6, description: 'A forceful single-target strike. No currency cost in this prototype.' },
   thief: { name: 'Thief', native: 6, role: 'Melee · burst damage', hp: 125, atk: 16, def: 2, range: 1.8, speed: 4, interval: 0.75, skill: 'Envenom', cost: 7, cooldown: 5, description: 'A quick piercing strike against a single enemy.' },
 };
+const secondJobs = {
+  knight: { parent: 'swordsman', native: 7, name: 'Knight', hp: 250, atk: 25, def: 8, skill: 'Brandish Spear', description: 'Sweep nearby enemies and draw them onto the Knight.', splash: 3.5, cost: 11 },
+  priest: { parent: 'acolyte', native: 8, name: 'Priest', hp: 175, atk: 16, def: 4, skill: 'Sanctuary', description: 'Restore HP to injured party members within eight tiles.', cost: 15 },
+  wizard: { parent: 'mage', native: 9, name: 'Wizard', hp: 135, atk: 29, def: 2, skill: 'Storm Gust', description: 'Blast a cluster around the target and delay their next attacks.', splash: 4, cost: 16 },
+  blacksmith: { parent: 'merchant', native: 10, name: 'Blacksmith', hp: 210, atk: 23, def: 6, skill: 'Hammer Fall', description: 'Strike clustered foes and delay their next attacks. Forge gear for half the Zeny at camp.', splash: 2.5, cost: 11 },
+  hunter: { parent: 'archer', native: 11, name: 'Hunter', hp: 155, atk: 22, def: 3, range: 8, skill: 'Blitz Beat', description: 'Your falcon strikes the target and up to two nearby enemies.', splash: 4, cost: 12 },
+  assassin: { parent: 'thief', native: 12, name: 'Assassin', hp: 165, atk: 23, def: 4, skill: 'Sonic Blow', description: 'Burst down a single foe. Deals extra damage below half health.', cost: 12 },
+};
+for (const [id, job] of Object.entries(secondJobs)) JOBS[id] = { ...JOBS[job.parent], ...job };
+export function promotionLevel(job) { return job === 'novice' ? 10 : JOBS[job].parent ? Infinity : 40; }
+export function jobChoices(job) {
+  return Object.entries(JOBS).filter(([id, data]) => id !== 'novice' && (data.parent || 'novice') === job);
+}
+export const FORGE = {
+  iron: { zeny: 75, materials: { Jellopy: 12, Resin: 3 } },
+  guard: { zeny: 60, materials: { Fluff: 6, Resin: 4 } },
+};
 export const MONSTERS = {
   poring: { name: 'Poring', sprite: '1002', hp: 35, atk: 5, def: 0, exp: 10, jobExp: 7, zeny: 5, material: 'Jellopy', speed: 1.3, range: 1.5, interval: 1.8 },
   fabre: { name: 'Fabre', sprite: '1007', hp: 43, atk: 6, def: 1, exp: 12, jobExp: 8, zeny: 6, material: 'Fluff', speed: 1.2, range: 1.5, interval: 1.7 },
@@ -50,6 +67,7 @@ export const JOB_ROLES = {
   novice: 'frontline', swordsman: 'frontline', merchant: 'frontline', thief: 'frontline',
   mage: 'ranged', archer: 'ranged', acolyte: 'support',
 };
+for (const [id, job] of Object.entries(secondJobs)) JOB_ROLES[id] = JOB_ROLES[job.parent];
 export const ROLE_LABELS = {
   frontline: 'Frontline — approaches and engages',
   ranged: 'Ranged — keeps attack distance',

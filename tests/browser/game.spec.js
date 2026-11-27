@@ -254,3 +254,24 @@ test('mobile camp access and additive selection stay available without a keyboar
   await page.locator('#multi-select').click(); await page.locator('[data-character="c2"]').click();
   await expect(page.locator('.character-card.selected')).toHaveCount(2);
 });
+
+test('a Merchant advances to Blacksmith and forges equipment from field loot', async ({ page }) => {
+  const s = createGame();
+  Object.assign(s.characters[0], { job: 'merchant', jobLevel: 40 });
+  s.inventory.materials = { Resin: 4, Fluff: 6 };
+  await page.addInitScript(raw => {
+    if (!localStorage.length) localStorage.setItem('ragna-tactics:save:v1', raw);
+  }, encodeSave(s));
+  await boot(page);
+  await page.locator('#job-notice').click();
+  await page.locator('[data-camp-unit="c1"]').click();
+  await page.locator('input[value="blacksmith"]').check();
+  await page.locator('#modal').screenshot({ path: 'artifacts/second-job.png' });
+  await page.locator('#job-form button.primary').click();
+  await page.locator('#storage-button').click();
+  await page.locator('[data-forge="guard"]').click();
+  await expect(page.locator('[data-forge="guard"]')).toBeDisabled();
+  await page.reload();
+  await expect(page.locator('[data-character="c1"]').first()).toContainText('Blacksmith');
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).state.inventory.equipment.guard)).toBe(1);
+});

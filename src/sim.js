@@ -1,5 +1,5 @@
 // Pure, serializable simulation. No DOM, storage, wall clock, or camera dependencies.
-import { HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
+import { FORGE, jobChoices, promotionLevel, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
 
 export function random(state) {
   state.seed = (Math.imul(state.seed, 1664525) + 1013904223) >>> 0;
@@ -111,6 +111,9 @@ export function command(s, cmd) {
   if (result === null) advanceExpeditionGoals(s);
   return result;
 }
+export function forgePrice(s, item) {
+  return Math.ceil(FORGE[item].zeny * (s.characters.some(c => c.job === 'blacksmith' && !c.mapId && c.hp > 0) ? 0.5 : 1));
+}
 function applyCommand(s, cmd) {
   const selected = s.characters.filter(c => cmd.ids?.includes(c.id));
   const units = expandSelection(s, cmd.ids || []);
@@ -121,6 +124,16 @@ function applyCommand(s, cmd) {
     const id = 'c' + (s.characters.length + 1);
     s.characters.push(character(id, name, cmd.sex === 'f' ? 'f' : 'm'));
     log(s, name + ' joined as a Novice.'); return null;
+  }
+  if (cmd.type === 'forge') {
+    if (!Object.hasOwn(FORGE, cmd.item)) return 'Unknown recipe.';
+    const ingredients = Object.entries(FORGE[cmd.item].materials), price = forgePrice(s, cmd.item);
+    if (s.inventory.zeny < price || ingredients.some(([id, qty]) => (s.inventory.materials[id] || 0) < qty)) return 'Gather the required materials and Zeny.';
+    s.inventory.zeny -= price;
+    for (const [id, qty] of ingredients) s.inventory.materials[id] -= qty;
+    s.inventory.equipment[cmd.item]++;
+    log(s, 'Forged ' + EQUIPMENT[cmd.item].name + '.');
+    return null;
   }
   if (!selected.length) return 'Select at least one adventurer.';
   if (cmd.type === 'party') {
@@ -156,8 +169,9 @@ function applyCommand(s, cmd) {
     if (selected.length !== 1) return 'Choose one Novice to advance.';
     const c = selected[0];
     if (c.mapId) return 'Return to camp to choose a job.';
-    if (c.job !== 'novice' || c.jobLevel < 10) return 'Reach Novice Job Lv. 10 first.';
-    if (!Object.hasOwn(JOBS, cmd.job) || cmd.job === 'novice') return 'Choose a first job.';
+    if (c.status === 'down') return 'Recover at camp before advancing.';
+    if (!jobChoices(c.job).some(([id]) => id === cmd.job)) return 'Choose an available job path.';
+    if (c.jobLevel < promotionLevel(c.job)) return 'Reach Job Lv. ' + promotionLevel(c.job) + ' first.';
     c.job = cmd.job; c.jobLevel = 1; c.jobExp = 0; c.hp = stats(c).hp; c.sp = stats(c).sp;
     log(s, c.name + ' became a ' + JOBS[c.job].name + '!'); return null;
   }
@@ -326,17 +340,28 @@ function damage(s, c, m, value, attackRange = stats(c).range) {
 function useSkill(s, c, target, manual = false) {
   const st = stats(c);
   if (c.cooldown > 0 || c.sp < st.cost) return false;
-  if (c.job === 'novice' || c.job === 'acolyte') {
+  if (c.job === 'novice' || roleOf(c) === 'support') {
     const allies = c.job === 'novice' ? [c] : partyMembers(s, c).filter(v => active(v) && v.mapId === c.mapId && distance(v, c) <= 8);
     const healAt = effectiveTactics(c).healAt;
     const injured = allies.filter(v => v.hp < stats(v).hp * (manual ? 1 : healAt)).sort((a, b) => a.hp / stats(a).hp - b.hp / stats(b).hp)[0];
     if (!injured) return false;
-    const amount = Math.min(stats(injured).hp - injured.hp, c.job === 'novice' ? 28 : 45 + c.level * 5);
-    injured.hp += amount; effect(s, c.mapId, injured.x, injured.y, '+' + Math.round(amount), 'heal');
+    const recipients = c.job === 'priest' ? allies.filter(a => a.hp < stats(a).hp) : [injured];
+    for (const ally of recipients) {
+      const amount = Math.min(stats(ally).hp - ally.hp, c.job === 'novice' ? 28 : 45 + c.level * 5);
+      ally.hp += amount; effect(s, c.mapId, ally.x, ally.y, '+' + Math.round(amount), 'heal');
+    }
   } else {
     if (!target || target.mapId !== c.mapId || distance(c, target) > st.range) return false;
-    if (!damage(s, c, target, st.atk * (c.job === 'mage' ? 2.4 : 2), st.range)) return false;
-    if (c.job === 'mage') for (const m of s.maps[c.mapId].monsters) if (m !== target && m.hp > 0 && distance(m, target) < 3) damage(s, c, m, st.atk * 1.4, st.range + 3);
+    const multiplier = c.job === 'assassin' ? (target.hp < MONSTERS[target.kind].hp / 2 ? 4 : 2.8) : roleOf(c) === 'ranged' && c.job !== 'archer' ? 2.4 : 2;
+    const splash = st.splash || (c.job === 'mage' ? 3 : 0);
+    const centre = c.job === 'knight' || c.job === 'blacksmith' ? c : target;
+    const secondary = splash ? s.maps[c.mapId].monsters.filter(m => m !== target && m.hp > 0 && distance(m, centre) < splash) : [];
+    if (!damage(s, c, target, st.atk * multiplier, st.range)) return false;
+    const stagger = c.job === 'blacksmith' || c.job === 'wizard';
+    if (stagger && target.hp > 0) target.timer = Math.max(target.timer, 2);
+    for (const m of secondary.slice(0, c.job === 'hunter' ? 2 : secondary.length)) {
+      if (damage(s, c, m, st.atk * 1.4, st.range + splash) && stagger && m.hp > 0) m.timer = Math.max(m.timer, 2);
+    }
     if (c.job === 'swordsman') for (const m of s.maps[c.mapId].monsters) if (m.hp > 0 && distance(m, c) < 5) m.targetId = c.id;
   }
   c.sp -= st.cost; c.cooldown = st.cooldown; c.attackFlash = 0.5; c.stance = 'attack';

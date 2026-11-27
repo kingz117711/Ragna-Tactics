@@ -64,3 +64,7 @@
 
 - Added three hunting radii, a placement preview and a keyboard-accessible centre-on-unit action. Existing marked areas retain their radius after loading.
 - Browser tests launch this checkout on a dedicated port. Added party, save, invalid-order and touch/keyboard coverage for the editor.
+
+## Second jobs and Prontera forging
+
+Six second jobs with native sprites and signature skills now unlock at first Job Lv. 40. Added material recipes and a camp Blacksmith discount.

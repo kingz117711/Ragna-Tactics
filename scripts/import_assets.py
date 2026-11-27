@@ -38,7 +38,7 @@ def verify():
     wardrobe = json.loads((DEST / 'wardrobe/source-catalog.json').read_text(encoding='utf-8'))
     mobs = json.loads((DEST / 'mobs/source-catalog.json').read_text(encoding='utf-8'))
     assert index['anchor'] == wardrobe['anchor'] and index['classes'] == wardrobe['classes']
-    assert len(index['wardrobe']) == 16 and len(index['monsters']) == 4
+    assert len(index['wardrobe']) == 28 and len(index['monsters']) == 4
     for key, rec in index['wardrobe'].items():
         assert rec == wardrobe['assets'][key], key
     for key, rec in index['monsters'].items():
@@ -60,7 +60,7 @@ def main():
     base = f'https://raw.githubusercontent.com/{REPO}/{commit}/'
     wardrobe_path = 'assets/wardrobe/v5/'
     catalog = json.loads(fetch(base + wardrobe_path + 'catalog.json'))
-    ids = [f'base-{job}-{sex}' for job in [0, 1, 2, 3, 4, 5, 6] for sex in ['m', 'f']]
+    ids = [f'base-{job}-{sex}' for job in range(13) for sex in ['m', 'f']]
     ids += ['hair-m-2-0', 'hair-f-2-0']
     selected = {key: catalog['assets'][key] for key in ids}
     sources = {}

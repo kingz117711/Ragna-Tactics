@@ -326,3 +326,38 @@ test('ranged attackers stop inside their native range while supports stay with t
   assert.ok(Math.hypot(support.x - enemy.x, support.y - enemy.y) <= 8);
   assert.equal(leader.targetId, support.targetId);
 });
+
+test('each second job follows its own first job and casts its signature skill', () => {
+  for (const [base, job] of Object.entries({ swordsman: 'knight', mage: 'wizard', archer: 'hunter', acolyte: 'priest', merchant: 'blacksmith', thief: 'assassin' })) {
+    const s = createGame(), [c, ally] = s.characters;
+    const change = job => command(s, { type: 'promote', ids: [c.id], job });
+    assert.ok(change(job)); promote(s, 0, base);
+    assert.ok(change(job)); c.jobLevel = 40;
+    assert.ok(change(job === 'knight' ? 'wizard' : 'knight'));
+    assert.equal(change(job), null);
+    assert.equal(c.jobLevel, 1);
+    command(s, { type: 'party', ids }); deploy(s);
+    const mobs = s.maps.meadow.monsters;
+    for (const m of mobs) Object.assign(m, { x: c.x, y: c.y, hp: 300, timer: 0 });
+    c.targetId = mobs[0].id;
+    c.hp = 20; ally.hp = 20;
+    assert.equal(command(s, { type: 'skill', ids: [c.id] }), null);
+    if (job === 'priest') { assert.ok(ally.hp > 20 && c.hp > 20); continue; }
+    const hits = mobs.filter(m => m.hp < 300);
+    assert.equal(hits.length, job === 'hunter' ? 3 : job === 'assassin' ? 1 : mobs.length);
+    if (['blacksmith', 'wizard'].includes(job)) assert.ok(hits.every(m => m.timer >= 2));
+  }
+});
+
+test('forging spends shared loot once and applies the resident Blacksmith discount', () => {
+  const s = createGame(), inv = s.inventory;
+  const forge = () => command(s, { type: 'forge', item: 'guard' });
+  assert.ok(forge()); assert.equal(inv.zeny, 150);
+  inv.materials = { Fluff: 12, Resin: 8 };
+  s.characters[0].job = 'blacksmith';
+  assert.equal(forge(), null); assert.equal(inv.zeny, 120);
+  deploy(s, 'meadow', ['c1']);
+  assert.equal(forge(), null); assert.equal(inv.zeny, 60);
+  assert.ok(forge()); assert.equal(inv.equipment.guard, 2);
+  assert.deepEqual(inv.materials, { Fluff: 0, Resin: 0 });
+});

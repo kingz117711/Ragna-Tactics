@@ -8,7 +8,7 @@ a new artwork license or transfer ownership.
 
 ## Imported subset
 
-- Male/female native bodies for Novice and the six first jobs.
+- Male/female native bodies for Novice and the six first jobs and their six second jobs.
 - One original default hairstyle per gender, with class-specific layer placement.
 - Original native monster atlases: Poring (1002), Fabre (1007), Willow (1010),
   and Baphomet (1039).
