@@ -45,6 +45,11 @@ export const MONSTERS = {
   willow: { name: 'Willow', sprite: '1010', hp: 120, atk: 13, def: 3, exp: 26, jobExp: 16, zeny: 13, material: 'Resin', speed: 1.6, range: 1.7, interval: 1.9 },
   baphomet: { name: 'Baphomet', sprite: '1039', hp: 2400, atk: 19, def: 5, exp: 220, jobExp: 100, zeny: 300, material: 'Sanctuary Sigil', speed: 1.6, range: 2.6, interval: 1.8 },
 };
+export const BOUNTIES = {
+  harvest: { name: 'Jellopy harvest', map: 'meadow', target: 'poring', count: 12, zeny: 70, item: 'iron' },
+  timber: { name: 'Willow patrol', map: 'forest', target: 'willow', count: 16, zeny: 160, item: 'guard' },
+  caravan: { name: 'Caravan escort', map: 'morroc', target: 'scorpion', count: 20, zeny: 420, item: 'iron' },
+};
 export const ATTRIBUTES = {
   str: { name: 'Strength', effect: '+2 attack per point' },
   agi: { name: 'Agility', effect: '+1% basic attack rate per point' },

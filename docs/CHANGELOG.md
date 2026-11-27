@@ -80,3 +80,7 @@ Added Phreeoni, a new live MVP arena, alternating gather/scatter mechanics, and 
 ## Character builds
 
 Added six trainable attributes with previews and permanent stat allocation. Old characters receive their full earned point budget.
+
+## Bounty board
+
+Added three repeatable hunting contracts, shared live and offline guild progress, and explicit reward claims.

@@ -315,3 +315,24 @@ test('preview and commit a personal stat build at camp', async ({page}) => {
   await page.reload(); await expect(page.locator('#loading')).toBeHidden();
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).state.characters[0].attributes)).toEqual({vit:1,str:1});
 });
+
+test('accept a guild contract and claim the completed hunt after reloading', async ({page}) => {
+  await boot(page); await page.locator('#bounty-button').click();
+  await page.locator('[data-bounty="accept"][data-id="harvest"]').click();
+  await expect(page.locator('#claim-bounty')).toBeDisabled();
+  await page.reload(); await page.locator('#bounty-button').click();
+  await expect(page.locator('#active-bounty-progress')).toHaveText('0 / 12');
+  await page.locator('#modal').screenshot({path:'artifacts/bounty-board.png'});
+  await page.evaluate(() => {
+    const key='ragna-tactics:save:v1', save=JSON.parse(localStorage.getItem(key));
+    save.state.bounty.kills=12;
+    sessionStorage.setItem('completed-hunt',JSON.stringify(save));
+  });
+  await page.addInitScript(() => {
+    const raw=sessionStorage.getItem('completed-hunt');
+    if(raw){localStorage.setItem('ragna-tactics:save:v1',raw);sessionStorage.removeItem('completed-hunt');}
+  });
+  await page.reload(); await page.locator('#bounty-button').click(); await page.locator('#claim-bounty').click();
+  await expect(page.locator('[data-bounty="accept"][data-id="harvest"]')).toBeEnabled();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).state.inventory.equipment.iron)).toBe(1);
+});

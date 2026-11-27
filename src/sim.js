@@ -1,5 +1,5 @@
 // Pure, serializable simulation. No DOM, storage, wall clock, or camera dependencies.
-import { ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
+import { BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
 
 export function random(state) {
   state.seed = (Math.imul(state.seed, 1664525) + 1013904223) >>> 0;
@@ -133,6 +133,21 @@ function applyCommand(s, cmd) {
     const id = 'c' + (s.characters.length + 1);
     s.characters.push(character(id, name, cmd.sex === 'f' ? 'f' : 'm'));
     log(s, name + ' joined as a Novice.'); return null;
+  }
+  if (cmd.type === 'bounty-accept') {
+    if (s.bounty || !Object.hasOwn(BOUNTIES,cmd.id)) return 'Choose one available guild contract.';
+    s.bounty = { id:cmd.id, kills:0 }; log(s,'Accepted ' + BOUNTIES[cmd.id].name + '.'); return null;
+  }
+  if (cmd.type === 'bounty-claim' || cmd.type === 'bounty-abandon') {
+    if (!s.bounty || s.bounty.id !== cmd.id) return 'This contract is no longer active.';
+    const bounty = BOUNTIES[cmd.id];
+    if (cmd.type === 'bounty-claim') {
+      if (s.bounty.kills < bounty.count) return 'Complete the hunt to claim the bounty.';
+      s.inventory.zeny += bounty.zeny;
+      s.inventory.equipment[bounty.item]++;
+      log(s,'Bounty paid: ' + bounty.zeny + ' Zeny and ' + EQUIPMENT[bounty.item].name + '.');
+    }
+    s.bounty = null; return null;
   }
   if (cmd.type === 'forge') {
     if (!Object.hasOwn(FORGE, cmd.item)) return 'Unknown recipe.';
@@ -354,6 +369,11 @@ function kill(s, m, killer) {
   if (m.rewarded) return;
   s.milestones.enemiesDefeated = (s.milestones.enemiesDefeated ?? 0) + 1;
   m.hp = 0; m.rewarded = true; m.respawn = 6 + random(s) * 4;
+  const bounty = BOUNTIES[s.bounty?.id];
+  if (bounty?.target === m.kind && bounty.map === m.mapId && s.bounty.kills < bounty.count) {
+    s.bounty.kills++;
+    if (s.bounty.kills === bounty.count) log(s, bounty.name + ' complete. Claim your reward at the bounty board.');
+  }
   const def = MONSTERS[m.kind];
   const recipients = partyMembers(s, killer).filter(c => active(c) && c.mapId === m.mapId && distance(c, killer) < 18);
   const share = (recipients.length > 1 ? 1.12 : 1) / recipients.length;

@@ -1,4 +1,4 @@
-import { ATTRIBUTES, ATTRIBUTE_CAP, CARDS, MONSTERS, HUNT_RADII, VERSION, MAPS, JOBS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS } from './data.js';
+import { BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, MONSTERS, HUNT_RADII, VERSION, MAPS, JOBS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS } from './data.js';
 import { availablePoints, populateField, createGame, advanceExpeditionGoals } from './sim.js';
 export const SAVE_KEY = 'ragna-tactics:save:v1';
 export const BACKUP_KEY = 'ragna-tactics:backup:v1';
@@ -12,6 +12,7 @@ export function validateState(s) {
   valid(s && s.version === VERSION && s.ownerId === 'local-player');
   valid(Number.isInteger(s.seed) && finite(s.seed, 0, 4294967295) && finite(s.time) && Number.isSafeInteger(s.nextId) && s.nextId > 0);
   valid(Array.isArray(s.characters) && s.characters.length >= 2 && s.characters.length <= 5);
+  if (s.bounty != null) valid(own(BOUNTIES,s.bounty.id) && Number.isInteger(s.bounty.kills) && finite(s.bounty.kills,0,BOUNTIES[s.bounty.id].count));
   const ids = new Set();
   for (const c of s.characters) {
     valid(c && /^c[1-5]$/.test(c.id) && !ids.has(c.id)); ids.add(c.id);

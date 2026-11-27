@@ -420,3 +420,16 @@ test('stat training spends earned points atomically and survives job advancement
   assert.equal(command(s,{type:'promote',ids:['c1'],job:'mage'}),null);
   assert.equal(stats(c).crit,0.05);
 });
+
+test('bounties count subsequent matching field kills offline and pay a single claim', () => {
+  const s = createGame(), accept = id => command(s,{type:'bounty-accept',id});
+  promote(s,0,'mage'); deploy(s,'forest',['c1']); assert.equal(accept('harvest'),null);
+  assert.ok(accept('timber')); settleOffline(s,40); assert.equal(s.bounty.kills,0);
+  deploy(s,'meadow',['c2']); settleOffline(s,600);
+  assert.equal(s.bounty.kills,12);
+  const {zeny,equipment} = s.inventory, oldIron = equipment.iron;
+  assert.equal(command(s,{type:'bounty-claim',id:'harvest'}),null);
+  assert.equal(s.inventory.zeny,zeny+70); assert.equal(equipment.iron,oldIron+1);
+  assert.ok(command(s,{type:'bounty-claim',id:'harvest'}));
+  assert.equal(accept('harvest'),null); assert.equal(s.bounty.kills,0);
+});

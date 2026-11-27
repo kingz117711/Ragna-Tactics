@@ -1776,3 +1776,8 @@ select{
 .stat-stepper { display:flex; align-items:center; gap:8px; }
 .stat-stepper button { width:32px; height:32px; }
 .stat-stepper output { min-width:2ch; text-align:center; color:var(--gold); }
+
+.activity-heading { flex-wrap:wrap; }
+.bounty-entry { display:grid; grid-template-columns:64px 1fr; gap:14px; padding:16px 0; border-top:1px solid #435449; }
+.bounty-entry img { width:60px; height:70px; object-fit:contain; image-rendering:pixelated; }
+.bounty-entry h3, .bounty-entry p { margin:5px 0; }

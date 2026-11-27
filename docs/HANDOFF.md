@@ -1,5 +1,11 @@
 # Milestone handoff — 2026-11-27
 
+## Guild bounty board
+
+Open Bounties under Field Notes. A guild can accept one repeatable hunt for
+Porings, Willows or Scorpions. Matching kills count on and off camera and
+offline. Claim the finished hunt at the board for Zeny and equipment.
+
 ## Character builds
 
 Open Stats on one adventurer. Each earned Base level grants two points, including

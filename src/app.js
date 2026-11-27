@@ -1,4 +1,4 @@
-import { ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
+import { BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
 import { availablePoints, forgePrice, command, tick, stats, rosterLimit, engaged, effectiveTactics, isLeader } from './sim.js';
 import { SAVE_KEY, loadGame, saveGame, encodeSave, decodeSave } from './persistence.js';
 import { Sprites } from './sprites.js';
@@ -53,6 +53,12 @@ function setSelection(id, multiple = false) {
 function renderUI() {
   if (!state || !renderer) return;
   const mapId = renderer.mapId, map = MAPS[mapId], units = selectedCharacters();
+  const bounty = BOUNTIES[state.bounty?.id];
+  $('bounty-button').textContent = bounty ? (state.bounty.kills === bounty.count ? 'Claim bounty ↗' : `Bounty · ${state.bounty.kills}/${bounty.count}`) : 'Bounties ↗';
+  if (modal.open && $('active-bounty-progress') && bounty) {
+    $('active-bounty-progress').textContent = state.bounty.kills + ' / ' + bounty.count;
+    $('claim-bounty').disabled = state.bounty.kills < bounty.count;
+  }
   $('zeny').textContent = number(state.inventory.zeny);
   $('map-name').textContent = map.name; $('map-subtitle').textContent = map.subtitle; $('map-tier').textContent = map.tier;
   html('map-list', Object.values(MAPS).map((m, i) => {
@@ -274,6 +280,17 @@ function worldOverview() {
   }).join('');
   showModal('Every expedition, at a glance', `${attention.length ? `<section class="attention-list"><h3>Needs attention · ${attention.length}</h3>${attention.map(({ c, label }) => `<button data-world-character="${c.id}">${esc(c.name)} · ${label} ↗</button>`).join('')}</section>` : '<p>Nothing needs your attention right now.</p>'}<div class="world-overview">${groups}</div>`, 'WORLD OVERVIEW');
 }
+function bountyBoard() {
+  const active = state.bounty;
+  const rows = Object.entries(BOUNTIES).map(([id, bounty]) => {
+    const current = active?.id === id;
+    const controls = current
+      ? `<strong id="active-bounty-progress">${active.kills} / ${bounty.count}</strong><button id="claim-bounty" data-bounty="claim" data-id="${id}" ${active.kills < bounty.count ? 'disabled' : ''}>Claim reward</button><button data-bounty="abandon" data-id="${id}">Abandon</button>`
+      : `<button data-bounty="accept" data-id="${id}" ${active ? 'disabled' : ''}>Accept hunt</button>`;
+    return `<section class="bounty-entry"><img src="${sprites.monsterPortrait(bounty.target)}" alt=""><div><span class="eyebrow">${MAPS[bounty.map].name}</span><h3>${bounty.name}</h3><p>Defeat ${bounty.count} × ${MONSTERS[bounty.target].name}</p><p>${bounty.zeny} Zeny + ${EQUIPMENT[bounty.item].name}</p><div class="detail-actions">${controls}</div></div></section>`;
+  }).join('');
+  showModal('Guild bounty board', `<p>Choose one hunt for your guild. Kills from any team count after acceptance, including while you are away.</p>${rows}${modalError}`,'HUNTING CONTRACTS');
+}
 function storage() {
   const recipes = Object.entries(FORGE).map(([id, recipe]) => {
     const price = forgePrice(state, id), ingredients = Object.entries(recipe.materials);
@@ -340,6 +357,8 @@ document.addEventListener('click', event => {
   if (service) { selected = new Set([service.dataset.campUnit]); if (service.dataset.service === 'advance') advanceJob(); else { issue({ type: service.dataset.service }); camp(); } }
   const socket = event.target.closest('[data-socket]');
   if (socket && issue({ type: 'socket', card: socket.dataset.socket || null }, { quiet: true })) equipment();
+  const bounty = event.target.closest('[data-bounty]');
+  if (bounty && issue({type:'bounty-' + bounty.dataset.bounty,id:bounty.dataset.id},{quiet:true})) bountyBoard();
   const forge = event.target.closest('[data-forge]');
   if (forge && issue({ type: 'forge', item: forge.dataset.forge }, { quiet: true })) { storage(); toast('Forged equipment added to shared storage.'); }
   const equip = event.target.closest('[data-equip]'); if (equip && issue({ type: 'equip', item: equip.dataset.equip, card: equip.dataset.card || null })) equipment();
@@ -384,7 +403,7 @@ $('select-all').onclick = () => { selected = new Set(state.characters.map(c => c
 $('multi-select').onclick = () => { multiSelect = !multiSelect; $('multi-select').setAttribute('aria-pressed', multiSelect); $('multi-select').textContent = multiSelect ? 'Multi ✓' : 'Multi'; };
 $('first-deploy').onclick = () => { selected = new Set(state.characters.map(c => c.id)); deployment(); };
 $('dismiss-coach').onclick = () => { coachDismissed = true; renderUI(); };
-$('recruit-button').onclick = recruit; $('settings-button').onclick = settings; $('storage-button').onclick = storage; $('world-button').onclick = worldOverview;
+$('recruit-button').onclick = recruit; $('settings-button').onclick = settings; $('bounty-button').onclick = bountyBoard; $('storage-button').onclick = storage; $('world-button').onclick = worldOverview;
 $('modal-close').onclick = closeModal;
 $('save-button').onclick = () => { persist(); toast(saveError ? 'Export your guild to preserve progress.' : 'Guild saved.'); };
 $('zoom-in').onclick = () => { renderer.zoom(1.18); renderUI(); }; $('zoom-out').onclick = () => { renderer.zoom(1 / 1.18); renderUI(); };
