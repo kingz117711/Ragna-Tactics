@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createGame, command, advance, tick, gainExp, stats, settleOffline, rosterLimit } from '../src/sim.js';
+import { createGame, command, advance, tick, gainExp, stats, settleOffline, rosterLimit, effectiveTactics, roleOf } from '../src/sim.js';
 import { OFFLINE_CAP, MONSTERS } from '../src/data.js';
 const ids = ['c1', 'c2'];
 test('a marked hunt survives manual repositioning, resume and offline settlement', () => {
@@ -139,8 +139,14 @@ test('four-hour offline cap is shared elapsed time and applies to every deployed
   assert.equal(ra.seconds, OFFLINE_CAP); assert.equal(ra.capped, true); assert.equal(rb.capped, false);
   assert.equal(ra.kills, rb.kills); assert.deepEqual(a, b); assert.ok(ra.characters.every(c => c.levels > 0));
 });
-test('offline farming uses the same combat results as live farming', () => {
-  const a = createGame(17), b = createGame(17); deploy(a); deploy(b);
+test('offline farming uses the same combat results as live farming, including custom tactics', () => {
+  const a = createGame(17), b = createGame(17);
+  for (const s of [a, b]) {
+    promote(s, 0, 'archer');
+    command(s, { type: 'tactic-config', ids: ['c1'], key: 'potionAt', value: 0.6 });
+    command(s, { type: 'tactic-config', ids: ['c1'], key: 'targetPref', value: 'lowest' });
+    deploy(s);
+  }
   advance(a, 90, { effects: false }); settleOffline(b, 90);
   assert.deepEqual(a.characters, b.characters); assert.deepEqual(a.inventory, b.inventory); assert.deepEqual(a.maps, b.maps);
 });
@@ -183,4 +189,48 @@ test('party EXP is one reward pool with a 12% bonus, not a full reward per membe
 test('effects carry their map identity and cannot leak between viewed maps', () => {
   const s = createGame(); deploy(s); advance(s, 4);
   assert.ok(s.effects.length > 0); assert.ok(s.effects.every(e => e.mapId === 'meadow'));
+});
+test('tactics customization is bounded at the command boundary and controls survive Farm resume', () => {
+  const s = createGame();
+  assert.match(command(s, { type: 'tactic-config', ids: ['c1'], key: 'potionAt', value: 1.2 }), /between 0% and 95%/);
+  assert.match(command(s, { type: 'tactic-config', ids: ['c1'], key: 'autoSkill', value: 1 }), /enabled or disabled/);
+  assert.match(command(s, { type: 'tactic-config', ids: ['c1'], key: 'targetPref', value: 'invalid' }), /target preference/);
+  assert.equal(command(s, { type: 'tactic-config', ids: ['c1'], key: 'autoSkill', value: false }), null);
+  assert.equal(command(s, { type: 'tactic-config', ids: ['c1'], key: 'potionAt', value: 0.7 }), null);
+  assert.equal(command(s, { type: 'tactic-config', ids: ['c1'], key: 'retreatAt', value: 0 }), null);
+  assert.deepEqual(effectiveTactics(s.characters[0]), { autoSkill: false, healAt: 0.65, potionAt: 0.7, retreatAt: 0, targetPref: 'leader' });
+  deploy(s, 'meadow', ['c1']); command(s, { type: 'move', ids: ['c1'], point: { x: 6, y: 6 } }); advance(s, 8);
+  command(s, { type: 'resume', ids: ['c1'] }); assert.equal(s.characters[0].order, 'farm');
+  assert.equal(s.characters[0].tactics.potionAt, 0.7);
+});
+test('party leader can be changed safely and followers promote an active member if the leader falls', () => {
+  const s = createGame(); command(s, { type: 'party', ids });
+  assert.equal(command(s, { type: 'leader', ids: ['c2'] }), null);
+  assert.equal(s.parties[0].leaderId, 'c2');
+  deploy(s, 'meadow'); s.characters[1].hp = 0; tick(s); tick(s);
+  assert.equal(s.characters[1].status, 'down');
+  assert.equal(s.parties[0].leaderId, 'c1');
+});
+test('job roles expose distinct frontline, ranged, and support positioning classes', () => {
+  const s = createGame(); assert.equal(roleOf(s.characters[0]), 'frontline');
+  promote(s, 0, 'archer'); assert.equal(roleOf(s.characters[0]), 'ranged');
+  promote(s, 1, 'acolyte'); assert.equal(roleOf(s.characters[1]), 'support');
+});
+test('ranged attackers stop inside their native range while supports stay with the engaging party', () => {
+  const ranged = createGame(); promote(ranged, 0, 'archer'); deploy(ranged, 'meadow', ['c1']);
+  const archer = ranged.characters[0], target = ranged.maps.meadow.monsters.find(m => m.kind === 'fabre');
+  for (const m of ranged.maps.meadow.monsters) if (m !== target) { m.hp = 0; m.respawn = 100; }
+  Object.assign(target, { x: 0, y: 0, hp: 1000 }); Object.assign(archer, { x: -5, y: 8, home: { x: -5, y: 8 } });
+  advance(ranged, 4);
+  assert.ok(Math.hypot(archer.x - target.x, archer.y - target.y) > 3.5);
+  assert.ok(Math.hypot(archer.x - target.x, archer.y - target.y) <= stats(archer).range);
+
+  const party = createGame(); promote(party, 0, 'swordsman'); promote(party, 1, 'acolyte');
+  command(party, { type: 'party', ids }); deploy(party);
+  const leader = party.characters[0], support = party.characters[1], enemy = party.maps.meadow.monsters[0];
+  for (const m of party.maps.meadow.monsters) if (m !== enemy) { m.hp = 0; m.respawn = 100; }
+  Object.assign(enemy, { x: 0, y: 0, hp: 1000 }); advance(party, 4);
+  assert.ok(Math.hypot(leader.x - support.x, leader.y - support.y) < 5.5);
+  assert.ok(Math.hypot(support.x - enemy.x, support.y - enemy.y) <= 8);
+  assert.equal(leader.targetId, support.targetId);
 });

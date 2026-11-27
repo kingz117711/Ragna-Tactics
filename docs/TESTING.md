@@ -24,9 +24,10 @@ npm run build
 
 Check validates syntax/module imports. Unit tests execute the actual simulation
 and persistence modules, including two-to-five roster gates, Novice advancement,
-all six jobs, concurrent maps, party EXP, equipment transfers, retreat/defeat,
+all six jobs, role-specific tactics, bounded settings validation, party leadership
+and failover, concurrent maps, party EXP, equipment transfers, retreat/defeat,
 boss rewards, deterministic results, exact offline/live parity, four-hour cap,
-corrupt-save recovery, and invalid import rejection.
+legacy tactics defaults, corrupt-save recovery, and invalid import rejection.
 
 Asset verification is offline. It checks all 38 original files against pinned
 hashes/lengths and checks the derived runtime index against original catalogs.
@@ -46,14 +47,14 @@ starts the local server or reuses an existing one. Use `PLAYWRIGHT_CHROMIUM_PATH
 only if you intentionally need a specific installed executable.
 
 Scenarios cover fresh deployment/parties/camera switching/orders/reload, job changes
-and boss deployment, a 390px viewport, cross-tab writer protection, third-character
-recruitment, a six-hour absence capped at four hours, hidden-tab checkpoint retention,
-and mobile camp/additive-selection controls. Tests construct their
-own save fixtures in isolated browser contexts. There are no production cheat
-buttons or global state hooks.
+and boss deployment, per-character tactics and party leadership, the world overview,
+a 390px viewport, cross-tab writer protection, third-character recruitment, a
+six-hour absence capped at four hours, hidden-tab checkpoint retention, and mobile
+camp/additive-selection controls. Tests construct their own save fixtures in isolated
+browser contexts. There are no production cheat buttons or global state hooks.
 
 Screenshots: `artifacts/foundation-desktop.png`, `foundation-boss.png`,
-`foundation-mobile.png`. Inspect them after visual changes. They are ignored by git;
+`foundation-mobile.png`, and `world-overview.png`. Inspect them after visual changes. They are ignored by git;
 The [CI template](ci/README.md) uploads them when enabled. A skipped run is not a pass.
 
 `test:build` serves the actual exported `dist/` folder on an ephemeral loopback

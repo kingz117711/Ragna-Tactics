@@ -44,13 +44,21 @@ Determinism helps test rules and reuse them later; it does not itself provide tr
 ## Combat/commands
 
 Manual move overrides farming, then becomes hold at the destination. Resume
-explicitly restores auto farming. Hold acquires nearby enemies around the held
-point. Focus prioritizes an enemy. Retreat moves toward the camp exit. Basic
-party following assists the leader's target; full formations are not implemented.
+explicitly restores auto farming and a marked hunting area. Hold acquires nearby
+enemies around the held point. Focus prioritizes an enemy. Retreat moves toward the
+camp exit. Frontliners close to engage; ranged roles hold a role-specific attack
+distance; supports stay with their party and heal within range. Farm target selection
+can assist the leader or prioritize nearest/lowest-HP enemies. Followers do not chase
+retreating leaders, and an active member takes over if a leader falls. There is no
+pathfinding yet; world-space leashes prevent indefinite target chasing.
 
-Automatic skills obey cooldown/SP, presets, ranges, and injured-ally thresholds.
-Damage and healing are independent of sprite rendering. Acolytes heal linked
-allies; solo Acolytes can heal themselves and attack. Monsters pick nearby targets.
+Automatic skills obey each character's saved auto-skill toggle, cooldown/SP, ranges,
+and healing threshold. Potion and retreat thresholds are also per-character HP
+fractions. Defaults are derived from the legacy safe/aggressive/conserve preset on
+load; valid schema-v1 saves continue using the same envelope/version. Commands validate
+tactic keys, types, and bounds in the simulation. Damage and healing are independent
+of sprite rendering. Acolytes heal linked allies; solo Acolytes can heal themselves
+and attack. Monsters pick nearby targets.
 Baphomet marks an area 2.5 seconds before Dark Cross resolves and summons adds.
 Below half health, Sanctuary Ring marks a band with inner radius 3 and outer
 radius 8 for three seconds. Hit checks and projected ring geometry use world units.

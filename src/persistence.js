@@ -1,4 +1,4 @@
-import { VERSION, MAPS, JOBS, EQUIPMENT, TACTICS } from './data.js';
+import { VERSION, MAPS, JOBS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS } from './data.js';
 import { createGame } from './sim.js';
 export const SAVE_KEY = 'ragna-tactics:save:v1';
 export const BACKUP_KEY = 'ragna-tactics:backup:v1';
@@ -17,6 +17,11 @@ export function validateState(s) {
     valid(c && /^c[1-5]$/.test(c.id) && !ids.has(c.id)); ids.add(c.id);
     valid(c.ownerId === s.ownerId && text(c.name, 20) && c.name.trim().length && ['m', 'f'].includes(c.sex));
     valid(own(JOBS, c.job) && own(EQUIPMENT, c.equipment) && own(TACTICS, c.tactic));
+    // Schema-v1 saves predate per-character tactics; derive their settings from the saved preset.
+    c.tactics = { ...TACTIC_PRESETS[c.tactic], ...(c.tactics || {}) };
+    valid(typeof c.tactics.autoSkill === 'boolean');
+    for (const key of ['healAt', 'potionAt', 'retreatAt']) valid(finite(c.tactics[key], 0, 0.95));
+    valid(own(TARGET_PREFS, c.tactics.targetPref));
     valid(c.mapId === null || own(MAPS, c.mapId));
     valid(c.partyId === null || /^p\d+$/.test(c.partyId));
     valid(Number.isInteger(c.level) && finite(c.level, 1, 99) && Number.isInteger(c.jobLevel) && finite(c.jobLevel, 1, c.job === 'novice' ? 10 : 50));

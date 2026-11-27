@@ -56,9 +56,10 @@ priority and an explicit way to return to the previous assignment.
 - Shared storage for materials and currency. One equippable prototype item per
   character. Inventory transfers preserve item counts; no item IDs are regenerated.
 - Balanced, training (+15% Base EXP), and gathering (double materials) assignments.
-- Three tactics presets: safe, aggressive, and conserve SP. These are not yet a
-  configurable behavior-rule editor. Potions trigger below 45% HP. Without potions,
-  low HP triggers a retreat at the preset's threshold.
+- Three tactics presets (safe, aggressive, conserve SP) establish per-character
+  defaults for skill use, healing/potion/retreat HP thresholds, and target preference.
+  Each character can customize these bounded settings. The UI presents these as
+  practical controls, not a general-purpose behavior-rule editor.
 - Offline uses the same fixed-step simulation, existing supplies, builds, and
   tactics for all farming teams concurrently. Defeat ends that character's farming.
   Boss teams return to camp without boss rewards when an absence is settled.

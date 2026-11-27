@@ -1,5 +1,5 @@
-import { MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, STEP, baseNeed, jobNeed } from './data.js';
-import { command, tick, stats, rosterLimit, engaged } from './sim.js';
+import { MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
+import { command, tick, stats, rosterLimit, engaged, effectiveTactics, isLeader } from './sim.js';
 import { SAVE_KEY, loadGame, saveGame, encodeSave, decodeSave } from './persistence.js';
 import { Sprites } from './sprites.js';
 import { Renderer } from './renderer.js';
@@ -68,6 +68,10 @@ function renderUI() {
   $('order-hint').textContent = orderMode === 'rally' ? 'Tap the centre of your hunting area · Esc to cancel' : 'Choose a destination · Esc to cancel';
   $('battlefield').style.cursor = orderMode ? 'crosshair' : hovered ? 'pointer' : 'grab';
   $('roster-count').textContent = `${state.characters.length} / 5`;
+  html('party-overview', state.parties.length ? state.parties.map(p => {
+    const members = state.characters.filter(c => c.partyId === p.id), leader = members.find(c => c.id === p.leaderId);
+    return `<div class="party-summary"><strong>${esc(p.name)}</strong><span>Leader: ${esc(leader?.name || '—')}</span><div>${members.map(c => `<button class="party-member ${selected.has(c.id) ? 'active' : ''}" data-character="${c.id}" aria-pressed="${selected.has(c.id)}" title="${esc(c.name)} · ${ROLE_LABELS[JOB_ROLES[c.job]]}">${esc(c.name)} · ${JOBS[c.job].name}</button>`).join('')}</div></div>`;
+  }).join('') : '<div class="party-empty">No linked parties · select two or more adventurers to form one.</div>');
   const eligible = state.characters.filter(c => c.job === 'novice' && c.jobLevel >= 10);
   $('job-notice').hidden = eligible.length === 0;
   $('job-names').textContent = eligible.map(c => c.name).join(', ');
@@ -107,6 +111,12 @@ function castWarning(cast) {
   const warning = cast.innerRadius ? 'Sanctuary Ring · move inside the centre or beyond the ring' : 'Dark Cross · leave the marked ground';
   return warning + ' · ' + Math.max(0, cast.remaining).toFixed(1) + 's';
 }
+function tacticsMarkup(c) {
+  const t = effectiveTactics(c);
+  const range = (key, label, min, max, step, help) => `<label class="tactics-setting"><span>${label}<output>${Math.round(t[key] * 100)}%</output></span><input type="range" data-tactics-key="${key}" min="${min}" max="${max}" step="${step}" value="${Math.round(t[key] * 100)}" aria-label="${label}"><small>${help}</small></label>`;
+  return `<details class="tactics-details"><summary>Fine-tune tactics</summary><label class="tactics-toggle"><input type="checkbox" data-tactics-key="autoSkill" ${t.autoSkill ? 'checked' : ''}> Automatically use skills when useful</label>${range('healAt', 'Heal allies below', 20, 95, 5, 'Acolytes heal party members; Novices heal themselves.')}${range('potionAt', 'Use potion below', 0, 80, 5, 'Consumes one potion; restores 65 HP.')}${range('retreatAt', 'Retreat below', 0, 70, 5, 'Automatically return to camp at this HP; set to 0% to disable.')}
+    <label class="form-label">Choose targets<select id="target-pref-select">${Object.entries(TARGET_PREFS).map(([key, label]) => `<option value="${key}" ${t.targetPref === key ? 'selected' : ''}>${label}</option>`).join('')}</select></label></details>`;
+}
 function renderInspector(units) {
   if ($('inspector').contains(document.activeElement) && ['SELECT', 'INPUT'].includes(document.activeElement.tagName)) return;
   let content;
@@ -115,7 +125,7 @@ function renderInspector(units) {
     content = `<div class="inspector-title">${units.length ? 'Better, together.' : 'Choose your adventurer.'}</div><p>${units.length ? 'Link your adventurers into a party to share targets, support each other, and earn shared EXP. Or deploy separately to cover more ground.' : 'Select a portrait to inspect equipment, tactics, and progression.'}</p>${units.length ? `<div class="detail-row"><span>Selected supplies</span><strong>${potions} potions</strong></div><label class="form-label">Tactics<select id="tactic-select"><option value="" disabled selected>Apply to selection…</option>${Object.entries(TACTICS).map(([key, t]) => `<option value="${key}">${t.name}</option>`).join('')}</select></label><p>Job changes become available at Novice Job Lv. 10. Every character chooses their own path.</p>` : ''}`;
   } else {
     const c = units[0], st = stats(c);
-    content = `<div class="inspector-title">${JOBS[c.job].name} <span class="tiny muted">${JOBS[c.job].role}</span></div><div class="detail-row"><span>Base Lv. ${c.level}</span><strong>${number(c.exp)} / ${baseNeed(c.level)} EXP</strong></div><div class="progress"><i style="width:${Math.min(100, c.exp / baseNeed(c.level) * 100)}%"></i></div><div class="detail-row"><span>Job Lv. ${c.jobLevel}${c.job === 'novice' ? ' / 10' : ' / 50'}</span><strong>${c.job === 'novice' && c.jobLevel === 10 ? 'Job change ready' : `${number(c.jobExp)} / ${jobNeed(c.jobLevel)}`}</strong></div><div class="progress"><i style="width:${Math.min(100, c.jobExp / jobNeed(c.jobLevel) * 100)}%"></i></div><div class="detail-row"><span>HP / SP</span><strong>${Math.ceil(c.hp)}/${st.hp} · ${Math.floor(c.sp)}/${st.sp}</strong></div><div class="detail-row"><span>ATK / DEF · Potions</span><strong>${st.atk} / ${st.def} · ${c.potions}</strong></div><label class="form-label">Tactics<select id="tactic-select">${Object.entries(TACTICS).map(([key, t]) => `<option value="${key}" ${c.tactic === key ? 'selected' : ''}>${t.name}</option>`).join('')}</select></label><label class="form-label">Farming objective<select id="assignment-select">${[['balanced', 'Balanced farming'], ['experience', 'Training · +15% Base EXP'], ['materials', 'Gathering · double materials']].map(([key, label]) => `<option value="${key}" ${c.assignment === key ? 'selected' : ''}>${label}</option>`).join('')}</select></label><div class="detail-actions"><button data-action="equipment">Equipment</button><button data-action="advance">Job path</button><button data-action="rename">Rename</button></div><p><span style="color:var(--gold)">${st.skill}</span> · ${st.cost} SP · ${c.cooldown > 0 ? c.cooldown.toFixed(1) + 's remaining' : 'Ready'}<br>${st.description || JOBS[c.job].description}</p>`;
+    content = `<div class="inspector-title">${JOBS[c.job].name} <span class="tiny muted">${JOBS[c.job].role}</span></div><div class="detail-row"><span>Base Lv. ${c.level}</span><strong>${number(c.exp)} / ${baseNeed(c.level)} EXP</strong></div><div class="progress"><i style="width:${Math.min(100, c.exp / baseNeed(c.level) * 100)}%"></i></div><div class="detail-row"><span>Job Lv. ${c.jobLevel}${c.job === 'novice' ? ' / 10' : ' / 50'}</span><strong>${c.job === 'novice' && c.jobLevel === 10 ? 'Job change ready' : `${number(c.jobExp)} / ${jobNeed(c.jobLevel)}`}</strong></div><div class="progress"><i style="width:${Math.min(100, c.jobExp / jobNeed(c.jobLevel) * 100)}%"></i></div><div class="detail-row"><span>HP / SP</span><strong>${Math.ceil(c.hp)}/${st.hp} · ${Math.floor(c.sp)}/${st.sp}</strong></div><div class="detail-row"><span>ATK / DEF · Potions</span><strong>${st.atk} / ${st.def} · ${c.potions}</strong></div><div class="detail-row"><span>Combat role</span><strong>${ROLE_LABELS[JOB_ROLES[c.job]]}${c.partyId ? ` · ${isLeader(state, c) ? 'Party leader' : 'Follower'}` : ''}</strong></div><label class="form-label">Starting preset<select id="tactic-select">${Object.entries(TACTICS).map(([key, t]) => `<option value="${key}" ${c.tactic === key ? 'selected' : ''}>${t.name}</option>`).join('')}</select></label>${tacticsMarkup(c)}<label class="form-label">Farming objective<select id="assignment-select">${[['balanced', 'Balanced farming'], ['experience', 'Training · +15% Base EXP'], ['materials', 'Gathering · double materials']].map(([key, label]) => `<option value="${key}" ${c.assignment === key ? 'selected' : ''}>${label}</option>`).join('')}</select></label><div class="detail-row"><span>Assignment · status</span><strong>${c.mapId ? `${MAPS[c.mapId].name} · ${c.status}` : c.status === 'down' ? 'Defeated · camp' : 'Guild camp'}</strong></div><div class="detail-actions"><button data-action="equipment">Equipment</button><button data-action="advance">Job path</button><button data-action="rename">Rename</button>${c.partyId && !isLeader(state, c) ? '<button data-action="leader" title="Make this adventurer the party leader">Lead party</button>' : ''}</div><p><span style="color:var(--gold)">${st.skill}</span> · ${st.cost} SP · ${c.cooldown > 0 ? c.cooldown.toFixed(1) + 's remaining' : 'Ready'}<br>${st.description || JOBS[c.job].description}</p>`;
   }
   if (content !== inspectorKey) { html('inspector', content); inspectorKey = content; }
 }
@@ -148,6 +158,25 @@ function recruit() {
 function equipment() {
   const c = selectedCharacters()[0]; if (!c || selected.size !== 1) return toast('Select one adventurer to manage equipment.');
   showModal(`${c.name}’s equipment`, `<p>Equip one armament or insignia at camp. All jobs can use these prototype items. Replaced equipment returns to shared storage.</p>${Object.entries(EQUIPMENT).map(([id, item]) => `<div class="inventory-row"><div>${item.name}<p>${item.description}</p></div><button data-equip="${id}" ${c.mapId || c.equipment === id || (id !== 'training' && !state.inventory.equipment[id]) ? 'disabled' : ''} style="padding:8px 12px">${c.equipment === id ? 'Equipped' : id === 'training' ? 'Equip' : `Equip · ${state.inventory.equipment[id]} stored`}</button></div>`).join('')}${modalError}`);
+}
+function worldActivity(c) {
+  return ({ down: 'Defeated', retreating: 'Retreating', fighting: 'Fighting', moving: 'Repositioning', holding: 'Holding', searching: 'Hunting', farming: 'Farming', camp: 'At camp' })[c.status] || c.status;
+}
+function assignmentName(c) {
+  return ({ balanced: 'Balanced', experience: 'Training', materials: 'Gathering' })[c.assignment] || c.assignment;
+}
+function worldOverview() {
+  const deployed = state.characters.filter(c => c.mapId);
+  const attention = state.characters.flatMap(c => [
+    c.status === 'down' ? { c, label: 'Defeated · recover at camp' } : null,
+    c.mapId && c.potions === 0 ? { c, label: 'No potions remaining' } : null,
+    c.job === 'novice' && c.jobLevel >= 10 && !c.mapId ? { c, label: 'Job advancement available' } : null,
+  ].filter(Boolean));
+  const groups = Object.values(MAPS).map(map => {
+    const team = deployed.filter(c => c.mapId === map.id);
+    return `<section class="world-map-group"><div class="world-map-heading"><strong>${map.name}</strong><button data-world-map="${map.id}">View map ↗</button></div>${team.length ? team.map(c => `<button class="world-unit" data-world-character="${c.id}"><span class="world-unit-title">${esc(c.name)} <small>${c.partyId ? esc(state.parties.find(p => p.id === c.partyId)?.name || 'Party') : 'Independent'}</small></span><span>${worldActivity(c)} · ${assignmentName(c)}</span><span>HP ${Math.ceil(c.hp)}/${stats(c).hp} · ${c.potions} potions</span></button>`).join('') : '<p class="world-empty">No deployed adventurers</p>'}</section>`;
+  }).join('');
+  showModal('Every expedition, at a glance', `${attention.length ? `<section class="attention-list"><h3>Needs attention · ${attention.length}</h3>${attention.map(({ c, label }) => `<button data-world-character="${c.id}">${esc(c.name)} · ${label} ↗</button>`).join('')}</section>` : '<p>Nothing needs your attention right now.</p>'}<div class="world-overview">${groups}</div>`, 'WORLD OVERVIEW');
 }
 function storage() {
   showModal('The fruits of your adventures.', `<p>All expedition loot arrives in shared storage. Equipment is assigned individually at camp.</p><h3>Materials</h3>${Object.entries(state.inventory.materials).length ? Object.entries(state.inventory.materials).map(([name, count]) => `<div class="inventory-row">${esc(name)}<span>${number(count)}</span></div>`).join('') : '<p>No materials yet. Your first expedition is waiting.</p>'}<h3>Equipment</h3>${Object.entries(state.inventory.equipment).map(([id, count]) => `<div class="inventory-row"><div>${EQUIPMENT[id].name}<p>${EQUIPMENT[id].description}</p></div><span>${count} stored</span></div>`).join('')}<p style="margin-top:17px">Field enemies have a small chance to drop equipment. Baphomet always drops a Sanctuary relic. Crafting and cards are planned for later.</p>`, 'SHARED STORAGE');
@@ -186,10 +215,16 @@ document.addEventListener('click', event => {
   if (!state || !ready) return;
   const map = event.target.closest('[data-map]'); if (map) { switchMap(map.dataset.map); return; }
   const card = event.target.closest('[data-character]'); if (card) { setSelection(card.dataset.character, event.shiftKey || multiSelect); return; }
+  const worldMap = event.target.closest('[data-world-map]'); if (worldMap) { closeModal(); switchMap(worldMap.dataset.worldMap); return; }
+  const worldCharacter = event.target.closest('[data-world-character]'); if (worldCharacter) {
+    const c = state.characters.find(v => v.id === worldCharacter.dataset.worldCharacter);
+    if (c) { selected = new Set([c.id]); closeModal(); if (c.mapId) { switchMap(c.mapId); renderer.followId = c.id; } else renderUI(); }
+    return;
+  }
   const action = event.target.closest('[data-action]')?.dataset.action;
   if (action) {
     if (action === 'deploy') deployment(); else if (action === 'camp') camp(); else if (action === 'advance') advanceJob();
-    else if (action === 'equipment') equipment(); else if (action === 'rename') rename();
+    else if (action === 'equipment') equipment(); else if (action === 'rename') rename(); else if (action === 'leader') issue({ type: 'leader' });
     else if (action === 'move' || action === 'rally') {
       if (action === 'rally' && renderer.mapId === 'arena') return toast('Choose a farming field to mark a hunting area.');
       orderMode = orderMode === action ? null : action;
@@ -210,8 +245,18 @@ document.addEventListener('click', event => {
   if (modalAction === 'reset-confirm') { localStorage.removeItem(SAVE_KEY); location.reload(); }
 });
 document.addEventListener('change', event => {
-  if (event.target.id === 'tactic-select') issue({ type: 'tactic', tactic: event.target.value }, { quiet: true });
+  if (event.target.id === 'tactic-select') { issue({ type: 'tactic', tactic: event.target.value }, { quiet: true }); event.target.blur(); renderUI(); }
   if (event.target.id === 'assignment-select') issue({ type: 'assignment', assignment: event.target.value }, { quiet: true });
+  if (event.target.id === 'target-pref-select') issue({ type: 'tactic-config', key: 'targetPref', value: event.target.value }, { quiet: true });
+  const key = event.target.dataset.tacticsKey;
+  if (key) {
+    const value = key === 'autoSkill' ? event.target.checked : Number(event.target.value) / 100;
+    issue({ type: 'tactic-config', key, value }, { quiet: true });
+  }
+});
+document.addEventListener('input', event => {
+  const key = event.target.dataset.tacticsKey;
+  if (key && key !== 'autoSkill') event.target.parentElement.querySelector('output').value = event.target.value + '%';
 });
 $('roster').addEventListener('dblclick', event => {
   const id = event.target.closest('[data-character]')?.dataset.character, c = state.characters.find(c => c.id === id);
@@ -221,7 +266,7 @@ $('select-all').onclick = () => { selected = new Set(state.characters.map(c => c
 $('multi-select').onclick = () => { multiSelect = !multiSelect; $('multi-select').setAttribute('aria-pressed', multiSelect); $('multi-select').textContent = multiSelect ? 'Multi ✓' : 'Multi'; };
 $('first-deploy').onclick = () => { selected = new Set(state.characters.map(c => c.id)); deployment(); };
 $('dismiss-coach').onclick = () => { coachDismissed = true; renderUI(); };
-$('recruit-button').onclick = recruit; $('settings-button').onclick = settings; $('storage-button').onclick = storage;
+$('recruit-button').onclick = recruit; $('settings-button').onclick = settings; $('storage-button').onclick = storage; $('world-button').onclick = worldOverview;
 $('modal-close').onclick = closeModal;
 $('save-button').onclick = () => { persist(); toast(saveError ? 'Export your guild to preserve progress.' : 'Guild saved.'); };
 $('zoom-in').onclick = () => { renderer.zoom(1.18); renderUI(); }; $('zoom-out').onclick = () => { renderer.zoom(1 / 1.18); renderUI(); };

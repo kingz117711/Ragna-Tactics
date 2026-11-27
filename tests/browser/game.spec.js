@@ -76,6 +76,32 @@ test('small screen has no horizontal overflow and supports tap-to-move controls'
   await expect(page.locator('#order-hint')).toBeHidden();
   await page.screenshot({ path: 'artifacts/foundation-mobile.png', fullPage: true });
 });
+test('party leadership, per-character tactics, and world overview work through the UI', async ({ page }) => {
+  const errors = []; page.on('pageerror', e => errors.push(e.message));
+  await boot(page);
+  await page.getByRole('button', { name: 'Link as party' }).click();
+  await expect(page.locator('#party-overview')).toContainText('Aren’s party');
+  await page.locator('#roster [data-character="c2"]').click();
+  await page.getByRole('button', { name: 'Lead party' }).click();
+  await expect(page.locator('#party-overview')).toContainText('Leader: Lyra');
+  await page.locator('summary', { hasText: 'Fine-tune tactics' }).click();
+  await page.locator('[data-tactics-key="autoSkill"]').uncheck();
+  await page.locator('[data-tactics-key="potionAt"]').evaluate(el => { el.value = '65'; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); });
+  await page.locator('#target-pref-select').selectOption('nearest');
+  await expect.poll(() => page.evaluate(() => {
+    const c = JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).state.characters.find(c => c.id === 'c2');
+    return [c.tactics.autoSkill, c.tactics.potionAt, c.tactics.targetPref];
+  })).toEqual([false, 0.65, 'nearest']);
+  await page.locator('[data-action="deploy"]').click(); await page.locator('#deployment-form button.primary').click();
+  await page.locator('#world-button').click();
+  await expect(page.locator('#modal')).toContainText('South Prontera');
+  await expect(page.locator('#modal')).toContainText('potions');
+  await page.screenshot({ path: 'artifacts/world-overview.png' });
+  await page.locator('[data-world-character="c2"]').click();
+  await expect(page.locator('#modal')).toBeHidden();
+  await expect(page.locator('#map-name')).toHaveText('South Prontera');
+  expect(errors).toEqual([]);
+});
 test('a second tab cannot write the same guild', async ({ context, page }) => {
   await boot(page); const second = await context.newPage(); await second.goto('/');
   await expect(second.locator('#loading-text')).toContainText('already open in another tab'); await second.close();

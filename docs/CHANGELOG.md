@@ -27,3 +27,18 @@
 - Seeded starter parties cleared Baphomet after five simulated minutes of training
   as Swordsman/Acolyte, Archer/Mage, and Thief/Merchant. The new tests exercise
   hunt orders, touch and reduced motion, job selection, ring damage, and reporting.
+
+## 2026-11-27 — Party tactics and world management
+
+- Added role-aware positioning, bounded per-character skill/healing/potion/retreat
+  thresholds, target preferences, leader assist/failover, and save defaults for
+  existing version-one saves. Manual movement remains an explicit override; Farm
+  resumes each character's assigned hunting area.
+- Added a party roster summary and leader handoff, plus a world overview of map,
+  activity, assignment, HP/supplies, direct navigation, and attention events.
+- Added sim/persistence/browser regression coverage and updated game/architecture/
+  testing/handoff/roadmap guidance. Preview server now binds to all interfaces.
+- Verified `npm run check`, `npm test` (39 pass), `npm run assets:verify` (38 files),
+  and `npm run build`. Browser tests and screenshots could not run: Playwright's
+  Chromium binary is missing and download from `cdn.playwright.dev` was blocked;
+  `npm run test:build` is likewise pending a browser-enabled environment.

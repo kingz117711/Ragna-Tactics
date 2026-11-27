@@ -32,5 +32,26 @@ export const TACTICS = {
   aggressive: { name: 'Aggressive', retreat: 0.1, skill: true },
   conserve: { name: 'Conserve SP', retreat: 0.25, skill: false },
 };
+// Per-character tactics. A preset is a starting point; the detailed fields below
+// are what the simulation actually reads. Thresholds are HP fractions (0–0.95).
+export const TACTIC_PRESETS = {
+  safe: { autoSkill: true, healAt: 0.65, potionAt: 0.45, retreatAt: 0.22, targetPref: 'leader' },
+  aggressive: { autoSkill: true, healAt: 0.5, potionAt: 0.3, retreatAt: 0.1, targetPref: 'nearest' },
+  conserve: { autoSkill: false, healAt: 0.65, potionAt: 0.45, retreatAt: 0.25, targetPref: 'leader' },
+};
+export const TARGET_PREFS = {
+  nearest: 'Nearest enemy',
+  leader: 'Assist party leader',
+  lowest: 'Lowest HP (focus fire)',
+};
+export const JOB_ROLES = {
+  novice: 'frontline', swordsman: 'frontline', merchant: 'frontline', thief: 'frontline',
+  mage: 'ranged', archer: 'ranged', acolyte: 'support',
+};
+export const ROLE_LABELS = {
+  frontline: 'Frontline — approaches and engages',
+  ranged: 'Ranged — keeps attack distance',
+  support: 'Support — stays near the party',
+};
 export const baseNeed = level => 24 + level * 18;
 export const jobNeed = level => 8 + level * 3;

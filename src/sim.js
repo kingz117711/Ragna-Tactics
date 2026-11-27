@@ -1,5 +1,5 @@
 // Pure, serializable simulation. No DOM, storage, wall clock, or camera dependencies.
-import { VERSION, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
+import { VERSION, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
 
 export function random(state) {
   state.seed = (Math.imul(state.seed, 1664525) + 1013904223) >>> 0;
@@ -14,8 +14,31 @@ export function character(id, name, sex = 'm') {
   return { id, ownerId: 'local-player', name, sex, job: 'novice', level: 1, exp: 0, jobLevel: 1, jobExp: 0,
     hp: 100, sp: 49, mapId: null, partyId: null, x: 0, y: 0, home: { x: 0, y: 0 },
     direction: 0, stance: 'idle', status: 'camp', order: 'farm', destination: null, targetId: null,
-    cooldown: 0, attackTimer: 0, attackFlash: 0, potions: 10, tactic: 'safe', equipment: 'training',
+    cooldown: 0, attackTimer: 0, attackFlash: 0, potions: 10, tactic: 'safe', tactics: { ...TACTIC_PRESETS.safe }, equipment: 'training',
     assignment: 'balanced', kills: 0, earned: 0 };
+}
+export function effectiveTactics(c) {
+  const preset = TACTIC_PRESETS[c.tactic] || TACTIC_PRESETS.safe;
+  return { ...preset, ...(c.tactics || {}) };
+}
+export function roleOf(c) { return JOB_ROLES[c.job] || 'frontline'; }
+export function partyOf(s, c) { return c.partyId ? s.parties.find(p => p.id === c.partyId) || null : null; }
+export function leaderOf(s, c) { const p = partyOf(s, c); return p ? s.characters.find(v => v.id === p.leaderId) || null : null; }
+export function isLeader(s, c) { const p = partyOf(s, c); return !!p && p.leaderId === c.id; }
+function leaderAvailable(s, c) {
+  const leader = leaderOf(s, c);
+  return leader && leader !== c && active(leader) && leader.mapId === c.mapId && leader.order !== 'retreat' && leader.status !== 'retreating' ? leader : null;
+}
+function ensureLeaders(s) {
+  for (const p of s.parties) {
+    const members = s.characters.filter(c => c.partyId === p.id);
+    if (members.length < 2) continue;
+    const leader = members.find(c => c.id === p.leaderId);
+    if (!leader || !active(leader)) {
+      const next = members.find(c => active(c));
+      if (next && next.id !== p.leaderId) { p.leaderId = next.id; log(s, next.name + ' takes the lead of ' + p.name + '.'); }
+    }
+  }
 }
 export function createGame(seed = 712711) {
   const s = { version: VERSION, ownerId: 'local-player', seed, time: 0, nextId: 1, characters: [character('c1', 'Aren'), character('c2', 'Lyra', 'f')],
@@ -65,6 +88,8 @@ export function command(s, cmd) {
     if (selected.length < 2) return 'Select at least two characters to form a party.';
     if (selected.some(c => c.mapId !== selected[0].mapId)) return 'Gather the selected characters on the same map first.';
     if (selected.some(c => engaged(s, c))) return 'Regroup after combat before changing parties.';
+    const external = s.characters.filter(c => c.partyId && !selected.includes(c) && selected.some(v => v.partyId === c.partyId));
+    if (external.length) return 'Select every member of an existing party before regrouping.';
     for (const c of selected) c.partyId = null;
     const id = 'p' + s.nextId++;
     s.parties.push({ id, name: selected[0].name + "’s party", leaderId: selected[0].id });
@@ -127,7 +152,23 @@ export function command(s, cmd) {
   }
   if (cmd.type === 'tactic') {
     if (!Object.hasOwn(TACTICS, cmd.tactic)) return 'Unknown tactic.';
-    selected.forEach(c => { c.tactic = cmd.tactic; }); return null;
+    selected.forEach(c => { c.tactic = cmd.tactic; c.tactics = { ...TACTIC_PRESETS[cmd.tactic] }; }); return null;
+  }
+  if (cmd.type === 'tactic-config') {
+    const key = cmd.key, value = cmd.value;
+    if (!['autoSkill', 'healAt', 'potionAt', 'retreatAt', 'targetPref'].includes(key)) return 'Unknown tactics setting.';
+    if (key === 'autoSkill' && typeof value !== 'boolean') return 'Automatic skill use must be enabled or disabled.';
+    if (['healAt', 'potionAt', 'retreatAt'].includes(key) && (!Number.isFinite(value) || value < 0 || value > 0.95)) return 'HP thresholds must be between 0% and 95%.';
+    if (key === 'targetPref' && !Object.hasOwn(TARGET_PREFS, value)) return 'Choose a valid target preference.';
+    selected.forEach(c => { c.tactics = { ...effectiveTactics(c), [key]: value }; }); return null;
+  }
+  if (cmd.type === 'leader') {
+    if (selected.length !== 1 || !selected[0].partyId) return 'Select one member of a party.';
+    const party = partyOf(s, selected[0]);
+    if (s.characters.filter(c => c.partyId === party.id).length < 2) return 'A party needs at least two members.';
+    if (selected[0].mapId && engaged(s, selected[0])) return 'Wait until combat ends before changing the leader.';
+    party.leaderId = selected[0].id;
+    log(s, selected[0].name + ' is now leading ' + party.name + '.'); return null;
   }
   if (cmd.type === 'assignment') {
     if (!['balanced', 'experience', 'materials'].includes(cmd.assignment)) return 'Unknown assignment.';
@@ -242,7 +283,8 @@ function useSkill(s, c, target, manual = false) {
   if (c.cooldown > 0 || c.sp < st.cost) return false;
   if (c.job === 'novice' || c.job === 'acolyte') {
     const allies = c.job === 'novice' ? [c] : partyMembers(s, c).filter(v => active(v) && v.mapId === c.mapId && distance(v, c) <= 8);
-    const injured = allies.filter(v => v.hp < stats(v).hp * (manual ? 1 : 0.65)).sort((a, b) => a.hp / stats(a).hp - b.hp / stats(b).hp)[0];
+    const healAt = effectiveTactics(c).healAt;
+    const injured = allies.filter(v => v.hp < stats(v).hp * (manual ? 1 : healAt)).sort((a, b) => a.hp / stats(a).hp - b.hp / stats(b).hp)[0];
     if (!injured) return false;
     const amount = Math.min(stats(injured).hp - injured.hp, c.job === 'novice' ? 28 : 45 + c.level * 5);
     injured.hp += amount; effect(s, c.mapId, injured.x, injured.y, '+' + Math.round(amount), 'heal');
@@ -257,50 +299,66 @@ function useSkill(s, c, target, manual = false) {
 }
 function tickCharacter(s, c, dt) {
   c.attackFlash = Math.max(0, c.attackFlash - dt); c.cooldown = Math.max(0, c.cooldown - dt); c.attackTimer = Math.max(0, c.attackTimer - dt);
-  const st = stats(c);
+  const st = stats(c), tactics = effectiveTactics(c);
   if (!c.mapId) { c.stance = 'idle'; if (c.status !== 'down') { c.hp = Math.min(st.hp, c.hp + 12 * dt); c.sp = Math.min(st.sp, c.sp + 8 * dt); } return; }
   if (c.hp <= 0) { log(s, c.name + ' fell and returned to camp. Recover before redeploying.'); c.hp = 0; c.mapId = null; c.status = 'down'; c.targetId = null; c.destination = null; return; }
   c.sp = Math.min(st.sp, c.sp + 0.9 * dt);
-  if (c.hp < st.hp * 0.45 && c.potions > 0) { c.hp = Math.min(st.hp, c.hp + 65); c.potions--; effect(s, c.mapId, c.x, c.y, '+Potion', 'heal'); }
-  if (c.hp / st.hp < TACTICS[c.tactic].retreat && c.potions === 0 && c.order !== 'retreat') {
-    c.order = 'retreat'; c.destination = { x: -11, y: 13 }; log(s, c.name + ' is retreating: HP low, no potions.');
+  if (c.hp < st.hp * tactics.potionAt && c.potions > 0) { c.hp = Math.min(st.hp, c.hp + 65); c.potions--; effect(s, c.mapId, c.x, c.y, '+Potion', 'heal'); }
+  if (c.hp / st.hp < tactics.retreatAt && c.order !== 'retreat') {
+    c.order = 'retreat'; c.status = 'retreating'; c.destination = { x: -11, y: 13 }; c.targetId = null;
+    log(s, c.name + ' is retreating: HP below their threshold.');
   }
   if (c.order === 'retreat') {
     c.status = 'retreating';
     if (move(c, c.destination || { x: -11, y: 13 }, st.speed * 1.3, dt)) { c.mapId = null; c.status = 'camp'; c.order = 'farm'; c.targetId = null; c.destination = null; log(s, c.name + ' returned safely to camp.'); }
     return;
   }
+  // Manual Move is an explicit short-lived order and always wins over automation.
   if (c.order === 'move') {
     c.status = 'moving';
     if (!c.destination || move(c, c.destination, st.speed, dt)) { c.order = 'hold'; c.home = { x: c.x, y: c.y }; c.destination = null; }
     return;
   }
-  const map = s.maps[c.mapId];
-  if (TACTICS[c.tactic].skill) useSkill(s, c, null);
+  const map = s.maps[c.mapId], role = roleOf(c), leader = leaderAvailable(s, c);
+  if (tactics.autoSkill) useSkill(s, c, null);
   let target = map.monsters.find(m => m.id === c.targetId && m.hp > 0);
   if (target && c.order === 'hold' && distance(target, c.home) > st.range + 2) target = null;
-  const leader = c.partyId && s.characters.find(v => v.id === s.parties.find(p => p.id === c.partyId)?.leaderId);
-  if (!target && leader && leader !== c && active(leader) && leader.mapId === c.mapId && c.order === 'farm') target = map.monsters.find(m => m.id === leader.targetId && m.hp > 0);
+  const pref = tactics.targetPref;
+  const assisted = pref === 'leader' && leader ? map.monsters.find(m => m.id === leader.targetId && m.hp > 0) : null;
+  if (c.order !== 'focus' && assisted) target = assisted;
   const huntingRadius = c.order === 'hold' ? st.range + 2 : c.farmRadius ?? 20;
-  if (c.order === 'farm' && c.farmRadius && target && distance(target, c.home) > huntingRadius) target = null;
+  if (c.order === 'farm' && c.farmRadius && target && distance(target, c.home) > huntingRadius + 2) target = null;
+  if (!target && assisted && distance(assisted, c.home) <= huntingRadius + 2) target = assisted;
   if (!target) {
     const candidates = map.monsters.filter(m => m.hp > 0 && distance(m, c.home) <= huntingRadius);
-    target = candidates.sort((a, b) => distance(c, a) - distance(c, b))[0];
+    if (pref === 'lowest') candidates.sort((a, b) => a.hp - b.hp || distance(c, a) - distance(c, b));
+    else candidates.sort((a, b) => distance(c, a) - distance(c, b));
+    target = candidates[0] || null;
   }
-  c.targetId = target?.id || null;
+  // Supports keep formation when there's no useful enemy nearby; they don't orbit or chase a retreating leader.
   if (!target) {
-    c.status = c.order === 'hold' ? 'holding' : 'searching'; c.stance = 'idle';
-    if (c.order === 'farm' && c.farmRadius && distance(c, c.home) > 1) {
-      c.status = 'moving';
-      move(c, c.home, st.speed, dt);
-    } else if (!c.farmRadius && leader && leader !== c && leader.mapId === c.mapId && distance(c, leader) > 4 && c.order === 'farm') move(c, leader, st.speed, dt);
+    c.targetId = null; c.status = c.order === 'hold' ? 'holding' : 'searching'; c.stance = 'idle';
+    if (c.order === 'farm' && c.farmRadius && distance(c, c.home) > 1.2) { c.status = 'moving'; move(c, c.home, st.speed, dt); }
+    else if (role !== 'frontline' && leader && distance(c, leader) > 5.5) { c.status = 'moving'; move(c, leader, st.speed, dt); }
     return;
   }
+  c.targetId = target.id;
   const d = distance(c, target);
-  if (d > st.range) { c.status = 'moving'; move(c, target, st.speed, dt); return; }
-  c.status = 'fighting'; c.stance = c.attackFlash > 0 ? 'attack' : 'idle';
-  face(c, target);
-  if (TACTICS[c.tactic].skill) useSkill(s, c, target);
+  let desired = role === 'frontline' ? Math.max(1.25, st.range - 0.25) : Math.min(st.range * 0.78, role === 'support' ? 3.5 : st.range - 0.5);
+  if (role === 'support' && leader && distance(c, leader) > 8 && d > desired) {
+    // Move partway toward the engagement, then reassess next step rather than chase continuously.
+    const toward = distance(c, leader) > 5.5 ? leader : target;
+    c.status = 'moving'; move(c, toward, st.speed, dt); return;
+  }
+  const leash = c.order === 'hold' ? st.range + 2 : (c.farmRadius ?? 20) + 3;
+  if (d > desired + 0.45 && distance(target, c.home) <= leash) { c.status = 'moving'; move(c, target, st.speed, dt); return; }
+  if (d < desired - 0.8 && role !== 'frontline') {
+    const dx = c.x - target.x, dy = c.y - target.y, length = Math.hypot(dx, dy) || 1;
+    const retreatPoint = { x: c.x + dx / length * Math.min(1.1, desired - d), y: c.y + dy / length * Math.min(1.1, desired - d) };
+    c.status = 'moving'; move(c, retreatPoint, st.speed * 0.7, dt); return;
+  }
+  c.status = 'fighting'; c.stance = c.attackFlash > 0 ? 'attack' : 'idle'; face(c, target);
+  if (tactics.autoSkill) useSkill(s, c, target);
   if (target.hp > 0 && c.attackTimer <= 0) {
     c.attackTimer = st.interval; c.attackFlash = 0.4; c.stance = 'attack';
     damage(s, c, target, st.atk * (0.9 + random(s) * 0.2));
@@ -382,6 +440,7 @@ function spacePartyMembers(characters, dt) {
 export function tick(s, dt = STEP, { offline = false, effects = true } = {}) {
   s.time += dt;
   if (effects) { for (const e of s.effects) e.life -= dt; s.effects = s.effects.filter(e => e.life > 0); } else s.effects = [];
+  ensureLeaders(s);
   for (const c of s.characters) tickCharacter(s, c, dt);
   spacePartyMembers(s.characters, dt);
   for (const map of Object.values(s.maps)) {
