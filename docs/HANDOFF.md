@@ -1,5 +1,19 @@
 # Foundation handoff — 2026-11-27
 
+## Expedition controls update
+
+Select deployed characters, choose **Hunt area**, then click or tap a field. Each
+selected team hunts within six world units of the marker. **Farm** resumes that
+assignment after a manual move. Redeployment opens up the whole field again.
+Farming party members give each other space. The roster names every Novice ready
+for a job change and links directly to camp. Class choices show their native sprites.
+
+Below half health Baphomet casts Sanctuary Ring around his position at cast start.
+Stand inside the clear centre or move beyond the ring before the countdown ends.
+Button presses, accepted field orders, and dialogs have motion feedback that follows
+the device's reduced-motion preference. Offline reports show inventory gains and
+count each enemy once across the guild.
+
 ## Start here
 
 Read `AGENTS.md`, then `GAME-DIRECTION.md`. Run `npm start` and play the fresh
@@ -35,9 +49,8 @@ The introductory boss is currently forgiving for a Swordsman/Acolyte duo; active
 dodging is helpful but not required for that measured build. Improving encounter
 balance/readability is the first continuation task, not grounds for rewriting the shell.
 
-Offline reporting currently summarizes kills, currency, levels, supplies, and team
-status. Materials/equipment still accumulate correctly in storage; a detailed
-offline drop breakdown is a future interface improvement.
+Offline reports include kills, currency, levels, supplies, materials, equipment,
+and the resulting status of each adventurer.
 
 Local saves are editable and client-clock-based. This is suitable for the current
 single-player prototype, not an authoritative online economy. Browser sleep without
@@ -55,8 +68,8 @@ are produced by browser tests and were visually inspected during implementation.
 > Read AGENTS.md, GAME-DIRECTION.md, ARCHITECTURE.md, and TESTING.md. Keep the agreed
 > two-to-five Novice roster, concurrent-map simulation, real-time bosses, original
 > sprites, and four-hour offline cap. Play and improve the fresh-guild → first-job
-> → introductory-boss loop. Focus on job-ready notifications, target-facing/animation
-> synchronization, party spacing, and encounter clarity/balance. Choose a small
+> → introductory-boss loop. Focus on support positioning and compare how well new
+> players understand moving into the safe centre of Sanctuary Ring. Choose a small
 > measurable slice, preserve saves, run the relevant checks, inspect browser output,
 > and update Handoff/Changelog. Do not begin multiplayer or a framework rewrite as
 > part of this task.

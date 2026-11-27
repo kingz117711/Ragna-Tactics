@@ -83,6 +83,8 @@ export function command(s, cmd) {
     if (cmd.mapId === 'arena' && units.filter(c => c.job !== 'novice').length < 2) return 'Bring at least two adventurers who have chosen their first job.';
     if (cmd.mapId === 'arena' && !s.characters.some(c => c.mapId === 'arena')) resetArena(s);
     units.forEach((c, i) => { c.mapId = cmd.mapId; c.x = -5 + i * 1.6; c.y = 8 + i % 2; c.home = { x: c.x, y: c.y };
+      delete c.farmRadius;
+      delete c.farmCenter;
       c.status = 'farming'; c.order = 'farm'; c.destination = null; c.targetId = null; });
     log(s, units.map(c => c.name).join(', ') + ' deployed to ' + MAPS[cmd.mapId].name + '.'); return null;
   }
@@ -136,6 +138,21 @@ export function command(s, cmd) {
     selected.forEach(c => { if (active(c) && useSkill(s, c, s.maps[c.mapId].monsters.find(m => m.id === c.targetId && m.hp > 0), true)) cast = true; });
     return cast ? null : 'Skill needs SP, a ready cooldown, and a valid target in range (or missing HP).';
   }
+  if (cmd.type === 'rally') {
+    const field = s.maps[cmd.mapId];
+    if (!field || field.id === 'arena' || !point(cmd.point)) return 'Choose a point inside a farming field.';
+    const farmers = units.filter(c => active(c) && c.mapId === field.id);
+    if (!farmers.length) return 'Select adventurers deployed on this field.';
+    for (const c of farmers) {
+      c.home = { ...cmd.point };
+      c.farmCenter = { ...cmd.point };
+      c.farmRadius = 6;
+      c.order = 'farm';
+      c.targetId = null;
+      c.destination = null;
+    }
+    return null;
+  }
   if (!['move', 'hold', 'resume', 'focus', 'retreat'].includes(cmd.type)) return 'Unknown command.';
   if (['move', 'hold'].includes(cmd.type) && cmd.point && !point(cmd.point)) return 'Choose a point inside the battlefield.';
   const deployed = units.filter(active);
@@ -145,7 +162,10 @@ export function command(s, cmd) {
     if (cmd.type === 'retreat') { c.order = 'retreat'; c.status = 'retreating'; c.destination = { x: -11, y: 13 }; }
     else if (cmd.type === 'move') { if (!cmd.point) return; c.order = 'move'; c.destination = { x: Math.min(15, cmd.point.x + i * 0.8), y: cmd.point.y }; c.targetId = null; }
     else if (cmd.type === 'hold') { c.order = 'hold'; c.home = cmd.point ? { ...cmd.point } : { x: c.x, y: c.y }; c.destination = null; c.targetId = null; }
-    else if (cmd.type === 'resume') { c.order = 'farm'; c.destination = null; c.targetId = null; }
+    else if (cmd.type === 'resume') {
+      c.order = 'farm'; c.destination = null; c.targetId = null;
+      if (c.farmCenter) c.home = { ...c.farmCenter };
+    }
     else if (cmd.type === 'focus' && s.maps[c.mapId].monsters.some(m => m.id === cmd.targetId)) { c.order = 'focus'; c.targetId = cmd.targetId; }
   });
   return null;
@@ -182,14 +202,19 @@ function effect(s, mapId, x, y, text, kind = 'hit') {
   if (s.effects.length > 70) s.effects.shift();
 }
 export function gainExp(s, c, exp, jobExp) {
+  const previousJobLevel = c.jobLevel;
   c.exp += exp; c.jobExp += jobExp;
   while (c.level < 99 && c.exp >= baseNeed(c.level)) { c.exp -= baseNeed(c.level); c.level++; c.hp = stats(c).hp; c.sp = stats(c).sp; log(s, `${c.name} reached Base Lv. ${c.level}.`); }
   const cap = c.job === 'novice' ? 10 : 50;
   while (c.jobLevel < cap && c.jobExp >= jobNeed(c.jobLevel)) { c.jobExp -= jobNeed(c.jobLevel); c.jobLevel++; }
   if (c.jobLevel >= cap) c.jobExp = Math.min(c.jobExp, jobNeed(cap));
+  if (c.job === 'novice' && previousJobLevel < 10 && c.jobLevel === 10) {
+    log(s, c.name + ' can now choose a first job at guild camp.');
+  }
 }
 function kill(s, m, killer) {
   if (m.rewarded) return;
+  s.milestones.enemiesDefeated = (s.milestones.enemiesDefeated ?? 0) + 1;
   m.hp = 0; m.rewarded = true; m.respawn = 6 + random(s) * 4;
   const def = MONSTERS[m.kind];
   const recipients = partyMembers(s, killer).filter(c => active(c) && c.mapId === m.mapId && distance(c, killer) < 18);
@@ -256,14 +281,19 @@ function tickCharacter(s, c, dt) {
   if (target && c.order === 'hold' && distance(target, c.home) > st.range + 2) target = null;
   const leader = c.partyId && s.characters.find(v => v.id === s.parties.find(p => p.id === c.partyId)?.leaderId);
   if (!target && leader && leader !== c && active(leader) && leader.mapId === c.mapId && c.order === 'farm') target = map.monsters.find(m => m.id === leader.targetId && m.hp > 0);
+  const huntingRadius = c.order === 'hold' ? st.range + 2 : c.farmRadius ?? 20;
+  if (c.order === 'farm' && c.farmRadius && target && distance(target, c.home) > huntingRadius) target = null;
   if (!target) {
-    const candidates = map.monsters.filter(m => m.hp > 0 && distance(m, c.home) <= (c.order === 'hold' ? st.range + 2 : 20));
+    const candidates = map.monsters.filter(m => m.hp > 0 && distance(m, c.home) <= huntingRadius);
     target = candidates.sort((a, b) => distance(c, a) - distance(c, b))[0];
   }
   c.targetId = target?.id || null;
   if (!target) {
     c.status = c.order === 'hold' ? 'holding' : 'searching'; c.stance = 'idle';
-    if (leader && leader !== c && leader.mapId === c.mapId && distance(c, leader) > 4 && c.order === 'farm') move(c, leader, st.speed, dt);
+    if (c.order === 'farm' && c.farmRadius && distance(c, c.home) > 1) {
+      c.status = 'moving';
+      move(c, c.home, st.speed, dt);
+    } else if (!c.farmRadius && leader && leader !== c && leader.mapId === c.mapId && distance(c, leader) > 4 && c.order === 'farm') move(c, leader, st.speed, dt);
     return;
   }
   const d = distance(c, target);
@@ -290,9 +320,9 @@ function tickMonster(s, map, m, dt) {
     const nearby = s.characters.filter(c => active(c) && c.mapId === map.id && distance(c, m) < (map.id === 'arena' ? 25 : 3.5));
     target = nearby.sort((a, b) => distance(a, m) - distance(b, m))[0];
   }
-  m.targetId = target?.id || null; m.stance = 'idle';
+  m.targetId = target?.id || null; m.stance = m.attackFlash > 0 ? 'attack' : 'idle';
   if (!target) return;
-  m.timer -= dt;
+  m.timer = Math.max(0, m.timer - dt);
   if (distance(m, target) > def.range) { move(m, target, def.speed, dt); return; }
   face(m, target);
   if (m.timer <= 0) { m.timer = def.interval; target.hp = Math.max(0, target.hp - Math.max(1, def.atk - stats(target).def)); m.stance = 'attack'; m.attackFlash = 0.4; }
@@ -306,22 +336,54 @@ function tickBoss(s, dt) {
     map.telegraph.remaining -= dt;
     if (map.telegraph.remaining <= 0) {
       const t = map.telegraph;
-      for (const c of fighters) if (distance(c, t) < t.radius) { c.hp = Math.max(0, c.hp - 50); effect(s, 'arena', c.x, c.y, '50', 'danger'); }
-      effect(s, 'arena', t.x, t.y, 'Dark Cross', 'danger'); map.telegraph = null;
+      const hitDamage = t.innerRadius ? 75 : 50;
+      for (const c of fighters) {
+        const d = distance(c, t);
+        if (d < (t.innerRadius || 0) || d >= t.radius) continue;
+        c.hp = Math.max(0, c.hp - hitDamage);
+        effect(s, 'arena', c.x, c.y, String(hitDamage), 'danger');
+      }
+      effect(s, 'arena', t.x, t.y, t.innerRadius ? 'Sanctuary Ring' : 'Dark Cross', 'danger');
+      map.telegraph = null;
     }
   }
   map.bossTimer -= dt;
   if (map.bossTimer <= 0) {
     const target = fighters[Math.floor(random(s) * fighters.length)];
-    map.telegraph = { x: target.x, y: target.y, radius: 4, remaining: 2.5, duration: 2.5 };
+    const boss = map.monsters.find(m => m.kind === 'baphomet');
+    if (boss.hp <= MONSTERS.baphomet.hp / 2) {
+      map.telegraph = { x: boss.x, y: boss.y, radius: 8, innerRadius: 3, remaining: 3, duration: 3 };
+    } else {
+      map.telegraph = { x: target.x, y: target.y, radius: 4, remaining: 2.5, duration: 2.5 };
+    }
     map.bossTimer = 10;
-    if (map.monsters.filter(m => m.kind === 'willow' && m.hp > 0).length < 2) spawn(s, 'arena', 'willow', { x: -4, y: -4 });
+    map.monsters = map.monsters.filter(m => m.kind === 'baphomet' || m.hp > 0);
+    if (map.monsters.filter(m => m.kind === 'willow').length < 2) spawn(s, 'arena', 'willow', { x: -4, y: -4 });
+  }
+}
+function spacePartyMembers(characters, dt) {
+  for (let i = 0; i < characters.length; i++) {
+    const a = characters[i];
+    if (!active(a) || !a.partyId || a.order !== 'farm') continue;
+    for (const b of characters.slice(i + 1)) {
+      if (!active(b) || b.partyId !== a.partyId || b.mapId !== a.mapId || b.order !== 'farm') continue;
+      const d = distance(a, b);
+      if (d >= 1.35) continue;
+      const push = Math.min((1.35 - d) / 2, dt);
+      const dx = d ? (a.x - b.x) / d : 1;
+      const dy = d ? (a.y - b.y) / d : 0;
+      for (const [unit, direction] of [[a, 1], [b, -1]]) {
+        unit.x = Math.max(-15, Math.min(15, unit.x + dx * push * direction));
+        unit.y = Math.max(-15, Math.min(15, unit.y + dy * push * direction));
+      }
+    }
   }
 }
 export function tick(s, dt = STEP, { offline = false, effects = true } = {}) {
   s.time += dt;
   if (effects) { for (const e of s.effects) e.life -= dt; s.effects = s.effects.filter(e => e.life > 0); } else s.effects = [];
   for (const c of s.characters) tickCharacter(s, c, dt);
+  spacePartyMembers(s.characters, dt);
   for (const map of Object.values(s.maps)) {
     if (offline && map.id === 'arena') continue;
     // Defeated field monsters still respawn, including on maps without a viewer.
@@ -337,12 +399,17 @@ export function advance(s, seconds, options) {
 }
 export function settleOffline(s, elapsedSeconds) {
   const seconds = Math.min(OFFLINE_CAP, Math.max(0, Number.isFinite(elapsedSeconds) ? elapsedSeconds : 0));
-  const before = { zeny: s.inventory.zeny, kills: s.characters.reduce((n, c) => n + c.kills, 0), levels: s.characters.map(c => ({ id: c.id, level: c.level, jobLevel: c.jobLevel, potions: c.potions })) };
+  const before = { zeny: s.inventory.zeny, kills: s.milestones.enemiesDefeated ?? 0,
+    materials: { ...s.inventory.materials }, equipment: { ...s.inventory.equipment },
+    levels: s.characters.map(c => ({ id: c.id, level: c.level, jobLevel: c.jobLevel, potions: c.potions })) };
   // Bosses require active play. Returning disconnects the expedition without rewards.
   for (const c of s.characters) if (c.mapId === 'arena') { c.mapId = null; c.status = c.hp > 0 ? 'camp' : 'down'; c.targetId = null; c.order = 'farm'; c.destination = null; }
   if (seconds > 0) advance(s, seconds, { offline: true, effects: false });
   const report = { seconds, capped: elapsedSeconds > OFFLINE_CAP, zeny: s.inventory.zeny - before.zeny,
-    kills: s.characters.reduce((n, c) => n + c.kills, 0) - before.kills,
+    kills: (s.milestones.enemiesDefeated ?? 0) - before.kills,
+    loot: [...Object.entries(s.inventory.materials).map(([name, count]) => ({ name, count: count - (before.materials[name] || 0) })),
+      ...Object.entries(s.inventory.equipment).map(([id, count]) => ({ name: EQUIPMENT[id].name, count: count - before.equipment[id] }))]
+      .filter(drop => drop.count > 0),
     characters: s.characters.map(c => ({ name: c.name, levels: c.level - before.levels.find(v => v.id === c.id).level,
       jobLevels: c.jobLevel - before.levels.find(v => v.id === c.id).jobLevel,
       potions: before.levels.find(v => v.id === c.id).potions - c.potions, status: c.status })) };

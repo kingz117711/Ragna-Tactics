@@ -3,6 +3,54 @@ import assert from 'node:assert/strict';
 import { createGame, command, advance, tick, gainExp, stats, settleOffline, rosterLimit } from '../src/sim.js';
 import { OFFLINE_CAP, MONSTERS } from '../src/data.js';
 const ids = ['c1', 'c2'];
+test('a marked hunt survives manual repositioning, resume and offline settlement', () => {
+  const s = createGame();
+  deploy(s, 'meadow', ['c1']);
+  deploy(s, 'forest', ['c2']);
+  const point = { x: 13, y: 13 };
+  assert.equal(command(s, { type: 'rally', ids, mapId: 'meadow', point }), null);
+  const [farmer, solo] = s.characters;
+  assert.equal(solo.farmRadius, undefined);
+  for (const enemy of s.maps.meadow.monsters) Object.assign(enemy, { x: -12, y: -12 });
+  advance(s, 15);
+  assert.ok(Math.hypot(farmer.x - point.x, farmer.y - point.y) < 1.1);
+  assert.equal(farmer.kills, 0);
+  command(s, { type: 'move', ids: ['c1'], point: { x: 5, y: 5 } });
+  advance(s, 6);
+  command(s, { type: 'resume', ids: ['c1'] });
+  assert.deepEqual(farmer.home, point);
+  settleOffline(s, 15);
+  assert.ok(Math.hypot(farmer.x - point.x, farmer.y - point.y) < 1.1);
+});
+test('Novice job readiness is recorded once and shared kills count once in an away report', () => {
+  const s = createGame();
+  gainExp(s, s.characters[0], 0, 1000);
+  gainExp(s, s.characters[0], 0, 1000);
+  assert.equal(s.journal.filter(e => e.message.includes('first job')).length, 1);
+  command(s, { type: 'party', ids });
+  deploy(s);
+  const report = settleOffline(s, 60);
+  assert.ok(report.kills > 0);
+  assert.equal(report.kills, Object.values(s.inventory.materials).reduce((a,b) => a+b, 0));
+  assert.ok(report.loot.some(drop => drop.count > 0 && drop.name === 'Jellopy'));
+});
+test('Sanctuary Ring spares adventurers in the centre and hits the marked band', () => {
+  const s = createGame();
+  promote(s, 0, 'swordsman'); promote(s, 1, 'archer'); deploy(s, 'arena');
+  const map = s.maps.arena, boss = map.monsters[0];
+  boss.hp = 1000; map.bossTimer = 0; tick(s);
+  const cast = map.telegraph;
+  assert.equal(cast.innerRadius, 3);
+  for (const [index, c] of s.characters.entries()) {
+    c.x = cast.x + index * 5; c.y = cast.y;
+    command(s, { type: 'hold', ids: [c.id] });
+  }
+  const health = s.characters.map(c => c.hp);
+  for (const m of map.monsters) m.timer = 8;
+  cast.remaining = 0.05; tick(s);
+  assert.equal(s.characters[0].hp, health[0]);
+  assert.equal(s.characters[1].hp, health[1] - 75);
+});
 const deploy = (s, mapId = 'meadow', units = ids) => assert.equal(command(s, { type: 'deploy', ids: units, mapId }), null);
 const promote = (s, i, job) => { const c = s.characters[i]; gainExp(s, c, 300, 1000); assert.equal(command(s, { type: 'promote', ids: [c.id], job }), null); };
 

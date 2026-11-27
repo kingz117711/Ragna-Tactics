@@ -49,10 +49,20 @@ export class Sprites {
     ctx.restore();
   }
   portrait(c) {
-    const key = c.job + c.sex;
+    return this.cachedPortrait(c.job + c.sex, ctx => this.hero(ctx, c, 0, 'idle', 0, 1));
+  }
+  monsterPortrait(kind) {
+    return this.cachedPortrait(kind, ctx => {
+      const record = this.index.monsters[MONSTERS[kind].sprite];
+      const scale = 84 / (record.idleHeight * 0.7);
+      ctx.scale(scale, scale);
+      this.monster(ctx, { kind, stance: 'idle', direction: 0 }, 0);
+    });
+  }
+  cachedPortrait(key, draw) {
     if (this.portraits.has(key)) return this.portraits.get(key);
     const cv = document.createElement('canvas'); cv.width = 100; cv.height = 100;
-    const ctx = cv.getContext('2d'); ctx.translate(50, 96); this.hero(ctx, c, 0, 'idle', 0, 1);
+    const ctx = cv.getContext('2d'); ctx.translate(50, 96); draw(ctx);
     const url = cv.toDataURL(); this.portraits.set(key, url); return url;
   }
 }

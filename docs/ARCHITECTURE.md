@@ -52,6 +52,11 @@ Automatic skills obey cooldown/SP, presets, ranges, and injured-ally thresholds.
 Damage and healing are independent of sprite rendering. Acolytes heal linked
 allies; solo Acolytes can heal themselves and attack. Monsters pick nearby targets.
 Baphomet marks an area 2.5 seconds before Dark Cross resolves and summons adds.
+Below half health, Sanctuary Ring marks a band with inner radius 3 and outer
+radius 8 for three seconds. Hit checks and projected ring geometry use world units.
+The optional farmCenter and farmRadius fields preserve a player's marked hunting
+ground through orders and saves. The camera interpolates sprite animation time
+between simulation ticks. Gold input pulses live entirely in the UI layer.
 
 Party kills create one shared EXP pool, not a full reward per unit. Inventory gets
 one loot event. Boss rewards have a once-per-encounter guard. Redeploying a new

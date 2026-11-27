@@ -1,3 +1,65 @@
+/* Movement and selection share the warm gold used for field orders. */
+.input-pulse {
+  position: fixed;
+  z-index: 250;
+  pointer-events: none;
+  border: 1px solid #f1d99d;
+  background: radial-gradient(circle, transparent 55%, #ffe3a338);
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+}
+dialog .input-pulse { position: absolute; }
+.field-pulse { width: 52px; height: 26px; border-width: 2px; }
+.toast { pointer-events: none; }
+.command-buttons button[data-action="rally"] { white-space: nowrap; }
+.map-card .map-creature {
+  position: absolute;
+  right: 5px;
+  top: 7px;
+  width: 62px;
+  height: 62px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 3px #0c201d90);
+  transition: translate .2s ease;
+}
+.map-card:hover .map-creature { translate: 0 -3px; }
+.map-card:has(.map-creature) strong { position: relative; max-width: calc(100% - 45px); }
+.map-card[data-map="arena"] { background: linear-gradient(120deg, #322f37, #222e30); }
+.map-card[data-map="forest"] { background: linear-gradient(120deg, #243730, #1b3131); }
+.job-notice {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 5px;
+  text-align: left;
+  padding: 12px;
+  margin-top: 10px;
+  background: linear-gradient(120deg,#3c4536,#243533);
+  border: 1px solid #baae7b78;
+}
+.job-notice strong { color: var(--gold); }
+.job-notice span { font-size: 10px; overflow-wrap: anywhere; }
+.job-notice span:last-child { grid-column: 1 / -1; color: #dae5c5; }
+.choice-card .job-preview { float: right; width: 52px; height: 52px; image-rendering: pixelated; }
+.command-buttons button[aria-pressed="true"] { border-color: var(--gold); background: #c7b98025; }
+@keyframes panel-arrive {
+  from { opacity: .35; translate: 0 7px; }
+  to { opacity: 1; translate: 0 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  dialog[open], .job-notice, .order-hint, .toast { animation: panel-arrive .2s ease-out; }
+}
+@media (max-width: 900px) {
+  .map-card .map-creature { width: 38px; height: 38px; right: 3px; top: 4px; opacity: .7; }
+  .map-card:has(.map-creature) strong { max-width: 100%; text-shadow: 0 1px 3px #112; }
+}
+@media (max-width: 620px) {
+  .command-deck .command-buttons { display: grid; grid-template-columns: repeat(3,1fr); }
+  .command-deck .command-buttons button { width: 100%; }
+  .map-card .map-creature { width: 26px; height: 26px; top: auto; bottom: 1px; opacity: .45; }
+}
 :root{
   color-scheme:dark;
   --bg:#112426;

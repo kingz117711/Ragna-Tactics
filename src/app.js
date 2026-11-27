@@ -3,6 +3,7 @@ import { command, tick, stats, rosterLimit, engaged } from './sim.js';
 import { SAVE_KEY, loadGame, saveGame, encodeSave, decodeSave } from './persistence.js';
 import { Sprites } from './sprites.js';
 import { Renderer } from './renderer.js';
+import { acknowledgePoint } from './feedback.js';
 
 const $ = id => document.getElementById(id);
 const esc = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -52,7 +53,7 @@ function renderUI() {
   $('map-name').textContent = map.name; $('map-subtitle').textContent = map.subtitle; $('map-tier').textContent = map.tier;
   html('map-list', Object.values(MAPS).map((m, i) => {
     const count = state.characters.filter(c => c.mapId === m.id).length;
-    return `<button class="map-card ${m.id === mapId ? 'active' : ''}" data-map="${m.id}" aria-current="${m.id === mapId ? 'location' : 'false'}"><span class="map-glyph">${i === 0 ? '❧' : i === 1 ? '♧' : '◇'}</span><div class="map-card-top"><span class="map-type">${i === 2 ? 'BOSS EXPEDITION' : 'FARMING GROUNDS'}</span><span class="map-number">0${i + 1}</span></div><strong>${m.name}</strong><div class="map-card-bottom"><span>${count ? `${count} adventurer${count > 1 ? 's' : ''} active` : i === 2 ? 'Awaiting a worthy party' : 'Ready to explore'}</span><span class="arrow">${count ? '●' : '↗'}</span></div></button>`;
+    return `<button class="map-card ${m.id === mapId ? 'active' : ''}" data-map="${m.id}" aria-current="${m.id === mapId ? 'location' : 'false'}"><img class="map-creature" src="${sprites.monsterPortrait(m.monster)}" alt=""><div class="map-card-top"><span class="map-type">${i === 2 ? 'BOSS EXPEDITION' : 'FARMING GROUNDS'}</span></div><strong>${m.name}</strong><div class="map-card-bottom"><span>${count ? `${count} adventurer${count > 1 ? 's' : ''} active` : i === 2 ? 'Awaiting a worthy party' : 'Ready to explore'}</span><span class="arrow">${count ? '●' : '↗'}</span></div></button>`;
   }).join(''));
   const present = state.characters.filter(c => c.mapId === mapId).length;
   $('map-population').textContent = `${present} adventurer${present === 1 ? '' : 's'} · ${state.maps[mapId].monsters.filter(m => m.hp > 0).length} enemies in the field`;
@@ -60,9 +61,16 @@ function renderUI() {
   $('first-expedition').hidden = coachDismissed || state.characters.some(c => c.kills || c.mapId) || state.time > 180;
   $('selection-title').textContent = units.length === 1 ? units[0].name : `${units.length} adventurers selected`;
   $('selection-description').textContent = units.some(c => c.partyId) ? 'Party commands include linked members' : units.length ? 'Independent adventurers · your orders' : 'Select an adventurer in your roster';
-  $('order-hint').hidden = !orderMode; $('order-hint').textContent = orderMode ? 'Choose a destination on this map · Esc to cancel' : '';
+  $('order-hint').hidden = !orderMode;
+  for (const action of ['move', 'rally']) {
+    document.querySelector(`[data-action="${action}"]`).setAttribute('aria-pressed', String(orderMode === action));
+  }
+  $('order-hint').textContent = orderMode === 'rally' ? 'Tap the centre of your hunting area · Esc to cancel' : 'Choose a destination · Esc to cancel';
   $('battlefield').style.cursor = orderMode ? 'crosshair' : hovered ? 'pointer' : 'grab';
   $('roster-count').textContent = `${state.characters.length} / 5`;
+  const eligible = state.characters.filter(c => c.job === 'novice' && c.jobLevel >= 10);
+  $('job-notice').hidden = eligible.length === 0;
+  $('job-names').textContent = eligible.map(c => c.name).join(', ');
   const cards = state.characters.map(c => {
     const st = stats(c), mapName = c.mapId ? MAPS[c.mapId].name : 'Guild camp';
     return `<button class="character-card ${selected.has(c.id) ? 'selected' : ''}" data-character="${c.id}" aria-pressed="${selected.has(c.id)}" aria-label="${esc(c.name)}, ${JOBS[c.job].name}, level ${c.level}, ${mapName}"><div class="portrait"><img src="${sprites.portrait(c)}" alt="" draggable="false"></div><div><div class="character-name">${esc(c.name)}<span>Lv. ${c.level}</span></div><div class="character-job">${JOBS[c.job].name} · Job ${c.jobLevel}${c.partyId ? ' · Linked' : ''}</div><div class="hp-track" title="HP ${Math.ceil(c.hp)} / ${st.hp}"><i style="width:${Math.max(0, Math.min(100, c.hp / st.hp * 100))}%"></i></div><div class="sp-track" title="SP ${Math.floor(c.sp)} / ${st.sp}"><i style="width:${Math.max(0, Math.min(100, c.sp / st.sp * 100))}%"></i></div><div class="character-location"><span>${mapName}</span><span class="status">${c.status === 'camp' ? 'Resting' : c.status === 'down' ? 'Defeated' : c.status[0].toUpperCase() + c.status.slice(1)}</span></div></div></button>`;
@@ -93,7 +101,11 @@ function renderUI() {
   html('journal', state.journal.slice(0, 12).map(e => `<div class="journal-entry"><time>${Math.floor(e.time / 60).toString().padStart(2, '0')}:${Math.floor(e.time % 60).toString().padStart(2, '0')}</time><span>${esc(e.message)}</span></div>`).join(''));
   const boss = state.maps.arena.monsters.find(m => m.kind === 'baphomet');
   $('boss-status').hidden = mapId !== 'arena' || !state.characters.some(c => c.mapId === 'arena');
-  if (!$('boss-status').hidden) html('boss-status', `<div class="boss-name">${boss?.hp > 0 ? 'Baphomet' : 'Sanctuary cleared'}</div><div class="progress"><i style="width:${Math.max(0, (boss?.hp || 0) / MONSTERS.baphomet.hp * 100)}%"></i></div><p>${state.maps.arena.telegraph ? 'DARK CROSS · MOVE OUT OF THE MARKED AREA' : boss?.hp > 0 ? `${number(boss.hp)} / ${number(MONSTERS.baphomet.hp)} HP · Real-time encounter` : 'Your reward is waiting in shared storage.'}</p>`);
+  if (!$('boss-status').hidden) html('boss-status', `<div class="boss-name">${boss?.hp > 0 ? 'Baphomet' : 'Sanctuary cleared'}</div><div class="progress"><i style="width:${Math.max(0, (boss?.hp || 0) / MONSTERS.baphomet.hp * 100)}%"></i></div><p>${state.maps.arena.telegraph ? castWarning(state.maps.arena.telegraph) : boss?.hp > 0 ? `${number(boss.hp)} / ${number(MONSTERS.baphomet.hp)} HP · Real-time encounter` : 'Your reward is waiting in shared storage.'}</p>`);
+}
+function castWarning(cast) {
+  const warning = cast.innerRadius ? 'Sanctuary Ring · move inside the centre or beyond the ring' : 'Dark Cross · leave the marked ground';
+  return warning + ' · ' + Math.max(0, cast.remaining).toFixed(1) + 's';
 }
 function renderInspector(units) {
   if ($('inspector').contains(document.activeElement) && ['SELECT', 'INPUT'].includes(document.activeElement.tagName)) return;
@@ -123,7 +135,7 @@ function advanceJob(id = [...selected][0]) {
   if (c.job !== 'novice') {
     showModal('Your path is taking shape.', `<p>${esc(c.name)} is a ${JOBS[c.job].name}. Second jobs and later job tiers are planned for a future milestone.</p><div class="milestone-note">Current path: Novice → ${JOBS[c.job].name}<br>Base Lv. ${c.level} · Job Lv. ${c.jobLevel}</div>`,'JOB PROGRESSION'); return;
   }
-  showModal('Choose a new beginning.', `<p>Every adventurer starts as a Novice. At Job Lv. 10, return to camp and choose their first job. This choice is permanent in the foundation.</p><p>${esc(c.name)} · Novice Job Lv. ${c.jobLevel}/10${c.mapId ? ' · Return to camp to advance' : ''}</p><form id="job-form"><div class="modal-grid">${Object.entries(JOBS).filter(([key]) => key !== 'novice').map(([key, job]) => `<label class="choice-card"><input type="radio" name="job" value="${key}" required><span class="tiny"> ${job.role}</span><strong>${job.name}</strong><p>${job.description}</p></label>`).join('')}</div>${modalError}<div class="modal-footer"><span>Each adventurer chooses independently.</span><button type="submit" class="primary" ${c.jobLevel < 10 || c.mapId ? 'disabled' : ''}>Choose job <span>✧</span></button></div></form>`, 'NOVICE → FIRST JOB');
+  showModal('Choose a new beginning.', `<p>Every adventurer starts as a Novice. At Job Lv. 10, return to camp and choose their first job. This choice is permanent in the foundation.</p><p>${esc(c.name)} · Novice Job Lv. ${c.jobLevel}/10${c.mapId ? ' · Return to camp to advance' : ''}</p><form id="job-form"><div class="modal-grid">${Object.entries(JOBS).filter(([key]) => key !== 'novice').map(([key, job]) => `<label class="choice-card"><input type="radio" name="job" value="${key}" required><img class="job-preview" src="${sprites.portrait({ ...c, job: key })}" alt=""><span class="tiny"> ${job.role}</span><strong>${job.name}</strong><p>${job.description}</p></label>`).join('')}</div>${modalError}<div class="modal-footer"><span>Each adventurer chooses independently.</span><button type="submit" class="primary" ${c.jobLevel < 10 || c.mapId ? 'disabled' : ''}>Choose job <span>✧</span></button></div></form>`, 'NOVICE → FIRST JOB');
   $('job-form').onsubmit = event => { event.preventDefault(); const job = new FormData(event.currentTarget).get('job'); issue({ type: 'promote', job, ids: [c.id] }, { close: true }); };
 }
 function recruit() {
@@ -152,7 +164,7 @@ function settings() {
   showModal('Your adventure, at your pace.', `<p>Your guild saves automatically on this device. Export a copy to keep a backup or move to another browser. Single-player progress is local; multiplayer will arrive in a later phase.</p><div class="settings-actions"><button data-modal-action="export">Export guild</button><button data-modal-action="import">Import guild</button><button data-modal-action="save">Save now</button></div><h3>Field commands</h3><div class="help-grid"><span><b>Click portrait / character</b> · Select</span><span><b>Shift + click</b> · Select several</span><span><b>Double-click portrait</b> · Follow on map</span><span><b>Right-click ground / M</b> · Move</span><span><b>Click enemy</b> · Focus target</span><span><b>H / R</b> · Hold / Resume farming</span><span><b>Q / T</b> · Skill / Retreat</span><span><b>Scroll / + / −</b> · Zoom</span><span><b>Drag ground</b> · Pan camera</span><span><b>F / Esc</b> · Fit map / Cancel order</span></div><h3>While you’re away</h3><p>All deployed farming teams continue for up to four hours, using their actual combat rules, supplies, and tactics. Defeated characters stop earning. Boss expeditions return to camp without an offline boss reward. Keep just one game tab open.</p><p>Party members share one EXP pool with a 12% group bonus. Training assignments earn 15% more Base EXP; gathering assignments collect double materials. No permanent death.</p><div class="milestone-note">First milestone: grow two Novices into first jobs, assemble a party, and defeat Baphomet to unlock another adventurer.</div><h3>Start over</h3><button class="danger-button" data-modal-action="reset" style="padding:10px 15px">Start a new guild…</button>`, 'SETTINGS & FIELD GUIDE');
 }
 function offlineReport(report) {
-  showModal('Welcome back, guild leader.', `<p>Your adventurers kept their assignments while you were away.${report.capped ? ' The four-hour limit was applied.' : ''} Boss expeditions require active play and returned to camp.</p><div class="report-stats"><div class="report-stat"><strong>${duration(report.seconds)}</strong><span>FARMING TIME</span></div><div class="report-stat"><strong>${number(report.kills)}</strong><span>ENEMIES DEFEATED</span></div><div class="report-stat"><strong>${number(report.zeny)}</strong><span>ZENY EARNED</span></div></div>${report.characters.map(c => `<div class="inventory-row"><div>${esc(c.name)}<p>${c.levels ? `+${c.levels} Base levels · ` : ''}${c.jobLevels ? `+${c.jobLevels} Job levels · ` : ''}${c.potions} potions used</p></div><span>${c.status === 'down' ? 'Needs recovery' : c.status === 'camp' ? 'At camp' : 'On assignment'}</span></div>`).join('')}<div class="modal-footer"><button class="primary" id="continue-adventure">Continue adventure <span>↗</span></button></div>`, 'EXPEDITION REPORT');
+  showModal('Welcome back, guild leader.', `<p>Your adventurers kept their assignments while you were away.${report.capped ? ' The four-hour limit was applied.' : ''} Boss expeditions require active play and returned to camp.</p><div class="report-stats"><div class="report-stat"><strong>${duration(report.seconds)}</strong><span>FARMING TIME</span></div><div class="report-stat"><strong>${number(report.kills)}</strong><span>ENEMIES DEFEATED</span></div><div class="report-stat"><strong>${number(report.zeny)}</strong><span>ZENY EARNED</span></div></div>${report.loot.length ? `<h3>Loot brought back</h3>${report.loot.map(drop => `<div class="inventory-row">${esc(drop.name)}<span>×${number(drop.count)}</span></div>`).join('')}` : ''}${report.characters.map(c => `<div class="inventory-row"><div>${esc(c.name)}<p>${c.levels ? `+${c.levels} Base levels · ` : ''}${c.jobLevels ? `+${c.jobLevels} Job levels · ` : ''}${c.potions} potions used</p></div><span>${c.status === 'down' ? 'Needs recovery' : c.status === 'camp' ? 'At camp' : 'On assignment'}</span></div>`).join('')}<div class="modal-footer"><button class="primary" id="continue-adventure">Continue adventure <span>↗</span></button></div>`, 'EXPEDITION REPORT');
   $('continue-adventure').onclick = closeModal;
 }
 async function settle(elapsed) {
@@ -178,7 +190,11 @@ document.addEventListener('click', event => {
   if (action) {
     if (action === 'deploy') deployment(); else if (action === 'camp') camp(); else if (action === 'advance') advanceJob();
     else if (action === 'equipment') equipment(); else if (action === 'rename') rename();
-    else if (action === 'move') { orderMode = 'move'; toast('Click or tap a destination on the current map.'); renderUI(); }
+    else if (action === 'move' || action === 'rally') {
+      if (action === 'rally' && renderer.mapId === 'arena') return toast('Choose a farming field to mark a hunting area.');
+      orderMode = orderMode === action ? null : action;
+      renderUI();
+    }
     else issue({ type: action });
   }
   const service = event.target.closest('[data-camp-unit]');
@@ -245,9 +261,12 @@ canvas.addEventListener('pointerup', event => {
   const r = canvas.getBoundingClientRect(), x = event.clientX - r.left, y = event.clientY - r.top, hit = renderer.hit(x, y);
   if (orderMode || event.button === 2) {
     const p = renderer.world(x, y), ids = state.characters.filter(c => selected.has(c.id) && c.mapId === renderer.mapId).map(c => c.id);
-    issue({ type: 'move', point: p, ids }, { quiet: true }); orderMode = null;
+    if (issue({ type: orderMode || 'move', mapId: renderer.mapId, point: p, ids }, { quiet: true })) {
+      acknowledgePoint(event);
+      orderMode = null;
+    }
   } else if (hit?.hero) setSelection(hit.id, press.shift || multiSelect);
-  else if (hit) { const ids = state.characters.filter(c => selected.has(c.id) && c.mapId === renderer.mapId).map(c => c.id); issue({ type: 'focus', targetId: hit.id, ids }, { quiet: true }); }
+  else if (hit) { const ids = state.characters.filter(c => selected.has(c.id) && c.mapId === renderer.mapId).map(c => c.id); if (issue({ type: 'focus', targetId: hit.id, ids }, { quiet: true })) acknowledgePoint(event); }
   renderUI();
 });
 canvas.addEventListener('pointercancel', () => { pointer = null; });
@@ -275,7 +294,7 @@ function frame(now) {
   if (!ready || !state || document.hidden || settling) { lastTime = now; return; }
   accumulator += Math.min((now - lastTime) / 1000, 0.5); lastTime = now;
   while (accumulator >= STEP) { tick(state); accumulator -= STEP; }
-  renderer.draw(state, selected, hovered);
+  renderer.draw(state, selected, hovered, accumulator);
   if (now - lastUI > 500) { renderUI(); lastUI = now; }
   if (now - lastSave > 5000) { persist(); lastSave = now; }
 }

@@ -21,6 +21,8 @@ export function validateState(s) {
     valid(c.partyId === null || /^p\d+$/.test(c.partyId));
     valid(Number.isInteger(c.level) && finite(c.level, 1, 99) && Number.isInteger(c.jobLevel) && finite(c.jobLevel, 1, c.job === 'novice' ? 10 : 50));
     valid(coordinate(c) && coordinate(c.home) && (c.destination === null || coordinate(c.destination)));
+    valid(c.farmRadius === undefined || c.farmRadius === 6);
+    valid(c.farmCenter === undefined || coordinate(c.farmCenter));
     valid(['farm', 'move', 'hold', 'focus', 'retreat'].includes(c.order));
     valid(['camp', 'down', 'farming', 'fighting', 'moving', 'holding', 'searching', 'retreating'].includes(c.status));
     valid(['balanced', 'experience', 'materials'].includes(c.assignment));
@@ -41,6 +43,7 @@ export function validateState(s) {
     const m = s.maps?.[key]; valid(m && m.id === key && Array.isArray(m.monsters) && m.monsters.length <= 30);
     valid(finite(m.bossTimer, -1, 100) && typeof m.bossDefeated === 'boolean');
     valid(m.telegraph === null || (coordinate(m.telegraph) && finite(m.telegraph.radius, 0, 10) && finite(m.telegraph.remaining, -1, 10) && finite(m.telegraph.duration, 0.1, 10)));
+    if (m.telegraph?.innerRadius !== undefined) valid(finite(m.telegraph.innerRadius, 0, m.telegraph.radius));
     for (const enemy of m.monsters) {
       valid(/^m\d+$/.test(enemy.id) && !monsterIds.has(enemy.id)); monsterIds.add(enemy.id);
       valid(['poring', 'fabre', 'willow', 'baphomet'].includes(enemy.kind) && enemy.mapId === key && coordinate(enemy));
@@ -54,6 +57,7 @@ export function validateState(s) {
   for (const [key, value] of Object.entries(s.inventory.materials || {})) valid(['Jellopy', 'Fluff', 'Resin', 'Sanctuary Sigil'].includes(key) && Number.isInteger(value) && finite(value));
   for (const key of ['iron', 'guard', 'sanctuary']) valid(Number.isInteger(s.inventory.equipment?.[key]) && finite(s.inventory.equipment[key]));
   for (const key of ['bossKills', 'forestKills']) valid(Number.isInteger(s.milestones?.[key]) && finite(s.milestones[key]));
+  valid(s.milestones.enemiesDefeated === undefined || (Number.isSafeInteger(s.milestones.enemiesDefeated) && finite(s.milestones.enemiesDefeated)));
   valid(Array.isArray(s.journal) && s.journal.length <= 35 && s.journal.every(e => Number.isSafeInteger(e.id) && finite(e.time) && text(e.message, 500)));
   valid(s.nextId > Math.max(0, ...[...monsterIds, ...parties].map(id => Number(id.slice(1))), ...s.journal.map(e => e.id)));
   s.effects = []; // Transient effects never survive loading.

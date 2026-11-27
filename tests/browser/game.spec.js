@@ -2,6 +2,35 @@ import { test, expect } from '@playwright/test';
 import { createGame, gainExp } from '../../src/sim.js';
 import { encodeSave } from '../../src/persistence.js';
 const boot = async page => { await page.goto('/'); await expect(page.locator('#loading')).toBeHidden({ timeout: 20000 }); };
+test('hunt orders work by touch and respect reduced motion', async ({ browser }) => {
+  const context = await browser.newContext({ hasTouch: true, reducedMotion: 'reduce', viewport: { width: 390, height: 844 }, baseURL: 'http://127.0.0.1:5173' });
+  try {
+    const page = await context.newPage();
+    await boot(page);
+    await page.locator('#first-deploy').tap();
+    await page.locator('#deployment-form button.primary').tap();
+    await page.locator('[data-action="rally"]').tap();
+    await expect(page.locator('[data-action="rally"]')).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('#battlefield').tap({ position: { x: 195, y: 240 } });
+    await expect(page.locator('#order-hint')).toBeHidden();
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).state.characters.every(c => c.farmRadius === 6))).toBe(true);
+    await expect(page.locator('.input-pulse')).toHaveCount(0);
+  } finally { await context.close(); }
+});
+test('button activation animates and the player can advance from the job notice', async ({ page }) => {
+  const s = createGame(); gainExp(s, s.characters[0], 0, 1000);
+  await page.addInitScript(raw => localStorage.setItem('ragna-tactics:save:v1', raw), encodeSave(s));
+  await boot(page);
+  await expect(page.locator('#job-names')).toHaveText('Aren');
+  await page.locator('#job-notice').click();
+  expect(await page.locator('.input-pulse').count()).toBeGreaterThan(0);
+  await page.locator('[data-service="advance"]').click();
+  await expect(page.locator('.job-preview')).toHaveCount(6);
+  await page.screenshot({ path: 'artifacts/job-choice.png' });
+  await page.locator('input[value="mage"]').check();
+  await page.locator('#job-form button.primary').click();
+  await expect(page.locator('#job-notice')).toBeHidden();
+});
 test('new guild deploys, forms a party, switches maps, orders movement, and saves', async ({ page }) => {
   const errors = []; page.on('pageerror', e => errors.push(e.message));
   await boot(page); await expect(page.locator('.character-card')).toHaveCount(2);
