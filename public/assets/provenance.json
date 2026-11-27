@@ -40,6 +40,12 @@
       "bytes": 523740
     },
     {
+      "local": "mobs/1159.webp",
+      "source": "assets/native-fields/v1/mobs/1159.webp",
+      "sha256": "c77598ddd97dcf5edec91de5c631223c1475420a26e2d1d6375528ff91d5ee06",
+      "bytes": 791166
+    },
+    {
       "local": "mobs/source-catalog.json",
       "source": "assets/native-fields/v1/mobs.json",
       "sha256": "fc2bb2f7e3a7339c874574e14c96e450aeb3af26d61f1b47215dca1aa18fa769",

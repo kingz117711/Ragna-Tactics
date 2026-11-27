@@ -57,7 +57,7 @@ function renderUI() {
   $('map-name').textContent = map.name; $('map-subtitle').textContent = map.subtitle; $('map-tier').textContent = map.tier;
   html('map-list', Object.values(MAPS).map((m, i) => {
     const count = state.characters.filter(c => c.mapId === m.id).length;
-    return `<button class="map-card ${m.id === mapId ? 'active' : ''}" data-map="${m.id}" aria-current="${m.id === mapId ? 'location' : 'false'}"><img class="map-creature" src="${sprites.monsterPortrait(m.monster)}" alt=""><div class="map-card-top"><span class="map-type">${m.id === 'arena' ? 'BOSS EXPEDITION' : 'FARMING GROUNDS'}</span></div><strong>${m.name}</strong><div class="map-card-bottom"><span>${count ? `${count} adventurer${count > 1 ? 's' : ''} active` : m.id === 'arena' ? 'Awaiting a worthy party' : 'Ready to explore'}</span><span class="arrow">${count ? '●' : '↗'}</span></div></button>`;
+    return `<button class="map-card ${m.id === mapId ? 'active' : ''}" data-map="${m.id}" aria-current="${m.id === mapId ? 'location' : 'false'}"><img class="map-creature" src="${sprites.monsterPortrait(m.monster)}" alt=""><div class="map-card-top"><span class="map-type">${m.boss ? 'BOSS EXPEDITION' : 'FARMING GROUNDS'}</span></div><strong>${m.name}</strong><div class="map-card-bottom"><span>${count ? `${count} adventurer${count > 1 ? 's' : ''} active` : m.boss ? 'Awaiting a worthy party' : 'Ready to explore'}</span><span class="arrow">${count ? '●' : '↗'}</span></div></button>`;
   }).join(''));
   const present = state.characters.filter(c => c.mapId === mapId).length;
   $('map-population').textContent = `${present} adventurer${present === 1 ? '' : 's'} · ${state.maps[mapId].monsters.filter(m => m.hp > 0).length} enemies in the field`;
@@ -112,12 +112,13 @@ function renderUI() {
   ].map(([done, title, subtitle]) => `<div class="milestone ${done ? 'complete' : ''}"><span class="diamond">${done ? '◆' : '◇'}</span><div><b>${title}</b><br>${subtitle}</div></div>`).join(''));
   renderInspector(units);
   html('journal', state.journal.slice(0, 12).map(e => `<div class="journal-entry"><time>${Math.floor(e.time / 60).toString().padStart(2, '0')}:${Math.floor(e.time % 60).toString().padStart(2, '0')}</time><span>${esc(e.message)}</span></div>`).join(''));
-  const boss = state.maps.arena.monsters.find(m => m.kind === 'baphomet');
-  $('boss-status').hidden = mapId !== 'arena' || !state.characters.some(c => c.mapId === 'arena');
-  if (!$('boss-status').hidden) html('boss-status', `<div class="boss-name">${boss?.hp > 0 ? 'Baphomet' : 'Sanctuary cleared'}</div><div class="progress"><i style="width:${Math.max(0, (boss?.hp || 0) / MONSTERS.baphomet.hp * 100)}%"></i></div><p>${state.maps.arena.telegraph ? castWarning(state.maps.arena.telegraph) : boss?.hp > 0 ? `${number(boss.hp)} / ${number(MONSTERS.baphomet.hp)} HP · Real-time encounter` : 'Your reward is waiting in shared storage.'}</p>`);
+  const encounter = state.maps[mapId], bossKind = MAPS[mapId].monster;
+  const boss = MAPS[mapId].boss && encounter.monsters.find(m => m.kind === bossKind);
+  $('boss-status').hidden = !boss || !state.characters.some(c => c.mapId === mapId);
+  if (!$('boss-status').hidden) html('boss-status', `<div class="boss-name">${boss.hp > 0 ? MONSTERS[bossKind].name : 'Expedition cleared'}</div><div class="progress"><i style="width:${Math.max(0,boss.hp) / MONSTERS[bossKind].hp * 100}%"></i></div><p>${encounter.telegraph ? castWarning(encounter.telegraph) : boss.hp > 0 ? `${number(boss.hp)} / ${number(MONSTERS[bossKind].hp)} HP · Real-time encounter` : 'Your reward is waiting in shared storage.'}</p>`);
 }
 function castWarning(cast) {
-  const warning = cast.innerRadius ? 'Sanctuary Ring · move inside the centre or beyond the ring' : 'Dark Cross · leave the marked ground';
+  const warning = cast.markedId ? 'Sand Pact · gather around ' + (state.characters.find(c => c.id === cast.markedId)?.name || 'the marked ally') + ' to share damage' : renderer.mapId === 'lair' ? 'Sinkhole · leave the red circle' : cast.innerRadius ? 'Sanctuary Ring · move inside the centre or beyond the ring' : 'Dark Cross · leave the marked ground';
   return warning + ' · ' + Math.max(0, cast.remaining).toFixed(1) + 's';
 }
 function tacticsMarkup(c) {
@@ -143,7 +144,7 @@ function renderInspector(units) {
 function deployment() {
   const units = selectedCharacters();
   if (!units.length) return toast('Select one or more adventurers first.');
-  showModal('Where will you venture?', `<p>Deploy ${units.map(c => esc(c.name)).join(', ')} instantly. Linked party members travel together. Viewing a map does not move your characters.</p><form id="deployment-form"><div class="modal-grid">${Object.values(MAPS).map(m => `<label class="choice-card"><input type="radio" name="destination" value="${m.id}" ${m.id === renderer.mapId ? 'checked' : ''}><span class="tiny"> ${m.tier}</span><strong>${m.name}</strong><p>${m.id === 'meadow' ? 'Poring and Fabre. A gentle start for Novices.' : m.id === 'forest' ? 'Willow. Tougher enemies, better EXP, and Resin.' : m.id === 'morroc' ? 'Scorpions strike hard. Peco Pecos quickly close distance. Both drop socket cards.' : 'Baphomet. Bring at least two first-job adventurers. Manual dodging recommended.'}</p></label>`).join('')}</div>${modalError}<div class="modal-footer"><span>In combat? Retreat to camp before redeploying.</span><button type="submit" class="primary">Begin expedition <span>↗</span></button></div></form>`, 'PLAN AN EXPEDITION');
+  showModal('Where will you venture?', `<p>Deploy ${units.map(c => esc(c.name)).join(', ')} instantly. Linked party members travel together. Viewing a map does not move your characters.</p><form id="deployment-form"><div class="modal-grid">${Object.values(MAPS).map(m => `<label class="choice-card"><input type="radio" name="destination" value="${m.id}" ${m.id === renderer.mapId ? 'checked' : ''}><span class="tiny"> ${m.tier}</span><strong>${m.name}</strong><p>${m.id === 'meadow' ? 'Poring and Fabre. A gentle start for Novices.' : m.id === 'forest' ? 'Willow. Tougher enemies, better EXP, and Resin.' : m.id === 'morroc' ? 'Scorpions strike hard. Peco Pecos quickly close distance. Both drop socket cards.' : m.id === 'lair' ? 'Phreeoni. Gather for Sand Pact, scatter for Sinkhole. Guaranteed MVP card.' : 'Baphomet. Bring at least two first-job adventurers. Manual dodging recommended.'}</p></label>`).join('')}</div>${modalError}<div class="modal-footer"><span>In combat? Retreat to camp before redeploying.</span><button type="submit" class="primary">Begin expedition <span>↗</span></button></div></form>`, 'PLAN AN EXPEDITION');
   $('deployment-form').onsubmit = event => { event.preventDefault(); const mapId = new FormData(event.currentTarget).get('destination'); if (issue({ type: 'deploy', mapId }, { close: true, quiet: true })) { coachDismissed = true; switchMap(mapId); toast('Expedition started. Your adventurers will farm automatically.'); } };
 }
 function camp() {
@@ -184,7 +185,7 @@ function equipment() {
 function cardRows(character) {
   return Object.entries(CARDS).map(([id, card]) => {
     const count = state.inventory.cards[id] || 0;
-    return `<div class="inventory-row monster-card"><img src="${sprites.monsterPortrait(id)}" alt=""><div><strong>${card.name}</strong><p>${card.description} · Morroc Dunes · ${count} loose</p></div>${character ? `<button data-socket="${id}" ${!count || character.mapId || character.card === id || character.equipment === 'training' ? 'disabled' : ''}>Socket</button>` : ''}</div>`;
+    return `<div class="inventory-row monster-card"><img src="${sprites.monsterPortrait(id)}" alt=""><div><strong>${card.name}</strong><p>${card.description} · ${id === 'phreeoni' ? 'Sandsea Hollow MVP' : 'Morroc Dunes'} · ${count} loose</p></div>${character ? `<button data-socket="${id}" ${!count || character.mapId || character.card === id || character.equipment === 'training' ? 'disabled' : ''}>Socket</button>` : ''}</div>`;
   }).join('');
 }
 const EXPEDITION_GOALS = [
@@ -298,7 +299,7 @@ document.addEventListener('click', event => {
     if (action === 'deploy') deployment(); else if (action === 'camp') camp(); else if (action === 'advance') advanceJob();
     else if (action === 'equipment') equipment(); else if (action === 'rename') rename(); else if (action === 'leader') issue({ type: 'leader' });
     else if (action === 'move' || action === 'rally') {
-      if (action === 'rally' && renderer.mapId === 'arena') return toast('Choose a farming field to mark a hunting area.');
+      if (action === 'rally' && MAPS[renderer.mapId].boss) return toast('Choose a farming field to mark a hunting area.');
       $('toast').hidden = true;
       orderMode = orderMode === action ? null : action;
       renderUI();

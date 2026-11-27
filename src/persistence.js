@@ -46,10 +46,12 @@ export function validateState(s) {
   for (const c of s.characters) valid(!c.partyId || parties.has(c.partyId));
   const monsterIds = new Set();
   for (const key of Object.keys(MAPS)) {
-    if (key === 'morroc' && s.maps && !Object.hasOwn(s.maps, key)) continue;
+    if (['morroc','lair'].includes(key) && s.maps && !Object.hasOwn(s.maps, key)) continue;
     const m = s.maps?.[key]; valid(m && m.id === key && Array.isArray(m.monsters) && m.monsters.length <= 30);
     valid(finite(m.bossTimer, -1, 100) && typeof m.bossDefeated === 'boolean');
     valid(m.telegraph === null || (coordinate(m.telegraph) && finite(m.telegraph.radius, 0, 10) && finite(m.telegraph.remaining, -1, 10) && finite(m.telegraph.duration, 0.1, 10)));
+    if (m.lastGather !== undefined) valid(key === 'lair' && typeof m.lastGather === 'boolean');
+    if (m.telegraph?.markedId !== undefined) valid(key === 'lair' && ids.has(m.telegraph.markedId));
     if (m.telegraph?.innerRadius !== undefined) valid(finite(m.telegraph.innerRadius, 0, m.telegraph.radius));
     for (const enemy of m.monsters) {
       valid(/^m\d+$/.test(enemy.id) && !monsterIds.has(enemy.id)); monsterIds.add(enemy.id);
@@ -86,7 +88,7 @@ export function validateState(s) {
   valid(s.milestones.enemiesDefeated === undefined || (Number.isSafeInteger(s.milestones.enemiesDefeated) && finite(s.milestones.enemiesDefeated)));
   valid(Array.isArray(s.journal) && s.journal.length <= 35 && s.journal.every(e => Number.isSafeInteger(e.id) && finite(e.time) && text(e.message, 500)));
   valid(s.nextId > Math.max(0, ...[...monsterIds, ...parties].map(id => Number(id.slice(1))), ...s.journal.map(e => e.id)));
-  if (!s.maps.morroc) populateField(s, MAPS.morroc);
+  for (const key of ['morroc','lair']) if (!s.maps[key]) populateField(s, MAPS[key]);
   for (const field of ['cards', 'socketed']) {
     if (s.inventory[field] === undefined) s.inventory[field] = {};
     const stock = s.inventory[field];

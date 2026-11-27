@@ -72,3 +72,7 @@ Six second jobs with native sprites and signature skills now unlock at first Job
 ## Morroc Dunes and monster cards
 
 Added a concurrent desert field, native Scorpion and Peco Peco sprites, two collectible cards, camp socketing and card-aware equipment storage. Offline reports include card drops.
+
+## Sandsea Hollow
+
+Added Phreeoni, a new live MVP arena, alternating gather/scatter mechanics, and a guaranteed socketable MVP card.

@@ -385,3 +385,24 @@ test('Dunes card hunting settles the same earned cards live and offline', () => 
   assert.deepEqual(s.inventory,live.inventory);
   assert.ok(report.loot.some(drop => drop.name.endsWith(' Card') && drop.count > 0));
 });
+
+test('Sand Pact follows the marked adventurer and shares damage only among nearby allies', () => {
+  const s = createGame(); promote(s,0,'swordsman'); promote(s,1,'acolyte'); deploy(s,'lair');
+  const [a,b] = s.characters, map = s.maps.lair;
+  for (const c of [a,b]) Object.assign(c,{ order:'hold', hp:200, potions:0, tactics:{ ...c.tactics, autoSkill:false }, attackTimer:30 });
+  Object.assign(map.monsters[0], { x:14,y:14,timer:20 });
+  map.telegraph = { x:14,y:14,radius:4,remaining:0.05,duration:3.5,markedId:a.id };
+  tick(s); assert.equal(a.hp,110); assert.equal(b.hp,110);
+  map.telegraph = {x:b.x,y:b.y,radius:4,remaining:0.05,duration:3.5,markedId:a.id};
+  b.x = 10; b.y = 10;
+  tick(s); assert.equal(a.hp,0); assert.equal(b.hp,110);
+});
+test('Phreeoni pays one MVP card live, while leaving the fight offline gives no reward', () => {
+  const s = createGame(); promote(s,0,'mage'); promote(s,1,'archer'); deploy(s,'lair');
+  const offline = structuredClone(s);
+  settleOffline(offline,60); assert.ok(offline.characters.every(c => !c.mapId));
+  assert.equal(offline.inventory.cards.phreeoni,undefined);
+  s.maps.lair.monsters[0].hp = 1; advance(s,20);
+  assert.equal(s.inventory.cards.phreeoni,1); assert.ok(s.maps.lair.bossDefeated);
+  advance(s,20); assert.equal(s.inventory.cards.phreeoni,1);
+});

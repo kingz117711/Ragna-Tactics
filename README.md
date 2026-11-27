@@ -45,7 +45,7 @@ band takes damage when the countdown ends. The centre and outer ground are safe.
   or Thief. All recruits start as Novices. Achievement-based growth to five units.
 - Six second jobs at first Job Lv. 40, with original sprites and signature skills.
 - Forge Iron armaments and Guard insignias from field loot in shared storage.
-- Three concurrent farming maps and one real-time boss expedition.
+- Three concurrent farming maps and two real-time boss expeditions.
 - Party linkage, shared targets/EXP, basic following, healing, skill priorities,
   HP-based potions/retreat, movement overrides, hold, and focus fire.
 - Shared materials, Zeny, equipment drops, item assignment, and camp services.

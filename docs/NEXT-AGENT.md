@@ -2,4 +2,4 @@
 
 Continue building Ragna Tactics from the latest head of PR #2. If merged, use the updated base. Read AGENTS.md and docs/HANDOFF.md. Inspect the latest commit before choosing work.
 
-Finish any unverified Morroc field and card work first. Then build an MVP encounter in the desert with its own arena, original sprite, readable telegraphs, unique reward, and a reason to reunite split farming parties. Keep bosses real-time and active-only. Implement the gameplay, UI, persistence compatibility and regression tests. Play the encounter through normal controls, verify the exported build, update these handoff notes, and push the playable milestone.
+Build stat allocation for all adventurers. Award stat points from earned Base levels. Give STR, AGI, VIT, INT, DEX and LUK concrete simulation effects, show a preview before spending, and preserve old saves. Continue with a guild bounty board that rewards field hunts. Verify actual play, run all checks and update this handoff before pushing to the PR.

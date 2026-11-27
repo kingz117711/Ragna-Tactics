@@ -40,7 +40,7 @@ export class Renderer {
     const ctx = cv.getContext('2d'); ctx.translate(900, 550);
     let seed = mapId === 'meadow' ? 182 : mapId === 'forest' ? 492 : 739;
     const rng = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
-    const arena = mapId === 'arena', forest = mapId === 'forest', dunes = mapId === 'morroc';
+    const arena = mapId === 'arena', forest = mapId === 'forest', dunes = ['morroc', 'lair'].includes(mapId);
     const boundary = [project(-16, -16), project(16, -16), project(16, 16), project(-16, 16)];
     polygon(ctx, boundary.map(p => ({ x: p.x, y: p.y + 18 })), '#182e28');
     polygon(ctx, boundary, dunes ? '#be9967' : arena ? '#555b5a' : forest ? '#436352' : '#6b8959', '#8aa47855');
@@ -70,6 +70,13 @@ export class Renderer {
         ctx.beginPath(); ctx.moveTo(p.x - 3, p.y); ctx.lineTo(p.x - 5, p.y - 5); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + 1, p.y - 7); ctx.moveTo(p.x + 3, p.y); ctx.lineTo(p.x + 6, p.y - 3); ctx.stroke();
         if (rng() > 0.91) ellipse(ctx, p.x, p.y - 3, 2.5, 1.7, rng() > 0.5 ? '#ebdab0' : '#c8a7b3');
       }
+    }
+    if (mapId === 'lair') {
+      for (let i = 6; i > 0; i--) {
+        const radius = 34 + i * 32;
+        ellipse(ctx, 0, 6, radius, radius / 2, i % 2 ? '#956e49' : '#a57d54', '#c49464');
+      }
+      ellipse(ctx, 0, 6, 54, 27, '#78573c');
     }
     if (arena) {
       ellipse(ctx, 0, 0, 210, 105, '#5e6268', '#a1a0a066'); ellipse(ctx, 0, 0, 184, 92, null, '#b4a57c77');
@@ -139,10 +146,10 @@ export class Renderer {
         ctx.moveTo(telegraph.innerRadius, 0);
         ctx.arc(0, 0, telegraph.innerRadius, 0, Math.PI * 2, true);
       }
-      ctx.fillStyle = `rgba(246,96,78,${pulse + 0.12})`;
+      ctx.fillStyle = telegraph.markedId ? 'rgba(111,205,224,.35)' : `rgba(246,96,78,${pulse + 0.12})`;
       ctx.fill('evenodd');
       ctx.lineWidth = 0.1 / z;
-      ctx.strokeStyle = '#ffd3ab';
+      ctx.strokeStyle = telegraph.markedId ? '#c5f6ff' : '#ffd3ab';
       ctx.stroke();
       ctx.restore();
     }
@@ -153,15 +160,15 @@ export class Renderer {
     for (const { unit: c, hero } of entities) {
       const p = project(c.x, c.y), screen = this.screen(c), isSelected = hero && selected.has(c.id);
       ctx.save(); ctx.translate(p.x, p.y);
-      ellipse(ctx, 0, 1, hero ? 18 : c.kind === 'baphomet' ? 48 : 18, hero ? 8 : c.kind === 'baphomet' ? 20 : 8, '#0c201e45');
+      ellipse(ctx, 0, 1, hero ? 18 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? 48 : 18, hero ? 8 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? 20 : 8, '#0c201e45');
       if (isSelected || hovered === c.id) { ctx.lineWidth = 2 / z; ellipse(ctx, 0, 0, hero ? 23 : 28, hero ? 10 : 12, isSelected ? '#e4cc8720' : '#e9866f18', hero ? '#edd79b' : '#e9866f'); }
       const route = c.stance + c.direction, previous = this.animations.get(c.id);
       if (!previous || previous.route !== route) this.animations.set(c.id, { route, started: s.time });
       const ms = Math.max(0, s.time + frameRemainder - this.animations.get(c.id).started) * 1000;
       if (hero) this.sprites.hero(ctx, c, ms); else this.sprites.monster(ctx, c, ms);
-      const barY = hero ? -80 : c.kind === 'baphomet' ? -115 : c.kind === 'willow' ? -83 : -44;
+      const barY = hero ? -80 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? -115 : c.kind === 'willow' ? -83 : -44;
       if (hero || hovered === c.id || c.hp < MONSTERS[c.kind].hp) {
-        const width = hero ? 43 : c.kind === 'baphomet' ? 82 : 36;
+        const width = hero ? 43 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? 82 : 36;
         ctx.fillStyle = '#132525'; ctx.fillRect(-width / 2 - 1, barY - 1, width + 2, 6);
         ctx.fillStyle = hero ? '#afc790' : '#d48b77'; ctx.fillRect(-width / 2, barY, width * Math.max(0, c.hp / (hero ? stats(c).hp : MONSTERS[c.kind].hp)), 4);
       }
@@ -170,7 +177,7 @@ export class Renderer {
         if (hero && c.partyId) { ctx.fillStyle = '#e0c48b'; ctx.fillRect(-3, 10, 6, 3); }
       }
       ctx.restore();
-      this.hits.push({ id: c.id, hero, x: screen.x, y: screen.y - (hero ? 25 : 15) * z, radius: Math.max(14, (hero ? 28 : c.kind === 'baphomet' ? 65 : 25) * z) });
+      this.hits.push({ id: c.id, hero, x: screen.x, y: screen.y - (hero ? 25 : 15) * z, radius: Math.max(14, (hero ? 28 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? 65 : 25) * z) });
     }
     for (const e of s.effects) {
       if (e.mapId && e.mapId !== this.mapId) continue;

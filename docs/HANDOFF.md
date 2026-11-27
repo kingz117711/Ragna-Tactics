@@ -1,5 +1,13 @@
 # Milestone handoff — 2026-11-27
 
+## Sandsea Hollow MVP
+
+Deploy two first-job or higher adventurers for Phreeoni. During Sand Pact,
+gather in the blue circle around the marked ally to divide damage. Leave
+the red circle during Sinkhole. A live clear awards the Phreeoni Card.
+Both boss expeditions recall their teams offline. Baphomet keeps its own
+progression and roster unlocks.
+
 ## Morroc Dunes and card builds
 
 Scorpions and Peco Pecos drop attack and defense cards. A character can socket

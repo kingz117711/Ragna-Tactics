@@ -60,7 +60,7 @@ export function log(s, message) {
   s.journal.length = Math.min(s.journal.length, 35);
 }
 function spawn(s, mapId, kind, position) {
-  const boss = kind === 'baphomet';
+  const boss = MAPS[mapId].boss && kind === MAPS[mapId].monster;
   s.maps[mapId].monsters.push({ id: 'm' + s.nextId++, kind, mapId,
     x: position?.x ?? (boss ? 0 : (random(s) - 0.5) * 24), y: position?.y ?? (boss ? 0 : (random(s) - 0.5) * 24),
     hp: MONSTERS[kind].hp, timer: 1, respawn: 0, targetId: null, stance: 'idle', direction: 0, attackFlash: 0 });
@@ -161,8 +161,8 @@ function applyCommand(s, cmd) {
     if (!Object.hasOwn(MAPS, cmd.mapId)) return 'Choose a valid destination.';
     if (units.some(c => c.hp <= 0)) return 'Recover defeated characters at camp first.';
     if (units.some(c => engaged(s, c))) return 'Use Retreat to leave an active fight.';
-    if (cmd.mapId === 'arena' && units.filter(c => c.job !== 'novice').length < 2) return 'Bring at least two adventurers who have chosen their first job.';
-    if (cmd.mapId === 'arena' && !s.characters.some(c => c.mapId === 'arena')) resetArena(s);
+    if (MAPS[cmd.mapId].boss && units.filter(c => c.job !== 'novice').length < 2) return 'Bring at least two adventurers who have chosen their first job.';
+    if (MAPS[cmd.mapId].boss && !s.characters.some(c => c.mapId === cmd.mapId)) resetArena(s, cmd.mapId);
     units.forEach((c, i) => { c.mapId = cmd.mapId; c.x = -5 + i * 1.6; c.y = 8 + i % 2; c.home = { x: c.x, y: c.y };
       delete c.farmRadius;
       delete c.farmCenter;
@@ -257,7 +257,7 @@ function applyCommand(s, cmd) {
     const radius = cmd.radius === undefined ? DEFAULT_HUNT_RADIUS : cmd.radius;
     if (!HUNT_RADII.includes(radius)) return 'Choose a supported hunting radius.';
     const field = s.maps[cmd.mapId];
-    if (!field || field.id === 'arena' || !point(cmd.point)) return 'Choose a point inside a farming field.';
+    if (!field || MAPS[field.id].boss || !point(cmd.point)) return 'Choose a point inside a farming field.';
     const farmers = units.filter(c => active(c) && c.mapId === field.id);
     if (!farmers.length) return 'Select adventurers deployed on this field.';
     for (const c of farmers) {
@@ -295,9 +295,9 @@ function cleanParties(s) {
     return true;
   });
 }
-function resetArena(s) {
-  const map = s.maps.arena; map.monsters = []; map.telegraph = null; map.bossTimer = 8; map.bossDefeated = false;
-  spawn(s, 'arena', 'baphomet');
+function resetArena(s, id) {
+  const map = s.maps[id]; map.monsters = []; map.telegraph = null; map.bossTimer = 8; map.bossDefeated = false; delete map.lastGather;
+  spawn(s, id, MAPS[id].monster);
 }
 function face(c, target) {
   const dx = target.x - c.x, dy = target.y - c.y;
@@ -341,12 +341,16 @@ function kill(s, m, killer) {
   s.inventory.zeny += def.zeny;
   s.inventory.materials[def.material] = (s.inventory.materials[def.material] || 0) + (killer.assignment === 'materials' ? 2 : 1);
   if (random(s) < 0.035) { const item = random(s) < 0.6 ? 'iron' : 'guard'; s.inventory.equipment[item]++; log(s, `${def.name} dropped ${EQUIPMENT[item].name}.`); }
-  if (Object.hasOwn(CARDS, m.kind) && random(s) < 0.06) {
+  if (Object.hasOwn(CARDS, m.kind) && (m.kind === 'phreeoni' || random(s) < 0.06)) {
     s.inventory.cards[m.kind] = (s.inventory.cards[m.kind] || 0) + 1;
     log(s, CARDS[m.kind].name + ' discovered in ' + MAPS[m.mapId].name + '! Socket it into equipment at camp.');
     effect(s, m.mapId, m.x, m.y, CARDS[m.kind].name, 'loot');
   }
   if (m.mapId === 'forest') s.milestones.forestKills++;
+  if (m.kind === 'phreeoni') {
+    s.maps.lair.bossDefeated = true; s.maps.lair.telegraph = null;
+    log(s, 'Phreeoni defeated! The Sandsea Hollow MVP card is in shared storage.');
+  }
   if (m.kind === 'baphomet') {
     s.milestones.bossKills++; s.inventory.equipment.sanctuary++; s.maps.arena.bossDefeated = true;
     s.maps.arena.telegraph = null;
@@ -466,7 +470,7 @@ function tickCharacter(s, c, dt) {
 function tickMonster(s, map, m, dt) {
   m.attackFlash = Math.max(0, m.attackFlash - dt);
   if (m.hp <= 0) {
-    if (map.id === 'arena') return;
+    if (MAPS[map.id].boss) return;
     m.respawn -= dt;
     if (m.respawn <= 0) { const def = MONSTERS[m.kind]; m.x = (random(s) - 0.5) * 24; m.y = (random(s) - 0.5) * 24; m.hp = def.hp; m.rewarded = false; m.targetId = null; }
     return;
@@ -474,7 +478,7 @@ function tickMonster(s, map, m, dt) {
   const def = MONSTERS[m.kind];
   let target = s.characters.find(c => c.id === m.targetId && active(c) && c.mapId === map.id && distance(c, m) < 20);
   if (!target) {
-    const nearby = s.characters.filter(c => active(c) && c.mapId === map.id && distance(c, m) < (map.id === 'arena' ? 25 : 3.5));
+    const nearby = s.characters.filter(c => active(c) && c.mapId === map.id && distance(c, m) < (MAPS[map.id].boss ? 25 : 3.5));
     target = nearby.sort((a, b) => distance(a, m) - distance(b, m))[0];
   }
   m.targetId = target?.id || null; m.stance = m.attackFlash > 0 ? 'attack' : 'idle';
@@ -483,6 +487,34 @@ function tickMonster(s, map, m, dt) {
   if (distance(m, target) > def.range) { move(m, target, def.speed, dt); return; }
   face(m, target);
   if (m.timer <= 0) { m.timer = def.interval; target.hp = Math.max(0, target.hp - Math.max(1, def.atk - stats(target).def)); m.stance = 'attack'; m.attackFlash = 0.4; }
+}
+function tickPhreeoni(s, dt) {
+  const map = s.maps.lair;
+  if (map.bossDefeated) return;
+  const fighters = s.characters.filter(c => active(c) && c.mapId === map.id);
+  if (!fighters.length) { map.telegraph = null; return; }
+  const cast = map.telegraph;
+  if (cast) {
+    const marked = fighters.find(c => c.id === cast.markedId);
+    if (cast.markedId && !marked) { map.telegraph = null; return; }
+    if (marked) { cast.x = marked.x; cast.y = marked.y; }
+    cast.remaining -= dt;
+    if (cast.remaining <= 0) {
+      const inside = fighters.filter(c => distance(c, cast) < cast.radius);
+      const amount = marked ? Math.ceil(180 / Math.max(1, inside.length)) : 110;
+      for (const c of inside) {
+        c.hp = Math.max(0, c.hp - amount); effect(s, map.id, c.x, c.y, String(amount), 'danger');
+      }
+      map.telegraph = null;
+    }
+  }
+  map.bossTimer -= dt;
+  if (map.bossTimer > 0) return;
+  const target = fighters[Math.floor(random(s) * fighters.length)];
+  const gather = !map.lastGather;
+  map.telegraph = { x: target.x, y: target.y, radius: gather ? 4 : 5, remaining: 3.5, duration: 3.5 };
+  if (gather) map.telegraph.markedId = target.id;
+  map.lastGather = gather; map.bossTimer = 10;
 }
 function tickBoss(s, dt) {
   const map = s.maps.arena;
@@ -543,11 +575,11 @@ export function tick(s, dt = STEP, { offline = false, effects = true } = {}) {
   for (const c of s.characters) tickCharacter(s, c, dt);
   spacePartyMembers(s.characters, dt);
   for (const map of Object.values(s.maps)) {
-    if (offline && map.id === 'arena') continue;
+    if (offline && MAPS[map.id].boss) continue;
     // Defeated field monsters still respawn, including on maps without a viewer.
     for (const m of map.monsters) tickMonster(s, map, m, dt);
   }
-  if (!offline) tickBoss(s, dt);
+  if (!offline) { tickBoss(s, dt); tickPhreeoni(s, dt); }
   if (!effects) s.effects = [];
   advanceExpeditionGoals(s);
 }
@@ -562,7 +594,7 @@ export function settleOffline(s, elapsedSeconds) {
     cards: { ...s.inventory.cards }, materials: { ...s.inventory.materials }, equipment: { ...s.inventory.equipment },
     levels: s.characters.map(c => ({ id: c.id, level: c.level, jobLevel: c.jobLevel, potions: c.potions })) };
   // Bosses require active play. Returning disconnects the expedition without rewards.
-  for (const c of s.characters) if (c.mapId === 'arena') { c.mapId = null; c.status = c.hp > 0 ? 'camp' : 'down'; c.targetId = null; c.order = 'farm'; c.destination = null; }
+  for (const c of s.characters) if (MAPS[c.mapId]?.boss) { c.mapId = null; c.status = c.hp > 0 ? 'camp' : 'down'; c.targetId = null; c.order = 'farm'; c.destination = null; }
   if (seconds > 0) advance(s, seconds, { offline: true, effects: false });
   const report = { seconds, capped: elapsedSeconds > OFFLINE_CAP, zeny: s.inventory.zeny - before.zeny,
     kills: (s.milestones.enemiesDefeated ?? 0) - before.kills,

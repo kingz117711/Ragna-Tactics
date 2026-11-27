@@ -7,8 +7,9 @@ export const MAPS = {
   meadow: { id: 'meadow', name: 'South Prontera', subtitle: 'A quiet beginning', tier: 'FIELD · LV 1–4', color: '#91b27d', monster: 'poring', count: 8, radius: 16 },
   forest: { id: 'forest', name: 'Willow Wood', subtitle: 'Beyond the familiar paths', tier: 'FIELD · LV 4–8', color: '#698a7b', monster: 'willow', count: 7, radius: 16 },
   morroc: { id: 'morroc', name: 'Morroc Dunes', subtitle: 'The southern caravan road', tier: 'FIELD · LV 8–14', color: '#cba976', monster: 'scorpion', count: 8, radius: 16 },
-  arena: { id: 'arena', name: 'The Broken Sanctuary', subtitle: 'Something stirs beneath the ruins', tier: 'BOSS · PARTY RECOMMENDED', color: '#807e95', monster: 'baphomet', count: 1, radius: 16 },
+  arena: { id: 'arena', boss: true, name: 'The Broken Sanctuary', subtitle: 'Something stirs beneath the ruins', tier: 'BOSS · PARTY RECOMMENDED', color: '#807e95', monster: 'baphomet', count: 1, radius: 16 },
 };
+MAPS.lair = { id: 'lair', boss: true, name: 'Sandsea Hollow', subtitle: 'Beneath the caravan road', tier: 'MVP · LV 18+', color: '#c38667', monster: 'phreeoni', count: 1, radius: 16 };
 export const JOBS = {
   novice: { name: 'Novice', native: 0, role: 'A new beginning', hp: 100, atk: 10, def: 1, range: 1.8, speed: 3.1, interval: 1.05, skill: 'First Aid', cost: 8, cooldown: 10, description: 'Recover your own HP. Learn the basics before choosing a path.' },
   swordsman: { name: 'Swordsman', native: 1, role: 'Frontline · protection', hp: 180, atk: 17, def: 5, range: 1.9, speed: 3.1, interval: 1.05, skill: 'Bash', cost: 7, cooldown: 5, description: 'A heavy strike that draws enemy attention.' },
@@ -36,6 +37,7 @@ export const FORGE = {
   guard: { zeny: 60, materials: { Fluff: 6, Resin: 4 } },
 };
 export const MONSTERS = {
+  phreeoni: { name: 'Phreeoni', sprite: '1159', hp: 5100, atk: 33, def: 8, exp: 550, jobExp: 300, zeny: 700, material: 'Tongue of the Desert', speed: 1.8, range: 3.2, interval: 1.6 },
   scorpion: { name: 'Scorpion', sprite: '1001', hp: 175, atk: 24, def: 6, exp: 44, jobExp: 26, zeny: 20, material: 'Scorpion Tail', speed: 1.45, range: 2, interval: 2.4 },
   peco: { name: 'Peco Peco', sprite: '1019', hp: 210, atk: 16, def: 2, exp: 46, jobExp: 28, zeny: 22, material: 'Peco Feather', speed: 3.8, range: 1.7, interval: 1.2 },
   poring: { name: 'Poring', sprite: '1002', hp: 35, atk: 5, def: 0, exp: 10, jobExp: 7, zeny: 5, material: 'Jellopy', speed: 1.3, range: 1.5, interval: 1.8 },
@@ -44,6 +46,7 @@ export const MONSTERS = {
   baphomet: { name: 'Baphomet', sprite: '1039', hp: 2400, atk: 19, def: 5, exp: 220, jobExp: 100, zeny: 300, material: 'Sanctuary Sigil', speed: 1.6, range: 2.6, interval: 1.8 },
 };
 export const CARDS = {
+  phreeoni: { name: 'Phreeoni Card', description: '+4 ATK · +3 DEF', atk: 4, def: 3 },
   scorpion: { name: 'Scorpion Card', description: '+6 ATK', atk: 6, def: 0 },
   peco: { name: 'Peco Peco Card', description: '+4 DEF', atk: 0, def: 4 },
 };

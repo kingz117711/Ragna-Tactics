@@ -288,3 +288,16 @@ test('view Morroc and socket a Peco Peco Card at camp', async ({page}) => {
   await page.reload(); await expect(page.locator('#loading')).toBeHidden();
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).state.characters[0].card)).toBe('peco');
 });
+
+test('deploy a second-job duo to Sandsea Hollow and read the MVP party order', async ({page}) => {
+  const s = createGame();
+  Object.assign(s.characters[0], {job:'knight',level:24,hp:550});
+  Object.assign(s.characters[1], {job:'priest',level:24,hp:460});
+  await page.addInitScript(raw => localStorage.setItem('ragna-tactics:save:v1',raw),encodeSave(s));
+  await boot(page); await page.locator('[data-action="deploy"]').click();
+  await page.locator('input[value="lair"]').check();
+  await page.locator('#deployment-form button.primary').click();
+  await expect(page.locator('#boss-status')).toContainText('Phreeoni');
+  await expect(page.locator('#boss-status')).toContainText('Sand Pact',{ timeout:14000 });
+  await page.locator('#battlefield').screenshot({path:'artifacts/phreeoni.png'});
+});
