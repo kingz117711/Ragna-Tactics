@@ -1,4 +1,4 @@
-import { AFFINITIES, ELEMENTS, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
+import { REFINEMENT, gearVariant, AFFINITIES, ELEMENTS, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
 import { availablePoints, forgePrice, command, tick, stats, rosterLimit, engaged, effectiveTactics, isLeader } from './sim.js';
 import { SAVE_KEY, loadGame, saveGame, encodeSave, decodeSave } from './persistence.js';
 import { Sprites } from './sprites.js';
@@ -207,16 +207,19 @@ function attributes() {
 }
 function equipment() {
   const c = selectedCharacters()[0]; if (!c || selected.size !== 1) return toast('Select one adventurer to manage equipment.');
-  const items = Object.keys(EQUIPMENT).map(id => ({ id, card: null, count: state.inventory.equipment[id] || 0 }));
+  const items = Object.keys(EQUIPMENT).map(id => ({ id, card: null, rank:0, count: state.inventory.equipment[id] || 0 }));
   for (const [key, count] of Object.entries(state.inventory.socketed)) {
-    if (count > 0) { const [id, card] = key.split('/'); items.push({ id, card, count }); }
+    if (count > 0) { const {item:id,card,rank} = gearVariant(key); items.push({id,card,rank,count}); }
   }
   const equipped = c.card ? CARDS[c.card].name : 'Empty socket';
-  const stock = items.map(({ id, card, count }) => {
-    const worn = c.equipment === id && (c.card || null) === card;
-    return `<div class="inventory-row"><div>${EQUIPMENT[id].name}${card ? ' · ' + CARDS[card].name : ''}<p>${EQUIPMENT[id].description}</p></div><button data-equip="${id}" data-card="${card || ''}" ${c.mapId || worn || (id !== 'training' && !count) ? 'disabled' : ''}>${worn ? 'Equipped' : id === 'training' ? 'Equip' : 'Equip · ' + count}</button></div>`;
+  const stock = items.map(({ id, card, rank, count }) => {
+    const worn = c.equipment === id && (c.card || null) === card && (c.refine || 0) === rank;
+    return `<div class="inventory-row"><div>${rank ? '+' + rank + ' ' : ''}${EQUIPMENT[id].name}${card ? ' · ' + CARDS[card].name : ''}<p>${EQUIPMENT[id].description}</p></div><button data-equip="${id}" data-rank="${rank}" data-card="${card || ''}" ${c.mapId || worn || (id !== 'training' && !count) ? 'disabled' : ''}>${worn ? 'Equipped' : id === 'training' ? 'Equip' : 'Equip · ' + count}</button></div>`;
   }).join('');
-  showModal(`${c.name}’s equipment`, `<p>Change equipment and sockets at camp. Stored gear keeps its card.</p>${stock}<h3>${EQUIPMENT[c.equipment].name} · ${c.equipment === 'training' ? 'No socket' : equipped}</h3>${cardRows(c)}${c.card ? `<button data-socket="" ${c.mapId ? 'disabled' : ''}>Remove card</button>` : ''}${modalError}`);
+  const rank = c.refine || 0, cost = REFINEMENT[rank+1], ore = state.inventory.materials.Emveretarcon || 0;
+  const workshop = c.equipment === 'training' ? '<p>Equip field gear to unlock refinement.</p>' : cost
+    ? `<div class="inventory-row"><div><strong>Refine to +${rank+1}</strong><p>+2 ATK · +1 DEF · ${ore}/${cost.ore} Emveretarcon · ${cost.zeny} Zeny</p><p>Ore drops from Payon undead, most often Archer Skeletons.</p></div><button data-refine="${rank+1}" ${c.mapId || ore < cost.ore || state.inventory.zeny < cost.zeny ? 'disabled' : ''}>Refine</button></div>` : '<p>Maximum refinement · +6 ATK and +3 DEF</p>';
+  showModal(`${c.name}’s equipment`, `<p>Change equipment and sockets at camp. Stored gear keeps its card.</p>${stock}<h3>${rank ? '+' + rank + ' ' : ''}${EQUIPMENT[c.equipment].name} · ${c.equipment === 'training' ? 'No socket' : equipped}</h3>${workshop}${cardRows(c)}${c.card ? `<button data-socket="" ${c.mapId ? 'disabled' : ''}>Remove card</button>` : ''}${modalError}`);
 }
 function cardRows(character) {
   return Object.entries(CARDS).map(([id, card]) => {
@@ -369,6 +372,8 @@ document.addEventListener('click', event => {
   }
   const service = event.target.closest('[data-camp-unit]');
   if (service) { selected = new Set([service.dataset.campUnit]); if (service.dataset.service === 'advance') advanceJob(); else { issue({ type: service.dataset.service }); camp(); } }
+  const refine = event.target.closest('[data-refine]');
+  if (refine && issue({ type:'refine',rank:Number(refine.dataset.refine) },{quiet:true})) equipment();
   const socket = event.target.closest('[data-socket]');
   if (socket && issue({ type: 'socket', card: socket.dataset.socket || null }, { quiet: true })) equipment();
   const attune = event.target.closest('[data-attune]');
@@ -379,7 +384,7 @@ document.addEventListener('click', event => {
   if (bounty && issue({type:'bounty-' + bounty.dataset.bounty,id:bounty.dataset.id},{quiet:true})) bountyBoard();
   const forge = event.target.closest('[data-forge]');
   if (forge && issue({ type: 'forge', item: forge.dataset.forge }, { quiet: true })) { storage(); toast('Forged equipment added to shared storage.'); }
-  const equip = event.target.closest('[data-equip]'); if (equip && issue({ type: 'equip', item: equip.dataset.equip, card: equip.dataset.card || null })) equipment();
+  const equip = event.target.closest('[data-equip]'); if (equip && issue({ type: 'equip', item: equip.dataset.equip, card: equip.dataset.card || null, rank:Number(equip.dataset.rank) })) equipment();
   const modalAction = event.target.closest('[data-modal-action]')?.dataset.modalAction;
   if (modalAction === 'recover-all') { const ids = state.characters.filter(c => !c.mapId).map(c => c.id); if (issue({ type: 'recover', ids })) camp(); }
   if (modalAction === 'supply-all') { const ids = state.characters.filter(c => !c.mapId).map(c => c.id); if (issue({ type: 'resupply', ids })) camp(); }
