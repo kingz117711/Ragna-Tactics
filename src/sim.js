@@ -1,5 +1,5 @@
 // Pure, serializable simulation. No DOM, storage, wall clock, or camera dependencies.
-import { ELEMENTS, affinityMultiplier, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
+import { REFINEMENT, gearKey, ELEMENTS, affinityMultiplier, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
 
 export function random(state) {
   state.seed = (Math.imul(state.seed, 1664525) + 1013904223) >>> 0;
@@ -14,8 +14,8 @@ export function stats(c) {
   const element = spellElement(c);
   const spell = element ? ELEMENTS[element][c.job] : job.skill;
   return { ...job, element, skill: spell, interval: job.interval / (1 + agi / 100), skillBonus: dex * 2, crit: luk / 100, regen: 0.9 + int * 0.025,
-    hp: job.hp + (c.level - 1) * 14 + vit * 10, atk: job.atk + (c.level - 1) * 2 + item.atk + str * 2 + (CARDS[c.card]?.atk || 0),
-    def: job.def + Math.floor((c.level - 1) / 3) + item.def + Math.floor(vit / 3) + (CARDS[c.card]?.def || 0), sp: 45 + c.level * 4 + int * 4 };
+    hp: job.hp + (c.level - 1) * 14 + vit * 10, atk: job.atk + (c.level - 1) * 2 + item.atk + 2 * (c.refine || 0) + str * 2 + (CARDS[c.card]?.atk || 0),
+    def: job.def + Math.floor((c.level - 1) / 3) + item.def + (c.refine || 0) + Math.floor(vit / 3) + (CARDS[c.card]?.def || 0), sp: 45 + c.level * 4 + int * 4 };
 }
 export function character(id, name, sex = 'm') {
   return { id, ownerId: 'local-player', name, sex, job: 'novice', level: 1, exp: 0, jobLevel: 1, jobExp: 0,
@@ -225,17 +225,27 @@ function applyCommand(s, cmd) {
     if (c.mapId) return 'Change equipment at camp.';
     const card = cmd.card ?? null;
     if (card !== null && (!Object.hasOwn(CARDS, card) || cmd.item === 'training')) return 'Unknown socketed item.';
-    if (c.equipment === cmd.item && (c.card || null) === card) return null;
-    const stock = card ? s.inventory.socketed : s.inventory.equipment;
-    const key = card ? cmd.item + '/' + card : cmd.item;
+    const rank = cmd.rank === undefined ? 0 : cmd.rank;
+    if (!Number.isInteger(rank) || rank < 0 || rank >= REFINEMENT.length || (rank && cmd.item === 'training')) return 'Invalid refinement rank.';
+    if (c.equipment === cmd.item && (c.card || null) === card && (c.refine || 0) === rank) return null;
+    const stock = card || rank ? s.inventory.socketed : s.inventory.equipment;
+    const key = gearKey(cmd.item,card,rank);
     if (cmd.item !== 'training' && !(stock[key] > 0)) return 'That item is not in storage.';
     if (c.equipment !== 'training') {
-      const oldStock = c.card ? s.inventory.socketed : s.inventory.equipment;
-      const oldKey = c.card ? c.equipment + '/' + c.card : c.equipment;
+      const oldStock = c.card || c.refine ? s.inventory.socketed : s.inventory.equipment;
+      const oldKey = gearKey(c.equipment,c.card,c.refine);
       oldStock[oldKey] = (oldStock[oldKey] || 0) + 1;
     }
     if (cmd.item !== 'training') stock[key]--;
-    c.equipment = cmd.item; c.card = card; c.hp = Math.min(c.hp, stats(c).hp); return null;
+    c.equipment = cmd.item; c.card = card; c.refine = rank; c.hp = Math.min(c.hp, stats(c).hp); return null;
+  }
+  if (cmd.type === 'refine') {
+    const c = selected[0], rank = (c.refine || 0) + 1, cost = REFINEMENT[rank];
+    if (selected.length !== 1 || c.mapId || c.equipment === 'training') return 'Equip field gear at camp to refine it.';
+    if (!cost || cmd.rank !== rank) return 'Select the next refinement rank.';
+    if ((s.inventory.materials.Emveretarcon || 0) < cost.ore || s.inventory.zeny < cost.zeny) return 'Gather the ore and Zeny required.';
+    s.inventory.materials.Emveretarcon -= cost.ore; s.inventory.zeny -= cost.zeny;
+    c.refine = rank; log(s,c.name + ' refined ' + EQUIPMENT[c.equipment].name + ' to +' + rank + '.'); return null;
   }
   if (cmd.type === 'attune') {
     const c = selected[0];
@@ -390,6 +400,9 @@ function kill(s, m, killer) {
   s.inventory.zeny += def.zeny;
   s.inventory.materials[def.material] = (s.inventory.materials[def.material] || 0) + (killer.assignment === 'materials' ? 2 : 1);
   if (random(s) < 0.035) { const item = random(s) < 0.6 ? 'iron' : 'guard'; s.inventory.equipment[item]++; log(s, `${def.name} dropped ${EQUIPMENT[item].name}.`); }
+  if (m.mapId === 'payon' && random(s) < (m.kind === 'skeleton' ? 0.35 : 0.15)) {
+    s.inventory.materials.Emveretarcon = (s.inventory.materials.Emveretarcon || 0) + 1;
+  }
   if (Object.hasOwn(CARDS, m.kind) && (m.kind === 'phreeoni' || random(s) < 0.06)) {
     s.inventory.cards[m.kind] = (s.inventory.cards[m.kind] || 0) + 1;
     log(s, CARDS[m.kind].name + ' discovered in ' + MAPS[m.mapId].name + '! Socket it into equipment at camp.');

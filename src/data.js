@@ -89,6 +89,15 @@ export const CARDS = {
   scorpion: { name: 'Scorpion Card', description: '+6 ATK', atk: 6, def: 0 },
   peco: { name: 'Peco Peco Card', description: '+4 DEF', atk: 0, def: 4 },
 };
+export const REFINEMENT = [null, { ore:2, zeny:60 }, { ore:4, zeny:140 }, { ore:7, zeny:300 }];
+export function gearKey(item, card, rank) {
+  if (rank) return item + '/' + (card || '') + '/' + rank;
+  return card ? item + '/' + card : item;
+}
+export function gearVariant(key) {
+  const [item, card, rank] = key.split('/');
+  return { item, card:card || null, rank:rank === undefined ? 0 : Number(rank) };
+}
 export const EQUIPMENT = {
   reliquary: { name:'Payon reliquary', atk:3, def:6, description:'+3 attack · +6 defense · a feather-bound ward from Payon Cave.' },
   dune: { name: 'Caravan brooch', atk: 6, def: 2, description: '+6 attack · +2 defense · forged from Morroc and Willow Wood materials.' },

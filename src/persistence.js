@@ -1,4 +1,4 @@
-import { ELEMENTS, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, MONSTERS, HUNT_RADII, VERSION, MAPS, JOBS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS } from './data.js';
+import { gearKey, gearVariant, REFINEMENT, ELEMENTS, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, MONSTERS, HUNT_RADII, VERSION, MAPS, JOBS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS } from './data.js';
 import { availablePoints, populateField, createGame, advanceExpeditionGoals } from './sim.js';
 export const SAVE_KEY = 'ragna-tactics:save:v1';
 export const BACKUP_KEY = 'ragna-tactics:backup:v1';
@@ -19,6 +19,7 @@ export function validateState(s) {
     valid(c.ownerId === s.ownerId && text(c.name, 20) && c.name.trim().length && ['m', 'f'].includes(c.sex));
     valid(own(JOBS, c.job) && own(EQUIPMENT, c.equipment) && own(TACTICS, c.tactic));
     valid(c.element === undefined || (own(ELEMENTS,c.element) && own(ELEMENTS[c.element],c.job)));
+    valid(c.refine === undefined || (Number.isInteger(c.refine) && finite(c.refine,0,REFINEMENT.length-1) && (!c.refine || c.equipment !== 'training')));
     valid(c.card == null || (c.equipment !== 'training' && own(CARDS, c.card)));
     // Schema-v1 saves predate per-character tactics; derive their settings from the saved preset.
     c.tactics = { ...TACTIC_PRESETS[c.tactic], ...(c.tactics || {}) };
@@ -70,7 +71,7 @@ export function validateState(s) {
     }
   }
   valid(s.inventory && finite(s.inventory.zeny) && s.inventory.materials && typeof s.inventory.materials === 'object' && !Array.isArray(s.inventory.materials));
-  for (const [key, value] of Object.entries(s.inventory.materials || {})) valid(Object.values(MONSTERS).some(monster => monster.material === key) && Number.isInteger(value) && finite(value));
+  for (const [key, value] of Object.entries(s.inventory.materials || {})) valid((key === 'Emveretarcon' || Object.values(MONSTERS).some(monster => monster.material === key)) && Number.isInteger(value) && finite(value));
   if (s.inventory.equipment && s.inventory.equipment.dune === undefined) s.inventory.equipment.dune = 0;
   if (s.inventory.equipment && s.inventory.equipment.reliquary === undefined) s.inventory.equipment.reliquary = 0;
   for (const key of ['reliquary', 'dune', 'iron', 'guard', 'sanctuary']) valid(Number.isInteger(s.inventory.equipment?.[key]) && finite(s.inventory.equipment[key]));
@@ -103,8 +104,8 @@ export function validateState(s) {
     const stock = s.inventory[field];
     valid(stock && typeof stock === 'object' && !Array.isArray(stock));
     for (const [key, count] of Object.entries(stock)) {
-      const [item, card] = key.split('/');
-      valid(field === 'cards' ? own(CARDS, key) : item !== 'training' && own(EQUIPMENT, item) && own(CARDS, card) && key === item + '/' + card);
+      const {item, card, rank} = gearVariant(key);
+      valid(field === 'cards' ? own(CARDS, key) : item !== 'training' && own(EQUIPMENT, item) && (!card || own(CARDS,card)) && (card || rank) && Number.isInteger(rank) && finite(rank,0,REFINEMENT.length-1) && key === gearKey(item,card,rank));
       valid(Number.isSafeInteger(count) && finite(count));
     }
   }

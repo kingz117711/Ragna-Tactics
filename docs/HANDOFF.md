@@ -1,5 +1,12 @@
 # Milestone handoff — 2026-11-27
 
+## Equipment refinement
+
+Open Equipment at camp with field gear equipped. Each successful refinement adds
+2 attack and 1 defense, up to +3. Emveretarcon drops from Zombies and Archer
+Skeletons. Stored gear keeps its rank when a card is added, removed or replaced.
+The inventory groups identical item, card and rank combinations.
+
 ## Payon Cave
 
 Hunt slow Zombies and ranged Archer Skeletons. Acolytes and Priests can prepare

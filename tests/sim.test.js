@@ -468,3 +468,26 @@ test('Payon rewards a prepared Holy Priest and preserves the healing loadout', (
   assert.ok(prepare('support')); priest.mapId=null;
   assert.equal(prepare('support'),null); assert.equal(stats(priest).skill,'Sanctuary');
 });
+
+test('refinement follows a carded item independently of a second plain copy', async () => {
+  const {decodeSave,encodeSave}=await import('../src/persistence.js');
+  let s=createGame(); s.inventory.zeny=500; s.inventory.materials.Emveretarcon=13;
+  s.inventory.equipment.iron=2; s.inventory.cards.peco=1;
+  const act=(id,type,args)=>command(s,{ids:[id],type,...args});
+  assert.equal(act('c1','equip',{item:'iron'}),null);
+  assert.equal(act('c1','socket',{card:'peco'}),null);
+  assert.equal(act('c2','equip',{item:'iron'}),null);
+  for(const rank of [1,2,3]) {
+    assert.equal(act('c1','refine',{rank}),null);
+    assert.ok(act('c1','refine',{rank}));
+  }
+  assert.equal(s.inventory.zeny,0); assert.equal(s.inventory.materials.Emveretarcon,0);
+  assert.equal(act('c1','equip',{item:'training'}),null);
+  s=decodeSave(encodeSave(s)).state;
+  assert.equal(act('c2','equip',{item:'iron',card:'peco',rank:3}),null);
+  assert.equal(stats(s.characters[1]).atk,21); assert.equal(s.inventory.equipment.iron,1);
+  assert.equal(act('c2','socket',{card:null}),null);
+  assert.equal(act('c2','equip',{item:'training'}),null);
+  assert.equal(s.inventory.socketed['iron//3'],1); assert.equal(s.inventory.cards.peco,1);
+  assert.equal(decodeSave(encodeSave(s)).state.inventory.socketed['iron//3'],1);
+});

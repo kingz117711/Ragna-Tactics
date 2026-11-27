@@ -351,7 +351,7 @@ test('prepare elemental magic and use the field guide to find a weak target', as
 });
 
 test('settle a split guild, craft the Payon ward, prepare Holy magic and deploy', async ({page}) => {
-  const s=createGame(), {command,stats}=await import('../../src/sim.js');
+  const s=createGame(1), {command,stats}=await import('../../src/sim.js');
   for (const [i,c] of s.characters.entries()) {
     c.job=i?'hunter':'priest'; c.assignment='materials'; c.level=45; c.hp=stats(c).hp; c.sp=stats(c).sp;
     command(s,{type:'deploy',ids:[c.id],mapId:i?'morroc':'payon'});
@@ -374,4 +374,14 @@ test('settle a split guild, craft the Payon ward, prepare Holy magic and deploy'
   await page.locator('#battlefield').screenshot({path:'artifacts/payon-cave.png'});
   await page.setViewportSize({width:390,height:844});
   await page.locator('#battlefield').screenshot({path:'artifacts/payon-mobile.png'});
+});
+
+test('refine equipped gear at camp and inspect the next material cost',async({page})=>{
+  const s=createGame(); s.characters[0].equipment='guard'; s.inventory.materials.Emveretarcon=2;
+  await page.addInitScript(raw=>{if(!localStorage.length)localStorage.setItem('ragna-tactics:save:v1',raw);},encodeSave(s));
+  await boot(page); await page.locator('[data-character="c1"]').first().click();
+  await page.locator('[data-action="equipment"]').click(); await page.locator('[data-refine="1"]').click();
+  await expect(page.locator('#modal h3')).toContainText('+1 Guard insignia');
+  await expect(page.locator('[data-refine="2"]')).toBeDisabled();
+  await page.locator('#modal').screenshot({path:'artifacts/refinement.png'});
 });

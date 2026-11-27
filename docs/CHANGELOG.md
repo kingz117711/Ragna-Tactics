@@ -94,3 +94,7 @@ Added the Caravan brooch recipe, a cross-region reward for desert and forest mat
 ## Payon Cave
 
 Added two native undead monsters, Holy offensive loadouts for support jobs, a repeatable bounty, Archer Skeleton Cards and the Payon reliquary.
+
+## Payon equipment refinement
+
+Added ore drops, three guaranteed refinement ranks, and independent storage of refined and carded gear.
