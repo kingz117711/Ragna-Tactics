@@ -43,7 +43,7 @@ function ensureLeaders(s) {
 export function createGame(seed = 712711) {
   const s = { version: VERSION, ownerId: 'local-player', seed, time: 0, nextId: 1, characters: [character('c1', 'Aren'), character('c2', 'Lyra', 'f')],
     parties: [], maps: {}, inventory: { zeny: 150, materials: {}, equipment: { iron: 0, guard: 0, sanctuary: 0 } },
-    milestones: { bossKills: 0, forestKills: 0 }, journal: [], effects: [] };
+    milestones: { bossKills: 0, forestKills: 0, expeditionStep: 0 }, journal: [], effects: [] };
   for (const map of Object.values(MAPS)) {
     s.maps[map.id] = { id: map.id, monsters: [], telegraph: null, bossTimer: 8, bossDefeated: false, respawn: 0 };
     for (let i = 0; i < map.count; i++) spawn(s, map.id, map.id === 'meadow' && i % 3 === 0 ? 'fabre' : map.monster);
@@ -72,7 +72,46 @@ export function engaged(s, c) {
   return !!c.mapId && s.maps[c.mapId].monsters.some(m => m.hp > 0 && m.targetId === c.id);
 }
 export function rosterLimit(s) { return Math.min(5, 2 + Number(s.milestones.bossKills >= 1) + Number(s.milestones.forestKills >= 35) + Number(s.milestones.bossKills >= 3)); }
+export function advanceExpeditionGoals(s) {
+  const goals = s.milestones;
+  const starters = s.characters.filter(c => c.id === 'c1' || c.id === 'c2');
+  const ready = starters.length === 2 && starters.every(c => c.job !== 'novice' || c.jobLevel >= 10);
+  const jobChosen = starters.length === 2 && starters.every(c => c.job !== 'novice');
+  const prepared = s.parties.some(p => {
+    const members = s.characters.filter(c => c.partyId === p.id);
+    return members.length >= 2 && members.every(c => c.potions >= 5);
+  });
+  const completed = [
+    starters.length === 2 && starters.every(c => !!c.mapId),
+    ready,
+    jobChosen,
+    prepared,
+    goals.bossKills >= 1,
+    s.characters.length >= 3,
+  ];
+  let step = Math.min(6, Math.max(0, Number.isInteger(goals.expeditionStep) ? goals.expeditionStep : 0));
+  const previous = step;
+  while (step < completed.length && completed[step]) step++;
+  if (step > previous) {
+    goals.expeditionStep = step;
+    const notices = [
+      'Both starting Novices are deployed. Keep hunting until one reaches Job Lv. 10.',
+      'Both Novices are ready to choose first jobs. Return to camp to advance.',
+      'Both first jobs are chosen. Form a party and check supplies before the boss.',
+      'Your party is prepared. Baphomet awaits in the Broken Sanctuary.',
+      'Baphomet is defeated. The guild can recruit a third Novice.',
+      'A third Novice joined the guild. The expedition goals are complete.',
+    ];
+    for (let i = previous; i < step; i++) log(s, notices[i]);
+  }
+  return step;
+}
 export function command(s, cmd) {
+  const result = applyCommand(s, cmd);
+  if (result === null) advanceExpeditionGoals(s);
+  return result;
+}
+function applyCommand(s, cmd) {
   const selected = s.characters.filter(c => cmd.ids?.includes(c.id));
   const units = expandSelection(s, cmd.ids || []);
   if (cmd.type === 'recruit') {
@@ -235,7 +274,8 @@ function move(c, target, speed, dt) {
   if (d < 0.1) { c.stance = 'idle'; return true; }
   const dx = target.x - c.x, dy = target.y - c.y, n = Math.min(d, speed * dt);
   face(c, target);
-  c.x += dx / d * n; c.y += dy / d * n;
+  c.x = Math.max(-15, Math.min(15, c.x + dx / d * n));
+  c.y = Math.max(-15, Math.min(15, c.y + dy / d * n));
   c.stance = 'walk'; return n >= d;
 }
 function effect(s, mapId, x, y, text, kind = 'hit') {
@@ -272,11 +312,14 @@ function kill(s, m, killer) {
   }
   effect(s, m.mapId, m.x, m.y, '+' + def.zeny + 'z', 'loot');
 }
-function damage(s, c, m, value) {
-  if (!m || m.hp <= 0) return;
+function damage(s, c, m, value, attackRange = stats(c).range) {
+  // All damaging paths re-check reach at the point of resolution. Target locks are
+  // intentions, not permission to deal damage across a map or through an overshoot.
+  if (!m || m.hp <= 0 || !c.mapId || c.mapId !== m.mapId || distance(c, m) > attackRange + 1e-6) return false;
   const dealt = Math.max(1, Math.round(value - MONSTERS[m.kind].def));
   m.hp -= dealt; m.targetId = c.id; effect(s, m.mapId, m.x, m.y, String(dealt));
   if (m.hp <= 0) kill(s, m, c);
+  return true;
 }
 function useSkill(s, c, target, manual = false) {
   const st = stats(c);
@@ -289,9 +332,9 @@ function useSkill(s, c, target, manual = false) {
     const amount = Math.min(stats(injured).hp - injured.hp, c.job === 'novice' ? 28 : 45 + c.level * 5);
     injured.hp += amount; effect(s, c.mapId, injured.x, injured.y, '+' + Math.round(amount), 'heal');
   } else {
-    if (!target || distance(c, target) > st.range + 0.5) return false;
-    damage(s, c, target, st.atk * (c.job === 'mage' ? 2.4 : 2));
-    if (c.job === 'mage') for (const m of s.maps[c.mapId].monsters) if (m !== target && m.hp > 0 && distance(m, target) < 3) damage(s, c, m, st.atk * 1.4);
+    if (!target || target.mapId !== c.mapId || distance(c, target) > st.range) return false;
+    if (!damage(s, c, target, st.atk * (c.job === 'mage' ? 2.4 : 2), st.range)) return false;
+    if (c.job === 'mage') for (const m of s.maps[c.mapId].monsters) if (m !== target && m.hp > 0 && distance(m, target) < 3) damage(s, c, m, st.atk * 1.4, st.range + 3);
     if (c.job === 'swordsman') for (const m of s.maps[c.mapId].monsters) if (m.hp > 0 && distance(m, c) < 5) m.targetId = c.id;
   }
   c.sp -= st.cost; c.cooldown = st.cooldown; c.attackFlash = 0.5; c.stance = 'attack';
@@ -304,7 +347,9 @@ function tickCharacter(s, c, dt) {
   if (c.hp <= 0) { log(s, c.name + ' fell and returned to camp. Recover before redeploying.'); c.hp = 0; c.mapId = null; c.status = 'down'; c.targetId = null; c.destination = null; return; }
   c.sp = Math.min(st.sp, c.sp + 0.9 * dt);
   if (c.hp < st.hp * tactics.potionAt && c.potions > 0) { c.hp = Math.min(st.hp, c.hp + 65); c.potions--; effect(s, c.mapId, c.x, c.y, '+Potion', 'heal'); }
-  if (c.hp / st.hp < tactics.retreatAt && c.order !== 'retreat') {
+  // Priority: an explicit Retreat is honored; an explicit Move finishes before
+  // safety automation interrupts it; otherwise low HP retreats before combat AI.
+  if (c.hp / st.hp < tactics.retreatAt && !['retreat', 'move'].includes(c.order)) {
     c.order = 'retreat'; c.status = 'retreating'; c.destination = { x: -11, y: 13 }; c.targetId = null;
     log(s, c.name + ' is retreating: HP below their threshold.');
   }
@@ -322,15 +367,17 @@ function tickCharacter(s, c, dt) {
   const map = s.maps[c.mapId], role = roleOf(c), leader = leaderAvailable(s, c);
   if (tactics.autoSkill) useSkill(s, c, null);
   let target = map.monsters.find(m => m.id === c.targetId && m.hp > 0);
-  if (target && c.order === 'hold' && distance(target, c.home) > st.range + 2) target = null;
   const pref = tactics.targetPref;
-  const assisted = pref === 'leader' && leader ? map.monsters.find(m => m.id === leader.targetId && m.hp > 0) : null;
-  if (c.order !== 'focus' && assisted) target = assisted;
-  const huntingRadius = c.order === 'hold' ? st.range + 2 : c.farmRadius ?? 20;
-  if (c.order === 'farm' && c.farmRadius && target && distance(target, c.home) > huntingRadius + 2) target = null;
-  if (!target && assisted && distance(assisted, c.home) <= huntingRadius + 2) target = assisted;
-  if (!target) {
-    const candidates = map.monsters.filter(m => m.hp > 0 && distance(m, c.home) <= huntingRadius);
+  // Leader assist is a farming behavior only: it must never bypass a manual Hold
+  // anchor, a rally leash, or an explicit focus order.
+  const assisted = c.order === 'farm' && pref === 'leader' && leader
+    ? map.monsters.find(m => m.id === leader.targetId && m.hp > 0) : null;
+  const leash = c.order === 'hold' ? st.range + 2 : c.order === 'farm' && c.farmRadius ? c.farmRadius : 20;
+  if (target && distance(target, c.home) > leash) target = null;
+  // In Farm, a valid leader target wins over a follower's previous target lock.
+  if (assisted && distance(assisted, c.home) <= leash) target = assisted;
+  if (!target && c.order !== 'focus') {
+    const candidates = map.monsters.filter(m => m.hp > 0 && distance(m, c.home) <= leash);
     if (pref === 'lowest') candidates.sort((a, b) => a.hp - b.hp || distance(c, a) - distance(c, b));
     else candidates.sort((a, b) => distance(c, a) - distance(c, b));
     target = candidates[0] || null;
@@ -339,7 +386,7 @@ function tickCharacter(s, c, dt) {
   if (!target) {
     c.targetId = null; c.status = c.order === 'hold' ? 'holding' : 'searching'; c.stance = 'idle';
     if (c.order === 'farm' && c.farmRadius && distance(c, c.home) > 1.2) { c.status = 'moving'; move(c, c.home, st.speed, dt); }
-    else if (role !== 'frontline' && leader && distance(c, leader) > 5.5) { c.status = 'moving'; move(c, leader, st.speed, dt); }
+    else if (c.order === 'farm' && role !== 'frontline' && leader && distance(c, leader) > 5.5) { c.status = 'moving'; move(c, leader, st.speed, dt); }
     return;
   }
   c.targetId = target.id;
@@ -350,7 +397,6 @@ function tickCharacter(s, c, dt) {
     const toward = distance(c, leader) > 5.5 ? leader : target;
     c.status = 'moving'; move(c, toward, st.speed, dt); return;
   }
-  const leash = c.order === 'hold' ? st.range + 2 : (c.farmRadius ?? 20) + 3;
   if (d > desired + 0.45 && distance(target, c.home) <= leash) { c.status = 'moving'; move(c, target, st.speed, dt); return; }
   if (d < desired - 0.8 && role !== 'frontline') {
     const dx = c.x - target.x, dy = c.y - target.y, length = Math.hypot(dx, dy) || 1;
@@ -359,9 +405,9 @@ function tickCharacter(s, c, dt) {
   }
   c.status = 'fighting'; c.stance = c.attackFlash > 0 ? 'attack' : 'idle'; face(c, target);
   if (tactics.autoSkill) useSkill(s, c, target);
-  if (target.hp > 0 && c.attackTimer <= 0) {
+  if (target.hp > 0 && c.attackTimer <= 0 && target.mapId === c.mapId && distance(c, target) <= st.range) {
     c.attackTimer = st.interval; c.attackFlash = 0.4; c.stance = 'attack';
-    damage(s, c, target, st.atk * (0.9 + random(s) * 0.2));
+    damage(s, c, target, st.atk * (0.9 + random(s) * 0.2), st.range);
   }
 }
 function tickMonster(s, map, m, dt) {
@@ -450,6 +496,7 @@ export function tick(s, dt = STEP, { offline = false, effects = true } = {}) {
   }
   if (!offline) tickBoss(s, dt);
   if (!effects) s.effects = [];
+  advanceExpeditionGoals(s);
 }
 export function advance(s, seconds, options) {
   let remaining = seconds;

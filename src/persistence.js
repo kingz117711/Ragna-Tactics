@@ -1,5 +1,5 @@
 import { VERSION, MAPS, JOBS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS } from './data.js';
-import { createGame } from './sim.js';
+import { createGame, advanceExpeditionGoals } from './sim.js';
 export const SAVE_KEY = 'ragna-tactics:save:v1';
 export const BACKUP_KEY = 'ragna-tactics:backup:v1';
 const finite = (v, low = 0, high = 1e12) => typeof v === 'number' && Number.isFinite(v) && v >= low && v <= high;
@@ -62,10 +62,30 @@ export function validateState(s) {
   for (const [key, value] of Object.entries(s.inventory.materials || {})) valid(['Jellopy', 'Fluff', 'Resin', 'Sanctuary Sigil'].includes(key) && Number.isInteger(value) && finite(value));
   for (const key of ['iron', 'guard', 'sanctuary']) valid(Number.isInteger(s.inventory.equipment?.[key]) && finite(s.inventory.equipment[key]));
   for (const key of ['bossKills', 'forestKills']) valid(Number.isInteger(s.milestones?.[key]) && finite(s.milestones[key]));
+  // New tutorial progress is optional in old v1 envelopes; infer forward from current state.
+  if (s.milestones.expeditionStep === undefined) {
+    const starters = s.characters.filter(c => ['c1', 'c2'].includes(c.id));
+    const deployedBefore = starters.length === 2 && (starters.every(c => !!c.mapId) || starters.every(c => c.kills > 0 || s.journal.some(e => /deployed to/.test(e.message) && e.message.includes(c.name))));
+    const readyBefore = starters.length === 2 && starters.every(c => c.job !== 'novice' || c.jobLevel >= 10) || s.journal.filter(e => /can now choose a first job/.test(e.message)).length >= 2;
+    const jobBefore = starters.length === 2 && starters.every(c => c.job !== 'novice');
+    const partyBefore = s.parties.some(p => {
+      const members = s.characters.filter(c => c.partyId === p.id);
+      return members.length >= 2 && members.every(c => c.potions >= 5);
+    });
+    let step = Number(deployedBefore);
+    if (step >= 1 && readyBefore) step = 2;
+    if (step >= 2 && jobBefore) step = 3;
+    if (step >= 3 && partyBefore) step = 4;
+    if (step >= 4 && s.milestones.bossKills > 0) step = 5;
+    if (step >= 5 && s.characters.length >= 3) step = 6;
+    s.milestones.expeditionStep = step;
+  }
+  valid(Number.isInteger(s.milestones.expeditionStep) && finite(s.milestones.expeditionStep, 0, 6));
   valid(s.milestones.enemiesDefeated === undefined || (Number.isSafeInteger(s.milestones.enemiesDefeated) && finite(s.milestones.enemiesDefeated)));
   valid(Array.isArray(s.journal) && s.journal.length <= 35 && s.journal.every(e => Number.isSafeInteger(e.id) && finite(e.time) && text(e.message, 500)));
   valid(s.nextId > Math.max(0, ...[...monsterIds, ...parties].map(id => Number(id.slice(1))), ...s.journal.map(e => e.id)));
   s.effects = []; // Transient effects never survive loading.
+  advanceExpeditionGoals(s);
   return s;
 }
 export function encodeSave(state, now = Date.now()) {

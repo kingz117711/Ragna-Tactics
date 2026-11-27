@@ -3,13 +3,19 @@
 The core foundation is playable. Work in small milestones; do not turn this list
 into one giant implementation task. Owner-confirmed direction is in GAME-DIRECTION.
 
-## Current milestone: party tactics and world management (implemented; browser QA pending)
+## Current milestone: combat reliability, first expedition goals, and browser QA (implemented)
 
-Positioning roles, per-character bounded tactics, leader failover, a party summary,
-and a cross-map world overview are in place. The simulation/persistence/asset/build
-checks pass. Chromium could not be installed in the current environment, so browser
-suite and screenshot QA are pending; complete them before marking this milestone
-fully verified.
+Basic attacks and skills validate map/range at damage resolution; target selection,
+leader assist, Hold/focus, and farm radii respect their anchors/leashes. Movement and
+ranged repositioning are clamped to the field, manual movement has a predictable
+priority over safety automation, and party support/failover behavior is covered by
+simulation tests. The UI now includes an ordered six-step first expedition panel with
+progress and contextual actions, alongside party/tactics/world-management affordances.
+
+The simulation, persistence, assets, static build, all 14 Chromium browser scenarios,
+and built-output browser smoke check passed on 2026-11-27. Desktop and narrow screenshots
+were inspected. Physical-device testing and a complete unscripted playthrough remain
+manual follow-up; do not claim those were covered.
 
 ## Next: polish and tune the first expedition
 

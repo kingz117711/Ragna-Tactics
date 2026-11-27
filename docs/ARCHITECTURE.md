@@ -40,6 +40,9 @@ Rendering cannot award rewards or advance timers. Effects carry their map ID.
 Commands currently mutate the passed state synchronously. There is no network
 transport, authoritative server, command sequence protocol, or anti-cheat layer.
 Determinism helps test rules and reuse them later; it does not itself provide trust.
+The first-expedition checklist is derived from starter deployments, job levels/choices,
+party supplies, boss kills, and roster size. Its saved step is monotonic so completion
+survives reloads and older v1 saves can advance without a schema bump.
 
 ## Combat/commands
 

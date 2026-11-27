@@ -28,6 +28,23 @@
   as Swordsman/Acolyte, Archer/Mage, and Thief/Merchant. The new tests exercise
   hunt orders, touch and reduced motion, job selection, ring damage, and reporting.
 
+## 2026-11-27 — Combat reliability, expedition goals, and browser QA
+
+- Prevented remote basic-attack/skill damage by validating map identity and actual
+  reach at resolution; tightened Hold/focus/farm leashes and made leader assist
+  override stale follower target locks only within the follower's boundary.
+- Clamped combat repositioning to the battlefield and clarified manual move versus
+  safety-retreat priority and party behavior after retreat/leader defeat.
+- Added a six-step first-expedition goals panel with progress and next actions, plus
+  backward-compatible save behavior, attention cues, tactical-order feedback, and
+  clearer boss/job/recruitment feedback. Retreat threshold controls now represent
+  preset values at 1% increments.
+- Added simulation, persistence, and browser regressions. Verified 45 unit tests,
+  14/14 Chromium scenarios, all 38 original assets, static build, and built-output
+  smoke test. Refreshed desktop/mobile-width/boss/world/job screenshots were inspected.
+- Remaining coverage limit: no physical-device or full multi-browser verification;
+  manual unscripted balance playthrough remains follow-up.
+
 ## 2026-11-27 — Party tactics and world management
 
 - Added role-aware positioning, bounded per-character skill/healing/potion/retreat

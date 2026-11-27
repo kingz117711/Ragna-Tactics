@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createGame, command, advance, tick, gainExp, stats, settleOffline, rosterLimit, effectiveTactics, roleOf } from '../src/sim.js';
+import { createGame, command, advance, tick, gainExp, stats, settleOffline, rosterLimit, effectiveTactics, roleOf, advanceExpeditionGoals } from '../src/sim.js';
 import { OFFLINE_CAP, MONSTERS } from '../src/data.js';
 const ids = ['c1', 'c2'];
 test('a marked hunt survives manual repositioning, resume and offline settlement', () => {
@@ -190,6 +190,22 @@ test('effects carry their map identity and cannot leak between viewed maps', () 
   const s = createGame(); deploy(s); advance(s, 4);
   assert.ok(s.effects.length > 0); assert.ok(s.effects.every(e => e.mapId === 'meadow'));
 });
+test('expedition goals progress in order, persist through completion, and unlock the first recruit', () => {
+  const s = createGame(); assert.equal(s.milestones.expeditionStep, 0);
+  command(s, { type: 'party', ids }); deploy(s);
+  assert.equal(s.milestones.expeditionStep, 1);
+  gainExp(s, s.characters[0], 0, 1000); gainExp(s, s.characters[1], 0, 1000); advance(s, 0.1);
+  assert.equal(s.milestones.expeditionStep, 2);
+  command(s, { type: 'retreat', ids }); advance(s, 20);
+  assert.ok(s.characters.every(c => !c.mapId));
+  assert.equal(command(s, { type: 'promote', ids: ['c1'], job: 'swordsman' }), null);
+  assert.equal(s.milestones.expeditionStep, 2, 'one job choice does not complete the two-character job goal');
+  assert.equal(command(s, { type: 'promote', ids: ['c2'], job: 'archer' }), null);
+  assert.equal(s.milestones.expeditionStep, 4, 'both jobs and the prepared party advance the tutorial');
+  s.milestones.bossKills = 1; advanceExpeditionGoals(s); assert.equal(s.milestones.expeditionStep, 5);
+  assert.equal(command(s, { type: 'recruit', name: 'Nia' }), null);
+  assert.equal(s.milestones.expeditionStep, 6);
+});
 test('tactics customization is bounded at the command boundary and controls survive Farm resume', () => {
   const s = createGame();
   assert.match(command(s, { type: 'tactic-config', ids: ['c1'], key: 'potionAt', value: 1.2 }), /between 0% and 95%/);
@@ -215,6 +231,67 @@ test('job roles expose distinct frontline, ranged, and support positioning class
   const s = createGame(); assert.equal(roleOf(s.characters[0]), 'frontline');
   promote(s, 0, 'archer'); assert.equal(roleOf(s.characters[0]), 'ranged');
   promote(s, 1, 'acolyte'); assert.equal(roleOf(s.characters[1]), 'support');
+});
+test('holding archers never damage leader targets outside attack range or hold leash', () => {
+  const s = createGame(); promote(s, 0, 'swordsman'); promote(s, 1, 'archer');
+  command(s, { type: 'party', ids }); deploy(s);
+  const [leader, archer] = s.characters, enemy = s.maps.meadow.monsters[0];
+  for (const m of s.maps.meadow.monsters) if (m !== enemy) { m.hp = 0; m.respawn = 100; }
+  Object.assign(enemy, { x: 12.1, y: 0, hp: 1000, timer: 100, targetId: leader.id });
+  command(s, { type: 'tactic-config', ids: ['c1'], key: 'autoSkill', value: false });
+  Object.assign(leader, { x: 10.3, y: 0, home: { x: 10.3, y: 0 }, order: 'hold', status: 'holding', targetId: enemy.id, attackTimer: 100 });
+  Object.assign(archer, { x: 0, y: 0, home: { x: 0, y: 0 }, order: 'hold', status: 'holding', targetId: null });
+  const before = enemy.hp;
+  tick(s);
+  assert.equal(archer.targetId, null, 'hold must ignore a leader target outside its anchor leash');
+  assert.equal(enemy.hp, before, 'leader assistance must not deal remote damage');
+});
+test('focused targets chase into attack range but never damage remotely or escape the leash', () => {
+  const s = createGame(); promote(s, 0, 'swordsman'); promote(s, 1, 'archer');
+  command(s, { type: 'party', ids }); deploy(s);
+  const [leader, archer] = s.characters, enemy = s.maps.meadow.monsters[0];
+  for (const m of s.maps.meadow.monsters) if (m !== enemy) { m.hp = 0; m.respawn = 100; }
+  Object.assign(enemy, { x: 12, y: 0, hp: 1000, timer: 100, targetId: null });
+  Object.assign(leader, { x: -8, y: 0, home: { x: -8, y: 0 }, order: 'hold', status: 'holding', attackTimer: 100 });
+  Object.assign(archer, { x: 0, y: 0, home: { x: 0, y: 0 }, order: 'focus', targetId: enemy.id });
+  const before = enemy.hp;
+  tick(s);
+  assert.equal(enemy.hp, before, 'focused target cannot be damaged before the Archer enters range');
+  assert.equal(archer.status, 'moving');
+  advance(s, 5);
+  assert.ok(enemy.hp < before, 'the explicit focus becomes attackable after repositioning into range');
+
+  Object.assign(archer, { x: 0, y: 0, home: { x: 0, y: 0 }, order: 'focus', targetId: enemy.id, attackTimer: 0 });
+  Object.assign(enemy, { x: 22, y: 0, hp: 1000, targetId: null });
+  const outOfLeash = enemy.hp;
+  tick(s);
+  assert.equal(enemy.hp, outOfLeash);
+  assert.equal(archer.targetId, null);
+  assert.deepEqual([archer.x, archer.y], [0, 0], 'an unreachable focus target does not pull a ranged follower away from Hold');
+});
+test('manual movement finishes before automatic retreat and all automatic repositioning stays in bounds', () => {
+  const s = createGame(); promote(s, 0, 'archer'); deploy(s, 'meadow', ['c1']);
+  const archer = s.characters[0];
+  command(s, { type: 'tactic-config', ids: ['c1'], key: 'retreatAt', value: 0.7 });
+  archer.hp = stats(archer).hp * 0.5;
+  command(s, { type: 'move', ids: ['c1'], point: { x: 14, y: 14 } });
+  tick(s);
+  assert.equal(archer.order, 'move', 'safety automation must not cancel a deliberate Move mid-route');
+  let observedRetreat = false;
+  for (let i = 0; i < 200 && archer.mapId; i++) { tick(s); if (archer.order === 'retreat') observedRetreat = true; }
+  assert.ok(observedRetreat, 'safety retreat resumes once the manual move completes');
+  assert.equal(archer.status, 'camp');
+  assert.ok(Math.abs(archer.x) <= 15 && Math.abs(archer.y) <= 15);
+});
+test('ranged kite repositioning is clamped to battlefield bounds', () => {
+  const s = createGame(); promote(s, 0, 'archer'); deploy(s, 'meadow', ['c1']);
+  const archer = s.characters[0], enemy = s.maps.meadow.monsters[0];
+  command(s, { type: 'tactic-config', ids: ['c1'], key: 'autoSkill', value: false });
+  for (const m of s.maps.meadow.monsters) if (m !== enemy) { m.hp = 0; m.respawn = 100; }
+  Object.assign(archer, { x: 15, y: 15, home: { x: 15, y: 15 }, order: 'farm', attackTimer: 0 });
+  Object.assign(enemy, { x: 14.9, y: 15, hp: 1000, timer: 100, targetId: null });
+  advance(s, 2);
+  assert.ok(Math.abs(archer.x) <= 15 && Math.abs(archer.y) <= 15);
 });
 test('ranged attackers stop inside their native range while supports stay with the engaging party', () => {
   const ranged = createGame(); promote(ranged, 0, 'archer'); deploy(ranged, 'meadow', ['c1']);

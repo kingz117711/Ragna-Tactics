@@ -1732,3 +1732,38 @@ select{
 @media(max-width:900px) { .party-overview { margin-top:10px; } .party-summary > div { gap:3px; } }
 @media(max-width:620px) { .party-overview { grid-template-columns:1fr; } .world-overview { grid-template-columns:1fr; } .activity-heading { gap:8px; } .activity-heading button { font-size:9px; gap:4px; } .tactics-setting input { min-height:30px; } }
 @media(prefers-reduced-motion:reduce) { .party-summary, .world-unit, .tactics-details { scroll-behavior:auto; } }
+/* Compact guided expedition progression. */
+.expedition-goals { margin-top: 13px; padding: 11px 10px; border: 1px solid #d6c58b30; border-radius: 5px; background: linear-gradient(125deg,#263b3544,#182c2b55); }
+.goals-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.goals-heading .eyebrow { font-size:8px; letter-spacing:1.2px; }
+.goals-heading > span:last-child { color:var(--gold); font-size:9px; font-variant-numeric:tabular-nums; }
+.expedition-goals ol { list-style:none; display:grid; gap:5px; padding:0; margin:0; }
+.expedition-goals li { display:grid; grid-template-columns:15px 1fr; align-items:start; gap:5px; color:#81958e; font-size:9px; line-height:1.35; }
+.expedition-goals li > span { width:13px; height:13px; border:1px solid #83958c66; border-radius:50%; text-align:center; font-size:8px; line-height:11px; }
+.expedition-goals li.complete { color:#9db49b; }
+.expedition-goals li.complete > span { color:var(--gold); border-color:#dec58e88; }
+.expedition-goals li.current { color:#e7e9dc; }
+.expedition-goals li.current > span { border-color:var(--gold); color:var(--gold); box-shadow:0 0 0 2px #dec58e16; }
+.goal-next { width:100%; display:flex; align-items:center; justify-content:space-between; margin-top:10px; padding:8px 9px; border-color:#dec58e55; color:#eddaa8; background:#dec58e0c; font-size:9px; text-align:left; }
+.goal-next span { font-size:13px; }
+.goals-complete { margin-top:8px; color:var(--gold); font-size:9px; line-height:1.5; }
+.command-buttons button[aria-pressed="true"] { border-color:var(--gold); background:#c7b98025; color:#f0dfb5; box-shadow:inset 0 -2px #dec58e55; }
+.party-member[aria-pressed="true"] { background:#dec58e17; }
+.tactics-details[open] { border-color:#dec58e55; background:#101f201a; }
+.tactics-details summary { min-height:32px; display:flex; align-items:center; }
+.tactics-toggle, .tactics-setting { padding:4px 0; }
+.tactics-setting output { min-width:34px; text-align:right; }
+.character-card:focus-visible, .party-member:focus-visible, .goal-next:focus-visible { outline:2px solid var(--gold); outline-offset:2px; z-index:1; }
+@media(max-width:900px) {
+  .expedition-goals { margin-top:9px; padding:8px 10px; }
+  .expedition-goals ol { grid-template-columns:1fr 1fr; column-gap:12px; }
+}
+@media(max-width:620px) {
+  .expedition-goals { margin-top:9px; }
+  .expedition-goals ol { grid-template-columns:1fr 1fr; }
+  .goal-next { min-height:40px; }
+  .tactics-details summary { min-height:40px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .goal-next, .party-member, .character-card { transition:none!important; }
+}

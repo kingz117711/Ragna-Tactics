@@ -54,8 +54,9 @@ camp/additive-selection controls. Tests construct their own save fixtures in iso
 browser contexts. There are no production cheat buttons or global state hooks.
 
 Screenshots: `artifacts/foundation-desktop.png`, `foundation-boss.png`,
-`foundation-mobile.png`, and `world-overview.png`. Inspect them after visual changes. They are ignored by git;
-The [CI template](ci/README.md) uploads them when enabled. A skipped run is not a pass.
+`foundation-mobile.png`, and `world-overview.png`. Inspect them after visual changes;
+these were refreshed and inspected on 2026-11-27. They are ignored by git. The
+[CI template](ci/README.md) uploads them when enabled. A skipped run is not a pass.
 
 `test:build` serves the actual exported `dist/` folder on an ephemeral loopback
 port and checks a fresh browser boot, asset requests, two Novices, and runtime

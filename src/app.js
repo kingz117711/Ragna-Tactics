@@ -11,7 +11,7 @@ const number = value => Math.floor(value).toLocaleString();
 const duration = seconds => seconds >= 3600 ? `${(seconds / 3600).toFixed(1)}h` : `${Math.floor(seconds / 60)}m ${Math.floor(seconds % 60)}s`;
 let state, renderer, sprites, ready = false, writable = false, settling = false, selected = new Set(['c1', 'c2']);
 let hovered = null, orderMode = null, coachDismissed = false, saveError = false, hiddenAt = null;
-let multiSelect = false;
+let multiSelect = false, tacticsExpanded = false;
 let toastTimer, accumulator = 0, lastTime = performance.now(), lastUI = 0, lastSave = performance.now(), inspectorKey = '';
 const modal = $('modal');
 function html(id, content) { if ($(id).innerHTML !== content) $(id).innerHTML = content; }
@@ -28,7 +28,7 @@ function issue(cmd, { close = false, quiet = false } = {}) {
   const message = command(state, { ids: [...selected], ...cmd });
   if (message) { error(message); return false; }
   if (close) closeModal();
-  if (!quiet) toast({ party: 'Party formed. Orders now apply to the whole party.', split: 'Selected adventurers are now independent.', resume: 'Farming assignments resumed.', hold: 'Holding position. Nearby enemies will be engaged.', retreat: 'Retreating to the camp exit.', recover: 'Rested and ready for the next expedition.', resupply: 'Potion supplies replenished.' }[cmd.type] || 'Orders received.');
+  if (!quiet) toast({ party: 'Party formed. Orders now apply to the whole party.', split: 'Selected adventurers are now independent.', resume: 'Farming assignments resumed.', hold: 'Holding position. Nearby enemies will be engaged.', retreat: 'Retreating to the camp exit.', recover: 'Rested and ready for the next expedition.', resupply: 'Potion supplies replenished.', promote: 'First job chosen. Your adventurer is ready for a new path.', recruit: 'A new Novice joined the guild.' }[cmd.type] || 'Orders received.');
   persist(); renderUI(); return true;
 }
 function persist() {
@@ -62,22 +62,26 @@ function renderUI() {
   $('selection-title').textContent = units.length === 1 ? units[0].name : `${units.length} adventurers selected`;
   $('selection-description').textContent = units.some(c => c.partyId) ? 'Party commands include linked members' : units.length ? 'Independent adventurers · your orders' : 'Select an adventurer in your roster';
   $('order-hint').hidden = !orderMode;
-  for (const action of ['move', 'rally']) {
-    document.querySelector(`[data-action="${action}"]`).setAttribute('aria-pressed', String(orderMode === action));
-  }
+  const activeOrders = units.map(c => c.order);
+  const pressed = { move: orderMode === 'move', rally: orderMode === 'rally', hold: !!units.length && activeOrders.every(v => v === 'hold'),
+    resume: !!units.length && activeOrders.every(v => v === 'farm'), retreat: !!units.length && activeOrders.every(v => v === 'retreat') };
+  for (const [action, value] of Object.entries(pressed)) document.querySelector(`[data-action="${action}"]`).setAttribute('aria-pressed', String(value));
   $('order-hint').textContent = orderMode === 'rally' ? 'Tap the centre of your hunting area · Esc to cancel' : 'Choose a destination · Esc to cancel';
   $('battlefield').style.cursor = orderMode ? 'crosshair' : hovered ? 'pointer' : 'grab';
   $('roster-count').textContent = `${state.characters.length} / 5`;
+  const focusedPartyMember = document.activeElement?.matches('.party-member') ? document.activeElement.dataset.character : null;
   html('party-overview', state.parties.length ? state.parties.map(p => {
     const members = state.characters.filter(c => c.partyId === p.id), leader = members.find(c => c.id === p.leaderId);
     return `<div class="party-summary"><strong>${esc(p.name)}</strong><span>Leader: ${esc(leader?.name || '—')}</span><div>${members.map(c => `<button class="party-member ${selected.has(c.id) ? 'active' : ''}" data-character="${c.id}" aria-pressed="${selected.has(c.id)}" title="${esc(c.name)} · ${ROLE_LABELS[JOB_ROLES[c.job]]}">${esc(c.name)} · ${JOBS[c.job].name}</button>`).join('')}</div></div>`;
   }).join('') : '<div class="party-empty">No linked parties · select two or more adventurers to form one.</div>');
+  if (focusedPartyMember) $('party-overview').querySelector(`[data-character="${focusedPartyMember}"]`)?.focus({ preventScroll: true });
+  renderExpeditionGoals();
   const eligible = state.characters.filter(c => c.job === 'novice' && c.jobLevel >= 10);
   $('job-notice').hidden = eligible.length === 0;
   $('job-names').textContent = eligible.map(c => c.name).join(', ');
   const cards = state.characters.map(c => {
     const st = stats(c), mapName = c.mapId ? MAPS[c.mapId].name : 'Guild camp';
-    return `<button class="character-card ${selected.has(c.id) ? 'selected' : ''}" data-character="${c.id}" aria-pressed="${selected.has(c.id)}" aria-label="${esc(c.name)}, ${JOBS[c.job].name}, level ${c.level}, ${mapName}"><div class="portrait"><img src="${sprites.portrait(c)}" alt="" draggable="false"></div><div><div class="character-name">${esc(c.name)}<span>Lv. ${c.level}</span></div><div class="character-job">${JOBS[c.job].name} · Job ${c.jobLevel}${c.partyId ? ' · Linked' : ''}</div><div class="hp-track" title="HP ${Math.ceil(c.hp)} / ${st.hp}"><i style="width:${Math.max(0, Math.min(100, c.hp / st.hp * 100))}%"></i></div><div class="sp-track" title="SP ${Math.floor(c.sp)} / ${st.sp}"><i style="width:${Math.max(0, Math.min(100, c.sp / st.sp * 100))}%"></i></div><div class="character-location"><span>${mapName}</span><span class="status">${c.status === 'camp' ? 'Resting' : c.status === 'down' ? 'Defeated' : c.status[0].toUpperCase() + c.status.slice(1)}</span></div></div></button>`;
+    return `<button class="character-card ${selected.has(c.id) ? 'selected' : ''} ${c.status === 'down' ? 'defeated' : c.hp / st.hp <= 0.3 ? 'low-health' : ''}" data-character="${c.id}" aria-pressed="${selected.has(c.id)}" aria-label="${esc(c.name)}, ${JOBS[c.job].name}, level ${c.level}, ${mapName}"><div class="portrait"><img src="${sprites.portrait(c)}" alt="" draggable="false"></div><div><div class="character-name">${esc(c.name)}<span>Lv. ${c.level}</span></div><div class="character-job">${JOBS[c.job].name} · Job ${c.jobLevel}${c.partyId ? ' · Linked' : ''}</div><div class="hp-track" title="HP ${Math.ceil(c.hp)} / ${st.hp}"><i style="width:${Math.max(0, Math.min(100, c.hp / st.hp * 100))}%"></i></div><div class="sp-track" title="SP ${Math.floor(c.sp)} / ${st.sp}"><i style="width:${Math.max(0, Math.min(100, c.sp / st.sp * 100))}%"></i></div><div class="character-location"><span>${mapName}</span><span class="status ${c.status === 'down' ? 'status-danger' : c.hp / st.hp <= 0.3 ? 'status-warning' : ''}">${c.status === 'camp' ? 'Resting' : c.status === 'down' ? 'Defeated' : c.status[0].toUpperCase() + c.status.slice(1)}</span></div></div></button>`;
   }).join('');
   // Keep outer buttons stable so keyboard focus survives HP updates.
   if (!pointer?.down) {
@@ -114,10 +118,12 @@ function castWarning(cast) {
 function tacticsMarkup(c) {
   const t = effectiveTactics(c);
   const range = (key, label, min, max, step, help) => `<label class="tactics-setting"><span>${label}<output>${Math.round(t[key] * 100)}%</output></span><input type="range" data-tactics-key="${key}" min="${min}" max="${max}" step="${step}" value="${Math.round(t[key] * 100)}" aria-label="${label}"><small>${help}</small></label>`;
-  return `<details class="tactics-details"><summary>Fine-tune tactics</summary><label class="tactics-toggle"><input type="checkbox" data-tactics-key="autoSkill" ${t.autoSkill ? 'checked' : ''}> Automatically use skills when useful</label>${range('healAt', 'Heal allies below', 20, 95, 5, 'Acolytes heal party members; Novices heal themselves.')}${range('potionAt', 'Use potion below', 0, 80, 5, 'Consumes one potion; restores 65 HP.')}${range('retreatAt', 'Retreat below', 0, 70, 5, 'Automatically return to camp at this HP; set to 0% to disable.')}
+  return `<details class="tactics-details" ${tacticsExpanded ? 'open' : ''}><summary>Fine-tune tactics</summary><label class="tactics-toggle"><input type="checkbox" data-tactics-key="autoSkill" ${t.autoSkill ? 'checked' : ''}> Automatically use skills when useful</label>${range('healAt', 'Heal allies below', 20, 95, 5, 'Acolytes heal party members; Novices heal themselves.')}${range('potionAt', 'Use potion below', 0, 80, 5, 'Consumes one potion; restores 65 HP.')}${range('retreatAt', 'Retreat below', 0, 70, 1, 'Automatically return to camp at this HP; set to 0% to disable.')}
     <label class="form-label">Choose targets<select id="target-pref-select">${Object.entries(TARGET_PREFS).map(([key, label]) => `<option value="${key}" ${t.targetPref === key ? 'selected' : ''}>${label}</option>`).join('')}</select></label></details>`;
 }
 function renderInspector(units) {
+  const previousDetails = $('inspector').querySelector('.tactics-details');
+  if (previousDetails) tacticsExpanded = previousDetails.open;
   if ($('inspector').contains(document.activeElement) && ['SELECT', 'INPUT'].includes(document.activeElement.tagName)) return;
   let content;
   if (units.length !== 1) {
@@ -159,6 +165,41 @@ function equipment() {
   const c = selectedCharacters()[0]; if (!c || selected.size !== 1) return toast('Select one adventurer to manage equipment.');
   showModal(`${c.name}’s equipment`, `<p>Equip one armament or insignia at camp. All jobs can use these prototype items. Replaced equipment returns to shared storage.</p>${Object.entries(EQUIPMENT).map(([id, item]) => `<div class="inventory-row"><div>${item.name}<p>${item.description}</p></div><button data-equip="${id}" ${c.mapId || c.equipment === id || (id !== 'training' && !state.inventory.equipment[id]) ? 'disabled' : ''} style="padding:8px 12px">${c.equipment === id ? 'Equipped' : id === 'training' ? 'Equip' : `Equip · ${state.inventory.equipment[id]} stored`}</button></div>`).join('')}${modalError}`);
 }
+const EXPEDITION_GOALS = [
+  'Deploy both starting Novices',
+  'Reach Novice Job Lv. 10 with both',
+  'Choose both first jobs at camp',
+  'Form a party and carry 5+ potions each',
+  'Challenge and defeat Baphomet',
+  'Recruit the third Novice',
+];
+function renderExpeditionGoals() {
+  const step = Math.max(0, Math.min(6, state.milestones.expeditionStep || 0));
+  const rows = EXPEDITION_GOALS.map((label, index) => `<li class="${index < step ? 'complete' : index === step ? 'current' : ''}"><span>${index < step ? '✓' : index + 1}</span>${label}</li>`).join('');
+  const action = ['Deploy starting pair', 'Continue farming', 'Choose a first job', 'Prepare party & supplies', 'Challenge Baphomet', 'Recruit a Novice'][step];
+  html('expedition-goals', `<div class="goals-heading"><span class="eyebrow">EXPEDITION GOALS</span><span>${step}/6</span></div><ol>${rows}</ol>${step < 6 ? `<button class="goal-next" data-goal-next>${action} <span>↗</span></button>` : '<p class="goals-complete">Your first expedition is complete.</p>'}`);
+}
+function takeGoalAction() {
+  const step = Math.max(0, Math.min(6, state.milestones.expeditionStep || 0));
+  const starters = state.characters.filter(c => ['c1', 'c2'].includes(c.id));
+  if (step === 0) { selected = new Set(['c1', 'c2']); deployment(); }
+  else if (step === 1) {
+    const deployed = starters.find(c => c.mapId);
+    if (deployed) { selected = new Set(starters.map(c => c.id)); switchMap(deployed.mapId); }
+    else { selected = new Set(['c1', 'c2']); deployment(); }
+  } else if (step === 2) {
+    const ready = starters.find(c => c.job === 'novice' && c.jobLevel >= 10);
+    if (ready && !ready.mapId) advanceJob(ready.id); else camp();
+  } else if (step === 3) {
+    const party = state.parties.find(p => state.characters.filter(c => c.partyId === p.id).length >= 2);
+    if (party && state.characters.filter(c => c.partyId === party.id).every(c => c.potions >= 5)) { selected = new Set([party.leaderId]); camp(); }
+    else if (starters.every(c => !c.mapId) && !starters.some(c => engaged(state, c))) { selected = new Set(starters.map(c => c.id)); if (!issue({ type: 'party' })) camp(); }
+    else { selected = new Set(starters.map(c => c.id)); camp(); }
+  } else if (step === 4) {
+    const party = state.parties.find(p => state.characters.filter(c => c.partyId === p.id).length >= 2);
+    selected = new Set([party?.leaderId || starters[0]?.id].filter(Boolean)); switchMap('arena'); deployment();
+  } else if (step === 5) recruit();
+}
 function worldActivity(c) {
   return ({ down: 'Defeated', retreating: 'Retreating', fighting: 'Fighting', moving: 'Repositioning', holding: 'Holding', searching: 'Hunting', farming: 'Farming', camp: 'At camp' })[c.status] || c.status;
 }
@@ -170,11 +211,13 @@ function worldOverview() {
   const attention = state.characters.flatMap(c => [
     c.status === 'down' ? { c, label: 'Defeated · recover at camp' } : null,
     c.mapId && c.potions === 0 ? { c, label: 'No potions remaining' } : null,
+    c.mapId && c.potions > 0 && c.potions <= 2 ? { c, label: 'Supplies running low' } : null,
+    c.mapId && c.hp / stats(c).hp <= 0.3 ? { c, label: 'Low health · check retreat tactics' } : null,
     c.job === 'novice' && c.jobLevel >= 10 && !c.mapId ? { c, label: 'Job advancement available' } : null,
   ].filter(Boolean));
   const groups = Object.values(MAPS).map(map => {
     const team = deployed.filter(c => c.mapId === map.id);
-    return `<section class="world-map-group"><div class="world-map-heading"><strong>${map.name}</strong><button data-world-map="${map.id}">View map ↗</button></div>${team.length ? team.map(c => `<button class="world-unit" data-world-character="${c.id}"><span class="world-unit-title">${esc(c.name)} <small>${c.partyId ? esc(state.parties.find(p => p.id === c.partyId)?.name || 'Party') : 'Independent'}</small></span><span>${worldActivity(c)} · ${assignmentName(c)}</span><span>HP ${Math.ceil(c.hp)}/${stats(c).hp} · ${c.potions} potions</span></button>`).join('') : '<p class="world-empty">No deployed adventurers</p>'}</section>`;
+    return `<section class="world-map-group"><div class="world-map-heading"><strong>${map.name}</strong><button data-world-map="${map.id}">View map ↗</button></div>${team.length ? team.map(c => `<button class="world-unit" data-world-character="${c.id}"><span class="world-unit-title">${esc(c.name)} <small>${c.partyId ? esc(state.parties.find(p => p.id === c.partyId)?.name || 'Party') : 'Independent'}</small></span><span>${worldActivity(c)} · ${assignmentName(c)}</span><span class="world-condition ${c.status === 'down' ? 'critical' : c.hp / stats(c).hp <= 0.3 || c.potions <= 2 ? 'warning' : ''}">HP ${Math.ceil(c.hp)}/${stats(c).hp} · ${c.potions} potions</span></button>`).join('') : '<p class="world-empty">No deployed adventurers</p>'}</section>`;
   }).join('');
   showModal('Every expedition, at a glance', `${attention.length ? `<section class="attention-list"><h3>Needs attention · ${attention.length}</h3>${attention.map(({ c, label }) => `<button data-world-character="${c.id}">${esc(c.name)} · ${label} ↗</button>`).join('')}</section>` : '<p>Nothing needs your attention right now.</p>'}<div class="world-overview">${groups}</div>`, 'WORLD OVERVIEW');
 }
@@ -215,6 +258,7 @@ document.addEventListener('click', event => {
   if (!state || !ready) return;
   const map = event.target.closest('[data-map]'); if (map) { switchMap(map.dataset.map); return; }
   const card = event.target.closest('[data-character]'); if (card) { setSelection(card.dataset.character, event.shiftKey || multiSelect); return; }
+  if (event.target.closest('[data-goal-next]')) { takeGoalAction(); return; }
   const worldMap = event.target.closest('[data-world-map]'); if (worldMap) { closeModal(); switchMap(worldMap.dataset.worldMap); return; }
   const worldCharacter = event.target.closest('[data-world-character]'); if (worldCharacter) {
     const c = state.characters.find(v => v.id === worldCharacter.dataset.worldCharacter);
@@ -245,14 +289,24 @@ document.addEventListener('click', event => {
   if (modalAction === 'reset-confirm') { localStorage.removeItem(SAVE_KEY); location.reload(); }
 });
 document.addEventListener('change', event => {
-  if (event.target.id === 'tactic-select') { issue({ type: 'tactic', tactic: event.target.value }, { quiet: true }); event.target.blur(); renderUI(); }
-  if (event.target.id === 'assignment-select') issue({ type: 'assignment', assignment: event.target.value }, { quiet: true });
-  if (event.target.id === 'target-pref-select') issue({ type: 'tactic-config', key: 'targetPref', value: event.target.value }, { quiet: true });
-  const key = event.target.dataset.tacticsKey;
-  if (key) {
-    const value = key === 'autoSkill' ? event.target.checked : Number(event.target.value) / 100;
-    issue({ type: 'tactic-config', key, value }, { quiet: true });
+  const control = event.target;
+  if (control.id === 'tactic-select') { issue({ type: 'tactic', tactic: control.value }, { quiet: true }); control.blur(); renderUI(); }
+  else if (control.id === 'assignment-select') { issue({ type: 'assignment', assignment: control.value }, { quiet: true }); control.blur(); renderUI(); }
+  else if (control.id === 'target-pref-select') { issue({ type: 'tactic-config', key: 'targetPref', value: control.value }, { quiet: true }); control.blur(); renderUI(); }
+  else {
+    const key = control.dataset.tacticsKey;
+    if (key) {
+      const value = key === 'autoSkill' ? control.checked : Number(control.value) / 100;
+      issue({ type: 'tactic-config', key, value }, { quiet: true });
+      control.blur(); renderUI();
+    }
   }
+});
+document.addEventListener('toggle', event => {
+  if (event.target.matches?.('.tactics-details')) tacticsExpanded = event.target.open;
+}, true);
+document.addEventListener('focusout', event => {
+  if ($('inspector').contains(event.target) && !$('inspector').contains(event.relatedTarget)) queueMicrotask(renderUI);
 });
 document.addEventListener('input', event => {
   const key = event.target.dataset.tacticsKey;

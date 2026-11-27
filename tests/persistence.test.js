@@ -43,6 +43,14 @@ test('legacy schema-v1 saves receive preset defaults and customized tactics roun
   command(old, { type: 'tactic-config', ids: ['c1'], key: 'potionAt', value: 0.7 });
   assert.equal(decodeSave(encodeSave(old, 2000), 2000).state.characters[0].tactics.potionAt, 0.7);
 });
+test('older v1 saves receive backward-compatible expedition-goal progress', () => {
+  const envelope = JSON.parse(encodeSave(createGame(), 1000));
+  delete envelope.state.milestones.expeditionStep;
+  const loaded = decodeSave(JSON.stringify(envelope), 1000).state;
+  assert.equal(loaded.milestones.expeditionStep, 0);
+  loaded.milestones.expeditionStep = 4;
+  assert.equal(decodeSave(encodeSave(loaded, 1000), 1000).state.milestones.expeditionStep, 4);
+});
 test('invalid saved tactics are rejected rather than trusted at the simulation boundary', () => {
   for (const edit of [c => c.tactics = { autoSkill: 'yes' }, c => c.tactics = { autoSkill: true, healAt: 2, potionAt: 0.4, retreatAt: 0.2, targetPref: 'nearest' }, c => c.tactics = { autoSkill: true, healAt: 0.5, potionAt: 0.4, retreatAt: 0.2, targetPref: 'cheat' }]) {
     const envelope = JSON.parse(encodeSave(createGame())); edit(envelope.state.characters[0]);
