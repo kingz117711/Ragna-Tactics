@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame, command, advance, tick, gainExp, stats, settleOffline, rosterLimit, effectiveTactics, roleOf, advanceExpeditionGoals } from '../src/sim.js';
-import { OFFLINE_CAP, MONSTERS } from '../src/data.js';
+import { OFFLINE_CAP, MONSTERS, mapBounds } from '../src/data.js';
 const ids = ['c1', 'c2'];
 test('a marked hunt survives manual repositioning, resume and offline settlement', () => {
   const s = createGame();
@@ -13,14 +13,16 @@ test('a marked hunt survives manual repositioning, resume and offline settlement
   assert.equal(solo.farmRadius, undefined);
   for (const enemy of s.maps.meadow.monsters) Object.assign(enemy, { x: -12, y: -12 });
   advance(s, 15);
-  assert.ok(Math.hypot(farmer.x - point.x, farmer.y - point.y) < 1.1);
+  // Farm idle settles inside the 1.2-unit home guard (party spacing keeps the
+  // pair from hugging the exact centre).
+  assert.ok(Math.hypot(farmer.x - point.x, farmer.y - point.y) < 1.25);
   assert.equal(farmer.kills, 0);
   command(s, { type: 'move', ids: ['c1'], point: { x: 5, y: 5 } });
   advance(s, 6);
   command(s, { type: 'resume', ids: ['c1'] });
   assert.deepEqual(farmer.home, point);
   settleOffline(s, 15);
-  assert.ok(Math.hypot(farmer.x - point.x, farmer.y - point.y) < 1.1);
+  assert.ok(Math.hypot(farmer.x - point.x, farmer.y - point.y) < 1.25);
 });
 test('rally radius is validated before changing either party member and survives a save', async () => {
   const { encodeSave, decodeSave } = await import('../src/persistence.js');
@@ -118,7 +120,10 @@ test('movement overrides farming and ends in hold until explicitly resumed', () 
 test('out-of-bounds and non-finite movement orders cannot corrupt positions', () => {
   const s = createGame(); deploy(s);
   assert.ok(command(s, { type: 'move', ids, point: { x: Infinity, y: 1 } }));
-  assert.ok(command(s, { type: 'move', ids, point: { x: 25, y: 0 } })); assert.ok(s.characters.every(c => Number.isFinite(c.x)));
+  // South Prontera now reaches x ±26, so orders must respect the map's own bounds.
+  assert.ok(command(s, { type: 'move', ids, point: { x: 40, y: 0 } }));
+  assert.ok(command(s, { type: 'move', ids, mapId: 'forest', point: { x: 20, y: 0 } }));
+  assert.ok(s.characters.every(c => Number.isFinite(c.x)));
 });
 test('combat blocks instant redeployment; retreat reaches camp', () => {
   const s = createGame(); deploy(s); const c = s.characters[0], m = s.maps.meadow.monsters[0];
@@ -202,8 +207,16 @@ test('party EXP is one reward pool with a 12% bonus, not a full reward per membe
   assert.ok(Math.abs(s.characters[0].exp + s.characters[1].exp - reward * 1.12) < 1e-8);
 });
 test('effects carry their map identity and cannot leak between viewed maps', () => {
-  const s = createGame(); deploy(s); advance(s, 4);
-  assert.ok(s.effects.length > 0); assert.ok(s.effects.every(e => e.mapId === 'meadow'));
+  const s = createGame(); deploy(s);
+  const observed = new Set();
+  // Sample across the fight: effect lifetime is short, so a single frame can
+  // legitimately fall between hits.
+  for (let i = 0; i < 16; i++) {
+    advance(s, 0.5);
+    for (const e of s.effects) observed.add(e.mapId);
+  }
+  assert.ok(observed.has('meadow'));
+  assert.ok([...observed].every(id => id === 'meadow'));
 });
 test('expedition goals progress in order, persist through completion, and unlock the first recruit', () => {
   const s = createGame(); assert.equal(s.milestones.expeditionStep, 0);
@@ -296,7 +309,8 @@ test('manual movement finishes before automatic retreat and all automatic reposi
   for (let i = 0; i < 200 && archer.mapId; i++) { tick(s); if (archer.order === 'retreat') observedRetreat = true; }
   assert.ok(observedRetreat, 'safety retreat resumes once the manual move completes');
   assert.equal(archer.status, 'camp');
-  assert.ok(Math.abs(archer.x) <= 15 && Math.abs(archer.y) <= 15);
+  const bounds = mapBounds('meadow');
+  assert.ok(Math.abs(archer.x) <= bounds.x && Math.abs(archer.y) <= bounds.y);
 });
 test('ranged kite repositioning is clamped to battlefield bounds', () => {
   const s = createGame(); promote(s, 0, 'archer'); deploy(s, 'meadow', ['c1']);
@@ -306,7 +320,8 @@ test('ranged kite repositioning is clamped to battlefield bounds', () => {
   Object.assign(archer, { x: 15, y: 15, home: { x: 15, y: 15 }, order: 'farm', attackTimer: 0 });
   Object.assign(enemy, { x: 14.9, y: 15, hp: 1000, timer: 100, targetId: null });
   advance(s, 2);
-  assert.ok(Math.abs(archer.x) <= 15 && Math.abs(archer.y) <= 15);
+  const bounds = mapBounds('meadow');
+  assert.ok(Math.abs(archer.x) <= bounds.x && Math.abs(archer.y) <= bounds.y);
 });
 test('ranged attackers stop inside their native range while supports stay with the engaging party', () => {
   const ranged = createGame(); promote(ranged, 0, 'archer'); deploy(ranged, 'meadow', ['c1']);
@@ -467,4 +482,42 @@ test('Payon rewards a prepared Holy Priest and preserves the healing loadout', (
   assert.ok(mobs.every(m=>m.hp<300)); assert.equal(stats(priest).skill,'Magnus Exorcismus');
   assert.ok(prepare('support')); priest.mapId=null;
   assert.equal(prepare('support'),null); assert.equal(stats(priest).skill,'Sanctuary');
+});
+
+test('refinement follows a carded item independently of a second plain copy', async () => {
+  const {decodeSave,encodeSave}=await import('../src/persistence.js');
+  let s=createGame(); s.inventory.zeny=500; s.inventory.materials.Emveretarcon=13;
+  s.inventory.equipment.iron=2; s.inventory.cards.peco=1;
+  const act=(id,type,args)=>command(s,{ids:[id],type,...args});
+  assert.equal(act('c1','equip',{item:'iron'}),null);
+  assert.equal(act('c1','socket',{card:'peco'}),null);
+  assert.equal(act('c2','equip',{item:'iron'}),null);
+  for(const rank of [1,2,3]) {
+    assert.equal(act('c1','refine',{rank}),null);
+    assert.ok(act('c1','refine',{rank}));
+  }
+  assert.equal(s.inventory.zeny,0); assert.equal(s.inventory.materials.Emveretarcon,0);
+  assert.equal(act('c1','equip',{item:'training'}),null);
+  s=decodeSave(encodeSave(s)).state;
+  assert.equal(act('c2','equip',{item:'iron',card:'peco',rank:3}),null);
+  assert.equal(stats(s.characters[1]).atk,21); assert.equal(s.inventory.equipment.iron,1);
+  assert.equal(act('c2','socket',{card:null}),null);
+  assert.equal(act('c2','equip',{item:'training'}),null);
+  assert.equal(s.inventory.socketed['iron//3'],1); assert.equal(s.inventory.cards.peco,1);
+  assert.equal(decodeSave(encodeSave(s)).state.inventory.socketed['iron//3'],1);
+});
+
+test('all six transcendent jobs keep their equipment and learned builds at second Job Lv. 50', async () => {
+  const {decodeSave,encodeSave}=await import('../src/persistence.js');
+  for(const [parent,job] of Object.entries({knight:'lordKnight',priest:'highPriest',wizard:'highWizard',blacksmith:'whitesmith',hunter:'sniper',assassin:'assassinCross'})){
+    const s=createGame(), c=s.characters[0];
+    Object.assign(c,{job:parent,jobLevel:49,level:35,equipment:'iron',card:'skeleton',refine:2,attributes:{vit:10}});
+    if(parent==='wizard')c.element='earth'; if(parent==='priest')c.element='holy';
+    const change=()=>command(s,{type:'promote',ids:['c1'],job});
+    assert.ok(change()); c.jobLevel=50; assert.equal(change(),null);
+    assert.equal(c.jobLevel,1); assert.equal(c.refine,2); assert.deepEqual(c.attributes,{vit:10});
+    assert.equal(decodeSave(encodeSave(s)).state.characters[0].job,job);
+    assert.ok(stats(c).skill); assert.ok(stats(c).hp>150);
+    deploy(s,'payon',['c1']); advance(s,60); assert.ok(c.kills>0);
+  }
 });

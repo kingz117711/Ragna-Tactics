@@ -1,5 +1,5 @@
 // Pure, serializable simulation. No DOM, storage, wall clock, or camera dependencies.
-import { ELEMENTS, affinityMultiplier, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
+import { combatJob, REFINEMENT, gearKey, ELEMENTS, affinityMultiplier, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, mapBounds, JOBS, MONSTERS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
 
 export function random(state) {
   state.seed = (Math.imul(state.seed, 1664525) + 1013904223) >>> 0;
@@ -12,10 +12,10 @@ export function stats(c) {
   const job = JOBS[c.job], item = EQUIPMENT[c.equipment];
   const { str = 0, vit = 0, agi = 0, int = 0, dex = 0, luk = 0 } = c.attributes || {};
   const element = spellElement(c);
-  const spell = element ? ELEMENTS[element][c.job] : job.skill;
+  const spell = element ? ELEMENTS[element][combatJob(c.job)] : job.skill;
   return { ...job, element, skill: spell, interval: job.interval / (1 + agi / 100), skillBonus: dex * 2, crit: luk / 100, regen: 0.9 + int * 0.025,
-    hp: job.hp + (c.level - 1) * 14 + vit * 10, atk: job.atk + (c.level - 1) * 2 + item.atk + str * 2 + (CARDS[c.card]?.atk || 0),
-    def: job.def + Math.floor((c.level - 1) / 3) + item.def + Math.floor(vit / 3) + (CARDS[c.card]?.def || 0), sp: 45 + c.level * 4 + int * 4 };
+    hp: job.hp + (c.level - 1) * 14 + vit * 10, atk: job.atk + (c.level - 1) * 2 + item.atk + 2 * (c.refine || 0) + str * 2 + (CARDS[c.card]?.atk || 0),
+    def: job.def + Math.floor((c.level - 1) / 3) + item.def + (c.refine || 0) + Math.floor(vit / 3) + (CARDS[c.card]?.def || 0), sp: 45 + c.level * 4 + int * 4 };
 }
 export function character(id, name, sex = 'm') {
   return { id, ownerId: 'local-player', name, sex, job: 'novice', level: 1, exp: 0, jobLevel: 1, jobExp: 0,
@@ -68,8 +68,17 @@ export function log(s, message) {
 }
 function spawn(s, mapId, kind, position) {
   const boss = MAPS[mapId].boss && kind === MAPS[mapId].monster;
-  s.maps[mapId].monsters.push({ id: 'm' + s.nextId++, kind, mapId,
-    x: position?.x ?? (boss ? 0 : (random(s) - 0.5) * 24), y: position?.y ?? (boss ? 0 : (random(s) - 0.5) * 24),
+  let x, y;
+  if (position) { x = position.x; y = position.y; }
+  else if (boss) { x = 0; y = 0; }
+  else {
+    // Zoned fields (South Prontera) keep each species in its own hunting ground.
+    // Both paths consume exactly two seeded rolls, preserving the RNG stream.
+    const zone = MAPS[mapId].zones?.find(z => z.kind === kind);
+    if (zone) { x = zone.x + (random(s) - 0.5) * 2 * zone.r; y = zone.y + (random(s) - 0.5) * 2 * zone.r; }
+    else { x = (random(s) - 0.5) * 24; y = (random(s) - 0.5) * 24; }
+  }
+  s.maps[mapId].monsters.push({ id: 'm' + s.nextId++, kind, mapId, x, y,
     hp: MONSTERS[kind].hp, timer: 1, respawn: 0, targetId: null, stance: 'idle', direction: 0, attackFlash: 0 });
 }
 export const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -78,7 +87,15 @@ const active = c => c.mapId && c.hp > 0 && c.status !== 'down';
 function expandSelection(s, ids) {
   return s.characters.filter(c => ids.includes(c.id) || (c.partyId && s.characters.some(v => ids.includes(v.id) && v.partyId === c.partyId)));
 }
-function point(p) { return p && Number.isFinite(p.x) && Number.isFinite(p.y) && Math.abs(p.x) <= 15 && Math.abs(p.y) <= 15; }
+function point(p, mapId) {
+  const b = mapBounds(mapId);
+  return !!p && Number.isFinite(p.x) && Number.isFinite(p.y) && Math.abs(p.x) <= b.x && Math.abs(p.y) <= b.y;
+}
+// Retreat always targets the map's marked camp exit; older maps keep the original spot.
+function campPoint(c) {
+  const camp = MAPS[c.mapId]?.camp;
+  return camp ? { x: camp.x, y: camp.y } : { x: -11, y: 13 };
+}
 export function engaged(s, c) {
   return !!c.mapId && s.maps[c.mapId].monsters.some(m => m.hp > 0 && m.targetId === c.id);
 }
@@ -123,7 +140,7 @@ export function command(s, cmd) {
   return result;
 }
 export function forgePrice(s, item) {
-  return Math.ceil(FORGE[item].zeny * (s.characters.some(c => c.job === 'blacksmith' && !c.mapId && c.hp > 0) ? 0.5 : 1));
+  return Math.ceil(FORGE[item].zeny * (s.characters.some(c => combatJob(c.job) === 'blacksmith' && !c.mapId && c.hp > 0) ? 0.5 : 1));
 }
 function applyCommand(s, cmd) {
   const selected = s.characters.filter(c => cmd.ids?.includes(c.id));
@@ -185,7 +202,8 @@ function applyCommand(s, cmd) {
     if (units.some(c => engaged(s, c))) return 'Use Retreat to leave an active fight.';
     if (MAPS[cmd.mapId].boss && units.filter(c => c.job !== 'novice').length < 2) return 'Bring at least two adventurers who have chosen their first job.';
     if (MAPS[cmd.mapId].boss && !s.characters.some(c => c.mapId === cmd.mapId)) resetArena(s, cmd.mapId);
-    units.forEach((c, i) => { c.mapId = cmd.mapId; c.x = -5 + i * 1.6; c.y = 8 + i % 2; c.home = { x: c.x, y: c.y };
+    const arrival = MAPS[cmd.mapId].deploy || { x: -5, y: 8 };
+    units.forEach((c, i) => { c.mapId = cmd.mapId; c.x = arrival.x + i * 1.6; c.y = arrival.y + i % 2; c.home = { x: c.x, y: c.y };
       delete c.farmRadius;
       delete c.farmCenter;
       c.status = 'farming'; c.order = 'farm'; c.destination = null; c.targetId = null; });
@@ -225,21 +243,31 @@ function applyCommand(s, cmd) {
     if (c.mapId) return 'Change equipment at camp.';
     const card = cmd.card ?? null;
     if (card !== null && (!Object.hasOwn(CARDS, card) || cmd.item === 'training')) return 'Unknown socketed item.';
-    if (c.equipment === cmd.item && (c.card || null) === card) return null;
-    const stock = card ? s.inventory.socketed : s.inventory.equipment;
-    const key = card ? cmd.item + '/' + card : cmd.item;
+    const rank = cmd.rank === undefined ? 0 : cmd.rank;
+    if (!Number.isInteger(rank) || rank < 0 || rank >= REFINEMENT.length || (rank && cmd.item === 'training')) return 'Invalid refinement rank.';
+    if (c.equipment === cmd.item && (c.card || null) === card && (c.refine || 0) === rank) return null;
+    const stock = card || rank ? s.inventory.socketed : s.inventory.equipment;
+    const key = gearKey(cmd.item,card,rank);
     if (cmd.item !== 'training' && !(stock[key] > 0)) return 'That item is not in storage.';
     if (c.equipment !== 'training') {
-      const oldStock = c.card ? s.inventory.socketed : s.inventory.equipment;
-      const oldKey = c.card ? c.equipment + '/' + c.card : c.equipment;
+      const oldStock = c.card || c.refine ? s.inventory.socketed : s.inventory.equipment;
+      const oldKey = gearKey(c.equipment,c.card,c.refine);
       oldStock[oldKey] = (oldStock[oldKey] || 0) + 1;
     }
     if (cmd.item !== 'training') stock[key]--;
-    c.equipment = cmd.item; c.card = card; c.hp = Math.min(c.hp, stats(c).hp); return null;
+    c.equipment = cmd.item; c.card = card; c.refine = rank; c.hp = Math.min(c.hp, stats(c).hp); return null;
+  }
+  if (cmd.type === 'refine') {
+    const c = selected[0], rank = (c.refine || 0) + 1, cost = REFINEMENT[rank];
+    if (selected.length !== 1 || c.mapId || c.equipment === 'training') return 'Equip field gear at camp to refine it.';
+    if (!cost || cmd.rank !== rank) return 'Select the next refinement rank.';
+    if ((s.inventory.materials.Emveretarcon || 0) < cost.ore || s.inventory.zeny < cost.zeny) return 'Gather the ore and Zeny required.';
+    s.inventory.materials.Emveretarcon -= cost.ore; s.inventory.zeny -= cost.zeny;
+    c.refine = rank; log(s,c.name + ' refined ' + EQUIPMENT[c.equipment].name + ' to +' + rank + '.'); return null;
   }
   if (cmd.type === 'attune') {
     const c = selected[0];
-    if (selected.length !== 1 || c.mapId || !(Object.hasOwn(ELEMENTS,cmd.element) && Object.hasOwn(ELEMENTS[cmd.element],c.job) || cmd.element === 'support' && roleOf(c) === 'support')) return 'Choose one caster and prepare an element at camp.';
+    if (selected.length !== 1 || c.mapId || !(Object.hasOwn(ELEMENTS,cmd.element) && Object.hasOwn(ELEMENTS[cmd.element],combatJob(c.job)) || cmd.element === 'support' && roleOf(c) === 'support')) return 'Choose one caster and prepare an element at camp.';
     if (cmd.element === 'support') delete c.element;
     else c.element = cmd.element;
     log(s,c.name + ' prepared ' + stats(c).skill + '.'); return null;
@@ -301,7 +329,7 @@ function applyCommand(s, cmd) {
     const radius = cmd.radius === undefined ? DEFAULT_HUNT_RADIUS : cmd.radius;
     if (!HUNT_RADII.includes(radius)) return 'Choose a supported hunting radius.';
     const field = s.maps[cmd.mapId];
-    if (!field || MAPS[field.id].boss || !point(cmd.point)) return 'Choose a point inside a farming field.';
+    if (!field || MAPS[field.id].boss || !point(cmd.point, cmd.mapId)) return 'Choose a point inside a farming field.';
     const farmers = units.filter(c => active(c) && c.mapId === field.id);
     if (!farmers.length) return 'Select adventurers deployed on this field.';
     for (const c of farmers) {
@@ -315,13 +343,23 @@ function applyCommand(s, cmd) {
     return null;
   }
   if (!['move', 'hold', 'resume', 'focus', 'retreat'].includes(cmd.type)) return 'Unknown command.';
-  if (['move', 'hold'].includes(cmd.type) && cmd.point && !point(cmd.point)) return 'Choose a point inside the battlefield.';
+  if (['move', 'hold'].includes(cmd.type) && cmd.point) {
+    // Validate against the map the order is aimed at; the visible map wins when given.
+    const scope = (cmd.mapId && MAPS[cmd.mapId] ? cmd.mapId : null) || units.find(c => c.mapId)?.mapId;
+    if (!point(cmd.point, scope)) return 'Choose a point inside the battlefield.';
+  }
   const deployed = units.filter(active);
   if (!deployed.length) return 'Deploy your selection first.';
   if (cmd.type === 'focus' && !deployed.some(c => s.maps[c.mapId].monsters.some(m => m.id === cmd.targetId && m.hp > 0))) return 'Choose a living enemy on this map.';
   deployed.forEach((c, i) => {
-    if (cmd.type === 'retreat') { c.order = 'retreat'; c.status = 'retreating'; c.destination = { x: -11, y: 13 }; }
-    else if (cmd.type === 'move') { if (!cmd.point) return; c.order = 'move'; c.destination = { x: Math.min(15, cmd.point.x + i * 0.8), y: cmd.point.y }; c.targetId = null; }
+    if (cmd.type === 'retreat') { c.order = 'retreat'; c.status = 'retreating'; c.destination = campPoint(c); }
+    else if (cmd.type === 'move') {
+      if (!cmd.point) return;
+      const b = mapBounds(c.mapId);
+      c.order = 'move';
+      c.destination = { x: Math.max(-b.x, Math.min(b.x, cmd.point.x + i * 0.8)), y: Math.max(-b.y, Math.min(b.y, cmd.point.y)) };
+      c.targetId = null;
+    }
     else if (cmd.type === 'hold') { c.order = 'hold'; c.home = cmd.point ? { ...cmd.point } : { x: c.x, y: c.y }; c.destination = null; c.targetId = null; }
     else if (cmd.type === 'resume') {
       c.order = 'farm'; c.destination = null; c.targetId = null;
@@ -355,8 +393,9 @@ function move(c, target, speed, dt) {
   if (d < 0.1) { c.stance = 'idle'; return true; }
   const dx = target.x - c.x, dy = target.y - c.y, n = Math.min(d, speed * dt);
   face(c, target);
-  c.x = Math.max(-15, Math.min(15, c.x + dx / d * n));
-  c.y = Math.max(-15, Math.min(15, c.y + dy / d * n));
+  const b = mapBounds(c.mapId);
+  c.x = Math.max(-b.x, Math.min(b.x, c.x + dx / d * n));
+  c.y = Math.max(-b.y, Math.min(b.y, c.y + dy / d * n));
   c.stance = 'walk'; return n >= d;
 }
 function effect(s, mapId, x, y, text, kind = 'hit') {
@@ -390,6 +429,9 @@ function kill(s, m, killer) {
   s.inventory.zeny += def.zeny;
   s.inventory.materials[def.material] = (s.inventory.materials[def.material] || 0) + (killer.assignment === 'materials' ? 2 : 1);
   if (random(s) < 0.035) { const item = random(s) < 0.6 ? 'iron' : 'guard'; s.inventory.equipment[item]++; log(s, `${def.name} dropped ${EQUIPMENT[item].name}.`); }
+  if (m.mapId === 'payon' && random(s) < (m.kind === 'skeleton' ? 0.35 : 0.15)) {
+    s.inventory.materials.Emveretarcon = (s.inventory.materials.Emveretarcon || 0) + 1;
+  }
   if (Object.hasOwn(CARDS, m.kind) && (m.kind === 'phreeoni' || random(s) < 0.06)) {
     s.inventory.cards[m.kind] = (s.inventory.cards[m.kind] || 0) + 1;
     log(s, CARDS[m.kind].name + ' discovered in ' + MAPS[m.mapId].name + '! Socket it into equipment at camp.');
@@ -417,32 +459,34 @@ function damage(s, c, m, value, attackRange = stats(c).range) {
   return true;
 }
 function useSkill(s, c, target, manual = false) {
-  const st = stats(c);
+  const st = stats(c), job = combatJob(c.job);
   if (c.cooldown > 0 || c.sp < st.cost) return false;
-  if (c.job === 'novice' || (roleOf(c) === 'support' && !st.element)) {
-    const allies = c.job === 'novice' ? [c] : partyMembers(s, c).filter(v => active(v) && v.mapId === c.mapId && distance(v, c) <= 8);
+  if (job === 'novice' || (roleOf(c) === 'support' && !st.element)) {
+    const allies = job === 'novice' ? [c] : partyMembers(s, c).filter(v => active(v) && v.mapId === c.mapId && distance(v, c) <= 8);
     const healAt = effectiveTactics(c).healAt;
     const injured = allies.filter(v => v.hp < stats(v).hp * (manual ? 1 : healAt)).sort((a, b) => a.hp / stats(a).hp - b.hp / stats(b).hp)[0];
     if (!injured) return false;
-    const recipients = c.job === 'priest' ? allies.filter(a => a.hp < stats(a).hp) : [injured];
+    const recipients = job === 'priest' ? allies.filter(a => a.hp < stats(a).hp) : [injured];
     for (const ally of recipients) {
-      const amount = Math.min(stats(ally).hp - ally.hp, (c.job === 'novice' ? 28 : 45 + c.level * 5) + st.skillBonus);
+      const amount = Math.min(stats(ally).hp - ally.hp, (job === 'novice' ? 28 : 45 + c.level * 5) + st.skillBonus);
+      if (c.job === 'highPriest') ally.sp = Math.min(stats(ally).sp,ally.sp + 5);
       ally.hp += amount; effect(s, c.mapId, ally.x, ally.y, '+' + Math.round(amount), 'heal');
     }
   } else {
     if (!target || target.mapId !== c.mapId || distance(c, target) > st.range) return false;
-    const multiplier = c.job === 'assassin' ? (target.hp < MONSTERS[target.kind].hp / 2 ? 4 : 2.8) : roleOf(c) === 'ranged' && c.job !== 'archer' ? 2.4 : 2;
-    const splash = st.splash || (c.job === 'mage' || (c.job === 'priest' && st.element === 'holy') ? 3 : 0);
-    const centre = c.job === 'knight' || c.job === 'blacksmith' ? c : target;
+    const multiplier = job === 'assassin' ? (target.hp < MONSTERS[target.kind].hp / 2 ? (c.job === 'assassinCross' ? 5 : 4) : 2.8) : roleOf(c) === 'ranged' && c.job !== 'archer' ? 2.4 : 2;
+    const splash = st.splash || (job === 'mage' || (job === 'priest' && st.element === 'holy') ? 3 : 0);
+    const centre = job === 'knight' || job === 'blacksmith' ? c : target;
     const secondary = splash ? s.maps[c.mapId].monsters.filter(m => m !== target && m.hp > 0 && distance(m, centre) < splash) : [];
     if (!damage(s, c, target, (st.atk * multiplier + st.skillBonus) * affinityMultiplier(st.element,target.kind), st.range)) return false;
     if (affinityMultiplier(st.element,target.kind) > 1) effect(s,c.mapId,target.x,target.y,'Weakness!', 'skill');
-    const stagger = c.job === 'blacksmith' || c.job === 'wizard';
-    if (stagger && target.hp > 0) target.timer = Math.max(target.timer, 2);
-    for (const m of secondary.slice(0, c.job === 'hunter' ? 2 : secondary.length)) {
-      if (damage(s, c, m, (st.atk * 1.4 + st.skillBonus) * affinityMultiplier(st.element,m.kind), st.range + splash) && stagger && m.hp > 0) m.timer = Math.max(m.timer, 2);
+    const staggerTime = c.job === 'whitesmith' ? 3 : 2;
+    const stagger = job === 'blacksmith' || job === 'wizard';
+    if (stagger && target.hp > 0) target.timer = Math.max(target.timer, staggerTime);
+    for (const m of secondary.slice(0, job === 'hunter' ? (c.job === 'sniper' ? 4 : 2) : secondary.length)) {
+      if (damage(s, c, m, (st.atk * 1.4 + st.skillBonus) * affinityMultiplier(st.element,m.kind), st.range + splash) && stagger && m.hp > 0) m.timer = Math.max(m.timer, staggerTime);
     }
-    if (c.job === 'swordsman') for (const m of s.maps[c.mapId].monsters) if (m.hp > 0 && distance(m, c) < 5) m.targetId = c.id;
+    if (job === 'swordsman') for (const m of s.maps[c.mapId].monsters) if (m.hp > 0 && distance(m, c) < 5) m.targetId = c.id;
   }
   c.sp -= st.cost; c.cooldown = st.cooldown; c.attackFlash = 0.5; c.stance = 'attack';
   effect(s, c.mapId, c.x, c.y, st.skill, 'skill'); return true;
@@ -457,12 +501,12 @@ function tickCharacter(s, c, dt) {
   // Priority: an explicit Retreat is honored; an explicit Move finishes before
   // safety automation interrupts it; otherwise low HP retreats before combat AI.
   if (c.hp / st.hp < tactics.retreatAt && !['retreat', 'move'].includes(c.order)) {
-    c.order = 'retreat'; c.status = 'retreating'; c.destination = { x: -11, y: 13 }; c.targetId = null;
+    c.order = 'retreat'; c.status = 'retreating'; c.destination = campPoint(c); c.targetId = null;
     log(s, c.name + ' is retreating: HP below their threshold.');
   }
   if (c.order === 'retreat') {
     c.status = 'retreating';
-    if (move(c, c.destination || { x: -11, y: 13 }, st.speed * 1.3, dt)) { c.mapId = null; c.status = 'camp'; c.order = 'farm'; c.targetId = null; c.destination = null; log(s, c.name + ' returned safely to camp.'); }
+    if (move(c, c.destination || campPoint(c), st.speed * 1.3, dt)) { c.mapId = null; c.status = 'camp'; c.order = 'farm'; c.targetId = null; c.destination = null; log(s, c.name + ' returned safely to camp.'); }
     return;
   }
   // Manual Move is an explicit short-lived order and always wins over automation.
@@ -504,11 +548,19 @@ function tickCharacter(s, c, dt) {
     const toward = distance(c, leader) > 5.5 ? leader : target;
     c.status = 'moving'; move(c, toward, st.speed, dt); return;
   }
-  if (d > desired + 0.45 && distance(target, c.home) <= leash) { c.status = 'moving'; move(c, target, st.speed, dt); return; }
+  // Close only until the unit is inside its actual attack range. Stopping at
+  // desired+0.45 can park melee units just outside reach, where both sides
+  // stand frozen without ever resolving the attack.
+  const closeTo = Math.min(desired + 0.45, st.range - 0.1);
+  if (d > closeTo && distance(target, c.home) <= leash) { c.status = 'moving'; move(c, target, st.speed, dt); return; }
   if (d < desired - 0.8 && role !== 'frontline') {
     const dx = c.x - target.x, dy = c.y - target.y, length = Math.hypot(dx, dy) || 1;
     const retreatPoint = { x: c.x + dx / length * Math.min(1.1, desired - d), y: c.y + dy / length * Math.min(1.1, desired - d) };
-    c.status = 'moving'; move(c, retreatPoint, st.speed * 0.7, dt); return;
+    const before = { x: c.x, y: c.y };
+    c.status = 'moving'; move(c, retreatPoint, st.speed * 0.7, dt);
+    // Pinned against the map edge the unit cannot kite any further — fall
+    // through and resolve the attack instead of freezing forever.
+    if (distance(before, c) > 0.01) return;
   }
   c.status = 'fighting'; c.stance = c.attackFlash > 0 ? 'attack' : 'idle'; face(c, target);
   if (tactics.autoSkill) useSkill(s, c, target);
@@ -524,7 +576,13 @@ function tickMonster(s, map, m, dt) {
   if (m.hp <= 0) {
     if (MAPS[map.id].boss) return;
     m.respawn -= dt;
-    if (m.respawn <= 0) { const def = MONSTERS[m.kind]; m.x = (random(s) - 0.5) * 24; m.y = (random(s) - 0.5) * 24; m.hp = def.hp; m.rewarded = false; m.targetId = null; }
+    if (m.respawn <= 0) {
+      const def = MONSTERS[m.kind], zone = MAPS[map.id].zones?.find(z => z.kind === m.kind);
+      // Two seeded rolls either way, so respawns never reshape the RNG stream.
+      m.x = zone ? zone.x + (random(s) - 0.5) * 2 * zone.r : (random(s) - 0.5) * 24;
+      m.y = zone ? zone.y + (random(s) - 0.5) * 2 * zone.r : (random(s) - 0.5) * 24;
+      m.hp = def.hp; m.rewarded = false; m.targetId = null;
+    }
     return;
   }
   const def = MONSTERS[m.kind];
@@ -614,8 +672,9 @@ function spacePartyMembers(characters, dt) {
       const dx = d ? (a.x - b.x) / d : 1;
       const dy = d ? (a.y - b.y) / d : 0;
       for (const [unit, direction] of [[a, 1], [b, -1]]) {
-        unit.x = Math.max(-15, Math.min(15, unit.x + dx * push * direction));
-        unit.y = Math.max(-15, Math.min(15, unit.y + dy * push * direction));
+        const b2 = mapBounds(unit.mapId);
+        unit.x = Math.max(-b2.x, Math.min(b2.x, unit.x + dx * push * direction));
+        unit.y = Math.max(-b2.y, Math.min(b2.y, unit.y + dy * push * direction));
       }
     }
   }

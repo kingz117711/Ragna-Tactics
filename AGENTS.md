@@ -54,8 +54,10 @@ then brings them together for tactical boss encounters.
   Read [Asset credits](ASSET-CREDITS.md); verify with `npm run assets:verify`.
 - The imported `source-catalog.json` files are provenance, not content rosters to
   expose automatically. `public/assets/index.json` is the supported runtime subset.
-- Terrain is procedural prototype scenery with no collision. Do not add invisible
-  obstacles. Add a tested navigation model before introducing blocking terrain.
+- Terrain is decorative scenery with no collision. Imported tiles and props
+  (`public/assets/terrain/`, listed in `index.json` terrain) are drawn at native
+  scale and anchors. Do not add invisible obstacles. Add a tested navigation model
+  before introducing blocking terrain.
 - No production backend, paid services, accounts, or deployment are configured.
   Avoid importing the old game's account/shop/social infrastructure into this game.
 

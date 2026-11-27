@@ -3,14 +3,64 @@ export const DEFAULT_HUNT_RADIUS = 6;
 export const VERSION = 1;
 export const STEP = 0.1;
 export const OFFLINE_CAP = 4 * 60 * 60;
+// bounds are half-extents in world units per axis. Every map carries its own
+// dimensions; camp/deploy/road/zones describe South Prontera's landmarks.
 export const MAPS = {
-  meadow: { id: 'meadow', name: 'South Prontera', subtitle: 'A quiet beginning', tier: 'FIELD · LV 1–4', color: '#91b27d', monster: 'poring', count: 8, radius: 16 },
-  forest: { id: 'forest', name: 'Willow Wood', subtitle: 'Beyond the familiar paths', tier: 'FIELD · LV 4–8', color: '#698a7b', monster: 'willow', count: 7, radius: 16 },
-  payon: { id: 'payon', name: 'Payon Cave', subtitle: 'Lanterns beneath the eastern ridge', tier: 'DUNGEON · LV 12–18', color: '#a49bb9', monster: 'zombie', count: 8, radius: 16 },
-  morroc: { id: 'morroc', name: 'Morroc Dunes', subtitle: 'The southern caravan road', tier: 'FIELD · LV 8–14', color: '#cba976', monster: 'scorpion', count: 8, radius: 16 },
-  arena: { id: 'arena', boss: true, name: 'The Broken Sanctuary', subtitle: 'Something stirs beneath the ruins', tier: 'BOSS · PARTY RECOMMENDED', color: '#807e95', monster: 'baphomet', count: 1, radius: 16 },
+  meadow: {
+    id: 'meadow', name: 'South Prontera', subtitle: 'A quiet beginning', tier: 'FIELD · LV 1–4', color: '#91b27d', monster: 'poring', count: 12, radius: 16,
+    bounds: { x: 26, y: 20 },
+    camp: { x: -17, y: 13 },
+    deploy: { x: -11, y: 6 },
+    zones: [
+      { kind: 'poring', x: -7, y: -1, r: 9, label: 'Poring Meadow' },
+      { kind: 'fabre', x: 13, y: 5, r: 7.5, label: 'Fabre Thicket' },
+    ],
+    road: [
+      [[-17, 13], [-9, 10], [-2, 7]],
+      [[-2, 7], [-6, 3], [-8, 0]],
+      [[-2, 7], [5, 6], [12, 5]],
+    ],
+    scenery: {
+      border: ['tree_tall_cluster', 'tree_sapling', 'tree_bush_bright'],
+      props: [
+        { id: 'house_prontera', x: -21.5, y: 16.5 },
+        { id: 'lantern_stone', x: -15.6, y: 11.4 },
+        { id: 'lantern_stone', x: -18.6, y: 15.8 },
+        { id: 'standing_stone', x: -0.4, y: 8.9 },
+        { id: 'tree_bush_bright', x: -13.5, y: -6.5 },
+        { id: 'tree_bush_bright', x: -2.5, y: -8.5 },
+        { id: 'tree_bush_bright', x: -12.5, y: 3.5 },
+        { id: 'tree_sapling', x: -4.5, y: -6.5 },
+        { id: 'tree_sapling', x: -12.5, y: -1.5 },
+        { id: 'rock_boulder_mossy', x: 16.5, y: 1.5 },
+        { id: 'rock_boulder_mossy', x: 10.5, y: 9.5 },
+        { id: 'rock_cliff_crag', x: 18.5, y: 7.5 },
+        { id: 'tree_tall_cluster', x: 20.5, y: 2.5, scale: 0.95 },
+        { id: 'tree_tall_cluster', x: 9.5, y: 12.5, scale: 0.9 },
+        { id: 'tree_tall_cluster', x: -16.5, y: -11.5, scale: 1.05 },
+      ],
+    },
+  },
+  forest: {
+    id: 'forest', name: 'Willow Wood', subtitle: 'Beyond the familiar paths', tier: 'FIELD · LV 4–8', color: '#698a7b', monster: 'willow', count: 7, radius: 16, bounds: { x: 15, y: 15 },
+    scenery: {
+      border: ['tree_tall_cluster', 'tree_bush_bright'],
+      props: [
+        { id: 'tree_tall_cluster', x: -8.5, y: -7.5, scale: 1.05 },
+        { id: 'tree_tall_cluster', x: 7.5, y: -8.5 },
+        { id: 'tree_tall_cluster', x: 9.5, y: 5.5, scale: 0.95 },
+        { id: 'tree_tall_cluster', x: -6.5, y: 9.5, scale: 1.1 },
+        { id: 'tree_bush_bright', x: 6.5, y: -3.5 },
+        { id: 'tree_bush_bright', x: -9.5, y: 3.5 },
+      ],
+    },
+  },
+  payon: { id: 'payon', name: 'Payon Cave', subtitle: 'Lanterns beneath the eastern ridge', tier: 'DUNGEON · LV 12–18', color: '#a49bb9', monster: 'zombie', count: 8, radius: 16, bounds: { x: 15, y: 15 }, scenery: { border: ['rock_cliff_crag', 'rock_boulder_mossy'] } },
+  morroc: { id: 'morroc', name: 'Morroc Dunes', subtitle: 'The southern caravan road', tier: 'FIELD · LV 8–14', color: '#cba976', monster: 'scorpion', count: 8, radius: 16, bounds: { x: 15, y: 15 }, scenery: { border: ['rock_boulder_mossy', 'rock_cliff_crag'] } },
+  arena: { id: 'arena', boss: true, name: 'The Broken Sanctuary', subtitle: 'Something stirs beneath the ruins', tier: 'BOSS · PARTY RECOMMENDED', color: '#807e95', monster: 'baphomet', count: 1, radius: 16, bounds: { x: 15, y: 15 }, scenery: { border: ['standing_stone', 'rock_cliff_crag'] } },
 };
-MAPS.lair = { id: 'lair', boss: true, name: 'Sandsea Hollow', subtitle: 'Beneath the caravan road', tier: 'MVP · LV 18+', color: '#c38667', monster: 'phreeoni', count: 1, radius: 16 };
+MAPS.lair = { id: 'lair', boss: true, name: 'Sandsea Hollow', subtitle: 'Beneath the caravan road', tier: 'MVP · LV 18+', color: '#c38667', monster: 'phreeoni', count: 1, radius: 16, bounds: { x: 15, y: 15 }, scenery: { border: ['rock_cliff_crag', 'rock_boulder_mossy'] } };
+export const mapBounds = mapId => MAPS[mapId]?.bounds || { x: 15, y: 15 };
 export const JOBS = {
   novice: { name: 'Novice', native: 0, role: 'A new beginning', hp: 100, atk: 10, def: 1, range: 1.8, speed: 3.1, interval: 1.05, skill: 'First Aid', cost: 8, cooldown: 10, description: 'Recover your own HP. Learn the basics before choosing a path.' },
   swordsman: { name: 'Swordsman', native: 1, role: 'Frontline · protection', hp: 180, atk: 17, def: 5, range: 1.9, speed: 3.1, interval: 1.05, skill: 'Bash', cost: 7, cooldown: 5, description: 'A heavy strike that draws enemy attention.' },
@@ -29,7 +79,25 @@ const secondJobs = {
   assassin: { parent: 'thief', native: 12, name: 'Assassin', hp: 165, atk: 23, def: 4, skill: 'Sonic Blow', description: 'Burst down a single foe. Deals extra damage below half health.', cost: 12 },
 };
 for (const [id, job] of Object.entries(secondJobs)) JOBS[id] = { ...JOBS[job.parent], ...job };
-export function promotionLevel(job) { return job === 'novice' ? 10 : JOBS[job].parent ? Infinity : 40; }
+const transcendent = {
+  lordKnight: { parent:'knight', native:4008, name:'Lord Knight', hp:325, atk:34, def:12, splash:5, skill:'Spiral Pierce', description:'A sweeping spear strike draws enemies within five tiles.' },
+  highPriest: { parent:'priest', native:4009, name:'High Priest', hp:220, atk:22, def:6, skill:'High Sanctuary', description:'Group healing also restores 5 SP to each injured ally.' },
+  highWizard: { parent:'wizard', native:4010, name:'High Wizard', hp:172, atk:39, def:3, splash:5.5, description:'Amplified elemental spells hit a wider area and stagger foes.' },
+  whitesmith: { parent:'blacksmith', native:4011, name:'Whitesmith', hp:265, atk:32, def:9, skill:'Cart Termination', description:'An empowered hammer strike staggers enemies for three seconds. Retains the camp forge discount.' },
+  sniper: { parent:'hunter', native:4012, name:'Sniper', hp:195, atk:31, def:5, range:9, skill:'Falcon Assault', description:'Your falcon strikes the target and up to four nearby enemies.' },
+  assassinCross: { parent:'assassin', native:4013, name:'Assassin Cross', hp:225, atk:31, def:6, skill:'Soul Breaker', description:'A finishing strike deals five times attack to enemies below half HP.' },
+};
+for (const [id, job] of Object.entries(transcendent)) JOBS[id] = { ...JOBS[job.parent], ...job, mastery: job.parent };
+export const combatJob = job => JOBS[job].mastery || job;
+export function promotionLevel(job) { return job === 'novice' ? 10 : JOBS[job].mastery ? Infinity : JOBS[job].parent ? 50 : 40; }
+export function jobLineage(job) {
+  const path = [];
+  while (job && job !== 'novice') {
+    path.unshift(JOBS[job].name);
+    job = JOBS[job].parent;
+  }
+  return ['Novice', ...path];
+}
 export function jobChoices(job) {
   return Object.entries(JOBS).filter(([id, data]) => id !== 'novice' && (data.parent || 'novice') === job);
 }
@@ -59,9 +127,10 @@ export const ELEMENTS = {
 };
 export const AFFINITIES = { zombie:'undead', skeleton:'undead', poring:'water', fabre:'earth', willow:'earth', peco:'fire', scorpion:'fire', phreeoni:'wind', baphomet:'neutral' };
 export function spellElement(c) {
-  if (c.job === 'acolyte' || c.job === 'priest') return c.element === 'holy' ? 'holy' : null;
-  if (c.job !== 'mage' && c.job !== 'wizard') return null;
-  return c.element || (c.job === 'mage' ? 'fire' : 'water');
+  const job = combatJob(c.job);
+  if (job === 'acolyte' || job === 'priest') return c.element === 'holy' ? 'holy' : null;
+  if (job !== 'mage' && job !== 'wizard') return null;
+  return c.element || (job === 'mage' ? 'fire' : 'water');
 }
 export function affinityMultiplier(element, kind) {
   if (!element) return 1;
@@ -89,6 +158,15 @@ export const CARDS = {
   scorpion: { name: 'Scorpion Card', description: '+6 ATK', atk: 6, def: 0 },
   peco: { name: 'Peco Peco Card', description: '+4 DEF', atk: 0, def: 4 },
 };
+export const REFINEMENT = [null, { ore:2, zeny:60 }, { ore:4, zeny:140 }, { ore:7, zeny:300 }];
+export function gearKey(item, card, rank) {
+  if (rank) return item + '/' + (card || '') + '/' + rank;
+  return card ? item + '/' + card : item;
+}
+export function gearVariant(key) {
+  const [item, card, rank] = key.split('/');
+  return { item, card:card || null, rank:rank === undefined ? 0 : Number(rank) };
+}
 export const EQUIPMENT = {
   reliquary: { name:'Payon reliquary', atk:3, def:6, description:'+3 attack · +6 defense · a feather-bound ward from Payon Cave.' },
   dune: { name: 'Caravan brooch', atk: 6, def: 2, description: '+6 attack · +2 defense · forged from Morroc and Willow Wood materials.' },
@@ -119,6 +197,7 @@ export const JOB_ROLES = {
   mage: 'ranged', archer: 'ranged', acolyte: 'support',
 };
 for (const [id, job] of Object.entries(secondJobs)) JOB_ROLES[id] = JOB_ROLES[job.parent];
+for (const [id, job] of Object.entries(transcendent)) JOB_ROLES[id] = JOB_ROLES[job.parent];
 export const ROLE_LABELS = {
   frontline: 'Frontline — approaches and engages',
   ranged: 'Ranged — keeps attack distance',
