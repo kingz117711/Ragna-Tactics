@@ -15,3 +15,15 @@
   scenarios, and all 38 imported original files verified. Desktop/boss/mobile-width
   screenshots inspected. Static build checked. No multiplayer or production
   hosting is configured.
+
+## 2026-11-27 — Expedition controls
+
+- Added animated button presses, ground-order feedback, and dialog transitions.
+  Map and job cards use native monster and class portraits.
+- Added hunting areas, automatic party spacing, a persistent job-ready notice,
+  and a second real-time boss cast with a safe centre and countdown.
+- Offline reports now list equipment and material drops and count each shared kill
+  once. Older version-one saves load with unrestricted field assignments.
+- Seeded starter parties cleared Baphomet after five simulated minutes of training
+  as Swordsman/Acolyte, Archer/Mage, and Thief/Merchant. The new tests exercise
+  hunt orders, touch and reduced motion, job selection, ring damage, and reporting.

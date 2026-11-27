@@ -93,7 +93,7 @@ export class Renderer {
     }
     this.terrain.set(mapId, cv); return cv;
   }
-  draw(s, selected, hovered) {
+  draw(s, selected, hovered, frameRemainder = 0) {
     const ctx = this.ctx, z = this.camera.zoom, map = s.maps[this.mapId];
     if (this.followId) { const c = s.characters.find(c => c.id === this.followId && c.mapId === this.mapId); if (c) { const p = project(c.x, c.y); this.camera.x += (p.x - this.camera.x) * 0.08; this.camera.y += (p.y - this.camera.y) * 0.08; } }
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
@@ -108,14 +108,31 @@ export class Renderer {
     }
     for (const c of s.characters.filter(c => c.mapId === this.mapId && selected.has(c.id))) {
       const p = project(c.x, c.y);
+      if (c.farmRadius && c.order === 'farm') {
+        const h = project(c.home.x, c.home.y);
+        ellipse(ctx, h.x, h.y, c.farmRadius * Math.SQRT2 * 22, c.farmRadius * Math.SQRT2 * 11, '#bfdfa212', '#d3e6b394');
+      }
       if (c.destination) { const t = project(c.destination.x, c.destination.y); ctx.setLineDash([5, 7]); ctx.strokeStyle = '#e8ca88aa'; ctx.lineWidth = 1.5 / z; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(t.x, t.y); ctx.stroke(); ctx.setLineDash([]); ellipse(ctx, t.x, t.y, 13, 6, '#e8ca8830', '#e8ca88'); }
       if (c.order === 'hold') { const h = project(c.home.x, c.home.y); ellipse(ctx, h.x, h.y, 95, 47, '#e8ca8808', '#e8ca8860'); }
     }
     const telegraph = map.telegraph;
     if (telegraph) {
       const p = project(telegraph.x, telegraph.y), pulse = 0.24 + Math.sin(s.time * 10) * 0.08;
-      ellipse(ctx, p.x, p.y, telegraph.radius * 31, telegraph.radius * 15.5, `rgba(236,97,85,${pulse})`, '#ff9e8a');
-      ellipse(ctx, p.x, p.y, telegraph.radius * 31 * (1 - telegraph.remaining / telegraph.duration), telegraph.radius * 15.5 * (1 - telegraph.remaining / telegraph.duration), '#ef705477');
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.scale(22 * Math.SQRT2, 11 * Math.SQRT2);
+      ctx.beginPath();
+      ctx.arc(0, 0, telegraph.radius, 0, Math.PI * 2);
+      if (telegraph.innerRadius) {
+        ctx.moveTo(telegraph.innerRadius, 0);
+        ctx.arc(0, 0, telegraph.innerRadius, 0, Math.PI * 2, true);
+      }
+      ctx.fillStyle = `rgba(246,96,78,${pulse + 0.12})`;
+      ctx.fill('evenodd');
+      ctx.lineWidth = 0.1 / z;
+      ctx.strokeStyle = '#ffd3ab';
+      ctx.stroke();
+      ctx.restore();
     }
     const heroes = s.characters.filter(c => c.mapId === this.mapId && c.hp > 0);
     const entities = [...heroes.map(c => ({ unit: c, hero: true })), ...map.monsters.filter(m => m.hp > 0).map(m => ({ unit: m, hero: false }))];
@@ -128,7 +145,7 @@ export class Renderer {
       if (isSelected || hovered === c.id) { ctx.lineWidth = 2 / z; ellipse(ctx, 0, 0, hero ? 23 : 28, hero ? 10 : 12, isSelected ? '#e4cc8720' : '#e9866f18', hero ? '#edd79b' : '#e9866f'); }
       const route = c.stance + c.direction, previous = this.animations.get(c.id);
       if (!previous || previous.route !== route) this.animations.set(c.id, { route, started: s.time });
-      const ms = (s.time - this.animations.get(c.id).started) * 1000;
+      const ms = Math.max(0, s.time + frameRemainder - this.animations.get(c.id).started) * 1000;
       if (hero) this.sprites.hero(ctx, c, ms); else this.sprites.monster(ctx, c, ms);
       const barY = hero ? -80 : c.kind === 'baphomet' ? -115 : c.kind === 'willow' ? -83 : -44;
       if (hero || hovered === c.id || c.hp < MONSTERS[c.kind].hp) {

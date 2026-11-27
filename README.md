@@ -34,6 +34,11 @@ Camera: scroll or +/− to zoom, drag to pan, F to fit. Double-click a portrait 
 follow a deployed adventurer. Q uses a skill, H holds, R resumes farming, T retreats.
 Boss fights continue while management dialogs are open.
 
+Choose **Hunt area** and click or tap the field to assign a team to a small hunting
+ground. Use **Farm** to resume after moving manually. When a Novice reaches Job
+Lv. 10, the roster offers a shortcut to camp. During Sanctuary Ring, the shaded
+band takes damage when the countdown ends. The centre and outer ground are safe.
+
 ## Included
 
 - Two named Novices; progression into Swordsman, Mage, Archer, Acolyte, Merchant,
