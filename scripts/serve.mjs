@@ -17,7 +17,7 @@ http.createServer(async (req, res) => {
     const file = resolve(base, '.' + path);
     if (!file.startsWith(base + sep) || !(await stat(file)).isFile()) { res.writeHead(404); res.end(); return; }
     res.writeHead(200, { 'Content-Type': mime[extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache',
-      'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; worker-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'" });
+      'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; worker-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors *" });
     res.end(req.method === 'HEAD' ? undefined : await readFile(file));
   } catch { res.writeHead(404); res.end('Not found'); }
-}).listen(port, '127.0.0.1', () => console.log(`Ragna Tactics → http://localhost:${port}`));
+}).listen(port, '0.0.0.0', () => console.log(`Ragna Tactics → http://0.0.0.0:${port}`));

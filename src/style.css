@@ -957,6 +957,8 @@ kbd{
   white-space:nowrap;
   pointer-events:none
 }
+#hunt-tools:not([hidden]) { display:flex; align-items:center; justify-content:center; gap:10px; margin-top:6px; pointer-events:auto; }
+#hunt-tools select, #hunt-tools button { font:inherit; padding:5px 8px; color:#f7ecd2; background:#263e34; border:1px solid #546b59; border-radius:4px; }
 .boss-status{
   position:absolute;
   top:100px;
@@ -1699,3 +1701,83 @@ select{
     scroll-behavior:auto!important
   }
 }
+/* Milestone: readable party, tactics, and all-map expedition management. */
+.party-overview { margin-top: 12px; display: grid; gap: 7px; }
+.party-summary { border: 1px solid var(--line); background: #20353638; border-radius: 5px; padding: 9px; display: grid; gap: 6px; }
+.party-summary > strong { color: var(--gold); font-size: 10px; font-weight: 500; }
+.party-summary > span { color: var(--muted); font-size: 9px; }
+.party-summary > div { display: flex; flex-wrap: wrap; gap: 4px; }
+.party-member { padding: 5px 7px; font-size: 9px; border-radius: 4px; }
+.party-member.active { border-color: var(--gold); color: var(--gold); }
+.party-empty { font-size: 9px; color: var(--muted); line-height: 1.5; }
+.tactics-details { border: 1px solid var(--line); border-radius: 5px; margin: 11px 0; padding: 9px 10px; }
+.tactics-details summary { color: var(--gold); cursor: pointer; font-size: 10px; padding: 3px 0; }
+.tactics-toggle { display:flex; align-items:center; gap:7px; font-size:10px; color:#c6d2bd; margin:11px 0; }
+.tactics-toggle input { accent-color:var(--gold); }
+.tactics-setting { display:block; margin:11px 0; font-size:10px; }
+.tactics-setting > span { display:flex; justify-content:space-between; color:#c6d2bd; }
+.tactics-setting output { color:var(--gold); font-variant-numeric:tabular-nums; }
+.tactics-setting input { width:100%; accent-color:var(--gold); min-height:24px; }
+.tactics-setting small { display:block; color:var(--muted); font-size:9px; line-height:1.45; }
+.world-overview { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.world-map-group { border:1px solid var(--line); border-radius:5px; padding:11px; min-width:0; }
+.world-map-heading { display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:8px; }
+.world-map-heading strong { font-family:Georgia,serif; font-weight:400; font-size:16px; }
+.world-map-heading button { font-size:9px; padding:6px 8px; color:var(--gold); }
+.world-unit { width:100%; display:grid; gap:4px; text-align:left; padding:8px; margin-top:5px; background:#20353638; font-size:9px; color:var(--muted); }
+.world-unit-title { color:var(--text); font-size:10px; }
+.world-unit-title small { color:var(--gold); font-size:9px; display:block; margin-top:3px; }
+.world-empty { color:var(--muted); font-size:10px; margin:5px 0 0; }
+.attention-list { border:1px solid #e0b47d44; background:#b88c3210; padding:10px; margin:0 0 12px; }
+.attention-list h3 { font-size:15px; margin:0 0 8px; }
+.attention-list button { display:block; width:100%; text-align:left; padding:7px 4px; border:0; border-top:1px solid var(--line); font-size:10px; color:#e8ca8f; }
+@media(max-width:900px) { .party-overview { margin-top:10px; } .party-summary > div { gap:3px; } }
+@media(max-width:620px) { .party-overview { grid-template-columns:1fr; } .world-overview { grid-template-columns:1fr; } .activity-heading { gap:8px; } .activity-heading button { font-size:9px; gap:4px; } .tactics-setting input { min-height:30px; } }
+@media(prefers-reduced-motion:reduce) { .party-summary, .world-unit, .tactics-details { scroll-behavior:auto; } }
+/* Compact guided expedition progression. */
+.expedition-goals { margin-top: 13px; padding: 11px 10px; border: 1px solid #d6c58b30; border-radius: 5px; background: linear-gradient(125deg,#263b3544,#182c2b55); }
+.goals-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.goals-heading .eyebrow { font-size:8px; letter-spacing:1.2px; }
+.goals-heading > span:last-child { color:var(--gold); font-size:9px; font-variant-numeric:tabular-nums; }
+.expedition-goals ol { list-style:none; display:grid; gap:5px; padding:0; margin:0; }
+.expedition-goals li { display:grid; grid-template-columns:15px 1fr; align-items:start; gap:5px; color:#81958e; font-size:9px; line-height:1.35; }
+.expedition-goals li > span { width:13px; height:13px; border:1px solid #83958c66; border-radius:50%; text-align:center; font-size:8px; line-height:11px; }
+.expedition-goals li.complete { color:#9db49b; }
+.expedition-goals li.complete > span { color:var(--gold); border-color:#dec58e88; }
+.expedition-goals li.current { color:#e7e9dc; }
+.expedition-goals li.current > span { border-color:var(--gold); color:var(--gold); box-shadow:0 0 0 2px #dec58e16; }
+.goal-next { width:100%; display:flex; align-items:center; justify-content:space-between; margin-top:10px; padding:8px 9px; border-color:#dec58e55; color:#eddaa8; background:#dec58e0c; font-size:9px; text-align:left; }
+.goal-next span { font-size:13px; }
+.goals-complete { margin-top:8px; color:var(--gold); font-size:9px; line-height:1.5; }
+.command-buttons button[aria-pressed="true"] { border-color:var(--gold); background:#c7b98025; color:#f0dfb5; box-shadow:inset 0 -2px #dec58e55; }
+.party-member[aria-pressed="true"] { background:#dec58e17; }
+.tactics-details[open] { border-color:#dec58e55; background:#101f201a; }
+.tactics-details summary { min-height:32px; display:flex; align-items:center; }
+.tactics-toggle, .tactics-setting { padding:4px 0; }
+.tactics-setting output { min-width:34px; text-align:right; }
+.character-card:focus-visible, .party-member:focus-visible, .goal-next:focus-visible { outline:2px solid var(--gold); outline-offset:2px; z-index:1; }
+@media(max-width:900px) {
+  .expedition-goals { margin-top:9px; padding:8px 10px; }
+  .expedition-goals ol { grid-template-columns:1fr 1fr; column-gap:12px; }
+}
+@media(max-width:620px) {
+  .expedition-goals { margin-top:9px; }
+  .expedition-goals ol { grid-template-columns:1fr 1fr; }
+  .goal-next { min-height:40px; }
+  .tactics-details summary { min-height:40px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .goal-next, .party-member, .character-card { transition:none!important; }
+}
+
+.monster-card img { width:52px; height:52px; object-fit:contain; image-rendering:pixelated; }
+.monster-card div { flex:1; }
+
+.stat-stepper { display:flex; align-items:center; gap:8px; }
+.stat-stepper button { width:32px; height:32px; }
+.stat-stepper output { min-width:2ch; text-align:center; color:var(--gold); }
+
+.activity-heading { flex-wrap:wrap; }
+.bounty-entry { display:grid; grid-template-columns:64px 1fr; gap:14px; padding:16px 0; border-top:1px solid #435449; }
+.bounty-entry img { width:60px; height:70px; object-fit:contain; image-rendering:pixelated; }
+.bounty-entry h3, .bounty-entry p { margin:5px 0; }

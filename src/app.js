@@ -1,5 +1,5 @@
-import { MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, STEP, baseNeed, jobNeed } from './data.js';
-import { command, tick, stats, rosterLimit, engaged } from './sim.js';
+import { AFFINITIES, ELEMENTS, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
+import { availablePoints, forgePrice, command, tick, stats, rosterLimit, engaged, effectiveTactics, isLeader } from './sim.js';
 import { SAVE_KEY, loadGame, saveGame, encodeSave, decodeSave } from './persistence.js';
 import { Sprites } from './sprites.js';
 import { Renderer } from './renderer.js';
@@ -11,7 +11,11 @@ const number = value => Math.floor(value).toLocaleString();
 const duration = seconds => seconds >= 3600 ? `${(seconds / 3600).toFixed(1)}h` : `${Math.floor(seconds / 60)}m ${Math.floor(seconds % 60)}s`;
 let state, renderer, sprites, ready = false, writable = false, settling = false, selected = new Set(['c1', 'c2']);
 let hovered = null, orderMode = null, coachDismissed = false, saveError = false, hiddenAt = null;
-let multiSelect = false;
+let previewPointer = null;
+const radiusControl = $('hunt-radius');
+for (const radius of HUNT_RADII) radiusControl.add(new Option(String(radius), String(radius)));
+radiusControl.value = String(DEFAULT_HUNT_RADIUS);
+let multiSelect = false, tacticsExpanded = false;
 let toastTimer, accumulator = 0, lastTime = performance.now(), lastUI = 0, lastSave = performance.now(), inspectorKey = '';
 const modal = $('modal');
 function html(id, content) { if ($(id).innerHTML !== content) $(id).innerHTML = content; }
@@ -28,7 +32,7 @@ function issue(cmd, { close = false, quiet = false } = {}) {
   const message = command(state, { ids: [...selected], ...cmd });
   if (message) { error(message); return false; }
   if (close) closeModal();
-  if (!quiet) toast({ party: 'Party formed. Orders now apply to the whole party.', split: 'Selected adventurers are now independent.', resume: 'Farming assignments resumed.', hold: 'Holding position. Nearby enemies will be engaged.', retreat: 'Retreating to the camp exit.', recover: 'Rested and ready for the next expedition.', resupply: 'Potion supplies replenished.' }[cmd.type] || 'Orders received.');
+  if (!quiet) toast({ party: 'Party formed. Orders now apply to the whole party.', split: 'Selected adventurers are now independent.', resume: 'Farming assignments resumed.', hold: 'Holding position. Nearby enemies will be engaged.', retreat: 'Retreating to the camp exit.', recover: 'Rested and ready for the next expedition.', resupply: 'Potion supplies replenished.', promote: 'Job advancement complete. Your adventurer is ready for a new path.', recruit: 'A new Novice joined the guild.' }[cmd.type] || 'Orders received.');
   persist(); renderUI(); return true;
 }
 function persist() {
@@ -49,11 +53,17 @@ function setSelection(id, multiple = false) {
 function renderUI() {
   if (!state || !renderer) return;
   const mapId = renderer.mapId, map = MAPS[mapId], units = selectedCharacters();
+  const bounty = BOUNTIES[state.bounty?.id];
+  $('bounty-button').textContent = bounty ? (state.bounty.kills === bounty.count ? 'Claim bounty ↗' : `Bounty · ${state.bounty.kills}/${bounty.count}`) : 'Bounties ↗';
+  if (modal.open && $('active-bounty-progress') && bounty) {
+    $('active-bounty-progress').textContent = state.bounty.kills + ' / ' + bounty.count;
+    $('claim-bounty').disabled = state.bounty.kills < bounty.count;
+  }
   $('zeny').textContent = number(state.inventory.zeny);
   $('map-name').textContent = map.name; $('map-subtitle').textContent = map.subtitle; $('map-tier').textContent = map.tier;
   html('map-list', Object.values(MAPS).map((m, i) => {
     const count = state.characters.filter(c => c.mapId === m.id).length;
-    return `<button class="map-card ${m.id === mapId ? 'active' : ''}" data-map="${m.id}" aria-current="${m.id === mapId ? 'location' : 'false'}"><img class="map-creature" src="${sprites.monsterPortrait(m.monster)}" alt=""><div class="map-card-top"><span class="map-type">${i === 2 ? 'BOSS EXPEDITION' : 'FARMING GROUNDS'}</span></div><strong>${m.name}</strong><div class="map-card-bottom"><span>${count ? `${count} adventurer${count > 1 ? 's' : ''} active` : i === 2 ? 'Awaiting a worthy party' : 'Ready to explore'}</span><span class="arrow">${count ? '●' : '↗'}</span></div></button>`;
+    return `<button class="map-card ${m.id === mapId ? 'active' : ''}" data-map="${m.id}" aria-current="${m.id === mapId ? 'location' : 'false'}"><img class="map-creature" src="${sprites.monsterPortrait(m.monster)}" alt=""><div class="map-card-top"><span class="map-type">${m.boss ? 'BOSS EXPEDITION' : 'FARMING GROUNDS'}</span></div><strong>${m.name}</strong><div class="map-card-bottom"><span>${count ? `${count} adventurer${count > 1 ? 's' : ''} active` : m.boss ? 'Awaiting a worthy party' : 'Ready to explore'}</span><span class="arrow">${count ? '●' : '↗'}</span></div></button>`;
   }).join(''));
   const present = state.characters.filter(c => c.mapId === mapId).length;
   $('map-population').textContent = `${present} adventurer${present === 1 ? '' : 's'} · ${state.maps[mapId].monsters.filter(m => m.hp > 0).length} enemies in the field`;
@@ -62,18 +72,27 @@ function renderUI() {
   $('selection-title').textContent = units.length === 1 ? units[0].name : `${units.length} adventurers selected`;
   $('selection-description').textContent = units.some(c => c.partyId) ? 'Party commands include linked members' : units.length ? 'Independent adventurers · your orders' : 'Select an adventurer in your roster';
   $('order-hint').hidden = !orderMode;
-  for (const action of ['move', 'rally']) {
-    document.querySelector(`[data-action="${action}"]`).setAttribute('aria-pressed', String(orderMode === action));
-  }
-  $('order-hint').textContent = orderMode === 'rally' ? 'Tap the centre of your hunting area · Esc to cancel' : 'Choose a destination · Esc to cancel';
+  const activeOrders = units.map(c => c.order);
+  const pressed = { move: orderMode === 'move', rally: orderMode === 'rally', hold: !!units.length && activeOrders.every(v => v === 'hold'),
+    resume: !!units.length && activeOrders.every(v => v === 'farm'), retreat: !!units.length && activeOrders.every(v => v === 'retreat') };
+  for (const [action, value] of Object.entries(pressed)) document.querySelector(`[data-action="${action}"]`).setAttribute('aria-pressed', String(value));
+  $('hunt-tools').hidden = orderMode !== 'rally';
+  $('order-instruction').textContent = orderMode === 'rally' ? 'Tap the centre of your hunting area · Esc to cancel' : 'Choose a destination · Esc to cancel';
   $('battlefield').style.cursor = orderMode ? 'crosshair' : hovered ? 'pointer' : 'grab';
   $('roster-count').textContent = `${state.characters.length} / 5`;
-  const eligible = state.characters.filter(c => c.job === 'novice' && c.jobLevel >= 10);
+  const focusedPartyMember = document.activeElement?.matches('.party-member') ? document.activeElement.dataset.character : null;
+  html('party-overview', state.parties.length ? state.parties.map(p => {
+    const members = state.characters.filter(c => c.partyId === p.id), leader = members.find(c => c.id === p.leaderId);
+    return `<div class="party-summary"><strong>${esc(p.name)}</strong><span>Leader: ${esc(leader?.name || '—')}</span><div>${members.map(c => `<button class="party-member ${selected.has(c.id) ? 'active' : ''}" data-character="${c.id}" aria-pressed="${selected.has(c.id)}" title="${esc(c.name)} · ${ROLE_LABELS[JOB_ROLES[c.job]]}">${esc(c.name)} · ${JOBS[c.job].name}</button>`).join('')}</div></div>`;
+  }).join('') : '<div class="party-empty">No linked parties · select two or more adventurers to form one.</div>');
+  if (focusedPartyMember) $('party-overview').querySelector(`[data-character="${focusedPartyMember}"]`)?.focus({ preventScroll: true });
+  renderExpeditionGoals();
+  const eligible = state.characters.filter(c => c.jobLevel >= promotionLevel(c.job));
   $('job-notice').hidden = eligible.length === 0;
   $('job-names').textContent = eligible.map(c => c.name).join(', ');
   const cards = state.characters.map(c => {
     const st = stats(c), mapName = c.mapId ? MAPS[c.mapId].name : 'Guild camp';
-    return `<button class="character-card ${selected.has(c.id) ? 'selected' : ''}" data-character="${c.id}" aria-pressed="${selected.has(c.id)}" aria-label="${esc(c.name)}, ${JOBS[c.job].name}, level ${c.level}, ${mapName}"><div class="portrait"><img src="${sprites.portrait(c)}" alt="" draggable="false"></div><div><div class="character-name">${esc(c.name)}<span>Lv. ${c.level}</span></div><div class="character-job">${JOBS[c.job].name} · Job ${c.jobLevel}${c.partyId ? ' · Linked' : ''}</div><div class="hp-track" title="HP ${Math.ceil(c.hp)} / ${st.hp}"><i style="width:${Math.max(0, Math.min(100, c.hp / st.hp * 100))}%"></i></div><div class="sp-track" title="SP ${Math.floor(c.sp)} / ${st.sp}"><i style="width:${Math.max(0, Math.min(100, c.sp / st.sp * 100))}%"></i></div><div class="character-location"><span>${mapName}</span><span class="status">${c.status === 'camp' ? 'Resting' : c.status === 'down' ? 'Defeated' : c.status[0].toUpperCase() + c.status.slice(1)}</span></div></div></button>`;
+    return `<button class="character-card ${selected.has(c.id) ? 'selected' : ''} ${c.status === 'down' ? 'defeated' : c.hp / st.hp <= 0.3 ? 'low-health' : ''}" data-character="${c.id}" aria-pressed="${selected.has(c.id)}" aria-label="${esc(c.name)}, ${JOBS[c.job].name}, level ${c.level}, ${mapName}"><div class="portrait"><img src="${sprites.portrait(c)}" alt="" draggable="false"></div><div><div class="character-name">${esc(c.name)}<span>Lv. ${c.level}</span></div><div class="character-job">${JOBS[c.job].name} · Job ${c.jobLevel}${c.partyId ? ' · Linked' : ''}</div><div class="hp-track" title="HP ${Math.ceil(c.hp)} / ${st.hp}"><i style="width:${Math.max(0, Math.min(100, c.hp / st.hp * 100))}%"></i></div><div class="sp-track" title="SP ${Math.floor(c.sp)} / ${st.sp}"><i style="width:${Math.max(0, Math.min(100, c.sp / st.sp * 100))}%"></i></div><div class="character-location"><span>${mapName}</span><span class="status ${c.status === 'down' ? 'status-danger' : c.hp / st.hp <= 0.3 ? 'status-warning' : ''}">${c.status === 'camp' ? 'Resting' : c.status === 'down' ? 'Defeated' : c.status[0].toUpperCase() + c.status.slice(1)}</span></div></div></button>`;
   }).join('');
   // Keep outer buttons stable so keyboard focus survives HP updates.
   if (!pointer?.down) {
@@ -99,15 +118,24 @@ function renderUI() {
   ].map(([done, title, subtitle]) => `<div class="milestone ${done ? 'complete' : ''}"><span class="diamond">${done ? '◆' : '◇'}</span><div><b>${title}</b><br>${subtitle}</div></div>`).join(''));
   renderInspector(units);
   html('journal', state.journal.slice(0, 12).map(e => `<div class="journal-entry"><time>${Math.floor(e.time / 60).toString().padStart(2, '0')}:${Math.floor(e.time % 60).toString().padStart(2, '0')}</time><span>${esc(e.message)}</span></div>`).join(''));
-  const boss = state.maps.arena.monsters.find(m => m.kind === 'baphomet');
-  $('boss-status').hidden = mapId !== 'arena' || !state.characters.some(c => c.mapId === 'arena');
-  if (!$('boss-status').hidden) html('boss-status', `<div class="boss-name">${boss?.hp > 0 ? 'Baphomet' : 'Sanctuary cleared'}</div><div class="progress"><i style="width:${Math.max(0, (boss?.hp || 0) / MONSTERS.baphomet.hp * 100)}%"></i></div><p>${state.maps.arena.telegraph ? castWarning(state.maps.arena.telegraph) : boss?.hp > 0 ? `${number(boss.hp)} / ${number(MONSTERS.baphomet.hp)} HP · Real-time encounter` : 'Your reward is waiting in shared storage.'}</p>`);
+  const encounter = state.maps[mapId], bossKind = MAPS[mapId].monster;
+  const boss = MAPS[mapId].boss && encounter.monsters.find(m => m.kind === bossKind);
+  $('boss-status').hidden = !boss || !state.characters.some(c => c.mapId === mapId);
+  if (!$('boss-status').hidden) html('boss-status', `<div class="boss-name">${boss.hp > 0 ? MONSTERS[bossKind].name : 'Expedition cleared'}</div><div class="progress"><i style="width:${Math.max(0,boss.hp) / MONSTERS[bossKind].hp * 100}%"></i></div><p>${encounter.telegraph ? castWarning(encounter.telegraph) : boss.hp > 0 ? `${number(boss.hp)} / ${number(MONSTERS[bossKind].hp)} HP · Real-time encounter` : 'Your reward is waiting in shared storage.'}</p>`);
 }
 function castWarning(cast) {
-  const warning = cast.innerRadius ? 'Sanctuary Ring · move inside the centre or beyond the ring' : 'Dark Cross · leave the marked ground';
+  const warning = cast.markedId ? 'Sand Pact · gather around ' + (state.characters.find(c => c.id === cast.markedId)?.name || 'the marked ally') + ' to share damage' : renderer.mapId === 'lair' ? 'Sinkhole · leave the red circle' : cast.innerRadius ? 'Sanctuary Ring · move inside the centre or beyond the ring' : 'Dark Cross · leave the marked ground';
   return warning + ' · ' + Math.max(0, cast.remaining).toFixed(1) + 's';
 }
+function tacticsMarkup(c) {
+  const t = effectiveTactics(c);
+  const range = (key, label, min, max, step, help) => `<label class="tactics-setting"><span>${label}<output>${Math.round(t[key] * 100)}%</output></span><input type="range" data-tactics-key="${key}" min="${min}" max="${max}" step="${step}" value="${Math.round(t[key] * 100)}" aria-label="${label}"><small>${help}</small></label>`;
+  return `<details class="tactics-details" ${tacticsExpanded ? 'open' : ''}><summary>Fine-tune tactics</summary><label class="tactics-toggle"><input type="checkbox" data-tactics-key="autoSkill" ${t.autoSkill ? 'checked' : ''}> Automatically use skills when useful</label>${range('healAt', 'Heal allies below', 20, 95, 5, 'Acolytes heal party members; Novices heal themselves.')}${range('potionAt', 'Use potion below', 0, 80, 5, 'Consumes one potion; restores 65 HP.')}${range('retreatAt', 'Retreat below', 0, 70, 1, 'Automatically return to camp at this HP; set to 0% to disable.')}
+    <label class="form-label">Choose targets<select id="target-pref-select">${Object.entries(TARGET_PREFS).map(([key, label]) => `<option value="${key}" ${t.targetPref === key ? 'selected' : ''}>${label}</option>`).join('')}</select></label></details>`;
+}
 function renderInspector(units) {
+  const previousDetails = $('inspector').querySelector('.tactics-details');
+  if (previousDetails) tacticsExpanded = previousDetails.open;
   if ($('inspector').contains(document.activeElement) && ['SELECT', 'INPUT'].includes(document.activeElement.tagName)) return;
   let content;
   if (units.length !== 1) {
@@ -115,27 +143,29 @@ function renderInspector(units) {
     content = `<div class="inspector-title">${units.length ? 'Better, together.' : 'Choose your adventurer.'}</div><p>${units.length ? 'Link your adventurers into a party to share targets, support each other, and earn shared EXP. Or deploy separately to cover more ground.' : 'Select a portrait to inspect equipment, tactics, and progression.'}</p>${units.length ? `<div class="detail-row"><span>Selected supplies</span><strong>${potions} potions</strong></div><label class="form-label">Tactics<select id="tactic-select"><option value="" disabled selected>Apply to selection…</option>${Object.entries(TACTICS).map(([key, t]) => `<option value="${key}">${t.name}</option>`).join('')}</select></label><p>Job changes become available at Novice Job Lv. 10. Every character chooses their own path.</p>` : ''}`;
   } else {
     const c = units[0], st = stats(c);
-    content = `<div class="inspector-title">${JOBS[c.job].name} <span class="tiny muted">${JOBS[c.job].role}</span></div><div class="detail-row"><span>Base Lv. ${c.level}</span><strong>${number(c.exp)} / ${baseNeed(c.level)} EXP</strong></div><div class="progress"><i style="width:${Math.min(100, c.exp / baseNeed(c.level) * 100)}%"></i></div><div class="detail-row"><span>Job Lv. ${c.jobLevel}${c.job === 'novice' ? ' / 10' : ' / 50'}</span><strong>${c.job === 'novice' && c.jobLevel === 10 ? 'Job change ready' : `${number(c.jobExp)} / ${jobNeed(c.jobLevel)}`}</strong></div><div class="progress"><i style="width:${Math.min(100, c.jobExp / jobNeed(c.jobLevel) * 100)}%"></i></div><div class="detail-row"><span>HP / SP</span><strong>${Math.ceil(c.hp)}/${st.hp} · ${Math.floor(c.sp)}/${st.sp}</strong></div><div class="detail-row"><span>ATK / DEF · Potions</span><strong>${st.atk} / ${st.def} · ${c.potions}</strong></div><label class="form-label">Tactics<select id="tactic-select">${Object.entries(TACTICS).map(([key, t]) => `<option value="${key}" ${c.tactic === key ? 'selected' : ''}>${t.name}</option>`).join('')}</select></label><label class="form-label">Farming objective<select id="assignment-select">${[['balanced', 'Balanced farming'], ['experience', 'Training · +15% Base EXP'], ['materials', 'Gathering · double materials']].map(([key, label]) => `<option value="${key}" ${c.assignment === key ? 'selected' : ''}>${label}</option>`).join('')}</select></label><div class="detail-actions"><button data-action="equipment">Equipment</button><button data-action="advance">Job path</button><button data-action="rename">Rename</button></div><p><span style="color:var(--gold)">${st.skill}</span> · ${st.cost} SP · ${c.cooldown > 0 ? c.cooldown.toFixed(1) + 's remaining' : 'Ready'}<br>${st.description || JOBS[c.job].description}</p>`;
+    content = `<div class="inspector-title">${JOBS[c.job].name} <span class="tiny muted">${JOBS[c.job].role}</span></div><div class="detail-row"><span>Base Lv. ${c.level}</span><strong>${number(c.exp)} / ${baseNeed(c.level)} EXP</strong></div><div class="progress"><i style="width:${Math.min(100, c.exp / baseNeed(c.level) * 100)}%"></i></div><div class="detail-row"><span>Job Lv. ${c.jobLevel}${c.job === 'novice' ? ' / 10' : ' / 50'}</span><strong>${c.jobLevel >= promotionLevel(c.job) ? 'Job change ready' : `${number(c.jobExp)} / ${jobNeed(c.jobLevel)}`}</strong></div><div class="progress"><i style="width:${Math.min(100, c.jobExp / jobNeed(c.jobLevel) * 100)}%"></i></div><div class="detail-row"><span>HP / SP</span><strong>${Math.ceil(c.hp)}/${st.hp} · ${Math.floor(c.sp)}/${st.sp}</strong></div><div class="detail-row"><span>ATK / DEF · Potions</span><strong>${st.atk} / ${st.def} · ${c.potions}</strong></div><div class="detail-row"><span>Combat role</span><strong>${ROLE_LABELS[JOB_ROLES[c.job]]}${c.partyId ? ` · ${isLeader(state, c) ? 'Party leader' : 'Follower'}` : ''}</strong></div><label class="form-label">Starting preset<select id="tactic-select">${Object.entries(TACTICS).map(([key, t]) => `<option value="${key}" ${c.tactic === key ? 'selected' : ''}>${t.name}</option>`).join('')}</select></label>${tacticsMarkup(c)}<label class="form-label">Farming objective<select id="assignment-select">${[['balanced', 'Balanced farming'], ['experience', 'Training · +15% Base EXP'], ['materials', 'Gathering · double materials']].map(([key, label]) => `<option value="${key}" ${c.assignment === key ? 'selected' : ''}>${label}</option>`).join('')}</select></label><div class="detail-row"><span>Assignment · status</span><strong>${c.mapId ? `${MAPS[c.mapId].name} · ${c.status}` : c.status === 'down' ? 'Defeated · camp' : 'Guild camp'}</strong></div><div class="detail-actions">${(st.element || JOB_ROLES[c.job] === 'support') ? '<button data-action="spellbook">Spellbook</button>' : ''}<button data-action="attributes">Stats · ${availablePoints(c)} pts</button><button data-action="equipment">Equipment</button><button data-action="advance">Job path</button><button data-action="rename">Rename</button>${c.partyId && !isLeader(state, c) ? '<button data-action="leader" title="Make this adventurer the party leader">Lead party</button>' : ''}</div><p><span style="color:var(--gold)">${st.skill}</span> · ${st.cost} SP · ${c.cooldown > 0 ? c.cooldown.toFixed(1) + 's remaining' : 'Ready'}<br>${st.element ? ELEMENTS[st.element].name + ' magic · strong against ' + (ELEMENTS[ELEMENTS[st.element].beats]?.name || 'Undead') : st.description || JOBS[c.job].description}</p>`;
   }
   if (content !== inspectorKey) { html('inspector', content); inspectorKey = content; }
 }
 function deployment() {
   const units = selectedCharacters();
   if (!units.length) return toast('Select one or more adventurers first.');
-  showModal('Where will you venture?', `<p>Deploy ${units.map(c => esc(c.name)).join(', ')} instantly. Linked party members travel together. Viewing a map does not move your characters.</p><form id="deployment-form"><div class="modal-grid">${Object.values(MAPS).map(m => `<label class="choice-card"><input type="radio" name="destination" value="${m.id}" ${m.id === renderer.mapId ? 'checked' : ''}><span class="tiny"> ${m.tier}</span><strong>${m.name}</strong><p>${m.id === 'meadow' ? 'Poring and Fabre. A gentle start for Novices.' : m.id === 'forest' ? 'Willow. Tougher enemies, better EXP, and Resin.' : 'Baphomet. Bring at least two first-job adventurers. Manual dodging recommended.'}</p></label>`).join('')}</div>${modalError}<div class="modal-footer"><span>In combat? Retreat to camp before redeploying.</span><button type="submit" class="primary">Begin expedition <span>↗</span></button></div></form>`, 'PLAN AN EXPEDITION');
+  showModal('Where will you venture?', `<p>Deploy ${units.map(c => esc(c.name)).join(', ')} instantly. Linked party members travel together. Viewing a map does not move your characters.</p><form id="deployment-form"><div class="modal-grid">${Object.values(MAPS).map(m => `<label class="choice-card"><input type="radio" name="destination" value="${m.id}" ${m.id === renderer.mapId ? 'checked' : ''}><span class="tiny"> ${m.tier}</span><strong>${m.name}</strong><p>${m.id === 'meadow' ? 'Poring and Fabre. A gentle start for Novices.' : m.id === 'forest' ? 'Willow. Tougher enemies, better EXP, and Resin.' : m.id === 'payon' ? 'Zombies close slowly while Archer Skeletons fire from range. Prepare Holy magic.' : m.id === 'morroc' ? 'Scorpions strike hard. Peco Pecos quickly close distance. Both drop socket cards.' : m.id === 'lair' ? 'Phreeoni. Gather for Sand Pact, scatter for Sinkhole. Guaranteed MVP card.' : 'Baphomet. Bring at least two first-job adventurers. Manual dodging recommended.'}</p></label>`).join('')}</div>${modalError}<div class="modal-footer"><span>In combat? Retreat to camp before redeploying.</span><button type="submit" class="primary">Begin expedition <span>↗</span></button></div></form>`, 'PLAN AN EXPEDITION');
   $('deployment-form').onsubmit = event => { event.preventDefault(); const mapId = new FormData(event.currentTarget).get('destination'); if (issue({ type: 'deploy', mapId }, { close: true, quiet: true })) { coachDismissed = true; switchMap(mapId); toast('Expedition started. Your adventurers will farm automatically.'); } };
 }
 function camp() {
-  showModal('Back at the guild camp.', `<p>Recover and change jobs here. Deployed adventurers must retreat before they can use camp services.</p>${state.characters.map(c => `<div class="camp-unit"><img src="${sprites.portrait(c)}" alt=""><div><strong>${esc(c.name)} · ${JOBS[c.job].name}</strong><p>${c.mapId ? `At ${MAPS[c.mapId].name}${engaged(state, c) ? ' · In combat' : ''}` : c.status === 'down' ? 'Defeated · recovery needed' : `At camp · ${c.potions} potions`}</p></div><button data-camp-unit="${c.id}" data-service="${c.mapId ? 'retreat' : c.job === 'novice' && c.jobLevel >= 10 ? 'advance' : 'recover'}">${c.mapId ? 'Recall' : c.job === 'novice' && c.jobLevel >= 10 ? 'Choose job' : 'Recover'}</button></div>`).join('')}<div class="camp-actions"><button data-modal-action="recover-all">Recover at camp</button><button data-modal-action="supply-all">Refill camp potions · 2z each</button></div><p style="margin-top:15px">Recovery is free in this foundation. Refills bring each character to ten potions. Each potion restores 65 HP automatically below 45% HP.</p>${modalError}`);
+  showModal('Back at the guild camp.', `<p>Recover and change jobs here. Deployed adventurers must retreat before they can use camp services.</p>${state.characters.map(c => `<div class="camp-unit"><img src="${sprites.portrait(c)}" alt=""><div><strong>${esc(c.name)} · ${JOBS[c.job].name}</strong><p>${c.mapId ? `At ${MAPS[c.mapId].name}${engaged(state, c) ? ' · In combat' : ''}` : c.status === 'down' ? 'Defeated · recovery needed' : `At camp · ${c.potions} potions`}</p></div><button data-camp-unit="${c.id}" data-service="${c.mapId ? 'retreat' : c.status !== 'down' && c.jobLevel >= promotionLevel(c.job) ? 'advance' : 'recover'}">${c.mapId ? 'Recall' : c.status !== 'down' && c.jobLevel >= promotionLevel(c.job) ? 'Choose job' : 'Recover'}</button></div>`).join('')}<div class="camp-actions"><button data-modal-action="recover-all">Recover at camp</button><button data-modal-action="supply-all">Refill camp potions · 2z each</button></div><p style="margin-top:15px">Recovery is free in this foundation. Refills bring each character to ten potions. Each potion restores 65 HP automatically below 45% HP.</p>${modalError}`);
 }
 function advanceJob(id = [...selected][0]) {
   const c = state.characters.find(v => v.id === id);
   if (!c) return;
   selected = new Set([c.id]);
-  if (c.job !== 'novice') {
-    showModal('Your path is taking shape.', `<p>${esc(c.name)} is a ${JOBS[c.job].name}. Second jobs and later job tiers are planned for a future milestone.</p><div class="milestone-note">Current path: Novice → ${JOBS[c.job].name}<br>Base Lv. ${c.level} · Job Lv. ${c.jobLevel}</div>`,'JOB PROGRESSION'); return;
+  const choices = jobChoices(c.job), gate = promotionLevel(c.job), first = c.job === 'novice';
+  if (!choices.length) {
+    showModal(JOBS[c.job].name, `<div class="milestone-note">Novice → ${JOBS[JOBS[c.job].parent].name} → ${JOBS[c.job].name}</div><h3>${JOBS[c.job].skill}</h3><p>${JOBS[c.job].description}</p>`, 'SECOND JOB');
+    return;
   }
-  showModal('Choose a new beginning.', `<p>Every adventurer starts as a Novice. At Job Lv. 10, return to camp and choose their first job. This choice is permanent in the foundation.</p><p>${esc(c.name)} · Novice Job Lv. ${c.jobLevel}/10${c.mapId ? ' · Return to camp to advance' : ''}</p><form id="job-form"><div class="modal-grid">${Object.entries(JOBS).filter(([key]) => key !== 'novice').map(([key, job]) => `<label class="choice-card"><input type="radio" name="job" value="${key}" required><img class="job-preview" src="${sprites.portrait({ ...c, job: key })}" alt=""><span class="tiny"> ${job.role}</span><strong>${job.name}</strong><p>${job.description}</p></label>`).join('')}</div>${modalError}<div class="modal-footer"><span>Each adventurer chooses independently.</span><button type="submit" class="primary" ${c.jobLevel < 10 || c.mapId ? 'disabled' : ''}>Choose job <span>✧</span></button></div></form>`, 'NOVICE → FIRST JOB');
+  showModal(first ? 'Choose a new beginning.' : 'Advance your calling.', `<p>${esc(c.name)} · ${JOBS[c.job].name} · Job Lv. ${c.jobLevel} / ${gate}</p><p>Return to camp at Job Lv. ${gate} to advance. Keep your Base level and equipment. Your new job begins at Job Lv. 1.</p><form id="job-form"><div class="modal-grid">${choices.map(([key, job]) => `<label class="choice-card"><input type="radio" name="job" value="${key}" required><img class="job-preview" src="${sprites.portrait({ ...c, job: key })}" alt=""><span class="tiny"> ${job.role}</span><strong>${job.name}</strong><p>${job.description}</p></label>`).join('')}</div>${modalError}<div class="modal-footer"><span>Each adventurer chooses independently.</span><button type="submit" class="primary" ${c.jobLevel < gate || c.mapId || c.status === 'down' ? 'disabled' : ''}>Choose job <span>✧</span></button></div></form>`, first ? 'NOVICE → FIRST JOB' : 'FIRST JOB → SECOND JOB');
   $('job-form').onsubmit = event => { event.preventDefault(); const job = new FormData(event.currentTarget).get('job'); issue({ type: 'promote', job, ids: [c.id] }, { close: true }); };
 }
 function recruit() {
@@ -145,12 +175,144 @@ function recruit() {
   showModal('A new adventurer arrives.', `<p>A fresh start, a new role, another possibility for your party. Your recruit begins as a Novice.</p><form id="recruit-form"><label class="form-label" for="recruit-name">Adventurer name</label><input id="recruit-name" name="name" type="text" maxlength="20" placeholder="Give them a name" required><label class="form-label" for="recruit-sex">Appearance</label><select name="sex" id="recruit-sex"><option value="m">Male</option><option value="f">Female</option></select>${modalError}<div class="modal-footer"><span>Free recruitment · ${state.characters.length + 1}/${rosterLimit(state)} unlocked slots</span><button class="primary">Welcome to the guild <span>+</span></button></div></form>`);
   $('recruit-form').onsubmit = event => { event.preventDefault(); const data = new FormData(event.currentTarget); if (issue({ type: 'recruit', name: data.get('name'), sex: data.get('sex') }, { close: true })) selected = new Set([state.characters.at(-1).id]); renderUI(); };
 }
+function attributes() {
+  const c = selectedCharacters()[0], draft = {};
+  if (!c || selected.size !== 1) return;
+  showModal(c.name + '’s attributes', `<p>Earn two points per Base level. Spend them at camp. Job changes preserve your build.</p>
+    <div class="attribute-rows">${Object.entries(ATTRIBUTES).map(([id, stat]) => `<div class="inventory-row"><div><strong>${id.toUpperCase()} · ${stat.name}</strong><p>${stat.effect}</p></div><div class="stat-stepper"><button data-stat="${id}" data-step="-1" aria-label="Decrease ${stat.name}">−</button><output id="stat-${id}"></output><button data-stat="${id}" data-step="1" aria-label="Increase ${stat.name}">+</button></div></div>`).join('')}</div>
+    <p id="stat-preview" aria-live="polite"></p><div class="modal-footer"><strong id="stat-remaining"></strong><button id="train-stats" class="primary">Train attributes</button></div>${modalError}`, 'CHARACTER BUILD');
+  const refresh = () => {
+    const planned = { ...c.attributes };
+    for (const [id, amount] of Object.entries(draft)) planned[id] = (planned[id] || 0) + amount;
+    const future = { ...c, attributes: planned }, remaining = availablePoints(future), st = stats(future);
+    for (const button of $('modal-body').querySelectorAll('[data-stat]')) {
+      const id = button.dataset.stat, val = planned[id] || 0;
+      $('stat-' + id).value = val;
+      button.disabled = !!c.mapId || (button.dataset.step === '-1' ? !draft[id] : !remaining || val >= ATTRIBUTE_CAP);
+    }
+    $('stat-remaining').textContent = remaining + ' points available';
+    $('stat-preview').textContent = `${st.hp} HP · ${st.sp} SP · ${st.atk} ATK · ${st.def} DEF · ${st.interval.toFixed(2)}s / attack · +${st.skillBonus} skill · ${Math.round(st.crit*100)}% crit`;
+    $('train-stats').disabled = !!c.mapId || !Object.keys(draft).length;
+  };
+  for (const button of $('modal-body').querySelectorAll('[data-stat]')) button.onclick = () => {
+    const id = button.dataset.stat;
+    draft[id] = (draft[id] || 0) + Number(button.dataset.step);
+    if (!draft[id]) delete draft[id];
+    refresh();
+  };
+  $('train-stats').onclick = () => {
+    if (issue({type:'allocate', ids:[c.id], points:draft}, {close:true, quiet:true})) toast(c.name + ' trained at camp.');
+  };
+  refresh();
+}
 function equipment() {
   const c = selectedCharacters()[0]; if (!c || selected.size !== 1) return toast('Select one adventurer to manage equipment.');
-  showModal(`${c.name}’s equipment`, `<p>Equip one armament or insignia at camp. All jobs can use these prototype items. Replaced equipment returns to shared storage.</p>${Object.entries(EQUIPMENT).map(([id, item]) => `<div class="inventory-row"><div>${item.name}<p>${item.description}</p></div><button data-equip="${id}" ${c.mapId || c.equipment === id || (id !== 'training' && !state.inventory.equipment[id]) ? 'disabled' : ''} style="padding:8px 12px">${c.equipment === id ? 'Equipped' : id === 'training' ? 'Equip' : `Equip · ${state.inventory.equipment[id]} stored`}</button></div>`).join('')}${modalError}`);
+  const items = Object.keys(EQUIPMENT).map(id => ({ id, card: null, count: state.inventory.equipment[id] || 0 }));
+  for (const [key, count] of Object.entries(state.inventory.socketed)) {
+    if (count > 0) { const [id, card] = key.split('/'); items.push({ id, card, count }); }
+  }
+  const equipped = c.card ? CARDS[c.card].name : 'Empty socket';
+  const stock = items.map(({ id, card, count }) => {
+    const worn = c.equipment === id && (c.card || null) === card;
+    return `<div class="inventory-row"><div>${EQUIPMENT[id].name}${card ? ' · ' + CARDS[card].name : ''}<p>${EQUIPMENT[id].description}</p></div><button data-equip="${id}" data-card="${card || ''}" ${c.mapId || worn || (id !== 'training' && !count) ? 'disabled' : ''}>${worn ? 'Equipped' : id === 'training' ? 'Equip' : 'Equip · ' + count}</button></div>`;
+  }).join('');
+  showModal(`${c.name}’s equipment`, `<p>Change equipment and sockets at camp. Stored gear keeps its card.</p>${stock}<h3>${EQUIPMENT[c.equipment].name} · ${c.equipment === 'training' ? 'No socket' : equipped}</h3>${cardRows(c)}${c.card ? `<button data-socket="" ${c.mapId ? 'disabled' : ''}>Remove card</button>` : ''}${modalError}`);
+}
+function cardRows(character) {
+  return Object.entries(CARDS).map(([id, card]) => {
+    const count = state.inventory.cards[id] || 0;
+    return `<div class="inventory-row monster-card"><img src="${sprites.monsterPortrait(id)}" alt=""><div><strong>${card.name}</strong><p>${card.description} · ${id === 'phreeoni' ? 'Sandsea Hollow MVP' : id === 'skeleton' ? 'Payon Cave' : 'Morroc Dunes'} · ${count} loose</p></div>${character ? `<button data-socket="${id}" ${!count || character.mapId || character.card === id || character.equipment === 'training' ? 'disabled' : ''}>Socket</button>` : ''}</div>`;
+  }).join('');
+}
+const EXPEDITION_GOALS = [
+  'Deploy both starting Novices',
+  'Reach Novice Job Lv. 10 with both',
+  'Choose both first jobs at camp',
+  'Form a party and carry 5+ potions each',
+  'Challenge and defeat Baphomet',
+  'Recruit the third Novice',
+];
+function renderExpeditionGoals() {
+  const step = Math.max(0, Math.min(6, state.milestones.expeditionStep || 0));
+  const rows = EXPEDITION_GOALS.map((label, index) => `<li class="${index < step ? 'complete' : index === step ? 'current' : ''}"><span>${index < step ? '✓' : index + 1}</span>${label}</li>`).join('');
+  const action = ['Deploy starting pair', 'Continue farming', 'Choose a first job', 'Prepare party & supplies', 'Challenge Baphomet', 'Recruit a Novice'][step];
+  html('expedition-goals', `<div class="goals-heading"><span class="eyebrow">EXPEDITION GOALS</span><span>${step}/6</span></div><ol>${rows}</ol>${step < 6 ? `<button class="goal-next" data-goal-next>${action} <span>↗</span></button>` : '<p class="goals-complete">Your first expedition is complete.</p>'}`);
+}
+function takeGoalAction() {
+  const step = Math.max(0, Math.min(6, state.milestones.expeditionStep || 0));
+  const starters = state.characters.filter(c => ['c1', 'c2'].includes(c.id));
+  if (step === 0) { selected = new Set(['c1', 'c2']); deployment(); }
+  else if (step === 1) {
+    const deployed = starters.find(c => c.mapId);
+    if (deployed) { selected = new Set(starters.map(c => c.id)); switchMap(deployed.mapId); }
+    else { selected = new Set(['c1', 'c2']); deployment(); }
+  } else if (step === 2) {
+    const ready = starters.find(c => c.job === 'novice' && c.jobLevel >= 10);
+    if (ready && !ready.mapId) advanceJob(ready.id); else camp();
+  } else if (step === 3) {
+    const party = state.parties.find(p => state.characters.filter(c => c.partyId === p.id).length >= 2);
+    if (party && state.characters.filter(c => c.partyId === party.id).every(c => c.potions >= 5)) { selected = new Set([party.leaderId]); camp(); }
+    else if (starters.every(c => !c.mapId) && !starters.some(c => engaged(state, c))) { selected = new Set(starters.map(c => c.id)); if (!issue({ type: 'party' })) camp(); }
+    else { selected = new Set(starters.map(c => c.id)); camp(); }
+  } else if (step === 4) {
+    const party = state.parties.find(p => state.characters.filter(c => c.partyId === p.id).length >= 2);
+    selected = new Set([party?.leaderId || starters[0]?.id].filter(Boolean)); switchMap('arena'); deployment();
+  } else if (step === 5) recruit();
+}
+function worldActivity(c) {
+  return ({ down: 'Defeated', retreating: 'Retreating', fighting: 'Fighting', moving: 'Repositioning', holding: 'Holding', searching: 'Hunting', farming: 'Farming', camp: 'At camp' })[c.status] || c.status;
+}
+function assignmentName(c) {
+  return ({ balanced: 'Balanced', experience: 'Training', materials: 'Gathering' })[c.assignment] || c.assignment;
+}
+function worldOverview() {
+  const deployed = state.characters.filter(c => c.mapId);
+  const attention = state.characters.flatMap(c => [
+    c.status === 'down' ? { c, label: 'Defeated · recover at camp' } : null,
+    c.mapId && c.potions === 0 ? { c, label: 'No potions remaining' } : null,
+    c.mapId && c.potions > 0 && c.potions <= 2 ? { c, label: 'Supplies running low' } : null,
+    c.mapId && c.hp / stats(c).hp <= 0.3 ? { c, label: 'Low health · check retreat tactics' } : null,
+    c.job === 'novice' && c.jobLevel >= 10 && !c.mapId ? { c, label: 'Job advancement available' } : null,
+  ].filter(Boolean));
+  const groups = Object.values(MAPS).map(map => {
+    const team = deployed.filter(c => c.mapId === map.id);
+    return `<section class="world-map-group"><div class="world-map-heading"><strong>${map.name}</strong><button data-world-map="${map.id}">View map ↗</button></div>${team.length ? team.map(c => `<button class="world-unit" data-world-character="${c.id}"><span class="world-unit-title">${esc(c.name)} <small>${c.partyId ? esc(state.parties.find(p => p.id === c.partyId)?.name || 'Party') : 'Independent'}</small></span><span>${worldActivity(c)} · ${assignmentName(c)}</span><span class="world-condition ${c.status === 'down' ? 'critical' : c.hp / stats(c).hp <= 0.3 || c.potions <= 2 ? 'warning' : ''}">HP ${Math.ceil(c.hp)}/${stats(c).hp} · ${c.potions} potions</span></button>`).join('') : '<p class="world-empty">No deployed adventurers</p>'}</section>`;
+  }).join('');
+  showModal('Every expedition, at a glance', `${attention.length ? `<section class="attention-list"><h3>Needs attention · ${attention.length}</h3>${attention.map(({ c, label }) => `<button data-world-character="${c.id}">${esc(c.name)} · ${label} ↗</button>`).join('')}</section>` : '<p>Nothing needs your attention right now.</p>'}<div class="world-overview">${groups}</div>`, 'WORLD OVERVIEW');
+}
+function spellbook() {
+  const c = selectedCharacters()[0], current = spellElement(c) || 'support';
+  const support = JOB_ROLES[c.job] === 'support' ? `<div class="inventory-row"><div><strong>${JOBS[c.job].skill}</strong><p>Restore party HP</p></div><button data-attune="support" ${current === 'support' || c.mapId ? 'disabled' : ''}>${current === 'support' ? 'Prepared' : 'Prepare'}</button></div>` : '';
+  const rows = support + Object.entries(ELEMENTS).filter(([,e]) => e[c.job]).map(([id, e]) => `<div class="inventory-row"><div><strong>${e[c.job]}</strong><p>${e.name} magic · strong against ${ELEMENTS[e.beats]?.name || 'Undead'}</p></div><button data-attune="${id}" ${current === id || c.mapId ? 'disabled' : ''}>${current === id ? 'Prepared' : 'Prepare'}</button></div>`).join('');
+  showModal(c.name + '’s spellbook', `<p>Prepare one spell at camp for manual casts and automatic farming. Weakness adds 50% spell damage. Matching the enemy element reduces it by 25%.</p>${rows}${modalError}`,'ELEMENTAL MAGIC');
+}
+function fieldGuide() {
+  const habitats = { zombie:'payon', skeleton:'payon', poring:'meadow', fabre:'meadow', willow:'forest', scorpion:'morroc', peco:'morroc', baphomet:'arena', phreeoni:'lair' };
+  const rows = Object.entries(habitats).map(([id,mapId]) => {
+    const mob = MONSTERS[id], element = AFFINITIES[id], weak = Object.values(ELEMENTS).find(e => e.beats === element);
+    return `<section class="bounty-entry"><img alt="" src="${sprites.monsterPortrait(id)}"><div><span class="eyebrow">${MAPS[mapId].name}</span><h3>${mob.name}</h3><p>${ELEMENTS[element]?.name || (element === 'undead' ? 'Undead' : 'Neutral')} · ${weak ? 'Weak to ' + weak.name : 'Standard spell damage'} · ${mob.hp} HP</p><p>${mob.material}${CARDS[id] ? ' · ' + CARDS[id].name + ' (' + CARDS[id].description + ')' : ''}</p><button data-guide-map="${mapId}">View field ↗</button></div></section>`;
+  }).join('');
+  showModal('Monster field guide',rows,'GUILD ARCHIVES');
+}
+function bountyBoard() {
+  const active = state.bounty;
+  const rows = Object.entries(BOUNTIES).map(([id, bounty]) => {
+    const current = active?.id === id;
+    const controls = current
+      ? `<strong id="active-bounty-progress">${active.kills} / ${bounty.count}</strong><button id="claim-bounty" data-bounty="claim" data-id="${id}" ${active.kills < bounty.count ? 'disabled' : ''}>Claim reward</button><button data-bounty="abandon" data-id="${id}">Abandon</button>`
+      : `<button data-bounty="accept" data-id="${id}" ${active ? 'disabled' : ''}>Accept hunt</button>`;
+    return `<section class="bounty-entry"><img src="${sprites.monsterPortrait(bounty.target)}" alt=""><div><span class="eyebrow">${MAPS[bounty.map].name}</span><h3>${bounty.name}</h3><p>Defeat ${bounty.count} × ${MONSTERS[bounty.target].name}</p><p>${bounty.zeny} Zeny + ${EQUIPMENT[bounty.item].name}</p><div class="detail-actions">${controls}</div></div></section>`;
+  }).join('');
+  showModal('Guild bounty board', `<p>Choose one hunt for your guild. Kills from any team count after acceptance, including while you are away.</p>${rows}${modalError}`,'HUNTING CONTRACTS');
 }
 function storage() {
-  showModal('The fruits of your adventures.', `<p>All expedition loot arrives in shared storage. Equipment is assigned individually at camp.</p><h3>Materials</h3>${Object.entries(state.inventory.materials).length ? Object.entries(state.inventory.materials).map(([name, count]) => `<div class="inventory-row">${esc(name)}<span>${number(count)}</span></div>`).join('') : '<p>No materials yet. Your first expedition is waiting.</p>'}<h3>Equipment</h3>${Object.entries(state.inventory.equipment).map(([id, count]) => `<div class="inventory-row"><div>${EQUIPMENT[id].name}<p>${EQUIPMENT[id].description}</p></div><span>${count} stored</span></div>`).join('')}<p style="margin-top:17px">Field enemies have a small chance to drop equipment. Baphomet always drops a Sanctuary relic. Crafting and cards are planned for later.</p>`, 'SHARED STORAGE');
+  const recipes = Object.entries(FORGE).map(([id, recipe]) => {
+    const price = forgePrice(state, id), ingredients = Object.entries(recipe.materials);
+    const ready = state.inventory.zeny >= price && ingredients.every(([key, qty]) => (state.inventory.materials[key] || 0) >= qty);
+    const costs = ingredients.map(([key, qty]) => `${key} ${state.inventory.materials[key] || 0}/${qty}`).join(' · ');
+    return `<div class="inventory-row"><div><strong>${EQUIPMENT[id].name}</strong><p>${costs} · ${price} Zeny</p></div><button data-forge="${id}" ${ready ? '' : 'disabled'}>Forge</button></div>`;
+  }).join('');
+  showModal('The fruits of your adventures.', `<p>All expedition loot arrives in shared storage. Equipment is assigned individually at camp.</p><h3>Materials</h3>${Object.entries(state.inventory.materials).length ? Object.entries(state.inventory.materials).map(([name, count]) => `<div class="inventory-row">${esc(name)}<span>${number(count)}</span></div>`).join('') : '<p>No materials yet. Your first expedition is waiting.</p>'}<h3>Equipment</h3>${Object.entries(state.inventory.equipment).map(([id, count]) => `<div class="inventory-row"><div>${EQUIPMENT[id].name}<p>${EQUIPMENT[id].description}</p></div><span>${count} stored</span></div>`).join('')}<p style="margin-top:17px">Field enemies have a small chance to drop equipment. Baphomet always drops a Sanctuary relic. Crafted gear can be equipped at camp.</p><h3>Monster cards</h3>${cardRows()}<h3>Prontera forge</h3><p>A Blacksmith resting at camp halves the Zeny fee. Guild funds · ${number(state.inventory.zeny)} Zeny</p>${recipes}${modalError}`, 'SHARED STORAGE');
 }
 function rename() {
   const c = selectedCharacters()[0]; if (!c || selected.size !== 1) return toast('Choose one adventurer to rename.');
@@ -186,12 +348,20 @@ document.addEventListener('click', event => {
   if (!state || !ready) return;
   const map = event.target.closest('[data-map]'); if (map) { switchMap(map.dataset.map); return; }
   const card = event.target.closest('[data-character]'); if (card) { setSelection(card.dataset.character, event.shiftKey || multiSelect); return; }
+  if (event.target.closest('[data-goal-next]')) { takeGoalAction(); return; }
+  const worldMap = event.target.closest('[data-world-map]'); if (worldMap) { closeModal(); switchMap(worldMap.dataset.worldMap); return; }
+  const worldCharacter = event.target.closest('[data-world-character]'); if (worldCharacter) {
+    const c = state.characters.find(v => v.id === worldCharacter.dataset.worldCharacter);
+    if (c) { selected = new Set([c.id]); closeModal(); if (c.mapId) { switchMap(c.mapId); renderer.followId = c.id; } else renderUI(); }
+    return;
+  }
   const action = event.target.closest('[data-action]')?.dataset.action;
   if (action) {
     if (action === 'deploy') deployment(); else if (action === 'camp') camp(); else if (action === 'advance') advanceJob();
-    else if (action === 'equipment') equipment(); else if (action === 'rename') rename();
+    else if (action === 'spellbook') spellbook(); else if (action === 'attributes') attributes(); else if (action === 'equipment') equipment(); else if (action === 'rename') rename(); else if (action === 'leader') issue({ type: 'leader' });
     else if (action === 'move' || action === 'rally') {
-      if (action === 'rally' && renderer.mapId === 'arena') return toast('Choose a farming field to mark a hunting area.');
+      if (action === 'rally' && MAPS[renderer.mapId].boss) return toast('Choose a farming field to mark a hunting area.');
+      $('toast').hidden = true;
       orderMode = orderMode === action ? null : action;
       renderUI();
     }
@@ -199,7 +369,17 @@ document.addEventListener('click', event => {
   }
   const service = event.target.closest('[data-camp-unit]');
   if (service) { selected = new Set([service.dataset.campUnit]); if (service.dataset.service === 'advance') advanceJob(); else { issue({ type: service.dataset.service }); camp(); } }
-  const equip = event.target.closest('[data-equip]'); if (equip && issue({ type: 'equip', item: equip.dataset.equip })) equipment();
+  const socket = event.target.closest('[data-socket]');
+  if (socket && issue({ type: 'socket', card: socket.dataset.socket || null }, { quiet: true })) equipment();
+  const attune = event.target.closest('[data-attune]');
+  if (attune && issue({ type:'attune',element:attune.dataset.attune },{quiet:true})) spellbook();
+  const field = event.target.closest('[data-guide-map]');
+  if (field) { closeModal(); switchMap(field.dataset.guideMap); }
+  const bounty = event.target.closest('[data-bounty]');
+  if (bounty && issue({type:'bounty-' + bounty.dataset.bounty,id:bounty.dataset.id},{quiet:true})) bountyBoard();
+  const forge = event.target.closest('[data-forge]');
+  if (forge && issue({ type: 'forge', item: forge.dataset.forge }, { quiet: true })) { storage(); toast('Forged equipment added to shared storage.'); }
+  const equip = event.target.closest('[data-equip]'); if (equip && issue({ type: 'equip', item: equip.dataset.equip, card: equip.dataset.card || null })) equipment();
   const modalAction = event.target.closest('[data-modal-action]')?.dataset.modalAction;
   if (modalAction === 'recover-all') { const ids = state.characters.filter(c => !c.mapId).map(c => c.id); if (issue({ type: 'recover', ids })) camp(); }
   if (modalAction === 'supply-all') { const ids = state.characters.filter(c => !c.mapId).map(c => c.id); if (issue({ type: 'resupply', ids })) camp(); }
@@ -210,8 +390,28 @@ document.addEventListener('click', event => {
   if (modalAction === 'reset-confirm') { localStorage.removeItem(SAVE_KEY); location.reload(); }
 });
 document.addEventListener('change', event => {
-  if (event.target.id === 'tactic-select') issue({ type: 'tactic', tactic: event.target.value }, { quiet: true });
-  if (event.target.id === 'assignment-select') issue({ type: 'assignment', assignment: event.target.value }, { quiet: true });
+  const control = event.target;
+  if (control.id === 'tactic-select') { issue({ type: 'tactic', tactic: control.value }, { quiet: true }); control.blur(); renderUI(); }
+  else if (control.id === 'assignment-select') { issue({ type: 'assignment', assignment: control.value }, { quiet: true }); control.blur(); renderUI(); }
+  else if (control.id === 'target-pref-select') { issue({ type: 'tactic-config', key: 'targetPref', value: control.value }, { quiet: true }); control.blur(); renderUI(); }
+  else {
+    const key = control.dataset.tacticsKey;
+    if (key) {
+      const value = key === 'autoSkill' ? control.checked : Number(control.value) / 100;
+      issue({ type: 'tactic-config', key, value }, { quiet: true });
+      control.blur(); renderUI();
+    }
+  }
+});
+document.addEventListener('toggle', event => {
+  if (event.target.matches?.('.tactics-details')) tacticsExpanded = event.target.open;
+}, true);
+document.addEventListener('focusout', event => {
+  if ($('inspector').contains(event.target) && !$('inspector').contains(event.relatedTarget)) queueMicrotask(renderUI);
+});
+document.addEventListener('input', event => {
+  const key = event.target.dataset.tacticsKey;
+  if (key && key !== 'autoSkill') event.target.parentElement.querySelector('output').value = event.target.value + '%';
 });
 $('roster').addEventListener('dblclick', event => {
   const id = event.target.closest('[data-character]')?.dataset.character, c = state.characters.find(c => c.id === id);
@@ -221,7 +421,7 @@ $('select-all').onclick = () => { selected = new Set(state.characters.map(c => c
 $('multi-select').onclick = () => { multiSelect = !multiSelect; $('multi-select').setAttribute('aria-pressed', multiSelect); $('multi-select').textContent = multiSelect ? 'Multi ✓' : 'Multi'; };
 $('first-deploy').onclick = () => { selected = new Set(state.characters.map(c => c.id)); deployment(); };
 $('dismiss-coach').onclick = () => { coachDismissed = true; renderUI(); };
-$('recruit-button').onclick = recruit; $('settings-button').onclick = settings; $('storage-button').onclick = storage;
+$('recruit-button').onclick = recruit; $('settings-button').onclick = settings; $('guide-button').onclick = fieldGuide; $('bounty-button').onclick = bountyBoard; $('storage-button').onclick = storage; $('world-button').onclick = worldOverview;
 $('modal-close').onclick = closeModal;
 $('save-button').onclick = () => { persist(); toast(saveError ? 'Export your guild to preserve progress.' : 'Guild saved.'); };
 $('zoom-in').onclick = () => { renderer.zoom(1.18); renderUI(); }; $('zoom-out').onclick = () => { renderer.zoom(1 / 1.18); renderUI(); };
@@ -247,6 +447,7 @@ canvas.addEventListener('pointerdown', event => {
 canvas.addEventListener('pointermove', event => {
   if (!ready) return;
   const r = canvas.getBoundingClientRect(), x = event.clientX - r.left, y = event.clientY - r.top;
+  previewPointer = { x, y };
   hovered = renderer.hit(x, y)?.id || null;
   if (pointer?.down && pointer.id === event.pointerId && pointer.button === 0) {
     if (Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) > 5) pointer.moved = true;
@@ -261,7 +462,7 @@ canvas.addEventListener('pointerup', event => {
   const r = canvas.getBoundingClientRect(), x = event.clientX - r.left, y = event.clientY - r.top, hit = renderer.hit(x, y);
   if (orderMode || event.button === 2) {
     const p = renderer.world(x, y), ids = state.characters.filter(c => selected.has(c.id) && c.mapId === renderer.mapId).map(c => c.id);
-    if (issue({ type: orderMode || 'move', mapId: renderer.mapId, point: p, ids }, { quiet: true })) {
+    if (issue({ type: orderMode || 'move', radius: Number(radiusControl.value), mapId: renderer.mapId, point: p, ids }, { quiet: true })) {
       acknowledgePoint(event);
       orderMode = null;
     }
@@ -269,6 +470,15 @@ canvas.addEventListener('pointerup', event => {
   else if (hit) { const ids = state.characters.filter(c => selected.has(c.id) && c.mapId === renderer.mapId).map(c => c.id); if (issue({ type: 'focus', targetId: hit.id, ids }, { quiet: true })) acknowledgePoint(event); }
   renderUI();
 });
+canvas.addEventListener('pointerleave', () => { previewPointer = null; });
+$('hunt-here').onclick = () => {
+  const unit = selectedCharacters().find(c => c.mapId === renderer.mapId);
+  if (!unit) return toast('Select an adventurer on this field.');
+  if (issue({ type: 'rally', mapId: renderer.mapId, ids: selectedCharacters().filter(c => c.mapId === renderer.mapId).map(c => c.id),
+    radius: Number(radiusControl.value), point: { x: unit.x, y: unit.y } })) {
+    orderMode = null; renderUI(); document.querySelector('[data-action="rally"]').focus();
+  }
+};
 canvas.addEventListener('pointercancel', () => { pointer = null; });
 canvas.addEventListener('wheel', event => { if (!ready) return; event.preventDefault(); const r = canvas.getBoundingClientRect(); renderer.zoom(Math.exp(-event.deltaY * 0.001), event.clientX - r.left, event.clientY - r.top); renderUI(); }, { passive: false });
 document.addEventListener('keydown', event => {
@@ -294,7 +504,8 @@ function frame(now) {
   if (!ready || !state || document.hidden || settling) { lastTime = now; return; }
   accumulator += Math.min((now - lastTime) / 1000, 0.5); lastTime = now;
   while (accumulator >= STEP) { tick(state); accumulator -= STEP; }
-  renderer.draw(state, selected, hovered, accumulator);
+  const preview = orderMode === 'rally' && previewPointer ? renderer.world(previewPointer.x, previewPointer.y) : null;
+  renderer.draw(state, selected, hovered, accumulator, preview && { ...preview, radius: Number(radiusControl.value) });
   if (now - lastUI > 500) { renderUI(); lastUI = now; }
   if (now - lastSave > 5000) { persist(); lastSave = now; }
 }

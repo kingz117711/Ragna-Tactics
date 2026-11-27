@@ -1,75 +1,115 @@
-# Foundation handoff — 2026-11-27
+# Milestone handoff — 2026-11-27
 
-## Expedition controls update
+## Payon Cave
 
-Select deployed characters, choose **Hunt area**, then click or tap a field. Each
-selected team hunts within six world units of the marker. **Farm** resumes that
-assignment after a manual move. Redeployment opens up the whole field again.
-Farming party members give each other space. The roster names every Novice ready
-for a job change and links directly to camp. Class choices show their native sprites.
+Hunt slow Zombies and ranged Archer Skeletons. Acolytes and Priests can prepare
+Holy Light or Magnus Exorcismus at camp and return to their healing spell there.
+The guild board offers a skeleton hunt. Skel-Bones, Decayed Nails and Peco
+Feathers forge a socketable Payon reliquary. Archer Skeleton Cards grant +8 ATK.
 
-Below half health Baphomet casts Sanctuary Ring around his position at cast start.
-Stand inside the clear centre or move beyond the ring before the countdown ends.
-Button presses, accepted field orders, and dialogs have motion feedback that follows
-the device's reduced-motion preference. Offline reports show inventory gains and
-count each enemy once across the guild.
+## Elemental magic and field guide
 
-## Start here
+Mages and Wizards prepare Fire, Water, Wind or Earth magic at camp using their
+Spellbook. Each enemy hit uses its own affinity, including splash targets.
+The Field guide lists habitats, weaknesses and drops and opens each map.
 
-Read `AGENTS.md`, then `GAME-DIRECTION.md`. Run `npm start` and play the fresh
-two-Novice expedition. Follow `ROADMAP.md` for a scoped next task.
+The Caravan brooch is a socketable forge recipe combining Scorpion Tails, Peco Feathers, and Willow Resin.
 
-This repo started empty. It now contains an independent playable browser game,
-not a fork of the old game's large inline page. Original character/monster assets
-were copied from a pinned Prontera-Grind commit. The old game was not modified.
+## Guild bounty board
 
-## Working foundation
+Open Bounties under Field Notes. A guild can accept one repeatable hunt for
+Porings, Willows or Scorpions. Matching kills count on and off camera and
+offline. Claim the finished hunt at the board for Zeny and equipment.
 
-- Two Novices; six first jobs at Novice Job Lv. 10; independent character builds.
-- Two simultaneous farming maps and a separate real-time Baphomet encounter.
-- Parties/solo assignments, shared targeting and EXP, basic following, healing,
-  automatic skills, potions, safety retreat, and explicit manual overrides.
-- Instant safe deployment, physical retreat from combat, camp recovery/resupply.
-- Achievement-based recruitment up to five; new characters are always Novices.
-- Materials, Zeny, equipment drops, shared storage, count-preserving item transfers.
-- Angled overhead canvas, wide zoom, pan/follow, enemy hit testing, marked boss AoE.
-- Local save validation, previous checkpoint, export/import, one writer per origin.
-- Four-hour offline worker using actual simulation; no offline boss reward.
-- Static build, meaningful unit/browser coverage, asset audit, and a CI template.
+## Character builds
 
-## Provisional and incomplete
+Open Stats on one adventurer. Each earned Base level grants two points, including
+levels in older saves. At camp, preview and train STR, AGI, VIT, INT, DEX and LUK.
+The simulation uses the bonuses live and offline. Job changes preserve them.
 
-No networking/accounts/server economy, second jobs, real pathfinding, blocking
-terrain, full formations, configurable tactics editor, cards, crafting, gear slots,
-item-instance affixes, or final tuning. Terrain is procedural prototype scenery.
-The skill effects are simple text/indicators; expanded original skill FX are not
-imported. All original eight-direction native character/mob animations are available.
+## Sandsea Hollow MVP
 
-The introductory boss is currently forgiving for a Swordsman/Acolyte duo; active
-dodging is helpful but not required for that measured build. Improving encounter
-balance/readability is the first continuation task, not grounds for rewriting the shell.
+Deploy two first-job or higher adventurers for Phreeoni. During Sand Pact,
+gather in the blue circle around the marked ally to divide damage. Leave
+the red circle during Sinkhole. A live clear awards the Phreeoni Card.
+Both boss expeditions recall their teams offline. Baphomet keeps its own
+progression and roster unlocks.
 
-Offline reports include kills, currency, levels, supplies, materials, equipment,
-and the resulting status of each adventurer.
+## Morroc Dunes and card builds
 
-Local saves are editable and client-clock-based. This is suitable for the current
-single-player prototype, not an authoritative online economy. Browser sleep without
-a visibility event and broader browser/device coverage need follow-up verification.
+Scorpions and Peco Pecos drop attack and defense cards. A character can socket
+one card into equipped non-training gear at camp. Unequipping stores the gear
+with its card attached. Shared storage shows both species and their bonuses.
+Old v1 guilds receive the new field and empty card storage on load.
+Read NEXT-AGENT.md for the continuation prompt.
 
-## Verification at handoff
+## Second jobs and forging
 
-The foundation has syntax/import checks, simulation/persistence coverage, eight browser
-scenarios, original-asset verification, and a portable static build. Exact final
-counts/results are recorded in CHANGELOG. Desktop, boss, and narrow-screen screenshots
-are produced by browser tests and were visually inspected during implementation.
+At first Job Lv. 40, use Job path at camp to become a Knight, Wizard, Hunter,
+Priest, Blacksmith, or Assassin. Each has its native wardrobe and a combat skill.
+Shared storage contains forge recipes for Iron armaments and Guard insignias.
+A living Blacksmith at camp halves the Zeny fee.
 
-## Suggested next-agent task
+Next content milestone: build a new farming field with original monsters, a
+collectible monster card, and a camp slotting interface.
 
-> Read AGENTS.md, GAME-DIRECTION.md, ARCHITECTURE.md, and TESTING.md. Keep the agreed
-> two-to-five Novice roster, concurrent-map simulation, real-time bosses, original
-> sprites, and four-hour offline cap. Play and improve the fresh-guild → first-job
-> → introductory-boss loop. Focus on support positioning and compare how well new
-> players understand moving into the safe centre of Sanctuary Ring. Choose a small
-> measurable slice, preserve saves, run the relevant checks, inspect browser output,
-> and update Handoff/Changelog. Do not begin multiplayer or a framework rewrite as
-> part of this task.
+## Hunt area controls
+
+Open Hunt area on a farming field. Choose a radius of 3, 6, or 10 world units.
+Hover to preview and tap/click to mark the centre, or activate Centre on unit
+to use the first selected adventurer on this field. Farm resumes the saved
+area after a manual order. The original default is 6. Browser tests now launch a
+dedicated checkout-specific server to avoid picking up another worktree.
+
+Additional playtest: play the first expedition through third recruitment using fresh
+guilds, measure starter pair performance and fix the most consequential friction.
+Use the manual gameplay gate in TESTING.md.
+
+## Combat reliability, first expedition goals, and browser QA
+
+Basic attack and skill damage now revalidates map identity and actual attack range at
+resolution. Target locks, leader assistance, Hold/focus and farm-radius behavior respect
+their intended hunting boundaries; valid leader targets take precedence over stale
+follower locks while farming. Movement/ranged kiting is clamped to field bounds, manual
+movement finishes before automatic retreat, and linked members recover without chasing
+a retreating leader. Regression cases exercise these rules.
+
+The expedition panel now tracks six ordered goals: deploy the starting Novices, reach
+Novice Job Lv. 10, choose both first jobs, prepare a party and supplies, defeat Baphomet,
+and recruit the third Novice. Progress is derived from existing game state where
+possible, advances monotonically, and remains backward compatible with v1 saves.
+
+Feedback and controls include tactical-order pressed states, clearer party/leader and
+selection cues, health/supply/defeat attention, boss cast/safe-area guidance, and job /
+recruitment success feedback. The tactics editor preserves focus/state across live UI
+refreshes; retreat thresholds can use 1% increments so saved presets are representable.
+
+## Verification — executed 2026-11-27
+
+- `npm run check` — passed (8 modules).
+- `npm test` — passed (45/45 simulation and persistence tests).
+- `npm run assets:verify` — passed (38 original asset files).
+- `npm run test:browser` — passed (14/14 desktop Chromium scenarios, including narrow
+  viewport, touch, reduced motion, keyboard, tactics/presets, party operations, tactical
+  orders, world navigation, job advancement, recruitment, legacy saves, and offline flow).
+- `npm run build` — passed.
+- `npm run test:build` — passed: exported site boots with two Novices, local assets,
+  and no failed requests/runtime errors.
+- Refreshed desktop, mobile-width, boss, world-overview, and job-choice screenshots were
+  visually inspected in `artifacts/`.
+
+Browser Chromium used the temporary `/tmp/chromium` binary with the `AWS_LAMBDA_JS_RUNTIME`
+and `LD_LIBRARY_PATH` environment settings; this did not change package manifests.
+
+## Start and limitations
+
+Read `AGENTS.md`, `docs/GAME-DIRECTION.md`, `docs/ARCHITECTURE.md`, and
+`docs/TESTING.md`. Run `npm ci && npm start`; the local preview binds to
+`0.0.0.0:5173` for Arena preview. The PR #2 head remains the baseline for this work.
+
+The automated browser run is desktop Chromium with narrow-viewport and input-mode
+scenarios, not physical-device or full multi-browser verification. A complete
+unscripted playthrough and final balance tuning remain manual follow-up. There is no
+collision/pathfinding system, multiplayer server, or authoritative online save model.
+Keep original sprite pixels/metadata, versioned-save and inventory-count invariants,
+concurrent farming, four-hour offline cap, and explicit owner/command boundaries intact.

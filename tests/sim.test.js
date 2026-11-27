@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createGame, command, advance, tick, gainExp, stats, settleOffline, rosterLimit } from '../src/sim.js';
+import { createGame, command, advance, tick, gainExp, stats, settleOffline, rosterLimit, effectiveTactics, roleOf, advanceExpeditionGoals } from '../src/sim.js';
 import { OFFLINE_CAP, MONSTERS } from '../src/data.js';
 const ids = ['c1', 'c2'];
 test('a marked hunt survives manual repositioning, resume and offline settlement', () => {
@@ -21,6 +21,21 @@ test('a marked hunt survives manual repositioning, resume and offline settlement
   assert.deepEqual(farmer.home, point);
   settleOffline(s, 15);
   assert.ok(Math.hypot(farmer.x - point.x, farmer.y - point.y) < 1.1);
+});
+test('rally radius is validated before changing either party member and survives a save', async () => {
+  const { encodeSave, decodeSave } = await import('../src/persistence.js');
+  const s = createGame();
+  command(s, { type: 'party', ids });
+  deploy(s);
+  const rally = { type: 'rally', ids: ['c1'], mapId: 'meadow', point: { x: 1, y: 2 } };
+  for (const radius of [3, 10, undefined]) {
+    assert.equal(command(s, { ...rally, radius }), null);
+    const loaded = decodeSave(encodeSave(s)).state;
+    assert.ok(loaded.characters.every(c => c.farmRadius === (radius ?? 6)));
+  }
+  const before = structuredClone(s);
+  for (const radius of [0, null, '6', 11]) assert.ok(command(s, { ...rally, radius }));
+  assert.deepEqual(s, before);
 });
 test('Novice job readiness is recorded once and shared kills count once in an away report', () => {
   const s = createGame();
@@ -139,8 +154,14 @@ test('four-hour offline cap is shared elapsed time and applies to every deployed
   assert.equal(ra.seconds, OFFLINE_CAP); assert.equal(ra.capped, true); assert.equal(rb.capped, false);
   assert.equal(ra.kills, rb.kills); assert.deepEqual(a, b); assert.ok(ra.characters.every(c => c.levels > 0));
 });
-test('offline farming uses the same combat results as live farming', () => {
-  const a = createGame(17), b = createGame(17); deploy(a); deploy(b);
+test('offline farming uses the same combat results as live farming, including custom tactics', () => {
+  const a = createGame(17), b = createGame(17);
+  for (const s of [a, b]) {
+    promote(s, 0, 'archer');
+    command(s, { type: 'tactic-config', ids: ['c1'], key: 'potionAt', value: 0.6 });
+    command(s, { type: 'tactic-config', ids: ['c1'], key: 'targetPref', value: 'lowest' });
+    deploy(s);
+  }
   advance(a, 90, { effects: false }); settleOffline(b, 90);
   assert.deepEqual(a.characters, b.characters); assert.deepEqual(a.inventory, b.inventory); assert.deepEqual(a.maps, b.maps);
 });
@@ -183,4 +204,267 @@ test('party EXP is one reward pool with a 12% bonus, not a full reward per membe
 test('effects carry their map identity and cannot leak between viewed maps', () => {
   const s = createGame(); deploy(s); advance(s, 4);
   assert.ok(s.effects.length > 0); assert.ok(s.effects.every(e => e.mapId === 'meadow'));
+});
+test('expedition goals progress in order, persist through completion, and unlock the first recruit', () => {
+  const s = createGame(); assert.equal(s.milestones.expeditionStep, 0);
+  command(s, { type: 'party', ids }); deploy(s);
+  assert.equal(s.milestones.expeditionStep, 1);
+  gainExp(s, s.characters[0], 0, 1000); gainExp(s, s.characters[1], 0, 1000); advance(s, 0.1);
+  assert.equal(s.milestones.expeditionStep, 2);
+  command(s, { type: 'retreat', ids }); advance(s, 20);
+  assert.ok(s.characters.every(c => !c.mapId));
+  assert.equal(command(s, { type: 'promote', ids: ['c1'], job: 'swordsman' }), null);
+  assert.equal(s.milestones.expeditionStep, 2, 'one job choice does not complete the two-character job goal');
+  assert.equal(command(s, { type: 'promote', ids: ['c2'], job: 'archer' }), null);
+  assert.equal(s.milestones.expeditionStep, 4, 'both jobs and the prepared party advance the tutorial');
+  s.milestones.bossKills = 1; advanceExpeditionGoals(s); assert.equal(s.milestones.expeditionStep, 5);
+  assert.equal(command(s, { type: 'recruit', name: 'Nia' }), null);
+  assert.equal(s.milestones.expeditionStep, 6);
+});
+test('tactics customization is bounded at the command boundary and controls survive Farm resume', () => {
+  const s = createGame();
+  assert.match(command(s, { type: 'tactic-config', ids: ['c1'], key: 'potionAt', value: 1.2 }), /between 0% and 95%/);
+  assert.match(command(s, { type: 'tactic-config', ids: ['c1'], key: 'autoSkill', value: 1 }), /enabled or disabled/);
+  assert.match(command(s, { type: 'tactic-config', ids: ['c1'], key: 'targetPref', value: 'invalid' }), /target preference/);
+  assert.equal(command(s, { type: 'tactic-config', ids: ['c1'], key: 'autoSkill', value: false }), null);
+  assert.equal(command(s, { type: 'tactic-config', ids: ['c1'], key: 'potionAt', value: 0.7 }), null);
+  assert.equal(command(s, { type: 'tactic-config', ids: ['c1'], key: 'retreatAt', value: 0 }), null);
+  assert.deepEqual(effectiveTactics(s.characters[0]), { autoSkill: false, healAt: 0.65, potionAt: 0.7, retreatAt: 0, targetPref: 'leader' });
+  deploy(s, 'meadow', ['c1']); command(s, { type: 'move', ids: ['c1'], point: { x: 6, y: 6 } }); advance(s, 8);
+  command(s, { type: 'resume', ids: ['c1'] }); assert.equal(s.characters[0].order, 'farm');
+  assert.equal(s.characters[0].tactics.potionAt, 0.7);
+});
+test('party leader can be changed safely and followers promote an active member if the leader falls', () => {
+  const s = createGame(); command(s, { type: 'party', ids });
+  assert.equal(command(s, { type: 'leader', ids: ['c2'] }), null);
+  assert.equal(s.parties[0].leaderId, 'c2');
+  deploy(s, 'meadow'); s.characters[1].hp = 0; tick(s); tick(s);
+  assert.equal(s.characters[1].status, 'down');
+  assert.equal(s.parties[0].leaderId, 'c1');
+});
+test('job roles expose distinct frontline, ranged, and support positioning classes', () => {
+  const s = createGame(); assert.equal(roleOf(s.characters[0]), 'frontline');
+  promote(s, 0, 'archer'); assert.equal(roleOf(s.characters[0]), 'ranged');
+  promote(s, 1, 'acolyte'); assert.equal(roleOf(s.characters[1]), 'support');
+});
+test('holding archers never damage leader targets outside attack range or hold leash', () => {
+  const s = createGame(); promote(s, 0, 'swordsman'); promote(s, 1, 'archer');
+  command(s, { type: 'party', ids }); deploy(s);
+  const [leader, archer] = s.characters, enemy = s.maps.meadow.monsters[0];
+  for (const m of s.maps.meadow.monsters) if (m !== enemy) { m.hp = 0; m.respawn = 100; }
+  Object.assign(enemy, { x: 12.1, y: 0, hp: 1000, timer: 100, targetId: leader.id });
+  command(s, { type: 'tactic-config', ids: ['c1'], key: 'autoSkill', value: false });
+  Object.assign(leader, { x: 10.3, y: 0, home: { x: 10.3, y: 0 }, order: 'hold', status: 'holding', targetId: enemy.id, attackTimer: 100 });
+  Object.assign(archer, { x: 0, y: 0, home: { x: 0, y: 0 }, order: 'hold', status: 'holding', targetId: null });
+  const before = enemy.hp;
+  tick(s);
+  assert.equal(archer.targetId, null, 'hold must ignore a leader target outside its anchor leash');
+  assert.equal(enemy.hp, before, 'leader assistance must not deal remote damage');
+});
+test('focused targets chase into attack range but never damage remotely or escape the leash', () => {
+  const s = createGame(); promote(s, 0, 'swordsman'); promote(s, 1, 'archer');
+  command(s, { type: 'party', ids }); deploy(s);
+  const [leader, archer] = s.characters, enemy = s.maps.meadow.monsters[0];
+  for (const m of s.maps.meadow.monsters) if (m !== enemy) { m.hp = 0; m.respawn = 100; }
+  Object.assign(enemy, { x: 12, y: 0, hp: 1000, timer: 100, targetId: null });
+  Object.assign(leader, { x: -8, y: 0, home: { x: -8, y: 0 }, order: 'hold', status: 'holding', attackTimer: 100 });
+  Object.assign(archer, { x: 0, y: 0, home: { x: 0, y: 0 }, order: 'focus', targetId: enemy.id });
+  const before = enemy.hp;
+  tick(s);
+  assert.equal(enemy.hp, before, 'focused target cannot be damaged before the Archer enters range');
+  assert.equal(archer.status, 'moving');
+  advance(s, 5);
+  assert.ok(enemy.hp < before, 'the explicit focus becomes attackable after repositioning into range');
+
+  Object.assign(archer, { x: 0, y: 0, home: { x: 0, y: 0 }, order: 'focus', targetId: enemy.id, attackTimer: 0 });
+  Object.assign(enemy, { x: 22, y: 0, hp: 1000, targetId: null });
+  const outOfLeash = enemy.hp;
+  tick(s);
+  assert.equal(enemy.hp, outOfLeash);
+  assert.equal(archer.targetId, null);
+  assert.deepEqual([archer.x, archer.y], [0, 0], 'an unreachable focus target does not pull a ranged follower away from Hold');
+});
+test('manual movement finishes before automatic retreat and all automatic repositioning stays in bounds', () => {
+  const s = createGame(); promote(s, 0, 'archer'); deploy(s, 'meadow', ['c1']);
+  const archer = s.characters[0];
+  command(s, { type: 'tactic-config', ids: ['c1'], key: 'retreatAt', value: 0.7 });
+  archer.hp = stats(archer).hp * 0.5;
+  command(s, { type: 'move', ids: ['c1'], point: { x: 14, y: 14 } });
+  tick(s);
+  assert.equal(archer.order, 'move', 'safety automation must not cancel a deliberate Move mid-route');
+  let observedRetreat = false;
+  for (let i = 0; i < 200 && archer.mapId; i++) { tick(s); if (archer.order === 'retreat') observedRetreat = true; }
+  assert.ok(observedRetreat, 'safety retreat resumes once the manual move completes');
+  assert.equal(archer.status, 'camp');
+  assert.ok(Math.abs(archer.x) <= 15 && Math.abs(archer.y) <= 15);
+});
+test('ranged kite repositioning is clamped to battlefield bounds', () => {
+  const s = createGame(); promote(s, 0, 'archer'); deploy(s, 'meadow', ['c1']);
+  const archer = s.characters[0], enemy = s.maps.meadow.monsters[0];
+  command(s, { type: 'tactic-config', ids: ['c1'], key: 'autoSkill', value: false });
+  for (const m of s.maps.meadow.monsters) if (m !== enemy) { m.hp = 0; m.respawn = 100; }
+  Object.assign(archer, { x: 15, y: 15, home: { x: 15, y: 15 }, order: 'farm', attackTimer: 0 });
+  Object.assign(enemy, { x: 14.9, y: 15, hp: 1000, timer: 100, targetId: null });
+  advance(s, 2);
+  assert.ok(Math.abs(archer.x) <= 15 && Math.abs(archer.y) <= 15);
+});
+test('ranged attackers stop inside their native range while supports stay with the engaging party', () => {
+  const ranged = createGame(); promote(ranged, 0, 'archer'); deploy(ranged, 'meadow', ['c1']);
+  const archer = ranged.characters[0], target = ranged.maps.meadow.monsters.find(m => m.kind === 'fabre');
+  for (const m of ranged.maps.meadow.monsters) if (m !== target) { m.hp = 0; m.respawn = 100; }
+  Object.assign(target, { x: 0, y: 0, hp: 1000 }); Object.assign(archer, { x: -5, y: 8, home: { x: -5, y: 8 } });
+  advance(ranged, 4);
+  assert.ok(Math.hypot(archer.x - target.x, archer.y - target.y) > 3.5);
+  assert.ok(Math.hypot(archer.x - target.x, archer.y - target.y) <= stats(archer).range);
+
+  const party = createGame(); promote(party, 0, 'swordsman'); promote(party, 1, 'acolyte');
+  command(party, { type: 'party', ids }); deploy(party);
+  const leader = party.characters[0], support = party.characters[1], enemy = party.maps.meadow.monsters[0];
+  for (const m of party.maps.meadow.monsters) if (m !== enemy) { m.hp = 0; m.respawn = 100; }
+  Object.assign(enemy, { x: 0, y: 0, hp: 1000 }); advance(party, 4);
+  assert.ok(Math.hypot(leader.x - support.x, leader.y - support.y) < 5.5);
+  assert.ok(Math.hypot(support.x - enemy.x, support.y - enemy.y) <= 8);
+  assert.equal(leader.targetId, support.targetId);
+});
+
+test('each second job follows its own first job and casts its signature skill', () => {
+  for (const [base, job] of Object.entries({ swordsman: 'knight', mage: 'wizard', archer: 'hunter', acolyte: 'priest', merchant: 'blacksmith', thief: 'assassin' })) {
+    const s = createGame(), [c, ally] = s.characters;
+    const change = job => command(s, { type: 'promote', ids: [c.id], job });
+    assert.ok(change(job)); promote(s, 0, base);
+    assert.ok(change(job)); c.jobLevel = 40;
+    assert.ok(change(job === 'knight' ? 'wizard' : 'knight'));
+    assert.equal(change(job), null);
+    assert.equal(c.jobLevel, 1);
+    command(s, { type: 'party', ids }); deploy(s);
+    const mobs = s.maps.meadow.monsters;
+    for (const m of mobs) Object.assign(m, { x: c.x, y: c.y, hp: 300, timer: 0 });
+    c.targetId = mobs[0].id;
+    c.hp = 20; ally.hp = 20;
+    assert.equal(command(s, { type: 'skill', ids: [c.id] }), null);
+    if (job === 'priest') { assert.ok(ally.hp > 20 && c.hp > 20); continue; }
+    const hits = mobs.filter(m => m.hp < 300);
+    assert.equal(hits.length, job === 'hunter' ? 3 : job === 'assassin' ? 1 : mobs.length);
+    if (['blacksmith', 'wizard'].includes(job)) assert.ok(hits.every(m => m.timer >= 2));
+  }
+});
+
+test('forging spends shared loot once and applies the resident Blacksmith discount', () => {
+  const s = createGame(), inv = s.inventory;
+  const forge = () => command(s, { type: 'forge', item: 'guard' });
+  assert.ok(forge()); assert.equal(inv.zeny, 150);
+  inv.materials = { Fluff: 12, Resin: 8 };
+  s.characters[0].job = 'blacksmith';
+  assert.equal(forge(), null); assert.equal(inv.zeny, 120);
+  deploy(s, 'meadow', ['c1']);
+  assert.equal(forge(), null); assert.equal(inv.zeny, 60);
+  assert.ok(forge()); assert.equal(inv.equipment.guard, 2);
+  assert.deepEqual(inv.materials, { Fluff: 0, Resin: 0 });
+});
+
+test('socketed duplicates can be stored, transferred and unsocketed independently', () => {
+  const s = createGame(), [a,b] = s.characters, inv = s.inventory;
+  inv.equipment.iron = 2; inv.cards.scorpion = 1;
+  const act = (c, type, args) => command(s, { type, ids: [c.id], ...args });
+  for (const c of [a,b]) assert.equal(act(c,'equip',{item:'iron'}), null);
+  const atk = stats(a).atk;
+  assert.equal(act(a,'socket',{card:'scorpion'}), null);
+  assert.equal(stats(a).atk, atk + 6); assert.equal(stats(b).atk, atk);
+  assert.equal(act(a,'equip',{item:'training'}), null);
+  assert.equal(inv.socketed['iron/scorpion'], 1);
+  assert.equal(act(b,'equip',{item:'iron',card:'scorpion'}), null);
+  assert.equal(inv.equipment.iron, 1); assert.equal(inv.cards.scorpion, 0);
+  assert.equal(act(b,'socket',{card:null}), null);
+  assert.equal(inv.cards.scorpion, 1); assert.equal(stats(b).atk, atk);
+});
+test('Dunes card hunting settles the same earned cards live and offline', () => {
+  const s = createGame(11);
+  for (const c of s.characters) { c.job='knight'; c.level=45; c.hp=stats(c).hp; }
+  deploy(s,'morroc'); const live = structuredClone(s);
+  const report = settleOffline(s,600); advance(live,600);
+  assert.deepEqual(s.inventory,live.inventory);
+  assert.ok(report.loot.some(drop => drop.name.endsWith(' Card') && drop.count > 0));
+});
+
+test('Sand Pact follows the marked adventurer and shares damage only among nearby allies', () => {
+  const s = createGame(); promote(s,0,'swordsman'); promote(s,1,'acolyte'); deploy(s,'lair');
+  const [a,b] = s.characters, map = s.maps.lair;
+  for (const c of [a,b]) Object.assign(c,{ order:'hold', hp:200, potions:0, tactics:{ ...c.tactics, autoSkill:false }, attackTimer:30 });
+  Object.assign(map.monsters[0], { x:14,y:14,timer:20 });
+  map.telegraph = { x:14,y:14,radius:4,remaining:0.05,duration:3.5,markedId:a.id };
+  tick(s); assert.equal(a.hp,110); assert.equal(b.hp,110);
+  map.telegraph = {x:b.x,y:b.y,radius:4,remaining:0.05,duration:3.5,markedId:a.id};
+  b.x = 10; b.y = 10;
+  tick(s); assert.equal(a.hp,0); assert.equal(b.hp,110);
+});
+test('Phreeoni pays one MVP card live, while leaving the fight offline gives no reward', () => {
+  const s = createGame(); promote(s,0,'mage'); promote(s,1,'archer'); deploy(s,'lair');
+  const offline = structuredClone(s);
+  settleOffline(offline,60); assert.ok(offline.characters.every(c => !c.mapId));
+  assert.equal(offline.inventory.cards.phreeoni,undefined);
+  s.maps.lair.monsters[0].hp = 1; advance(s,20);
+  assert.equal(s.inventory.cards.phreeoni,1); assert.ok(s.maps.lair.bossDefeated);
+  advance(s,20); assert.equal(s.inventory.cards.phreeoni,1);
+});
+
+test('stat training spends earned points atomically and survives job advancement', () => {
+  const s = createGame(), c = s.characters[0]; c.level = 10; c.jobLevel = 10;
+  const train = points => command(s,{type:'allocate',ids:['c1'],points});
+  const before = stats(c);
+  assert.ok(train({vit:5,str:15})); assert.equal(c.attributes,undefined);
+  assert.equal(train({str:2,agi:2,vit:3,int:3,dex:3,luk:5}),null);
+  const after = stats(c); assert.equal(after.hp-before.hp,30); assert.equal(after.def-before.def,1);
+  assert.equal(after.atk-before.atk,4); assert.ok(after.interval < before.interval);
+  assert.equal(after.crit,0.05); assert.equal(after.sp-before.sp,12); assert.equal(after.skillBonus,6);
+  assert.ok(train({str:1}));
+  assert.equal(command(s,{type:'promote',ids:['c1'],job:'mage'}),null);
+  assert.equal(stats(c).crit,0.05);
+});
+
+test('bounties count subsequent matching field kills offline and pay a single claim', () => {
+  const s = createGame(), accept = id => command(s,{type:'bounty-accept',id});
+  promote(s,0,'mage'); deploy(s,'forest',['c1']); assert.equal(accept('harvest'),null);
+  assert.ok(accept('timber')); settleOffline(s,40); assert.equal(s.bounty.kills,0);
+  deploy(s,'meadow',['c2']); settleOffline(s,600);
+  assert.equal(s.bounty.kills,12);
+  const {zeny,equipment} = s.inventory, oldIron = equipment.iron;
+  assert.equal(command(s,{type:'bounty-claim',id:'harvest'}),null);
+  assert.equal(s.inventory.zeny,zeny+70); assert.equal(equipment.iron,oldIron+1);
+  assert.ok(command(s,{type:'bounty-claim',id:'harvest'}));
+  assert.equal(accept('harvest'),null); assert.equal(s.bounty.kills,0);
+});
+
+test('prepared magic resolves each splash victim against its own affinity', () => {
+  const s=createGame(); promote(s,0,'mage');
+  assert.equal(command(s,{type:'attune',ids:['c1'],element:'wind'}),null);
+  deploy(s,'meadow',['c1']); const c=s.characters[0], mobs=s.maps.meadow.monsters;
+  const poring=mobs.find(m=>m.kind==='poring'), fabre=mobs.find(m=>m.kind==='fabre');
+  for(const m of [poring,fabre]) Object.assign(m,{x:c.x,y:c.y,hp:400});
+  c.targetId=fabre.id;
+  assert.ok(command(s,{type:'attune',ids:['c1'],element:'fire'}));
+  assert.equal(command(s,{type:'skill',ids:['c1']}),null);
+  assert.equal(400-poring.hp,Math.round(stats(c).atk*1.4*1.5));
+  assert.equal(400-fabre.hp,Math.round(stats(c).atk*2.4-MONSTERS.fabre.def));
+  assert.equal(stats(c).skill,'Lightning Bolt');
+});
+
+test('Caravan brooch converts drops from both regions into wearable gear', () => {
+  const s=createGame(); s.inventory.zeny=180;
+  s.inventory.materials={'Scorpion Tail':8,'Peco Feather':5,Resin:4};
+  assert.equal(command(s,{type:'forge',item:'dune'}),null);
+  assert.equal(s.inventory.zeny,0); assert.equal(s.inventory.equipment.dune,1);
+  assert.equal(command(s,{type:'equip',item:'dune',ids:['c1']}),null);
+  assert.equal(stats(s.characters[0]).atk,16); assert.equal(s.inventory.equipment.dune,0);
+});
+
+test('Payon rewards a prepared Holy Priest and preserves the healing loadout', () => {
+  const s=createGame(), [priest]=s.characters; priest.job='priest';
+  const prepare = element => command(s,{type:'attune',ids:[priest.id],element});
+  assert.ok(prepare('water')); assert.equal(prepare('holy'),null);
+  deploy(s,'payon',[priest.id]); const mobs=s.maps.payon.monsters;
+  for(const m of mobs) Object.assign(m,{x:priest.x,y:priest.y,hp:300});
+  priest.targetId=mobs[0].id; assert.equal(command(s,{type:'skill',ids:[priest.id]}),null);
+  assert.ok(mobs.every(m=>m.hp<300)); assert.equal(stats(priest).skill,'Magnus Exorcismus');
+  assert.ok(prepare('support')); priest.mapId=null;
+  assert.equal(prepare('support'),null); assert.equal(stats(priest).skill,'Sanctuary');
 });

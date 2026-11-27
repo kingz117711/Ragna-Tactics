@@ -35,3 +35,43 @@ test('malformed or future-version imported saves are rejected', () => {
 test('a new browser starts fresh without manufacturing offline time', () => {
   const loaded = loadGame(memory()); assert.equal(loaded.fresh, true); assert.equal(loaded.elapsed, 0);
 });
+test('legacy schema-v1 saves receive preset defaults and customized tactics round-trip', () => {
+  const envelope = JSON.parse(encodeSave(createGame(), 1000));
+  for (const c of envelope.state.characters) delete c.tactics;
+  const old = decodeSave(JSON.stringify(envelope), 1000).state;
+  assert.deepEqual(old.characters[0].tactics, { autoSkill: true, healAt: 0.65, potionAt: 0.45, retreatAt: 0.22, targetPref: 'leader' });
+  command(old, { type: 'tactic-config', ids: ['c1'], key: 'potionAt', value: 0.7 });
+  assert.equal(decodeSave(encodeSave(old, 2000), 2000).state.characters[0].tactics.potionAt, 0.7);
+});
+test('older v1 saves receive backward-compatible expedition-goal progress', () => {
+  const envelope = JSON.parse(encodeSave(createGame(), 1000));
+  delete envelope.state.milestones.expeditionStep;
+  const loaded = decodeSave(JSON.stringify(envelope), 1000).state;
+  assert.equal(loaded.milestones.expeditionStep, 0);
+  loaded.milestones.expeditionStep = 4;
+  assert.equal(decodeSave(encodeSave(loaded, 1000), 1000).state.milestones.expeditionStep, 4);
+});
+test('invalid saved tactics are rejected rather than trusted at the simulation boundary', () => {
+  for (const edit of [c => c.tactics = { autoSkill: 'yes' }, c => c.tactics = { autoSkill: true, healAt: 2, potionAt: 0.4, retreatAt: 0.2, targetPref: 'nearest' }, c => c.tactics = { autoSkill: true, healAt: 0.5, potionAt: 0.4, retreatAt: 0.2, targetPref: 'cheat' }]) {
+    const envelope = JSON.parse(encodeSave(createGame())); edit(envelope.state.characters[0]);
+    assert.throws(() => decodeSave(JSON.stringify(envelope)));
+  }
+});
+
+test('pre-Dunes guilds gain a populated field with unique ids and empty card storage', () => {
+  const s = createGame();
+  delete s.maps.morroc; delete s.inventory.cards; delete s.inventory.socketed;
+  const restored = decodeSave(encodeSave(s)).state;
+  assert.equal(restored.maps.morroc.monsters.length,8);
+  assert.deepEqual(restored.inventory.cards,{});
+  assert.deepEqual(decodeSave(encodeSave(restored)).state,restored);
+});
+
+test('older guild acquires Payon without changing owned equipment or assignments', () => {
+  const s=createGame(); delete s.maps.payon; delete s.inventory.equipment.reliquary;
+  s.characters[0].mapId='forest'; s.inventory.equipment.iron=2;
+  const loaded=decodeSave(encodeSave(s)).state;
+  assert.equal(loaded.characters[0].mapId,'forest'); assert.equal(loaded.inventory.equipment.iron,2);
+  assert.equal(loaded.inventory.equipment.reliquary,0); assert.ok(loaded.maps.payon.monsters.some(m=>m.kind==='skeleton'));
+  assert.deepEqual(decodeSave(encodeSave(loaded)).state,loaded);
+});

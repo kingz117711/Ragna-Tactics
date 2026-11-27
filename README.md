@@ -43,10 +43,13 @@ band takes damage when the countdown ends. The centre and outer ground are safe.
 
 - Two named Novices; progression into Swordsman, Mage, Archer, Acolyte, Merchant,
   or Thief. All recruits start as Novices. Achievement-based growth to five units.
-- Two concurrent farming maps and one real-time boss expedition.
+- Six second jobs at first Job Lv. 40, with original sprites and signature skills.
+- Forge Iron armaments and Guard insignias from field loot in shared storage.
+- Four concurrent farming maps and two real-time boss expeditions.
 - Party linkage, shared targets/EXP, basic following, healing, skill priorities,
   HP-based potions/retreat, movement overrides, hold, and focus fire.
-- Shared materials, Zeny, equipment drops, item assignment, and camp services.
+- Six trainable attributes, repeatable hunting bounties, elemental caster loadouts, and a field guide.
+- Four collectible monster cards, socketed equipment transfers, shared loot and camp forging.
 - Original locally served character/monster sprites from the owner's existing
   project, with pinned source hashes and original animation metadata.
 - Angled overhead map view with zoom/pan/follow and desktop/touch controls.
@@ -54,8 +57,8 @@ band takes damage when the countdown ends. The centre and outer ground are safe.
   tab coordination, and four-hour offline farming in a background worker.
 - Pure simulation tests, browser scenarios, static build, and a CI workflow template.
 
-This is a foundation, not a complete MMORPG. Multiplayer, second jobs, detailed
-navigation/formations, cards, crafting, and final balance are future milestones.
+This is a foundation, not a complete MMORPG. Multiplayer, transcendent jobs, detailed
+navigation/formations, expanded card sets, expanded crafting, and final balance are future milestones.
 Terrain is provisional procedural scenery; imported character and mob art is original.
 
 ## Development and checks

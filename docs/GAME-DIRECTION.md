@@ -41,7 +41,7 @@ priority and an explicit way to return to the previous assignment.
 ## Provisional foundation rules (not additional owner commitments)
 
 - Novice job change at **Job Lv. 10**, at camp. Six first jobs are implemented;
-  first-job choices currently cannot be reset. Second jobs are not implemented.
+  first-job choices currently cannot be reset. At first Job Lv. 40 a character can advance at camp to their corresponding second job.
 - Starting names Aren/Lyra; rename at any time. Default original male/female looks.
 - Third/fourth/fifth roster slots are earned from three independent achievements:
   one boss clear, 35 Willow Wood kills, three boss clears. Each adds a slot.
@@ -56,13 +56,14 @@ priority and an explicit way to return to the previous assignment.
 - Shared storage for materials and currency. One equippable prototype item per
   character. Inventory transfers preserve item counts; no item IDs are regenerated.
 - Balanced, training (+15% Base EXP), and gathering (double materials) assignments.
-- Three tactics presets: safe, aggressive, and conserve SP. These are not yet a
-  configurable behavior-rule editor. Potions trigger below 45% HP. Without potions,
-  low HP triggers a retreat at the preset's threshold.
+- Three tactics presets (safe, aggressive, conserve SP) establish per-character
+  defaults for skill use, healing/potion/retreat HP thresholds, and target preference.
+  Each character can customize these bounded settings. The UI presents these as
+  practical controls, not a general-purpose behavior-rule editor.
 - Offline uses the same fixed-step simulation, existing supplies, builds, and
   tactics for all farming teams concurrently. Defeat ends that character's farming.
   Boss teams return to camp without boss rewards when an absence is settled.
-- Two fields and Baphomet are an introductory content set. Numbers, drop rates,
+- Four farming fields and the Baphomet and Phreeoni encounters form the current content set. Numbers, drop rates,
   maps, item names, boss difficulty, and scenery are provisional.
 
 ## Keep out of the initial scope

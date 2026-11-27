@@ -27,3 +27,70 @@
 - Seeded starter parties cleared Baphomet after five simulated minutes of training
   as Swordsman/Acolyte, Archer/Mage, and Thief/Merchant. The new tests exercise
   hunt orders, touch and reduced motion, job selection, ring damage, and reporting.
+
+## 2026-11-27 — Combat reliability, expedition goals, and browser QA
+
+- Prevented remote basic-attack/skill damage by validating map identity and actual
+  reach at resolution; tightened Hold/focus/farm leashes and made leader assist
+  override stale follower target locks only within the follower's boundary.
+- Clamped combat repositioning to the battlefield and clarified manual move versus
+  safety-retreat priority and party behavior after retreat/leader defeat.
+- Added a six-step first-expedition goals panel with progress and next actions, plus
+  backward-compatible save behavior, attention cues, tactical-order feedback, and
+  clearer boss/job/recruitment feedback. Retreat threshold controls now represent
+  preset values at 1% increments.
+- Added simulation, persistence, and browser regressions. Verified 45 unit tests,
+  14/14 Chromium scenarios, all 38 original assets, static build, and built-output
+  smoke test. Refreshed desktop/mobile-width/boss/world/job screenshots were inspected.
+- Remaining coverage limit: no physical-device or full multi-browser verification;
+  manual unscripted balance playthrough remains follow-up.
+
+## 2026-11-27 — Party tactics and world management
+
+- Added role-aware positioning, bounded per-character skill/healing/potion/retreat
+  thresholds, target preferences, leader assist/failover, and save defaults for
+  existing version-one saves. Manual movement remains an explicit override; Farm
+  resumes each character's assigned hunting area.
+- Added a party roster summary and leader handoff, plus a world overview of map,
+  activity, assignment, HP/supplies, direct navigation, and attention events.
+- Added sim/persistence/browser regression coverage and updated game/architecture/
+  testing/handoff/roadmap guidance. Preview server now binds to all interfaces.
+- Verified `npm run check`, `npm test` (39 pass), `npm run assets:verify` (38 files),
+  and `npm run build`. Browser tests and screenshots could not run: Playwright's
+  Chromium binary is missing and download from `cdn.playwright.dev` was blocked;
+  `npm run test:build` is likewise pending a browser-enabled environment.
+
+## 2026-11-27 - Adjustable hunting areas
+
+- Added three hunting radii, a placement preview and a keyboard-accessible centre-on-unit action. Existing marked areas retain their radius after loading.
+- Browser tests launch this checkout on a dedicated port. Added party, save, invalid-order and touch/keyboard coverage for the editor.
+
+## Second jobs and Prontera forging
+
+Six second jobs with native sprites and signature skills now unlock at first Job Lv. 40. Added material recipes and a camp Blacksmith discount.
+
+## Morroc Dunes and monster cards
+
+Added a concurrent desert field, native Scorpion and Peco Peco sprites, two collectible cards, camp socketing and card-aware equipment storage. Offline reports include card drops.
+
+## Sandsea Hollow
+
+Added Phreeoni, a new live MVP arena, alternating gather/scatter mechanics, and a guaranteed socketable MVP card.
+
+## Character builds
+
+Added six trainable attributes with previews and permanent stat allocation. Old characters receive their full earned point budget.
+
+## Bounty board
+
+Added three repeatable hunting contracts, shared live and offline guild progress, and explicit reward claims.
+
+## Spells and the monster field guide
+
+Added eight elemental spell loadouts across Mage and Wizard, affinity-based skill damage, native monster portraits, weaknesses and map shortcuts.
+
+Added the Caravan brooch recipe, a cross-region reward for desert and forest materials.
+
+## Payon Cave
+
+Added two native undead monsters, Holy offensive loadouts for support jobs, a repeatable bounty, Archer Skeleton Cards and the Payon reliquary.

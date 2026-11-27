@@ -40,33 +40,52 @@ export class Renderer {
     const ctx = cv.getContext('2d'); ctx.translate(900, 550);
     let seed = mapId === 'meadow' ? 182 : mapId === 'forest' ? 492 : 739;
     const rng = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
-    const arena = mapId === 'arena', forest = mapId === 'forest';
+    const cave = mapId === 'payon', arena = mapId === 'arena', forest = mapId === 'forest', dunes = ['morroc', 'lair'].includes(mapId);
     const boundary = [project(-16, -16), project(16, -16), project(16, 16), project(-16, 16)];
     polygon(ctx, boundary.map(p => ({ x: p.x, y: p.y + 18 })), '#182e28');
-    polygon(ctx, boundary, arena ? '#555b5a' : forest ? '#436352' : '#6b8959', '#8aa47855');
+    polygon(ctx, boundary, cave ? '#504859' : dunes ? '#be9967' : arena ? '#555b5a' : forest ? '#436352' : '#6b8959', '#8aa47855');
     ctx.save(); ctx.beginPath(); boundary.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath(); ctx.clip();
     for (let i = 0; i < 7500; i++) {
       const x = (rng() - 0.5) * 32, y = (rng() - 0.5) * 32, p = project(x, y), r = rng();
       ctx.globalAlpha = 0.06 + rng() * 0.12;
-      ellipse(ctx, p.x, p.y, 4 + rng() * 19, 2 + rng() * 9, arena ? (r > 0.5 ? '#bbc0ae' : '#1b2532') : (r > 0.5 ? '#c3d58e' : '#203e32'));
+      ellipse(ctx, p.x, p.y, 4 + rng() * 19, 2 + rng() * 9, cave ? (r > 0.5 ? '#92809a' : '#25222e') : arena ? (r > 0.5 ? '#bbc0ae' : '#1b2532') : (r > 0.5 ? '#c3d58e' : '#203e32'));
     }
     ctx.globalAlpha = 1;
     // A walkable, decorative road. Terrain has no hidden collision in this milestone.
     const road = [-17, -12, -5, 3, 10, 17].map((y, i) => project(Math.sin(i * 0.8) * 3, y));
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    for (const [width, color] of [[102, '#263e2830'], [74, arena ? '#707272' : forest ? '#8d9271' : '#b7b18a'], [55, arena ? '#7d7e77' : forest ? '#9da07d' : '#c4bd96']]) {
+    for (const [width, color] of [[102, '#263e2830'], [74, cave ? '#655d71' : arena ? '#707272' : forest ? '#8d9271' : '#b7b18a'], [55, cave ? '#797180' : arena ? '#7d7e77' : forest ? '#9da07d' : '#c4bd96']]) {
       ctx.beginPath(); road.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.strokeStyle = color; ctx.lineWidth = width; ctx.stroke();
     }
     for (let i = 0; i < 1000; i++) {
       const x = (rng() - 0.5) * 31, y = (rng() - 0.5) * 31, p = project(x, y);
       if (Math.abs(x) < 3.5) continue;
-      if (arena) {
+      if (dunes || cave) {
+        ctx.lineWidth = cave ? 1.5 : 2; ctx.strokeStyle = cave ? '#aca5bb44' : '#e2bb8455'; ctx.beginPath(); ctx.moveTo(p.x - 6, p.y);
+        ctx.quadraticCurveTo(p.x, p.y - 3, p.x + 9, p.y); ctx.stroke();
+      } else if (arena) {
         ctx.fillStyle = '#a1a69a45'; ctx.fillRect(p.x, p.y, 3 + rng() * 7, 1 + rng() * 3);
       } else {
         ctx.strokeStyle = rng() > 0.4 ? '#b7ca8160' : '#254e3590'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(p.x - 3, p.y); ctx.lineTo(p.x - 5, p.y - 5); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + 1, p.y - 7); ctx.moveTo(p.x + 3, p.y); ctx.lineTo(p.x + 6, p.y - 3); ctx.stroke();
         if (rng() > 0.91) ellipse(ctx, p.x, p.y - 3, 2.5, 1.7, rng() > 0.5 ? '#ebdab0' : '#c8a7b3');
       }
+    }
+    if (cave) {
+      const mouth = project(-3,-13);
+      ellipse(ctx,mouth.x,mouth.y,50,26,'#61566b'); ellipse(ctx,mouth.x,mouth.y+2,32,17,'#262531');
+      for (const [x,y] of [[-4,-11],[5,-4],[-4,4],[5,12]]) {
+        const p = project(x,y), glow = ctx.createRadialGradient(p.x,p.y,1,p.x,p.y,65);
+        glow.addColorStop(0,'#ffc87380'); glow.addColorStop(1,'#ffc87300');
+        ellipse(ctx,p.x,p.y,65,34,glow); ellipse(ctx,p.x,p.y-4,4,6,'#f7c56c');
+      }
+    }
+    if (mapId === 'lair') {
+      for (let i = 6; i > 0; i--) {
+        const radius = 34 + i * 32;
+        ellipse(ctx, 0, 6, radius, radius / 2, i % 2 ? '#956e49' : '#a57d54', '#c49464');
+      }
+      ellipse(ctx, 0, 6, 54, 27, '#78573c');
     }
     if (arena) {
       ellipse(ctx, 0, 0, 210, 105, '#5e6268', '#a1a0a066'); ellipse(ctx, 0, 0, 184, 92, null, '#b4a57c77');
@@ -79,7 +98,10 @@ export class Renderer {
     // Perimeter scenery stays outside the playable boundary.
     for (let i = 0; i < 80; i++) {
       const edge = i % 4, t = rng() * 33 - 16.5, p = project(edge < 2 ? (edge ? 16.8 : -16.8) : t, edge < 2 ? t : (edge === 2 ? -16.8 : 16.8));
-      if (arena) {
+      if (dunes || cave) {
+        const h = 8 + rng() * 24;
+        polygon(ctx, [{x:p.x-h,y:p.y},{x:p.x-3,y:p.y-h},{x:p.x+h,y:p.y-3},{x:p.x+8,y:p.y+4}], cave ? '#484254' : '#946d50', cave ? '#756981' : '#ab8161');
+      } else if (arena) {
         const h = 12 + rng() * 36;
         polygon(ctx, [{ x: p.x - 8, y: p.y }, { x: p.x - 8, y: p.y - h }, { x: p.x + 4, y: p.y - h - 4 }, { x: p.x + 12, y: p.y - h }, { x: p.x + 12, y: p.y - 2 }], '#767d75', '#a6ac8c30');
       } else {
@@ -93,7 +115,7 @@ export class Renderer {
     }
     this.terrain.set(mapId, cv); return cv;
   }
-  draw(s, selected, hovered, frameRemainder = 0) {
+  draw(s, selected, hovered, frameRemainder = 0, huntPreview = null) {
     const ctx = this.ctx, z = this.camera.zoom, map = s.maps[this.mapId];
     if (this.followId) { const c = s.characters.find(c => c.id === this.followId && c.mapId === this.mapId); if (c) { const p = project(c.x, c.y); this.camera.x += (p.x - this.camera.x) * 0.08; this.camera.y += (p.y - this.camera.y) * 0.08; } }
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
@@ -115,6 +137,12 @@ export class Renderer {
       if (c.destination) { const t = project(c.destination.x, c.destination.y); ctx.setLineDash([5, 7]); ctx.strokeStyle = '#e8ca88aa'; ctx.lineWidth = 1.5 / z; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(t.x, t.y); ctx.stroke(); ctx.setLineDash([]); ellipse(ctx, t.x, t.y, 13, 6, '#e8ca8830', '#e8ca88'); }
       if (c.order === 'hold') { const h = project(c.home.x, c.home.y); ellipse(ctx, h.x, h.y, 95, 47, '#e8ca8808', '#e8ca8860'); }
     }
+    if (huntPreview && Math.abs(huntPreview.x) <= 15 && Math.abs(huntPreview.y) <= 15) {
+      const h = project(huntPreview.x, huntPreview.y), radius = huntPreview.radius * Math.SQRT2;
+      ctx.save(); ctx.lineWidth = 1.5 / z; ctx.setLineDash([6 / z, 4 / z]);
+      ellipse(ctx, h.x, h.y, radius * 22, radius * 11, '#efd38c18', '#ffdf92');
+      ctx.restore();
+    }
     const telegraph = map.telegraph;
     if (telegraph) {
       const p = project(telegraph.x, telegraph.y), pulse = 0.24 + Math.sin(s.time * 10) * 0.08;
@@ -127,10 +155,10 @@ export class Renderer {
         ctx.moveTo(telegraph.innerRadius, 0);
         ctx.arc(0, 0, telegraph.innerRadius, 0, Math.PI * 2, true);
       }
-      ctx.fillStyle = `rgba(246,96,78,${pulse + 0.12})`;
+      ctx.fillStyle = telegraph.markedId ? 'rgba(111,205,224,.35)' : `rgba(246,96,78,${pulse + 0.12})`;
       ctx.fill('evenodd');
       ctx.lineWidth = 0.1 / z;
-      ctx.strokeStyle = '#ffd3ab';
+      ctx.strokeStyle = telegraph.markedId ? '#c5f6ff' : '#ffd3ab';
       ctx.stroke();
       ctx.restore();
     }
@@ -141,15 +169,15 @@ export class Renderer {
     for (const { unit: c, hero } of entities) {
       const p = project(c.x, c.y), screen = this.screen(c), isSelected = hero && selected.has(c.id);
       ctx.save(); ctx.translate(p.x, p.y);
-      ellipse(ctx, 0, 1, hero ? 18 : c.kind === 'baphomet' ? 48 : 18, hero ? 8 : c.kind === 'baphomet' ? 20 : 8, '#0c201e45');
+      ellipse(ctx, 0, 1, hero ? 18 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? 48 : 18, hero ? 8 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? 20 : 8, '#0c201e45');
       if (isSelected || hovered === c.id) { ctx.lineWidth = 2 / z; ellipse(ctx, 0, 0, hero ? 23 : 28, hero ? 10 : 12, isSelected ? '#e4cc8720' : '#e9866f18', hero ? '#edd79b' : '#e9866f'); }
       const route = c.stance + c.direction, previous = this.animations.get(c.id);
       if (!previous || previous.route !== route) this.animations.set(c.id, { route, started: s.time });
       const ms = Math.max(0, s.time + frameRemainder - this.animations.get(c.id).started) * 1000;
       if (hero) this.sprites.hero(ctx, c, ms); else this.sprites.monster(ctx, c, ms);
-      const barY = hero ? -80 : c.kind === 'baphomet' ? -115 : c.kind === 'willow' ? -83 : -44;
+      const barY = hero ? -80 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? -115 : c.kind === 'willow' ? -83 : -44;
       if (hero || hovered === c.id || c.hp < MONSTERS[c.kind].hp) {
-        const width = hero ? 43 : c.kind === 'baphomet' ? 82 : 36;
+        const width = hero ? 43 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? 82 : 36;
         ctx.fillStyle = '#132525'; ctx.fillRect(-width / 2 - 1, barY - 1, width + 2, 6);
         ctx.fillStyle = hero ? '#afc790' : '#d48b77'; ctx.fillRect(-width / 2, barY, width * Math.max(0, c.hp / (hero ? stats(c).hp : MONSTERS[c.kind].hp)), 4);
       }
@@ -158,7 +186,7 @@ export class Renderer {
         if (hero && c.partyId) { ctx.fillStyle = '#e0c48b'; ctx.fillRect(-3, 10, 6, 3); }
       }
       ctx.restore();
-      this.hits.push({ id: c.id, hero, x: screen.x, y: screen.y - (hero ? 25 : 15) * z, radius: Math.max(14, (hero ? 28 : c.kind === 'baphomet' ? 65 : 25) * z) });
+      this.hits.push({ id: c.id, hero, x: screen.x, y: screen.y - (hero ? 25 : 15) * z, radius: Math.max(14, (hero ? 28 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? 65 : 25) * z) });
     }
     for (const e of s.effects) {
       if (e.mapId && e.mapId !== this.mapId) continue;

@@ -36,7 +36,9 @@ then brings them together for tactical boss encounters.
 - `src/sim.js` is DOM-free. No canvas, localStorage, network, `Date.now()`, or
   unseeded randomness inside it. Rules live here, never duplicated in the renderer.
 - UI submits `command(state, command)`; only the app owns the live simulation.
-  New gameplay commands must validate their inputs and get meaningful tests.
+  New gameplay commands must validate their inputs and get meaningful tests. Per-
+  character tactics are saved in v1 and old saves receive preset-derived defaults.
+  Keep role positioning, party leader behavior, and offline/live automation in sim.
 - `src/data.js` contains content and tuning. Keep stable character/job/item/map IDs.
 - Keep offline and live combat on the same simulation rules. Bosses are active-only
   in this foundation; no offline boss payouts. Keep settlement in a worker.
