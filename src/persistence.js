@@ -1,10 +1,12 @@
-import { combatJob, gearKey, gearVariant, REFINEMENT, ELEMENTS, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, MONSTERS, HUNT_RADII, VERSION, MAPS, JOBS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS } from './data.js';
+import { combatJob, gearKey, gearVariant, REFINEMENT, ELEMENTS, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, MONSTERS, HUNT_RADII, VERSION, MAPS, mapBounds, JOBS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS } from './data.js';
 import { availablePoints, populateField, createGame, advanceExpeditionGoals } from './sim.js';
 export const SAVE_KEY = 'ragna-tactics:save:v1';
 export const BACKUP_KEY = 'ragna-tactics:backup:v1';
 const finite = (v, low = 0, high = 1e12) => typeof v === 'number' && Number.isFinite(v) && v >= low && v <= high;
 const text = (v, max = 100) => typeof v === 'string' && v.length <= max;
-const coordinate = v => v && finite(v.x, -30, 30) && finite(v.y, -30, 30);
+// Deployed units are validated against their own map's bounds; loose camp/global
+// coordinates keep the historical ±30 envelope.
+const coordinate = (v, bounds) => v && finite(v.x, -(bounds?.x ?? 30), bounds?.x ?? 30) && finite(v.y, -(bounds?.y ?? 30), bounds?.y ?? 30);
 const own = (o, key) => typeof key === 'string' && Object.hasOwn(o, key);
 const valid = condition => { if (!condition) throw new Error('This save is invalid or uses an unsupported format.'); };
 
@@ -27,11 +29,12 @@ export function validateState(s) {
     for (const key of ['healAt', 'potionAt', 'retreatAt']) valid(finite(c.tactics[key], 0, 0.95));
     valid(own(TARGET_PREFS, c.tactics.targetPref));
     valid(c.mapId === null || own(MAPS, c.mapId));
+    const field = c.mapId ? mapBounds(c.mapId) : null;
     valid(c.partyId === null || /^p\d+$/.test(c.partyId));
     valid(Number.isInteger(c.level) && finite(c.level, 1, 99) && Number.isInteger(c.jobLevel) && finite(c.jobLevel, 1, c.job === 'novice' ? 10 : 50));
-    valid(coordinate(c) && coordinate(c.home) && (c.destination === null || coordinate(c.destination)));
+    valid(coordinate(c, field) && coordinate(c.home, field) && (c.destination === null || coordinate(c.destination, field)));
     valid(c.farmRadius === undefined || HUNT_RADII.includes(c.farmRadius));
-    valid(c.farmCenter === undefined || coordinate(c.farmCenter));
+    valid(c.farmCenter === undefined || coordinate(c.farmCenter, field));
     valid(['farm', 'move', 'hold', 'focus', 'retreat'].includes(c.order));
     valid(['camp', 'down', 'farming', 'fighting', 'moving', 'holding', 'searching', 'retreating'].includes(c.status));
     valid(['balanced', 'experience', 'materials'].includes(c.assignment));
@@ -57,13 +60,14 @@ export function validateState(s) {
     if (['morroc','lair','payon'].includes(key) && s.maps && !Object.hasOwn(s.maps, key)) continue;
     const m = s.maps?.[key]; valid(m && m.id === key && Array.isArray(m.monsters) && m.monsters.length <= 30);
     valid(finite(m.bossTimer, -1, 100) && typeof m.bossDefeated === 'boolean');
-    valid(m.telegraph === null || (coordinate(m.telegraph) && finite(m.telegraph.radius, 0, 10) && finite(m.telegraph.remaining, -1, 10) && finite(m.telegraph.duration, 0.1, 10)));
+    const mapField = mapBounds(key);
+    valid(m.telegraph === null || (coordinate(m.telegraph, mapField) && finite(m.telegraph.radius, 0, 10) && finite(m.telegraph.remaining, -1, 10) && finite(m.telegraph.duration, 0.1, 10)));
     if (m.lastGather !== undefined) valid(key === 'lair' && typeof m.lastGather === 'boolean');
     if (m.telegraph?.markedId !== undefined) valid(key === 'lair' && ids.has(m.telegraph.markedId));
     if (m.telegraph?.innerRadius !== undefined) valid(finite(m.telegraph.innerRadius, 0, m.telegraph.radius));
     for (const enemy of m.monsters) {
       valid(/^m\d+$/.test(enemy.id) && !monsterIds.has(enemy.id)); monsterIds.add(enemy.id);
-      valid(own(MONSTERS, enemy.kind) && enemy.mapId === key && coordinate(enemy));
+      valid(own(MONSTERS, enemy.kind) && enemy.mapId === key && coordinate(enemy, mapField));
       valid(finite(enemy.hp, -10000, 10000) && finite(enemy.timer, -10, 100) && finite(enemy.respawn, -1, 100));
       valid(enemy.targetId === null || ids.has(enemy.targetId));
       valid(['idle', 'walk', 'attack'].includes(enemy.stance) && Number.isInteger(enemy.direction) && finite(enemy.direction, 0, 7));

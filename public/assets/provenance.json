@@ -64,6 +64,78 @@
       "bytes": 1009575
     },
     {
+      "local": "terrain/props/house_prontera.png",
+      "source": "Updates/map-sprites-v2/work/props/house_prontera.png",
+      "sha256": "56c2239fe7d4b35b38258ece73ec7fd7c276ad382dd84f2f213976c921bacbe6",
+      "bytes": 111836
+    },
+    {
+      "local": "terrain/props/lantern_stone.png",
+      "source": "Updates/map-sprites-v2/work/props/lantern_stone.png",
+      "sha256": "92f9b67eb288d6671085de96f90cd8b83cfe01709b156cb558ee5461035181fd",
+      "bytes": 23701
+    },
+    {
+      "local": "terrain/props/rock_boulder_mossy.png",
+      "source": "Updates/map-sprites-v2/work/props/rock_boulder_mossy.png",
+      "sha256": "ce0814c32f9e80b74b59f10e15a34fe5e42aec19faea30c96169b316f3acd02b",
+      "bytes": 32708
+    },
+    {
+      "local": "terrain/props/rock_cliff_crag.png",
+      "source": "Updates/map-sprites-v2/work/props/rock_cliff_crag.png",
+      "sha256": "30b6ffb698e9a329b8090573a0a534efa191b3112c9352506a646de218ea918d",
+      "bytes": 50918
+    },
+    {
+      "local": "terrain/props/source-anchors.json",
+      "source": "Updates/map-sprites-v2/work/props/_anchors.json",
+      "sha256": "07473ca4d84e4150bcc8b8e773c7b57b46778d57828cfd0d182e38a737838a16",
+      "bytes": 2786
+    },
+    {
+      "local": "terrain/props/standing_stone.png",
+      "source": "Updates/map-sprites-v2/work/props/standing_stone.png",
+      "sha256": "f8cbbed71d85a94979f25ec7f03add12088b71e310f6e57d1ce483b717611c8b",
+      "bytes": 38640
+    },
+    {
+      "local": "terrain/props/tree_bush_bright.png",
+      "source": "Updates/map-sprites-v2/work/props/tree_bush_bright.png",
+      "sha256": "b523fa19a2c181cee036dd6b1d1e265559672f53df915af2ecfe421e20d85469",
+      "bytes": 28572
+    },
+    {
+      "local": "terrain/props/tree_sapling.png",
+      "source": "Updates/map-sprites-v2/work/props/tree_sapling.png",
+      "sha256": "3fdec8f9021ba48f4ec18b1d61d769b28ade67858ceb05514b68fe63d8ffe093",
+      "bytes": 20253
+    },
+    {
+      "local": "terrain/props/tree_tall_cluster.png",
+      "source": "Updates/map-sprites-v2/work/props/tree_tall_cluster.png",
+      "sha256": "d4c7f3d191f63ff1873754da27697d9015c6ffd272d00249f641e7e5c3fe9e33",
+      "bytes": 84746
+    },
+    {
+      "local": "terrain/tiles/dirt_path.png",
+      "source": "Updates/map-sprites-v2/work/tiles/dirt_path.png",
+      "sha256": "c3a0c098a4930087c64a75073fc458ecafcd4b181bca50d5bc6d6104ba60b82b",
+      "bytes": 23280
+    },
+    {
+      "local": "terrain/tiles/grass_blossom.png",
+      "source": "Updates/map-sprites-v2/work/tiles/grass_blossom.png",
+      "sha256": "b4a20ff208c6e13c76597ac57869d62d045c2f77919b7fdae3cff931db9724a6",
+      "bytes": 31204
+    },
+    {
+      "local": "terrain/tiles/grass_olive.png",
+      "source": "Updates/map-sprites-v2/work/tiles/grass_olive.png",
+      "sha256": "01c8d3aa0c8487da0c74eb9fb3bfd7c333f9a991e51cc7b29a965c25438d9265",
+      "bytes": 26578
+    },
+    {
       "local": "wardrobe/atlas-010a29d6f92604fd264e.png",
       "source": "assets/wardrobe/v5/atlas-010a29d6f92604fd264e.png",
       "sha256": "010a29d6f92604fd264e06d481f34c8d09d73621e0daa37d6f0e56e4b01711f1",

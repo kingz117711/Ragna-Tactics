@@ -16,7 +16,22 @@ export class Sprites {
     await Promise.all(Object.entries(this.index.monsters).map(async ([id, record]) => {
       this.assets.set('mob-' + id, { record, atlas: await image('/assets/mobs/' + id + '.webp') });
     }));
+    // Decorative ground tiles and anchored scenery props. Optional by design:
+    // a build without them still renders the procedural ground fallback.
+    const terrain = this.index.terrain;
+    if (terrain) {
+      await Promise.all([
+        ...Object.entries(terrain.tiles).map(async ([name, rec]) => {
+          this.assets.set('tile-' + name, await image('/assets/' + rec.file));
+        }),
+        ...Object.entries(terrain.props).map(async ([name, rec]) => {
+          this.assets.set('prop-' + name, await image('/assets/' + rec.file));
+        }),
+      ]);
+    }
   }
+  tile(name) { return this.assets.get('tile-' + name) || null; }
+  prop(name) { return this.assets.get('prop-' + name) || null; }
   hero(ctx, c, ms, stance = c.stance, direction = c.direction, scale = 0.7) {
     const job = JOBS[c.job].native;
     const body = this.assets.get(`base-${job}-${c.sex}`), hair = this.assets.get(`hair-${c.sex}-2-0`);

@@ -15,10 +15,22 @@ ROOT = Path(__file__).resolve().parents[1]
 DEST = ROOT / 'public' / 'assets'
 MANIFEST = DEST / 'provenance.json'
 REPO = 'KzeR7/Prontera-Grind'
+# Decorative terrain subset: seamless ground tiles and anchored scenery props.
+TILES = ['grass_blossom', 'grass_olive', 'dirt_path']
+PROPS = ['tree_tall_cluster', 'tree_sapling', 'tree_bush_bright', 'rock_boulder_mossy',
+         'rock_cliff_crag', 'standing_stone', 'lantern_stone', 'house_prontera']
 
 
 def fetch(url):
-    req = urllib.request.Request(url, headers={'User-Agent': 'Ragna-Tactics-asset-import'})
+    # raw.githubusercontent.com is unreachable from some sandboxes; the contents
+    # API returns the exact same bytes for a pinned ref when asked for raw media.
+    headers = {'User-Agent': 'Ragna-Tactics-asset-import'}
+    if url.startswith('https://raw.githubusercontent.com/'):
+        parts = url.split('/')
+        repo, ref, path = parts[3] + '/' + parts[4], parts[5], '/'.join(parts[6:])
+        url = f'https://api.github.com/repos/{repo}/contents/{path}?ref={ref}'
+        headers['Accept'] = 'application/vnd.github.raw'
+    req = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(req, timeout=60) as response:
         return response.read()
 
@@ -43,6 +55,11 @@ def verify():
         assert rec == wardrobe['assets'][key], key
     for key, rec in index['monsters'].items():
         assert rec == mobs['monsters'][key], key
+    terrain = index.get('terrain', {})
+    assert sorted(terrain.get('tiles', {})) == sorted(TILES)
+    assert sorted(terrain.get('props', {})) == sorted(PROPS)
+    for rec in terrain.get('props', {}).values():
+        assert rec['w'] > 0 and rec['h'] > 0 and 0 <= rec['anchorX'] <= rec['w'] and 0 <= rec['anchorY'] <= rec['h']
     print(f"Verified {len(manifest['files'])} original asset files.")
 
 
@@ -72,6 +89,18 @@ def main():
     for key, rec in monsters.items():
         sources[rec['texture']] = ('mobs/' + key + '.webp', None)
 
+    # Decorative terrain subset: native ground tiles and anchored scenery props.
+    tiles_path = 'Updates/map-sprites-v2/work/tiles/'
+    props_path = 'Updates/map-sprites-v2/work/props/'
+    anchors = json.loads(fetch(base + props_path + '_anchors.json'))
+    for name in TILES:
+        sources[tiles_path + name + '.png'] = ('terrain/tiles/' + name + '.png', None)
+    for name in PROPS:
+        if name not in anchors:
+            raise ValueError('Missing source anchor for prop: ' + name)
+        sources[props_path + name + '.png'] = ('terrain/props/' + name + '.png', None)
+    sources[props_path + '_anchors.json'] = ('terrain/props/source-anchors.json', None)
+
     def download(item):
         source, (local, expected) = item
         data = fetch(base + source)
@@ -90,7 +119,13 @@ def main():
                           ('mobs/source-catalog.json', 'assets/native-fields/v1/mobs.json')]:
         records.append(download((source, (local, None))))
     index = {'anchor': catalog['anchor'], 'classes': catalog['classes'], 'wardrobe': selected,
-             'monsters': monsters}
+             'monsters': monsters,
+             'terrain': {
+                 'tiles': {name: {'file': 'terrain/tiles/' + name + '.png'} for name in TILES},
+                 'props': {name: {'file': 'terrain/props/' + name + '.png',
+                                  **{key: anchors[name][key] for key in ('w', 'h', 'anchorX', 'anchorY')}}
+                           for name in PROPS},
+             }}
     (DEST / 'index.json').write_text(json.dumps(index, separators=(',', ':')), encoding='utf-8')
     manifest = {'repository': REPO, 'commit': commit,
                 'note': 'Original files copied byte-for-byte. Runtime index is a derived subset. '

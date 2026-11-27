@@ -20,9 +20,8 @@
   <div class="app-layout">
     <aside class="sidebar">
       <div class="sidebar-heading"><span class="eyebrow">EXPEDITIONS</span><span class="tiny muted">03 LOCATIONS</span></div>
-      <h2>Expedition map</h2><p class="sidebar-intro">Select a field to watch its party.</p>
+      <h2>Expedition map</h2>
       <nav id="map-list" aria-label="World locations"></nav>
-      <section id="expedition-goals" class="expedition-goals" aria-label="Expedition goals"></section>
       <div class="camp-card"><div><span class="camp-symbol">⌂</span><strong>Guild camp</strong></div><p>A place to rest, resupply,<br>and choose your next path.</p><button class="text-button" data-action="camp">Manage camp <span>↗</span></button></div>
       <div class="sidebar-bottom"><span class="eyebrow">GUILD MILESTONES</span><div id="milestones"></div><div class="save-status"><span id="save-dot" class="status-dot"></span><span id="save-status">Saved on this device</span><button id="save-button" title="Save now">↻</button></div></div>
     </aside>
@@ -30,7 +29,8 @@
       <section class="battlefield" aria-label="Live tactical battlefield">
         <canvas id="battlefield" tabindex="0" aria-label="Battlefield. Select characters using the roster. Right-click ground to move, or use the Move command."></canvas>
         <div class="map-heading"><div class="eyebrow" id="map-tier">FIELD · LV 1–4</div><h1 id="map-name">South Prontera</h1><p id="map-subtitle">A quiet beginning</p></div>
-        <div class="view-tools"><button class="icon-button" id="zoom-out" aria-label="Zoom out">−</button><span id="zoom-label">65%</span><button class="icon-button" id="zoom-in" aria-label="Zoom in">+</button><span class="tool-divider"></span><button class="icon-button" id="fit-camera" aria-label="Fit whole map" title="Fit map (F)">⛶</button><button class="icon-button" id="grid-button" aria-label="Toggle map grid" aria-pressed="false" title="Toggle grid">▦</button></div>
+        <div class="view-tools"><button class="icon-button" id="zoom-out" aria-label="Zoom out">−</button><span id="zoom-label">65%</span><button class="icon-button" id="zoom-in" aria-label="Zoom in">+</button><span class="tool-divider"></span><button class="icon-button" id="fit-camera" aria-label="Fit whole map" title="Fit map (F)">⛶</button><button class="icon-button" id="grid-button" aria-label="Toggle map grid" aria-pressed="false" title="Toggle grid">▦</button><button id="find-unit" title="Find an adventurer (G)" aria-label="Find an adventurer">Find</button></div>
+        <canvas id="minimap" width="344" height="264" aria-label="Field minimap. Click to move the view." title="Click or drag to move the view"></canvas>
         <div id="boss-status" class="boss-status" hidden></div>
         <div id="first-expedition" class="first-expedition"><span class="eyebrow">SOUTH PRONTERA · GUILD CAMP</span><h3>Your first expedition</h3><p>Hunt Porings in South Prontera. Reach Job Lv. 10<br>to choose a first job for each Novice.</p><button class="primary" id="first-deploy">Plan your first expedition <span>↗</span></button><button class="dismiss-coach" id="dismiss-coach" aria-label="Dismiss introduction">×</button></div>
         <div class="map-footer"><span id="map-population">No adventurers deployed</span><span class="map-control-hint">SCROLL TO ZOOM <i>·</i> DRAG TO PAN <i>·</i> RIGHT-CLICK TO MOVE</span><span class="compass" aria-label="North">N <span>↑</span></span></div>
@@ -41,17 +41,21 @@
         <div class="command-buttons"><button data-action="move" title="Move to a point (M)"><span>➤</span>Move<kbd>M</kbd></button><button data-action="rally" title="Mark a hunting area"><span>◎</span>Hunt area</button><button data-action="hold" title="Hold current position (H)"><span>◇</span>Hold<kbd>H</kbd></button><button data-action="resume" title="Resume farming (R)"><span>↻</span>Farm<kbd>R</kbd></button><button data-action="skill" title="Use selected character's skill (Q)"><span>✧</span>Skill<kbd>Q</kbd></button><button data-action="retreat" class="retreat" title="Retreat to camp (T)"><span>↩</span>Retreat<kbd>T</kbd></button></div>
         <button class="primary deploy-button" data-action="deploy">Deploy <span>↗</span></button>
       </section>
-      <section class="activity-panel"><div class="activity-heading"><span class="eyebrow">FIELD NOTES</span><button id="guide-button" class="text-button">Field guide ↗</button><button id="bounty-button" class="text-button">Bounties ↗</button><button id="world-button" class="text-button">World overview ↗</button><button id="storage-button" class="text-button">Shared storage ↗</button></div><div id="journal" class="journal" aria-label="Recent guild activity"></div></section>
+      <section class="activity-panel"><div class="activity-heading"><span class="eyebrow">FIELD NOTES</span><div id="journal" class="journal" aria-label="Recent guild activity"></div><div class="activity-actions"><button id="guide-button" class="text-button">Field guide ↗</button><button id="bounty-button" class="text-button">Bounties ↗</button><button id="world-button" class="text-button">World overview ↗</button><button id="storage-button" class="text-button">Shared storage ↗</button></div></div></section>
     </main>
     <aside class="roster-panel" aria-label="Guild roster">
       <div class="roster-heading"><div><span class="eyebrow">YOUR ADVENTURERS</span><h2>The guild</h2></div><span id="roster-count" class="roster-count">2 / 5</span></div>
-      <div class="roster-selection"><span class="tiny muted">SELECT YOUR ADVENTURERS</span><button class="text-button" id="multi-select" aria-pressed="false" title="Toggle additive selection. Shift-click also adds characters.">Multi</button><button class="text-button" id="select-all">All</button></div>
+      <div class="roster-selection"><span class="tiny muted">SELECT YOUR ADVENTURERS</span><button class="text-button" id="multi-select" aria-pressed="false" title="Toggle additive selection. Shift-click also adds characters.">Multi</button><button class="text-button" id="select-all">All</button><button class="text-button" id="detail-toggle" aria-expanded="false" aria-controls="detail-stack">Details</button></div>
       <div id="roster" class="roster"></div>
       <button id="job-notice" class="job-notice" data-action="camp" hidden><strong>Job advancement available</strong><span id="job-names"></span><span>Open guild camp ↗</span></button>
       <button id="recruit-button" class="recruit-button"><span>+</span><span id="recruit-label">The next chapter awaits</span><span>♧</span></button>
-      <section id="party-overview" class="party-overview" aria-label="Party management"></section>
-      <div class="party-actions"><button data-action="party">Link as party</button><button data-action="split">Separate</button></div>
-      <section class="inspector"><div class="inspector-heading"><span class="eyebrow">ADVENTURER DETAILS</span></div><div id="inspector"></div></section>
+      <div id="detail-stack" class="detail-stack">
+        <button class="stack-close" id="stack-close" aria-label="Close details">×</button>
+        <section id="expedition-goals" class="expedition-goals" aria-label="Expedition goals"></section>
+        <section id="party-overview" class="party-overview" aria-label="Party management"></section>
+        <div class="party-actions"><button data-action="party">Link as party</button><button data-action="split">Separate</button></div>
+        <section class="inspector"><div class="inspector-heading"><span class="eyebrow">ADVENTURER DETAILS</span></div><div id="inspector"></div></section>
+      </div>
       <div class="roster-bottom"><span class="status-dot"></span><span>All deployed maps stay active</span><span class="tiny">↗</span></div>
     </aside>
   </div>
