@@ -1,5 +1,5 @@
 // Pure, serializable simulation. No DOM, storage, wall clock, or camera dependencies.
-import { combatJob, REFINEMENT, gearKey, ELEMENTS, affinityMultiplier, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
+import { combatJob, REFINEMENT, gearKey, ELEMENTS, affinityMultiplier, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, mapBounds, JOBS, MONSTERS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
 
 export function random(state) {
   state.seed = (Math.imul(state.seed, 1664525) + 1013904223) >>> 0;
@@ -68,8 +68,17 @@ export function log(s, message) {
 }
 function spawn(s, mapId, kind, position) {
   const boss = MAPS[mapId].boss && kind === MAPS[mapId].monster;
-  s.maps[mapId].monsters.push({ id: 'm' + s.nextId++, kind, mapId,
-    x: position?.x ?? (boss ? 0 : (random(s) - 0.5) * 24), y: position?.y ?? (boss ? 0 : (random(s) - 0.5) * 24),
+  let x, y;
+  if (position) { x = position.x; y = position.y; }
+  else if (boss) { x = 0; y = 0; }
+  else {
+    // Zoned fields (South Prontera) keep each species in its own hunting ground.
+    // Both paths consume exactly two seeded rolls, preserving the RNG stream.
+    const zone = MAPS[mapId].zones?.find(z => z.kind === kind);
+    if (zone) { x = zone.x + (random(s) - 0.5) * 2 * zone.r; y = zone.y + (random(s) - 0.5) * 2 * zone.r; }
+    else { x = (random(s) - 0.5) * 24; y = (random(s) - 0.5) * 24; }
+  }
+  s.maps[mapId].monsters.push({ id: 'm' + s.nextId++, kind, mapId, x, y,
     hp: MONSTERS[kind].hp, timer: 1, respawn: 0, targetId: null, stance: 'idle', direction: 0, attackFlash: 0 });
 }
 export const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -78,7 +87,15 @@ const active = c => c.mapId && c.hp > 0 && c.status !== 'down';
 function expandSelection(s, ids) {
   return s.characters.filter(c => ids.includes(c.id) || (c.partyId && s.characters.some(v => ids.includes(v.id) && v.partyId === c.partyId)));
 }
-function point(p) { return p && Number.isFinite(p.x) && Number.isFinite(p.y) && Math.abs(p.x) <= 15 && Math.abs(p.y) <= 15; }
+function point(p, mapId) {
+  const b = mapBounds(mapId);
+  return !!p && Number.isFinite(p.x) && Number.isFinite(p.y) && Math.abs(p.x) <= b.x && Math.abs(p.y) <= b.y;
+}
+// Retreat always targets the map's marked camp exit; older maps keep the original spot.
+function campPoint(c) {
+  const camp = MAPS[c.mapId]?.camp;
+  return camp ? { x: camp.x, y: camp.y } : { x: -11, y: 13 };
+}
 export function engaged(s, c) {
   return !!c.mapId && s.maps[c.mapId].monsters.some(m => m.hp > 0 && m.targetId === c.id);
 }
@@ -185,7 +202,8 @@ function applyCommand(s, cmd) {
     if (units.some(c => engaged(s, c))) return 'Use Retreat to leave an active fight.';
     if (MAPS[cmd.mapId].boss && units.filter(c => c.job !== 'novice').length < 2) return 'Bring at least two adventurers who have chosen their first job.';
     if (MAPS[cmd.mapId].boss && !s.characters.some(c => c.mapId === cmd.mapId)) resetArena(s, cmd.mapId);
-    units.forEach((c, i) => { c.mapId = cmd.mapId; c.x = -5 + i * 1.6; c.y = 8 + i % 2; c.home = { x: c.x, y: c.y };
+    const arrival = MAPS[cmd.mapId].deploy || { x: -5, y: 8 };
+    units.forEach((c, i) => { c.mapId = cmd.mapId; c.x = arrival.x + i * 1.6; c.y = arrival.y + i % 2; c.home = { x: c.x, y: c.y };
       delete c.farmRadius;
       delete c.farmCenter;
       c.status = 'farming'; c.order = 'farm'; c.destination = null; c.targetId = null; });
@@ -311,7 +329,7 @@ function applyCommand(s, cmd) {
     const radius = cmd.radius === undefined ? DEFAULT_HUNT_RADIUS : cmd.radius;
     if (!HUNT_RADII.includes(radius)) return 'Choose a supported hunting radius.';
     const field = s.maps[cmd.mapId];
-    if (!field || MAPS[field.id].boss || !point(cmd.point)) return 'Choose a point inside a farming field.';
+    if (!field || MAPS[field.id].boss || !point(cmd.point, cmd.mapId)) return 'Choose a point inside a farming field.';
     const farmers = units.filter(c => active(c) && c.mapId === field.id);
     if (!farmers.length) return 'Select adventurers deployed on this field.';
     for (const c of farmers) {
@@ -325,13 +343,23 @@ function applyCommand(s, cmd) {
     return null;
   }
   if (!['move', 'hold', 'resume', 'focus', 'retreat'].includes(cmd.type)) return 'Unknown command.';
-  if (['move', 'hold'].includes(cmd.type) && cmd.point && !point(cmd.point)) return 'Choose a point inside the battlefield.';
+  if (['move', 'hold'].includes(cmd.type) && cmd.point) {
+    // Validate against the map the order is aimed at; the visible map wins when given.
+    const scope = (cmd.mapId && MAPS[cmd.mapId] ? cmd.mapId : null) || units.find(c => c.mapId)?.mapId;
+    if (!point(cmd.point, scope)) return 'Choose a point inside the battlefield.';
+  }
   const deployed = units.filter(active);
   if (!deployed.length) return 'Deploy your selection first.';
   if (cmd.type === 'focus' && !deployed.some(c => s.maps[c.mapId].monsters.some(m => m.id === cmd.targetId && m.hp > 0))) return 'Choose a living enemy on this map.';
   deployed.forEach((c, i) => {
-    if (cmd.type === 'retreat') { c.order = 'retreat'; c.status = 'retreating'; c.destination = { x: -11, y: 13 }; }
-    else if (cmd.type === 'move') { if (!cmd.point) return; c.order = 'move'; c.destination = { x: Math.min(15, cmd.point.x + i * 0.8), y: cmd.point.y }; c.targetId = null; }
+    if (cmd.type === 'retreat') { c.order = 'retreat'; c.status = 'retreating'; c.destination = campPoint(c); }
+    else if (cmd.type === 'move') {
+      if (!cmd.point) return;
+      const b = mapBounds(c.mapId);
+      c.order = 'move';
+      c.destination = { x: Math.max(-b.x, Math.min(b.x, cmd.point.x + i * 0.8)), y: Math.max(-b.y, Math.min(b.y, cmd.point.y)) };
+      c.targetId = null;
+    }
     else if (cmd.type === 'hold') { c.order = 'hold'; c.home = cmd.point ? { ...cmd.point } : { x: c.x, y: c.y }; c.destination = null; c.targetId = null; }
     else if (cmd.type === 'resume') {
       c.order = 'farm'; c.destination = null; c.targetId = null;
@@ -365,8 +393,9 @@ function move(c, target, speed, dt) {
   if (d < 0.1) { c.stance = 'idle'; return true; }
   const dx = target.x - c.x, dy = target.y - c.y, n = Math.min(d, speed * dt);
   face(c, target);
-  c.x = Math.max(-15, Math.min(15, c.x + dx / d * n));
-  c.y = Math.max(-15, Math.min(15, c.y + dy / d * n));
+  const b = mapBounds(c.mapId);
+  c.x = Math.max(-b.x, Math.min(b.x, c.x + dx / d * n));
+  c.y = Math.max(-b.y, Math.min(b.y, c.y + dy / d * n));
   c.stance = 'walk'; return n >= d;
 }
 function effect(s, mapId, x, y, text, kind = 'hit') {
@@ -472,12 +501,12 @@ function tickCharacter(s, c, dt) {
   // Priority: an explicit Retreat is honored; an explicit Move finishes before
   // safety automation interrupts it; otherwise low HP retreats before combat AI.
   if (c.hp / st.hp < tactics.retreatAt && !['retreat', 'move'].includes(c.order)) {
-    c.order = 'retreat'; c.status = 'retreating'; c.destination = { x: -11, y: 13 }; c.targetId = null;
+    c.order = 'retreat'; c.status = 'retreating'; c.destination = campPoint(c); c.targetId = null;
     log(s, c.name + ' is retreating: HP below their threshold.');
   }
   if (c.order === 'retreat') {
     c.status = 'retreating';
-    if (move(c, c.destination || { x: -11, y: 13 }, st.speed * 1.3, dt)) { c.mapId = null; c.status = 'camp'; c.order = 'farm'; c.targetId = null; c.destination = null; log(s, c.name + ' returned safely to camp.'); }
+    if (move(c, c.destination || campPoint(c), st.speed * 1.3, dt)) { c.mapId = null; c.status = 'camp'; c.order = 'farm'; c.targetId = null; c.destination = null; log(s, c.name + ' returned safely to camp.'); }
     return;
   }
   // Manual Move is an explicit short-lived order and always wins over automation.
@@ -519,11 +548,19 @@ function tickCharacter(s, c, dt) {
     const toward = distance(c, leader) > 5.5 ? leader : target;
     c.status = 'moving'; move(c, toward, st.speed, dt); return;
   }
-  if (d > desired + 0.45 && distance(target, c.home) <= leash) { c.status = 'moving'; move(c, target, st.speed, dt); return; }
+  // Close only until the unit is inside its actual attack range. Stopping at
+  // desired+0.45 can park melee units just outside reach, where both sides
+  // stand frozen without ever resolving the attack.
+  const closeTo = Math.min(desired + 0.45, st.range - 0.1);
+  if (d > closeTo && distance(target, c.home) <= leash) { c.status = 'moving'; move(c, target, st.speed, dt); return; }
   if (d < desired - 0.8 && role !== 'frontline') {
     const dx = c.x - target.x, dy = c.y - target.y, length = Math.hypot(dx, dy) || 1;
     const retreatPoint = { x: c.x + dx / length * Math.min(1.1, desired - d), y: c.y + dy / length * Math.min(1.1, desired - d) };
-    c.status = 'moving'; move(c, retreatPoint, st.speed * 0.7, dt); return;
+    const before = { x: c.x, y: c.y };
+    c.status = 'moving'; move(c, retreatPoint, st.speed * 0.7, dt);
+    // Pinned against the map edge the unit cannot kite any further — fall
+    // through and resolve the attack instead of freezing forever.
+    if (distance(before, c) > 0.01) return;
   }
   c.status = 'fighting'; c.stance = c.attackFlash > 0 ? 'attack' : 'idle'; face(c, target);
   if (tactics.autoSkill) useSkill(s, c, target);
@@ -539,7 +576,13 @@ function tickMonster(s, map, m, dt) {
   if (m.hp <= 0) {
     if (MAPS[map.id].boss) return;
     m.respawn -= dt;
-    if (m.respawn <= 0) { const def = MONSTERS[m.kind]; m.x = (random(s) - 0.5) * 24; m.y = (random(s) - 0.5) * 24; m.hp = def.hp; m.rewarded = false; m.targetId = null; }
+    if (m.respawn <= 0) {
+      const def = MONSTERS[m.kind], zone = MAPS[map.id].zones?.find(z => z.kind === m.kind);
+      // Two seeded rolls either way, so respawns never reshape the RNG stream.
+      m.x = zone ? zone.x + (random(s) - 0.5) * 2 * zone.r : (random(s) - 0.5) * 24;
+      m.y = zone ? zone.y + (random(s) - 0.5) * 2 * zone.r : (random(s) - 0.5) * 24;
+      m.hp = def.hp; m.rewarded = false; m.targetId = null;
+    }
     return;
   }
   const def = MONSTERS[m.kind];
@@ -629,8 +672,9 @@ function spacePartyMembers(characters, dt) {
       const dx = d ? (a.x - b.x) / d : 1;
       const dy = d ? (a.y - b.y) / d : 0;
       for (const [unit, direction] of [[a, 1], [b, -1]]) {
-        unit.x = Math.max(-15, Math.min(15, unit.x + dx * push * direction));
-        unit.y = Math.max(-15, Math.min(15, unit.y + dy * push * direction));
+        const b2 = mapBounds(unit.mapId);
+        unit.x = Math.max(-b2.x, Math.min(b2.x, unit.x + dx * push * direction));
+        unit.y = Math.max(-b2.y, Math.min(b2.y, unit.y + dy * push * direction));
       }
     }
   }

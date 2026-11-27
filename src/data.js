@@ -3,14 +3,64 @@ export const DEFAULT_HUNT_RADIUS = 6;
 export const VERSION = 1;
 export const STEP = 0.1;
 export const OFFLINE_CAP = 4 * 60 * 60;
+// bounds are half-extents in world units per axis. Every map carries its own
+// dimensions; camp/deploy/road/zones describe South Prontera's landmarks.
 export const MAPS = {
-  meadow: { id: 'meadow', name: 'South Prontera', subtitle: 'A quiet beginning', tier: 'FIELD · LV 1–4', color: '#91b27d', monster: 'poring', count: 8, radius: 16 },
-  forest: { id: 'forest', name: 'Willow Wood', subtitle: 'Beyond the familiar paths', tier: 'FIELD · LV 4–8', color: '#698a7b', monster: 'willow', count: 7, radius: 16 },
-  payon: { id: 'payon', name: 'Payon Cave', subtitle: 'Lanterns beneath the eastern ridge', tier: 'DUNGEON · LV 12–18', color: '#a49bb9', monster: 'zombie', count: 8, radius: 16 },
-  morroc: { id: 'morroc', name: 'Morroc Dunes', subtitle: 'The southern caravan road', tier: 'FIELD · LV 8–14', color: '#cba976', monster: 'scorpion', count: 8, radius: 16 },
-  arena: { id: 'arena', boss: true, name: 'The Broken Sanctuary', subtitle: 'Something stirs beneath the ruins', tier: 'BOSS · PARTY RECOMMENDED', color: '#807e95', monster: 'baphomet', count: 1, radius: 16 },
+  meadow: {
+    id: 'meadow', name: 'South Prontera', subtitle: 'A quiet beginning', tier: 'FIELD · LV 1–4', color: '#91b27d', monster: 'poring', count: 12, radius: 16,
+    bounds: { x: 26, y: 20 },
+    camp: { x: -17, y: 13 },
+    deploy: { x: -11, y: 6 },
+    zones: [
+      { kind: 'poring', x: -7, y: -1, r: 9, label: 'Poring Meadow' },
+      { kind: 'fabre', x: 13, y: 5, r: 7.5, label: 'Fabre Thicket' },
+    ],
+    road: [
+      [[-17, 13], [-9, 10], [-2, 7]],
+      [[-2, 7], [-6, 3], [-8, 0]],
+      [[-2, 7], [5, 6], [12, 5]],
+    ],
+    scenery: {
+      border: ['tree_tall_cluster', 'tree_sapling', 'tree_bush_bright'],
+      props: [
+        { id: 'house_prontera', x: -21.5, y: 16.5 },
+        { id: 'lantern_stone', x: -15.6, y: 11.4 },
+        { id: 'lantern_stone', x: -18.6, y: 15.8 },
+        { id: 'standing_stone', x: -0.4, y: 8.9 },
+        { id: 'tree_bush_bright', x: -13.5, y: -6.5 },
+        { id: 'tree_bush_bright', x: -2.5, y: -8.5 },
+        { id: 'tree_bush_bright', x: -12.5, y: 3.5 },
+        { id: 'tree_sapling', x: -4.5, y: -6.5 },
+        { id: 'tree_sapling', x: -12.5, y: -1.5 },
+        { id: 'rock_boulder_mossy', x: 16.5, y: 1.5 },
+        { id: 'rock_boulder_mossy', x: 10.5, y: 9.5 },
+        { id: 'rock_cliff_crag', x: 18.5, y: 7.5 },
+        { id: 'tree_tall_cluster', x: 20.5, y: 2.5, scale: 0.95 },
+        { id: 'tree_tall_cluster', x: 9.5, y: 12.5, scale: 0.9 },
+        { id: 'tree_tall_cluster', x: -16.5, y: -11.5, scale: 1.05 },
+      ],
+    },
+  },
+  forest: {
+    id: 'forest', name: 'Willow Wood', subtitle: 'Beyond the familiar paths', tier: 'FIELD · LV 4–8', color: '#698a7b', monster: 'willow', count: 7, radius: 16, bounds: { x: 15, y: 15 },
+    scenery: {
+      border: ['tree_tall_cluster', 'tree_bush_bright'],
+      props: [
+        { id: 'tree_tall_cluster', x: -8.5, y: -7.5, scale: 1.05 },
+        { id: 'tree_tall_cluster', x: 7.5, y: -8.5 },
+        { id: 'tree_tall_cluster', x: 9.5, y: 5.5, scale: 0.95 },
+        { id: 'tree_tall_cluster', x: -6.5, y: 9.5, scale: 1.1 },
+        { id: 'tree_bush_bright', x: 6.5, y: -3.5 },
+        { id: 'tree_bush_bright', x: -9.5, y: 3.5 },
+      ],
+    },
+  },
+  payon: { id: 'payon', name: 'Payon Cave', subtitle: 'Lanterns beneath the eastern ridge', tier: 'DUNGEON · LV 12–18', color: '#a49bb9', monster: 'zombie', count: 8, radius: 16, bounds: { x: 15, y: 15 }, scenery: { border: ['rock_cliff_crag', 'rock_boulder_mossy'] } },
+  morroc: { id: 'morroc', name: 'Morroc Dunes', subtitle: 'The southern caravan road', tier: 'FIELD · LV 8–14', color: '#cba976', monster: 'scorpion', count: 8, radius: 16, bounds: { x: 15, y: 15 }, scenery: { border: ['rock_boulder_mossy', 'rock_cliff_crag'] } },
+  arena: { id: 'arena', boss: true, name: 'The Broken Sanctuary', subtitle: 'Something stirs beneath the ruins', tier: 'BOSS · PARTY RECOMMENDED', color: '#807e95', monster: 'baphomet', count: 1, radius: 16, bounds: { x: 15, y: 15 }, scenery: { border: ['standing_stone', 'rock_cliff_crag'] } },
 };
-MAPS.lair = { id: 'lair', boss: true, name: 'Sandsea Hollow', subtitle: 'Beneath the caravan road', tier: 'MVP · LV 18+', color: '#c38667', monster: 'phreeoni', count: 1, radius: 16 };
+MAPS.lair = { id: 'lair', boss: true, name: 'Sandsea Hollow', subtitle: 'Beneath the caravan road', tier: 'MVP · LV 18+', color: '#c38667', monster: 'phreeoni', count: 1, radius: 16, bounds: { x: 15, y: 15 }, scenery: { border: ['rock_cliff_crag', 'rock_boulder_mossy'] } };
+export const mapBounds = mapId => MAPS[mapId]?.bounds || { x: 15, y: 15 };
 export const JOBS = {
   novice: { name: 'Novice', native: 0, role: 'A new beginning', hp: 100, atk: 10, def: 1, range: 1.8, speed: 3.1, interval: 1.05, skill: 'First Aid', cost: 8, cooldown: 10, description: 'Recover your own HP. Learn the basics before choosing a path.' },
   swordsman: { name: 'Swordsman', native: 1, role: 'Frontline · protection', hp: 180, atk: 17, def: 5, range: 1.9, speed: 3.1, interval: 1.05, skill: 'Bash', cost: 7, cooldown: 5, description: 'A heavy strike that draws enemy attention.' },
