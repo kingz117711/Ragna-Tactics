@@ -385,3 +385,14 @@ test('refine equipped gear at camp and inspect the next material cost',async({pa
   await expect(page.locator('[data-refine="2"]')).toBeDisabled();
   await page.locator('#modal').screenshot({path:'artifacts/refinement.png'});
 });
+
+test('advance to High Wizard and retain the equipped elemental spell',async({page})=>{
+  const s=createGame();Object.assign(s.characters[0],{job:'wizard',jobLevel:50,element:'earth'});
+  await page.addInitScript(raw=>{if(!localStorage.length)localStorage.setItem('ragna-tactics:save:v1',raw);},encodeSave(s));
+  await boot(page);await page.locator('#job-notice').click();await page.locator('[data-camp-unit="c1"]').click();
+  await page.locator('[value="highWizard"]').check();
+  await page.locator('#modal').screenshot({path:'artifacts/transcendent.png'});
+  await page.locator('#job-form button.primary').click();await page.locator('[data-action="spellbook"]').click();
+  await expect(page.locator('[data-attune="earth"]')).toHaveText('Prepared');
+  await page.reload();await expect(page.locator('.character-card').first()).toContainText('High Wizard');
+});

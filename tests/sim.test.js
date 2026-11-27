@@ -491,3 +491,18 @@ test('refinement follows a carded item independently of a second plain copy', as
   assert.equal(s.inventory.socketed['iron//3'],1); assert.equal(s.inventory.cards.peco,1);
   assert.equal(decodeSave(encodeSave(s)).state.inventory.socketed['iron//3'],1);
 });
+
+test('all six transcendent jobs keep their equipment and learned builds at second Job Lv. 50', async () => {
+  const {decodeSave,encodeSave}=await import('../src/persistence.js');
+  for(const [parent,job] of Object.entries({knight:'lordKnight',priest:'highPriest',wizard:'highWizard',blacksmith:'whitesmith',hunter:'sniper',assassin:'assassinCross'})){
+    const s=createGame(), c=s.characters[0];
+    Object.assign(c,{job:parent,jobLevel:49,level:35,equipment:'iron',card:'skeleton',refine:2,attributes:{vit:10}});
+    if(parent==='wizard')c.element='earth'; if(parent==='priest')c.element='holy';
+    const change=()=>command(s,{type:'promote',ids:['c1'],job});
+    assert.ok(change()); c.jobLevel=50; assert.equal(change(),null);
+    assert.equal(c.jobLevel,1); assert.equal(c.refine,2); assert.deepEqual(c.attributes,{vit:10});
+    assert.equal(decodeSave(encodeSave(s)).state.characters[0].job,job);
+    assert.ok(stats(c).skill); assert.ok(stats(c).hp>150);
+    deploy(s,'payon',['c1']); advance(s,60); assert.ok(c.kills>0);
+  }
+});

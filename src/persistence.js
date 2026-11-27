@@ -1,4 +1,4 @@
-import { gearKey, gearVariant, REFINEMENT, ELEMENTS, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, MONSTERS, HUNT_RADII, VERSION, MAPS, JOBS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS } from './data.js';
+import { combatJob, gearKey, gearVariant, REFINEMENT, ELEMENTS, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, MONSTERS, HUNT_RADII, VERSION, MAPS, JOBS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS } from './data.js';
 import { availablePoints, populateField, createGame, advanceExpeditionGoals } from './sim.js';
 export const SAVE_KEY = 'ragna-tactics:save:v1';
 export const BACKUP_KEY = 'ragna-tactics:backup:v1';
@@ -18,7 +18,7 @@ export function validateState(s) {
     valid(c && /^c[1-5]$/.test(c.id) && !ids.has(c.id)); ids.add(c.id);
     valid(c.ownerId === s.ownerId && text(c.name, 20) && c.name.trim().length && ['m', 'f'].includes(c.sex));
     valid(own(JOBS, c.job) && own(EQUIPMENT, c.equipment) && own(TACTICS, c.tactic));
-    valid(c.element === undefined || (own(ELEMENTS,c.element) && own(ELEMENTS[c.element],c.job)));
+    valid(c.element === undefined || (own(ELEMENTS,c.element) && own(ELEMENTS[c.element],combatJob(c.job))));
     valid(c.refine === undefined || (Number.isInteger(c.refine) && finite(c.refine,0,REFINEMENT.length-1) && (!c.refine || c.equipment !== 'training')));
     valid(c.card == null || (c.equipment !== 'training' && own(CARDS, c.card)));
     // Schema-v1 saves predate per-character tactics; derive their settings from the saved preset.

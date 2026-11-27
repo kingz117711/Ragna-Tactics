@@ -43,6 +43,7 @@ band takes damage when the countdown ends. The centre and outer ground are safe.
 
 - Two named Novices; progression into Swordsman, Mage, Archer, Acolyte, Merchant,
   or Thief. All recruits start as Novices. Achievement-based growth to five units.
+- Six transcendent promotions at second Job Lv. 50 preserve gear, stat builds and prepared spells.
 - Six second jobs at first Job Lv. 40, with original sprites and signature skills.
 - Forge Iron armaments and Guard insignias from field loot in shared storage.
 - Four concurrent farming maps and two real-time boss expeditions.
@@ -57,7 +58,7 @@ band takes damage when the countdown ends. The centre and outer ground are safe.
   tab coordination, and four-hour offline farming in a background worker.
 - Pure simulation tests, browser scenarios, static build, and a CI workflow template.
 
-This is a foundation, not a complete MMORPG. Multiplayer, transcendent jobs, detailed
+This is a foundation, not a complete MMORPG. Multiplayer, detailed
 navigation/formations, expanded card sets, expanded crafting, and final balance are future milestones.
 Terrain is provisional procedural scenery; imported character and mob art is original.
 

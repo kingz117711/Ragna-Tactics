@@ -1,4 +1,4 @@
-import { REFINEMENT, gearVariant, AFFINITIES, ELEMENTS, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
+import { jobLineage, combatJob, REFINEMENT, gearVariant, AFFINITIES, ELEMENTS, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
 import { availablePoints, forgePrice, command, tick, stats, rosterLimit, engaged, effectiveTactics, isLeader } from './sim.js';
 import { SAVE_KEY, loadGame, saveGame, encodeSave, decodeSave } from './persistence.js';
 import { Sprites } from './sprites.js';
@@ -162,10 +162,10 @@ function advanceJob(id = [...selected][0]) {
   selected = new Set([c.id]);
   const choices = jobChoices(c.job), gate = promotionLevel(c.job), first = c.job === 'novice';
   if (!choices.length) {
-    showModal(JOBS[c.job].name, `<div class="milestone-note">Novice → ${JOBS[JOBS[c.job].parent].name} → ${JOBS[c.job].name}</div><h3>${JOBS[c.job].skill}</h3><p>${JOBS[c.job].description}</p>`, 'SECOND JOB');
+    showModal(JOBS[c.job].name, `<div class="milestone-note">${jobLineage(c.job).join(' → ')}</div><h3>${JOBS[c.job].skill}</h3><p>${JOBS[c.job].description}</p>`, 'TRANSCENDENT JOB');
     return;
   }
-  showModal(first ? 'Choose a new beginning.' : 'Advance your calling.', `<p>${esc(c.name)} · ${JOBS[c.job].name} · Job Lv. ${c.jobLevel} / ${gate}</p><p>Return to camp at Job Lv. ${gate} to advance. Keep your Base level and equipment. Your new job begins at Job Lv. 1.</p><form id="job-form"><div class="modal-grid">${choices.map(([key, job]) => `<label class="choice-card"><input type="radio" name="job" value="${key}" required><img class="job-preview" src="${sprites.portrait({ ...c, job: key })}" alt=""><span class="tiny"> ${job.role}</span><strong>${job.name}</strong><p>${job.description}</p></label>`).join('')}</div>${modalError}<div class="modal-footer"><span>Each adventurer chooses independently.</span><button type="submit" class="primary" ${c.jobLevel < gate || c.mapId || c.status === 'down' ? 'disabled' : ''}>Choose job <span>✧</span></button></div></form>`, first ? 'NOVICE → FIRST JOB' : 'FIRST JOB → SECOND JOB');
+  showModal(first ? 'Choose a new beginning.' : 'Advance your calling.', `<p>${esc(c.name)} · ${JOBS[c.job].name} · Job Lv. ${c.jobLevel} / ${gate}</p><p>Return to camp at Job Lv. ${gate} to advance. Keep your Base level and equipment. Your new job begins at Job Lv. 1.</p><form id="job-form"><div class="modal-grid">${choices.map(([key, job]) => `<label class="choice-card"><input type="radio" name="job" value="${key}" required><img class="job-preview" src="${sprites.portrait({ ...c, job: key })}" alt=""><span class="tiny"> ${job.role}</span><strong>${job.name}</strong><p>${job.description}</p></label>`).join('')}</div>${modalError}<div class="modal-footer"><span>Each adventurer chooses independently.</span><button type="submit" class="primary" ${c.jobLevel < gate || c.mapId || c.status === 'down' ? 'disabled' : ''}>Choose job <span>✧</span></button></div></form>`, first ? 'NOVICE → FIRST JOB' : (JOBS[c.job].parent ? 'SECOND JOB → TRANSCENDENT' : 'FIRST JOB → SECOND JOB'));
   $('job-form').onsubmit = event => { event.preventDefault(); const job = new FormData(event.currentTarget).get('job'); issue({ type: 'promote', job, ids: [c.id] }, { close: true }); };
 }
 function recruit() {
@@ -286,7 +286,7 @@ function worldOverview() {
 function spellbook() {
   const c = selectedCharacters()[0], current = spellElement(c) || 'support';
   const support = JOB_ROLES[c.job] === 'support' ? `<div class="inventory-row"><div><strong>${JOBS[c.job].skill}</strong><p>Restore party HP</p></div><button data-attune="support" ${current === 'support' || c.mapId ? 'disabled' : ''}>${current === 'support' ? 'Prepared' : 'Prepare'}</button></div>` : '';
-  const rows = support + Object.entries(ELEMENTS).filter(([,e]) => e[c.job]).map(([id, e]) => `<div class="inventory-row"><div><strong>${e[c.job]}</strong><p>${e.name} magic · strong against ${ELEMENTS[e.beats]?.name || 'Undead'}</p></div><button data-attune="${id}" ${current === id || c.mapId ? 'disabled' : ''}>${current === id ? 'Prepared' : 'Prepare'}</button></div>`).join('');
+  const rows = support + Object.entries(ELEMENTS).filter(([,e]) => e[combatJob(c.job)]).map(([id, e]) => `<div class="inventory-row"><div><strong>${e[combatJob(c.job)]}</strong><p>${e.name} magic · strong against ${ELEMENTS[e.beats]?.name || 'Undead'}</p></div><button data-attune="${id}" ${current === id || c.mapId ? 'disabled' : ''}>${current === id ? 'Prepared' : 'Prepare'}</button></div>`).join('');
   showModal(c.name + '’s spellbook', `<p>Prepare one spell at camp for manual casts and automatic farming. Weakness adds 50% spell damage. Matching the enemy element reduces it by 25%.</p>${rows}${modalError}`,'ELEMENTAL MAGIC');
 }
 function fieldGuide() {
