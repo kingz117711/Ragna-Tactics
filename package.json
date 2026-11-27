@@ -1,0 +1,23 @@
+{
+  "name": "ragna-tactics",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A small-roster, multi-map adventurer management RPG.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "start": "node scripts/serve.mjs",
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/sim.test.js tests/persistence.test.js",
+    "test:browser": "playwright test",
+    "test:build": "node scripts/verify-build.mjs",
+    "check": "node scripts/check.mjs",
+    "assets:verify": "python scripts/import_assets.py --verify"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1"
+  }
+}

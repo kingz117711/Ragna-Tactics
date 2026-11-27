@@ -1,0 +1,235 @@
+{
+  "repository": "KzeR7/Prontera-Grind",
+  "commit": "f47bf27e3092c385ba050da1cdb2fde4176f5183",
+  "note": "Original files copied byte-for-byte. Runtime index is a derived subset. Reuse does not grant ownership of underlying Ragnarok artwork.",
+  "files": [
+    {
+      "local": "mobs/1002.webp",
+      "source": "assets/native-fields/v1/mobs/1002.webp",
+      "sha256": "22bf967c52b034131fdb810f84e3135ad9dd4781c9370097eb7c2393135e7847",
+      "bytes": 69136
+    },
+    {
+      "local": "mobs/1007.webp",
+      "source": "assets/native-fields/v1/mobs/1007.webp",
+      "sha256": "59cb7322c7383f829cae30bdc53bce88d5ac69b8f67dff0546ec846a5ea305ca",
+      "bytes": 22992
+    },
+    {
+      "local": "mobs/1010.webp",
+      "source": "assets/native-fields/v1/mobs/1010.webp",
+      "sha256": "a1d63d3ee5e5e08f287c876ae068b296368f40e5389c3f94142bc57e66941f50",
+      "bytes": 403510
+    },
+    {
+      "local": "mobs/1039.webp",
+      "source": "assets/native-fields/v1/mobs/1039.webp",
+      "sha256": "41d085ceebf004a6ecb3acd06bad27b84add1c16ac7aa22d419c6443822d41f4",
+      "bytes": 523740
+    },
+    {
+      "local": "mobs/source-catalog.json",
+      "source": "assets/native-fields/v1/mobs.json",
+      "sha256": "fc2bb2f7e3a7339c874574e14c96e450aeb3af26d61f1b47215dca1aa18fa769",
+      "bytes": 1009575
+    },
+    {
+      "local": "wardrobe/atlas-0fa3a59003576738367c.png",
+      "source": "assets/wardrobe/v5/atlas-0fa3a59003576738367c.png",
+      "sha256": "0fa3a59003576738367ceff5cf7db499d562cb7cd22d5b06965921fab762fa2a",
+      "bytes": 73287
+    },
+    {
+      "local": "wardrobe/atlas-14e8b6cf8932f8f5926c.png",
+      "source": "assets/wardrobe/v5/atlas-14e8b6cf8932f8f5926c.png",
+      "sha256": "14e8b6cf8932f8f5926c9c6931293ea1d32fbbfd2c83866960d44a85a1b0754f",
+      "bytes": 69278
+    },
+    {
+      "local": "wardrobe/atlas-1b30a02d82813205c3c5.png",
+      "source": "assets/wardrobe/v5/atlas-1b30a02d82813205c3c5.png",
+      "sha256": "1b30a02d82813205c3c58d2843536e28707c5e876ac8d684b4ef19173a956bae",
+      "bytes": 61846
+    },
+    {
+      "local": "wardrobe/atlas-328a1cb92f3355fee41c.png",
+      "source": "assets/wardrobe/v5/atlas-328a1cb92f3355fee41c.png",
+      "sha256": "328a1cb92f3355fee41c1248ce2fbbf088d4ddec4f34f9bec0ece08ba38360c9",
+      "bytes": 61132
+    },
+    {
+      "local": "wardrobe/atlas-431da1db29d45e275184.png",
+      "source": "assets/wardrobe/v5/atlas-431da1db29d45e275184.png",
+      "sha256": "431da1db29d45e275184e4901d34c9a9a2bb3cacb93d70a01ca70a599c1118c2",
+      "bytes": 69107
+    },
+    {
+      "local": "wardrobe/atlas-46ea43a3a49c6cfdc2d6.png",
+      "source": "assets/wardrobe/v5/atlas-46ea43a3a49c6cfdc2d6.png",
+      "sha256": "46ea43a3a49c6cfdc2d688c57ef811b8c83ef0fdf93a2fa42190329f2f5bf262",
+      "bytes": 68472
+    },
+    {
+      "local": "wardrobe/atlas-47434af47da2c6c6973e.png",
+      "source": "assets/wardrobe/v5/atlas-47434af47da2c6c6973e.png",
+      "sha256": "47434af47da2c6c6973e60309086bc02cb0e43b46a7c8b9a79e46cd65eb9d5dc",
+      "bytes": 65733
+    },
+    {
+      "local": "wardrobe/atlas-54e7b484dcfe15763a4a.png",
+      "source": "assets/wardrobe/v5/atlas-54e7b484dcfe15763a4a.png",
+      "sha256": "54e7b484dcfe15763a4a4e1f206a297a8e833d24fa0a8c2170e480f602de56a9",
+      "bytes": 2268
+    },
+    {
+      "local": "wardrobe/atlas-6b9c14d8fe41d6ec5d96.png",
+      "source": "assets/wardrobe/v5/atlas-6b9c14d8fe41d6ec5d96.png",
+      "sha256": "6b9c14d8fe41d6ec5d9615456ee68d3a3e4b4f1e8566e0423c0639e11062803a",
+      "bytes": 78925
+    },
+    {
+      "local": "wardrobe/atlas-73260f2ebf30d88ba881.png",
+      "source": "assets/wardrobe/v5/atlas-73260f2ebf30d88ba881.png",
+      "sha256": "73260f2ebf30d88ba8817e27975da9d22977b14e4e024167c52ab9c0ff076a9d",
+      "bytes": 69853
+    },
+    {
+      "local": "wardrobe/atlas-794caf8f89c88b4d98d9.png",
+      "source": "assets/wardrobe/v5/atlas-794caf8f89c88b4d98d9.png",
+      "sha256": "794caf8f89c88b4d98d966a90f9262046ab27204cbc57290043d6af1d81ec803",
+      "bytes": 72123
+    },
+    {
+      "local": "wardrobe/atlas-9676ad6c56b2edf423f6.png",
+      "source": "assets/wardrobe/v5/atlas-9676ad6c56b2edf423f6.png",
+      "sha256": "9676ad6c56b2edf423f6be7bf47cbb8fa02ef5c20bc031a4bc92e027bde46d70",
+      "bytes": 67277
+    },
+    {
+      "local": "wardrobe/atlas-c311b5198020fdbf3eaa.png",
+      "source": "assets/wardrobe/v5/atlas-c311b5198020fdbf3eaa.png",
+      "sha256": "c311b5198020fdbf3eaa730469facb76ebeb81a55d71d12d834028bddcbe4445",
+      "bytes": 61673
+    },
+    {
+      "local": "wardrobe/atlas-c6e9ffe0db795248620a.png",
+      "source": "assets/wardrobe/v5/atlas-c6e9ffe0db795248620a.png",
+      "sha256": "c6e9ffe0db795248620aa1881e535478c18f8ce482d3ae8ca61dd63af88b177d",
+      "bytes": 63623
+    },
+    {
+      "local": "wardrobe/atlas-d52465ab115dfa0a809c.png",
+      "source": "assets/wardrobe/v5/atlas-d52465ab115dfa0a809c.png",
+      "sha256": "d52465ab115dfa0a809cd0d6c46ceb0ec93a85ead23ae82afa58a8b332601452",
+      "bytes": 2222
+    },
+    {
+      "local": "wardrobe/atlas-f5ad61ba4b3ea013d4b0.png",
+      "source": "assets/wardrobe/v5/atlas-f5ad61ba4b3ea013d4b0.png",
+      "sha256": "f5ad61ba4b3ea013d4b024cc5f2b4a8ef631f3d25987ad082b34df01a675a33f",
+      "bytes": 63460
+    },
+    {
+      "local": "wardrobe/poses-0bcefc0cc2affd46f2a8.json",
+      "source": "assets/wardrobe/v5/poses-0bcefc0cc2affd46f2a8.json",
+      "sha256": "0bcefc0cc2affd46f2a8c0b8d258b7f2b9c33e94bd22549717c0b28119b52b14",
+      "bytes": 10709
+    },
+    {
+      "local": "wardrobe/poses-1312aebe8bf4327da429.json",
+      "source": "assets/wardrobe/v5/poses-1312aebe8bf4327da429.json",
+      "sha256": "1312aebe8bf4327da4290906b8946cad883aeb562beeea44fc24e0e044823275",
+      "bytes": 11466
+    },
+    {
+      "local": "wardrobe/poses-1a1e8dbcbc67ab97139f.json",
+      "source": "assets/wardrobe/v5/poses-1a1e8dbcbc67ab97139f.json",
+      "sha256": "1a1e8dbcbc67ab97139f53df81659d6a9c38c36b97ceab5e77bee04dd3f6a679",
+      "bytes": 9409
+    },
+    {
+      "local": "wardrobe/poses-1c9b43f705177e0ddab9.json",
+      "source": "assets/wardrobe/v5/poses-1c9b43f705177e0ddab9.json",
+      "sha256": "1c9b43f705177e0ddab96ef2259343da90fb4c78dc3d709e286045454d32022e",
+      "bytes": 11428
+    },
+    {
+      "local": "wardrobe/poses-2d96a1094d7434eb0f78.json",
+      "source": "assets/wardrobe/v5/poses-2d96a1094d7434eb0f78.json",
+      "sha256": "2d96a1094d7434eb0f7837916f40c3538d7a1599ab1f4e7e4b3ff55607ad44a6",
+      "bytes": 11459
+    },
+    {
+      "local": "wardrobe/poses-4282820a540715d66696.json",
+      "source": "assets/wardrobe/v5/poses-4282820a540715d66696.json",
+      "sha256": "4282820a540715d666960d4d1dd816882e6ec21436b9e4a637bec885fd76b798",
+      "bytes": 10537
+    },
+    {
+      "local": "wardrobe/poses-652cf2a6ddf4858526a4.json",
+      "source": "assets/wardrobe/v5/poses-652cf2a6ddf4858526a4.json",
+      "sha256": "652cf2a6ddf4858526a4a52555be5623b8cb6ff526eb63100d6d0fb0081cdb98",
+      "bytes": 10728
+    },
+    {
+      "local": "wardrobe/poses-6c9b9bc88fdaf54a48a5.json",
+      "source": "assets/wardrobe/v5/poses-6c9b9bc88fdaf54a48a5.json",
+      "sha256": "6c9b9bc88fdaf54a48a5c72c121bea566a77e2decde1c4297b34ea7e1019a046",
+      "bytes": 9662
+    },
+    {
+      "local": "wardrobe/poses-713be01267e049ababd4.json",
+      "source": "assets/wardrobe/v5/poses-713be01267e049ababd4.json",
+      "sha256": "713be01267e049ababd46d4fe68cf1c38d765d507a93e7ea281aa6ada789e1bd",
+      "bytes": 9177
+    },
+    {
+      "local": "wardrobe/poses-7a1f463ab75c4be2d674.json",
+      "source": "assets/wardrobe/v5/poses-7a1f463ab75c4be2d674.json",
+      "sha256": "7a1f463ab75c4be2d674f7e3dbaf4b587f8a6f91f19f1ba2a25bc2e5a5d571c7",
+      "bytes": 9659
+    },
+    {
+      "local": "wardrobe/poses-98a37688d79171c73357.json",
+      "source": "assets/wardrobe/v5/poses-98a37688d79171c73357.json",
+      "sha256": "98a37688d79171c7335725877eda457eec07a0c3dd41baaa0e2bdd14b6c67f19",
+      "bytes": 11251
+    },
+    {
+      "local": "wardrobe/poses-b1039314111bfacaaf2b.json",
+      "source": "assets/wardrobe/v5/poses-b1039314111bfacaaf2b.json",
+      "sha256": "b1039314111bfacaaf2b6e8c58585fe63efc07cf0dc43b299eb558a23ada1551",
+      "bytes": 51757
+    },
+    {
+      "local": "wardrobe/poses-ce077864a4910282bd4f.json",
+      "source": "assets/wardrobe/v5/poses-ce077864a4910282bd4f.json",
+      "sha256": "ce077864a4910282bd4f58a113a392e695db8a54d94c94b2c18b4e698222d1e1",
+      "bytes": 49582
+    },
+    {
+      "local": "wardrobe/poses-db6a554e655a896cd148.json",
+      "source": "assets/wardrobe/v5/poses-db6a554e655a896cd148.json",
+      "sha256": "db6a554e655a896cd148b73fbbda9cbe099118314f1affdbd31be7dd8c284e32",
+      "bytes": 11685
+    },
+    {
+      "local": "wardrobe/poses-f18309964aa2bf9e4e03.json",
+      "source": "assets/wardrobe/v5/poses-f18309964aa2bf9e4e03.json",
+      "sha256": "f18309964aa2bf9e4e033db7557e4c728de1336e8aa8356cfd488a00c7b690eb",
+      "bytes": 10502
+    },
+    {
+      "local": "wardrobe/poses-f932e1175e9efccd573a.json",
+      "source": "assets/wardrobe/v5/poses-f932e1175e9efccd573a.json",
+      "sha256": "f932e1175e9efccd573af38ce85569d154338ef8e63ced625176f7f1f0707bbd",
+      "bytes": 9705
+    },
+    {
+      "local": "wardrobe/source-catalog.json",
+      "source": "assets/wardrobe/v5/catalog.json",
+      "sha256": "8c5cb0c9fc0b709ce32d72c8bcf0daf10bfb9e2c13149772085b4442299eec87",
+      "bytes": 164918
+    }
+  ]
+}

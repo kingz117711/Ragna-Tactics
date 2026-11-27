@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#142729">
+  <meta name="description" content="Build a guild. Shape your party. Let the adventure unfold. A Ragnarok-inspired tactical management RPG.">
+  <title>Ragna Tactics — Your guild, your adventure</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23d8c28d' d='M32 3 59 32 32 61 5 32Z'/%3E%3Cpath fill='%23142729' d='m32 14 15 18-15 18-15-18Zm0 8-8 10 8 10 8-10Z'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/src/style.css">
+  <script type="module" src="/src/app.js"></script>
+</head>
+<body>
+  <div id="loading" class="loading"><div class="brand-mark">✧</div><h1>Ragna Tactics</h1><p id="loading-text">Gathering your adventurers…</p></div>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Ragna Tactics home"><span class="brand-mark">✧</span><span>RAGNA<span class="brand-sub">TACTICS</span></span></a>
+    <div class="breadcrumb"><span class="muted">YOUR GUILD</span><span class="slash">/</span> Expedition overview <span class="build-tag">FOUNDATION 0.1</span></div>
+    <div class="top-resources"><span class="live-indicator">LIVE WORLD</span><span class="currency"><span class="coin">Z</span><strong id="zeny">150</strong><span class="muted">Zeny</span></span><button class="icon-button" data-action="camp" title="Guild camp" aria-label="Manage guild camp">⌂</button><button class="icon-button" id="settings-button" title="Saves, controls, and help" aria-label="Open settings">☰</button></div>
+  </header>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-heading"><span class="eyebrow">EXPEDITIONS</span><span class="tiny muted">03 LOCATIONS</span></div>
+      <h2>A world to explore.</h2><p class="sidebar-intro">Choose a destination.<br>Every journey starts somewhere.</p>
+      <nav id="map-list" aria-label="World locations"></nav>
+      <div class="camp-card"><div><span class="camp-symbol">⌂</span><strong>Guild camp</strong></div><p>A place to rest, resupply,<br>and choose your next path.</p><button class="text-button" data-action="camp">Manage camp <span>↗</span></button></div>
+      <div class="sidebar-bottom"><span class="eyebrow">GUILD MILESTONES</span><div id="milestones"></div><div class="save-status"><span id="save-dot" class="status-dot"></span><span id="save-status">Saved on this device</span><button id="save-button" title="Save now">↻</button></div></div>
+    </aside>
+    <main class="main-area">
+      <section class="battlefield" aria-label="Live tactical battlefield">
+        <canvas id="battlefield" tabindex="0" aria-label="Battlefield. Select characters using the roster. Right-click ground to move, or use the Move command."></canvas>
+        <div class="map-heading"><div class="eyebrow" id="map-tier">FIELD · LV 1–4</div><h1 id="map-name">South Prontera</h1><p id="map-subtitle">A quiet beginning</p></div>
+        <div class="view-tools"><button class="icon-button" id="zoom-out" aria-label="Zoom out">−</button><span id="zoom-label">65%</span><button class="icon-button" id="zoom-in" aria-label="Zoom in">+</button><span class="tool-divider"></span><button class="icon-button" id="fit-camera" aria-label="Fit whole map" title="Fit map (F)">⛶</button><button class="icon-button" id="grid-button" aria-label="Toggle map grid" aria-pressed="false" title="Toggle grid">▦</button></div>
+        <div id="boss-status" class="boss-status" hidden></div>
+        <div id="first-expedition" class="first-expedition"><span class="eyebrow">CHAPTER I · A NEW BEGINNING</span><h3>Two Novices.<br>Countless possibilities.</h3><p>Deploy your adventurers, watch them grow,<br>and discover the party you want to build.</p><button class="primary" id="first-deploy">Plan your first expedition <span>↗</span></button><button class="dismiss-coach" id="dismiss-coach" aria-label="Dismiss introduction">×</button></div>
+        <div class="map-footer"><span id="map-population">No adventurers deployed</span><span class="map-control-hint">SCROLL TO ZOOM <i>·</i> DRAG TO PAN <i>·</i> RIGHT-CLICK TO MOVE</span><span class="compass" aria-label="North">N <span>↑</span></span></div>
+        <div id="order-hint" class="order-hint" hidden></div>
+      </section>
+      <section class="command-deck" aria-label="Character commands">
+        <div class="command-selection"><span class="eyebrow">COMMAND DECK</span><strong id="selection-title">2 adventurers selected</strong><span id="selection-description">Ready for their first adventure</span></div>
+        <div class="command-buttons"><button data-action="move" title="Move to a point (M)"><span>➤</span>Move<kbd>M</kbd></button><button data-action="hold" title="Hold current position (H)"><span>◇</span>Hold<kbd>H</kbd></button><button data-action="resume" title="Resume farming (R)"><span>↻</span>Farm<kbd>R</kbd></button><button data-action="skill" title="Use selected character's skill (Q)"><span>✧</span>Skill<kbd>Q</kbd></button><button data-action="retreat" class="retreat" title="Retreat to camp (T)"><span>↩</span>Retreat<kbd>T</kbd></button></div>
+        <button class="primary deploy-button" data-action="deploy">Deploy <span>↗</span></button>
+      </section>
+      <section class="activity-panel"><div class="activity-heading"><span class="eyebrow">FIELD NOTES</span><span class="tiny muted">Your guild’s story, as it happens.</span><button id="storage-button" class="text-button">Shared storage ↗</button></div><div id="journal" class="journal" aria-label="Recent guild activity"></div></section>
+    </main>
+    <aside class="roster-panel" aria-label="Guild roster">
+      <div class="roster-heading"><div><span class="eyebrow">YOUR ADVENTURERS</span><h2>The guild</h2></div><span id="roster-count" class="roster-count">2 / 5</span></div>
+      <div class="roster-selection"><span class="tiny muted">SELECT YOUR ADVENTURERS</span><button class="text-button" id="multi-select" aria-pressed="false" title="Toggle additive selection. Shift-click also adds characters.">Multi</button><button class="text-button" id="select-all">All</button></div>
+      <div id="roster" class="roster"></div>
+      <button id="recruit-button" class="recruit-button"><span>+</span><span id="recruit-label">The next chapter awaits</span><span>♧</span></button>
+      <div class="party-actions"><button data-action="party">Link as party</button><button data-action="split">Separate</button></div>
+      <section class="inspector"><div class="inspector-heading"><span class="eyebrow">ADVENTURER DETAILS</span></div><div id="inspector"></div></section>
+      <div class="roster-bottom"><span class="status-dot"></span><span>All deployed maps stay active</span><span class="tiny">↗</span></div>
+    </aside>
+  </div>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <dialog id="modal"><div class="modal-top"><span id="modal-eyebrow" class="eyebrow">GUILD MANAGEMENT</span><button id="modal-close" class="icon-button" aria-label="Close dialog">×</button></div><h2 id="modal-title"></h2><div id="modal-body"></div></dialog>
+  <input id="import-file" type="file" accept="application/json,.json" hidden>
+</body>
+</html>

@@ -1,0 +1,6 @@
+* text=auto eol=lf
+# Original atlases and metadata must remain byte-identical across Windows/Linux.
+public/assets/** -text
+# These two files are generated here, rather than imported original bytes.
+public/assets/provenance.json text eol=lf
+public/assets/index.json text eol=lf

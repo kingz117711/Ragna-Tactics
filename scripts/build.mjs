@@ -1,0 +1,13 @@
+import { cp, mkdir, rm } from 'node:fs/promises';
+import { resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
+const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
+const output = resolve(root, 'dist');
+if (output !== root + sep + 'dist') throw new Error('Refusing to clean a path outside the project build directory.');
+await rm(output, { recursive: true, force: true });
+await mkdir(output);
+await cp(resolve(root, 'index.html'), resolve(output, 'index.html'));
+await cp(resolve(root, 'src'), resolve(output, 'src'), { recursive: true });
+await cp(resolve(root, 'public/assets'), resolve(output, 'assets'), { recursive: true });
+await cp(resolve(root, 'ASSET-CREDITS.md'), resolve(output, 'ASSET-CREDITS.md'));
+console.log('Built dist/: index.html, source modules, local assets, and asset credits.');

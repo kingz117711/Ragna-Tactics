@@ -1,0 +1,138 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createGame, command, advance, tick, gainExp, stats, settleOffline, rosterLimit } from '../src/sim.js';
+import { OFFLINE_CAP, MONSTERS } from '../src/data.js';
+const ids = ['c1', 'c2'];
+const deploy = (s, mapId = 'meadow', units = ids) => assert.equal(command(s, { type: 'deploy', ids: units, mapId }), null);
+const promote = (s, i, job) => { const c = s.characters[i]; gainExp(s, c, 300, 1000); assert.equal(command(s, { type: 'promote', ids: [c.id], job }), null); };
+
+test('a new guild starts with exactly two independent Novices and two unlocked slots', () => {
+  const s = createGame(); assert.equal(s.characters.length, 2); assert.equal(rosterLimit(s), 2);
+  assert.ok(s.characters.every(c => c.job === 'novice' && c.mapId === null && c.partyId === null));
+  assert.match(command(s, { type: 'recruit', name: 'Third' }), /milestones/);
+});
+test('independent teams make progress on different maps in the same simulation', () => {
+  const s = createGame(); promote(s, 0, 'swordsman'); promote(s, 1, 'archer');
+  deploy(s, 'meadow', ['c1']); deploy(s, 'forest', ['c2']); advance(s, 90);
+  assert.ok(s.characters[0].kills > 0); assert.ok(s.characters[1].kills > 0); assert.ok(s.milestones.forestKills > 0);
+});
+test('same seed and commands yield identical outcomes, regardless of view', () => {
+  const a = createGame(22), b = createGame(22); deploy(a); deploy(b);
+  advance(a, 120); advance(b, 120); assert.deepEqual(a, b);
+});
+test('party deployment expands a leader selection and keeps members on the same map', () => {
+  const s = createGame(); assert.equal(command(s, { type: 'party', ids }), null);
+  deploy(s, 'meadow', ['c1']); assert.ok(s.characters.every(c => c.mapId === 'meadow'));
+  assert.equal(s.parties[0].leaderId, 'c1');
+});
+test('party formation refuses to silently link characters on different maps', () => {
+  const s = createGame(); deploy(s, 'meadow', ['c1']); deploy(s, 'forest', ['c2']);
+  assert.match(command(s, { type: 'party', ids }), /same map/);
+});
+test('splitting a party removes singleton records and clears membership', () => {
+  const s = createGame(); command(s, { type: 'party', ids }); command(s, { type: 'split', ids: ['c1'] });
+  assert.equal(s.parties.length, 0); assert.ok(s.characters.every(c => c.partyId === null));
+});
+test('Novices must earn Job Lv. 10 and be at camp to choose a first job', () => {
+  const s = createGame(); assert.match(command(s, { type: 'promote', ids: ['c1'], job: 'mage' }), /Lv. 10/);
+  gainExp(s, s.characters[0], 50, 1000); deploy(s, 'meadow', ['c1']);
+  assert.match(command(s, { type: 'promote', ids: ['c1'], job: 'mage' }), /camp/);
+  s.characters[0].mapId = null; assert.equal(command(s, { type: 'promote', ids: ['c1'], job: 'mage' }), null);
+  assert.equal(s.characters[0].job, 'mage'); assert.equal(s.characters[1].job, 'novice'); assert.equal(s.characters[0].jobLevel, 1);
+});
+test('all six first jobs can advance and farm using original stable job IDs', () => {
+  for (const job of ['swordsman', 'mage', 'archer', 'acolyte', 'merchant', 'thief']) {
+    const s = createGame(); promote(s, 0, job); deploy(s, 'meadow', ['c1']); advance(s, 40);
+    assert.ok(s.characters[0].kills > 0, job);
+  }
+});
+test('movement overrides farming and ends in hold until explicitly resumed', () => {
+  const s = createGame(); deploy(s, 'meadow', ['c1']);
+  command(s, { type: 'move', ids: ['c1'], point: { x: 12, y: 12 } }); advance(s, 8);
+  assert.equal(s.characters[0].order, 'hold');
+  command(s, { type: 'resume', ids: ['c1'] }); assert.equal(s.characters[0].order, 'farm');
+});
+test('out-of-bounds and non-finite movement orders cannot corrupt positions', () => {
+  const s = createGame(); deploy(s);
+  assert.ok(command(s, { type: 'move', ids, point: { x: Infinity, y: 1 } }));
+  assert.ok(command(s, { type: 'move', ids, point: { x: 25, y: 0 } })); assert.ok(s.characters.every(c => Number.isFinite(c.x)));
+});
+test('combat blocks instant redeployment; retreat reaches camp', () => {
+  const s = createGame(); deploy(s); const c = s.characters[0], m = s.maps.meadow.monsters[0];
+  m.x = c.x; m.y = c.y; m.targetId = c.id;
+  assert.match(command(s, { type: 'deploy', ids: ['c1'], mapId: 'forest' }), /Retreat/);
+  assert.equal(command(s, { type: 'retreat', ids: ['c1'] }), null); advance(s, 15);
+  assert.equal(c.mapId, null); assert.equal(c.status, 'camp');
+});
+test('defeat stops a character; recovery is an explicit camp action', () => {
+  const s = createGame(); deploy(s, 'meadow', ['c1']); const c = s.characters[0]; c.hp = 0;
+  tick(s); assert.equal(c.status, 'down'); assert.equal(c.mapId, null);
+  advance(s, 30); assert.equal(c.hp, 0);
+  assert.match(command(s, { type: 'deploy', ids: ['c1'], mapId: 'meadow' }), /Recover/);
+  command(s, { type: 'recover', ids: ['c1'] }); assert.equal(c.hp, stats(c).hp); assert.equal(c.status, 'camp');
+});
+test('equipment transfers preserve item counts and identity', () => {
+  const s = createGame(); s.inventory.equipment.iron = 1;
+  command(s, { type: 'equip', ids: ['c1'], item: 'iron' }); assert.equal(s.inventory.equipment.iron, 0);
+  assert.ok(command(s, { type: 'equip', ids: ['c2'], item: 'iron' }));
+  command(s, { type: 'equip', ids: ['c1'], item: 'training' }); assert.equal(s.inventory.equipment.iron, 1);
+  command(s, { type: 'equip', ids: ['c2'], item: 'iron' }); assert.equal(s.inventory.equipment.iron, 0);
+  assert.equal(s.characters[1].equipment, 'iron');
+});
+test('refilling potions charges the exact cost and does not mint currency', () => {
+  const s = createGame(); s.characters[0].potions = 3;
+  command(s, { type: 'resupply', ids: ['c1'] }); assert.equal(s.inventory.zeny, 136); assert.equal(s.characters[0].potions, 10);
+  assert.ok(command(s, { type: 'resupply', ids: ['c1'] })); assert.equal(s.inventory.zeny, 136);
+});
+test('four-hour offline cap is shared elapsed time and applies to every deployed team', () => {
+  const a = createGame(19), b = createGame(19);
+  for (const s of [a, b]) { promote(s, 0, 'archer'); promote(s, 1, 'swordsman'); deploy(s, 'meadow', ['c1']); deploy(s, 'forest', ['c2']); }
+  const ra = settleOffline(a, OFFLINE_CAP * 8), rb = settleOffline(b, OFFLINE_CAP);
+  assert.equal(ra.seconds, OFFLINE_CAP); assert.equal(ra.capped, true); assert.equal(rb.capped, false);
+  assert.equal(ra.kills, rb.kills); assert.deepEqual(a, b); assert.ok(ra.characters.every(c => c.levels > 0));
+});
+test('offline farming uses the same combat results as live farming', () => {
+  const a = createGame(17), b = createGame(17); deploy(a); deploy(b);
+  advance(a, 90, { effects: false }); settleOffline(b, 90);
+  assert.deepEqual(a.characters, b.characters); assert.deepEqual(a.inventory, b.inventory); assert.deepEqual(a.maps, b.maps);
+});
+test('offline defeat remains defeated, and bosses never generate offline rewards', () => {
+  const s = createGame(); promote(s, 0, 'mage'); promote(s, 1, 'swordsman'); deploy(s, 'arena');
+  const before = s.inventory.zeny; settleOffline(s, 100);
+  assert.equal(s.milestones.bossKills, 0); assert.equal(s.inventory.zeny, before); assert.ok(s.characters.every(c => !c.mapId));
+  s.characters[0].status = 'down'; s.characters[0].hp = 0; settleOffline(s, 100); assert.equal(s.characters[0].hp, 0);
+});
+test('negative or invalid offline time cannot grant rewards', () => {
+  for (const elapsed of [-100, NaN, Infinity]) { const s = createGame(); deploy(s); const r = settleOffline(s, elapsed); assert.equal(r.seconds, 0); assert.equal(r.kills, 0); }
+});
+test('boss encounter telegraphs an attack before it resolves', () => {
+  const s = createGame(); promote(s, 0, 'swordsman'); promote(s, 1, 'acolyte'); deploy(s, 'arena');
+  s.maps.arena.bossTimer = 0; tick(s); const t = s.maps.arena.telegraph;
+  assert.ok(t); assert.equal(t.remaining, 2.5); assert.equal(t.radius, 4);
+  advance(s, 2.6); assert.equal(s.maps.arena.telegraph, null);
+});
+test('boss defeat grants one relic, unlocks recruitment, and cannot reward twice', () => {
+  const s = createGame(); promote(s, 0, 'swordsman'); promote(s, 1, 'acolyte'); deploy(s, 'arena');
+  const boss = s.maps.arena.monsters.find(m => m.kind === 'baphomet'); boss.hp = 1;
+  s.characters[0].x = boss.x; s.characters[0].y = boss.y; tick(s);
+  assert.equal(s.milestones.bossKills, 1); assert.equal(s.inventory.equipment.sanctuary, 1); assert.equal(rosterLimit(s), 3);
+  advance(s, 5); assert.equal(s.inventory.equipment.sanctuary, 1);
+  assert.equal(command(s, { type: 'recruit', name: 'Nia', sex: 'f' }), null); assert.equal(s.characters[2].job, 'novice');
+});
+test('roster cannot exceed five even after all achievements', () => {
+  const s = createGame(); s.milestones = { bossKills: 3, forestKills: 35 };
+  for (let i = 0; i < 3; i++) assert.equal(command(s, { type: 'recruit', name: 'Novice ' + i }), null);
+  assert.equal(s.characters.length, 5); assert.ok(command(s, { type: 'recruit', name: 'Extra' }));
+});
+test('party EXP is one reward pool with a 12% bonus, not a full reward per member', () => {
+  const s = createGame(); command(s, { type: 'party', ids }); deploy(s);
+  const m = s.maps.meadow.monsters[0]; m.x = s.characters[0].x; m.y = s.characters[0].y; m.hp = 1;
+  const reward = MONSTERS[m.kind].exp; s.characters[1].order = 'hold'; s.characters[1].home = { x: s.characters[1].x, y: s.characters[1].y };
+  tick(s);
+  assert.equal(s.characters[0].kills, 1); assert.equal(s.characters[1].kills, 1);
+  assert.ok(Math.abs(s.characters[0].exp + s.characters[1].exp - reward * 1.12) < 1e-8);
+});
+test('effects carry their map identity and cannot leak between viewed maps', () => {
+  const s = createGame(); deploy(s); advance(s, 4);
+  assert.ok(s.effects.length > 0); assert.ok(s.effects.every(e => e.mapId === 'meadow'));
+});
