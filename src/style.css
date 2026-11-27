@@ -1769,3 +1769,6 @@ select{
 @media(prefers-reduced-motion:reduce) {
   .goal-next, .party-member, .character-card { transition:none!important; }
 }
+
+.monster-card img { width:52px; height:52px; object-fit:contain; image-rendering:pixelated; }
+.monster-card div { flex:1; }

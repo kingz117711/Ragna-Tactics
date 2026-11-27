@@ -1,5 +1,5 @@
-import { HUNT_RADII, VERSION, MAPS, JOBS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS } from './data.js';
-import { createGame, advanceExpeditionGoals } from './sim.js';
+import { CARDS, MONSTERS, HUNT_RADII, VERSION, MAPS, JOBS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS } from './data.js';
+import { populateField, createGame, advanceExpeditionGoals } from './sim.js';
 export const SAVE_KEY = 'ragna-tactics:save:v1';
 export const BACKUP_KEY = 'ragna-tactics:backup:v1';
 const finite = (v, low = 0, high = 1e12) => typeof v === 'number' && Number.isFinite(v) && v >= low && v <= high;
@@ -17,6 +17,7 @@ export function validateState(s) {
     valid(c && /^c[1-5]$/.test(c.id) && !ids.has(c.id)); ids.add(c.id);
     valid(c.ownerId === s.ownerId && text(c.name, 20) && c.name.trim().length && ['m', 'f'].includes(c.sex));
     valid(own(JOBS, c.job) && own(EQUIPMENT, c.equipment) && own(TACTICS, c.tactic));
+    valid(c.card == null || (c.equipment !== 'training' && own(CARDS, c.card)));
     // Schema-v1 saves predate per-character tactics; derive their settings from the saved preset.
     c.tactics = { ...TACTIC_PRESETS[c.tactic], ...(c.tactics || {}) };
     valid(typeof c.tactics.autoSkill === 'boolean');
@@ -45,13 +46,14 @@ export function validateState(s) {
   for (const c of s.characters) valid(!c.partyId || parties.has(c.partyId));
   const monsterIds = new Set();
   for (const key of Object.keys(MAPS)) {
+    if (key === 'morroc' && s.maps && !Object.hasOwn(s.maps, key)) continue;
     const m = s.maps?.[key]; valid(m && m.id === key && Array.isArray(m.monsters) && m.monsters.length <= 30);
     valid(finite(m.bossTimer, -1, 100) && typeof m.bossDefeated === 'boolean');
     valid(m.telegraph === null || (coordinate(m.telegraph) && finite(m.telegraph.radius, 0, 10) && finite(m.telegraph.remaining, -1, 10) && finite(m.telegraph.duration, 0.1, 10)));
     if (m.telegraph?.innerRadius !== undefined) valid(finite(m.telegraph.innerRadius, 0, m.telegraph.radius));
     for (const enemy of m.monsters) {
       valid(/^m\d+$/.test(enemy.id) && !monsterIds.has(enemy.id)); monsterIds.add(enemy.id);
-      valid(['poring', 'fabre', 'willow', 'baphomet'].includes(enemy.kind) && enemy.mapId === key && coordinate(enemy));
+      valid(own(MONSTERS, enemy.kind) && enemy.mapId === key && coordinate(enemy));
       valid(finite(enemy.hp, -10000, 10000) && finite(enemy.timer, -10, 100) && finite(enemy.respawn, -1, 100));
       valid(enemy.targetId === null || ids.has(enemy.targetId));
       valid(['idle', 'walk', 'attack'].includes(enemy.stance) && Number.isInteger(enemy.direction) && finite(enemy.direction, 0, 7));
@@ -59,7 +61,7 @@ export function validateState(s) {
     }
   }
   valid(s.inventory && finite(s.inventory.zeny) && s.inventory.materials && typeof s.inventory.materials === 'object' && !Array.isArray(s.inventory.materials));
-  for (const [key, value] of Object.entries(s.inventory.materials || {})) valid(['Jellopy', 'Fluff', 'Resin', 'Sanctuary Sigil'].includes(key) && Number.isInteger(value) && finite(value));
+  for (const [key, value] of Object.entries(s.inventory.materials || {})) valid(Object.values(MONSTERS).some(monster => monster.material === key) && Number.isInteger(value) && finite(value));
   for (const key of ['iron', 'guard', 'sanctuary']) valid(Number.isInteger(s.inventory.equipment?.[key]) && finite(s.inventory.equipment[key]));
   for (const key of ['bossKills', 'forestKills']) valid(Number.isInteger(s.milestones?.[key]) && finite(s.milestones[key]));
   // New tutorial progress is optional in old v1 envelopes; infer forward from current state.
@@ -84,6 +86,17 @@ export function validateState(s) {
   valid(s.milestones.enemiesDefeated === undefined || (Number.isSafeInteger(s.milestones.enemiesDefeated) && finite(s.milestones.enemiesDefeated)));
   valid(Array.isArray(s.journal) && s.journal.length <= 35 && s.journal.every(e => Number.isSafeInteger(e.id) && finite(e.time) && text(e.message, 500)));
   valid(s.nextId > Math.max(0, ...[...monsterIds, ...parties].map(id => Number(id.slice(1))), ...s.journal.map(e => e.id)));
+  if (!s.maps.morroc) populateField(s, MAPS.morroc);
+  for (const field of ['cards', 'socketed']) {
+    if (s.inventory[field] === undefined) s.inventory[field] = {};
+    const stock = s.inventory[field];
+    valid(stock && typeof stock === 'object' && !Array.isArray(stock));
+    for (const [key, count] of Object.entries(stock)) {
+      const [item, card] = key.split('/');
+      valid(field === 'cards' ? own(CARDS, key) : item !== 'training' && own(EQUIPMENT, item) && own(CARDS, card) && key === item + '/' + card);
+      valid(Number.isSafeInteger(count) && finite(count));
+    }
+  }
   s.effects = []; // Transient effects never survive loading.
   advanceExpeditionGoals(s);
   return s;

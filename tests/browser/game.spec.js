@@ -178,10 +178,10 @@ test('move, hold, focus, retreat, resume, multi-map overview and character navig
   await page.locator('[data-character="c1"]').click();
   const box = await page.locator('#battlefield').boundingBox();
   const scale = Math.max(0.35, Math.min(1.15, box.width / 1510, (box.height - 100) / 800));
-  const clickWorld = async (x, y, hitOffset = -15) => page.mouse.click(
-    box.x + box.width / 2 + (x - y) * 22 * scale,
-    box.y + box.height / 2 + 20 + (x + y) * 11 * scale + hitOffset * scale,
-  );
+  const clickWorld = async (x, y, hitOffset = -15) => page.locator('#battlefield').click({ position: {
+    x: box.width / 2 + (x - y) * 22 * scale,
+    y: box.height / 2 + 20 + (x + y) * 11 * scale + hitOffset * scale,
+  } });
   await clickWorld(enemy.x, enemy.y);
   await expect.poll(async () => (await saved()).characters[0].order).toBe('focus');
   await expect.poll(async () => (await saved()).characters[0].targetId).toBe(enemy.id);
@@ -274,4 +274,17 @@ test('a Merchant advances to Blacksmith and forges equipment from field loot', a
   await page.reload();
   await expect(page.locator('[data-character="c1"]').first()).toContainText('Blacksmith');
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).state.inventory.equipment.guard)).toBe(1);
+});
+
+test('view Morroc and socket a Peco Peco Card at camp', async ({page}) => {
+  const s = createGame(); s.inventory.cards.peco = 1; s.characters[0].equipment = 'guard';
+  await page.addInitScript(raw => { if (!localStorage.length) localStorage.setItem('ragna-tactics:save:v1',raw); },encodeSave(s));
+  await boot(page); await page.locator('[data-map="morroc"]').click();
+  await expect(page.locator('#map-name')).toHaveText('Morroc Dunes');
+  await page.locator('[data-character="c1"]').first().click(); await page.locator('[data-action="equipment"]').click();
+  await page.locator('[data-socket="peco"]').click();
+  await expect(page.locator('#modal h3')).toContainText('Peco Peco Card');
+  await page.locator('#modal').screenshot({path:'artifacts/monster-cards.png'});
+  await page.reload(); await expect(page.locator('#loading')).toBeHidden();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).state.characters[0].card)).toBe('peco');
 });

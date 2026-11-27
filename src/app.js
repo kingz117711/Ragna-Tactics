@@ -1,4 +1,4 @@
-import { FORGE, promotionLevel, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
+import { CARDS, FORGE, promotionLevel, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
 import { forgePrice, command, tick, stats, rosterLimit, engaged, effectiveTactics, isLeader } from './sim.js';
 import { SAVE_KEY, loadGame, saveGame, encodeSave, decodeSave } from './persistence.js';
 import { Sprites } from './sprites.js';
@@ -57,7 +57,7 @@ function renderUI() {
   $('map-name').textContent = map.name; $('map-subtitle').textContent = map.subtitle; $('map-tier').textContent = map.tier;
   html('map-list', Object.values(MAPS).map((m, i) => {
     const count = state.characters.filter(c => c.mapId === m.id).length;
-    return `<button class="map-card ${m.id === mapId ? 'active' : ''}" data-map="${m.id}" aria-current="${m.id === mapId ? 'location' : 'false'}"><img class="map-creature" src="${sprites.monsterPortrait(m.monster)}" alt=""><div class="map-card-top"><span class="map-type">${i === 2 ? 'BOSS EXPEDITION' : 'FARMING GROUNDS'}</span></div><strong>${m.name}</strong><div class="map-card-bottom"><span>${count ? `${count} adventurer${count > 1 ? 's' : ''} active` : i === 2 ? 'Awaiting a worthy party' : 'Ready to explore'}</span><span class="arrow">${count ? '●' : '↗'}</span></div></button>`;
+    return `<button class="map-card ${m.id === mapId ? 'active' : ''}" data-map="${m.id}" aria-current="${m.id === mapId ? 'location' : 'false'}"><img class="map-creature" src="${sprites.monsterPortrait(m.monster)}" alt=""><div class="map-card-top"><span class="map-type">${m.id === 'arena' ? 'BOSS EXPEDITION' : 'FARMING GROUNDS'}</span></div><strong>${m.name}</strong><div class="map-card-bottom"><span>${count ? `${count} adventurer${count > 1 ? 's' : ''} active` : m.id === 'arena' ? 'Awaiting a worthy party' : 'Ready to explore'}</span><span class="arrow">${count ? '●' : '↗'}</span></div></button>`;
   }).join(''));
   const present = state.characters.filter(c => c.mapId === mapId).length;
   $('map-population').textContent = `${present} adventurer${present === 1 ? '' : 's'} · ${state.maps[mapId].monsters.filter(m => m.hp > 0).length} enemies in the field`;
@@ -143,7 +143,7 @@ function renderInspector(units) {
 function deployment() {
   const units = selectedCharacters();
   if (!units.length) return toast('Select one or more adventurers first.');
-  showModal('Where will you venture?', `<p>Deploy ${units.map(c => esc(c.name)).join(', ')} instantly. Linked party members travel together. Viewing a map does not move your characters.</p><form id="deployment-form"><div class="modal-grid">${Object.values(MAPS).map(m => `<label class="choice-card"><input type="radio" name="destination" value="${m.id}" ${m.id === renderer.mapId ? 'checked' : ''}><span class="tiny"> ${m.tier}</span><strong>${m.name}</strong><p>${m.id === 'meadow' ? 'Poring and Fabre. A gentle start for Novices.' : m.id === 'forest' ? 'Willow. Tougher enemies, better EXP, and Resin.' : 'Baphomet. Bring at least two first-job adventurers. Manual dodging recommended.'}</p></label>`).join('')}</div>${modalError}<div class="modal-footer"><span>In combat? Retreat to camp before redeploying.</span><button type="submit" class="primary">Begin expedition <span>↗</span></button></div></form>`, 'PLAN AN EXPEDITION');
+  showModal('Where will you venture?', `<p>Deploy ${units.map(c => esc(c.name)).join(', ')} instantly. Linked party members travel together. Viewing a map does not move your characters.</p><form id="deployment-form"><div class="modal-grid">${Object.values(MAPS).map(m => `<label class="choice-card"><input type="radio" name="destination" value="${m.id}" ${m.id === renderer.mapId ? 'checked' : ''}><span class="tiny"> ${m.tier}</span><strong>${m.name}</strong><p>${m.id === 'meadow' ? 'Poring and Fabre. A gentle start for Novices.' : m.id === 'forest' ? 'Willow. Tougher enemies, better EXP, and Resin.' : m.id === 'morroc' ? 'Scorpions strike hard. Peco Pecos quickly close distance. Both drop socket cards.' : 'Baphomet. Bring at least two first-job adventurers. Manual dodging recommended.'}</p></label>`).join('')}</div>${modalError}<div class="modal-footer"><span>In combat? Retreat to camp before redeploying.</span><button type="submit" class="primary">Begin expedition <span>↗</span></button></div></form>`, 'PLAN AN EXPEDITION');
   $('deployment-form').onsubmit = event => { event.preventDefault(); const mapId = new FormData(event.currentTarget).get('destination'); if (issue({ type: 'deploy', mapId }, { close: true, quiet: true })) { coachDismissed = true; switchMap(mapId); toast('Expedition started. Your adventurers will farm automatically.'); } };
 }
 function camp() {
@@ -170,7 +170,22 @@ function recruit() {
 }
 function equipment() {
   const c = selectedCharacters()[0]; if (!c || selected.size !== 1) return toast('Select one adventurer to manage equipment.');
-  showModal(`${c.name}’s equipment`, `<p>Equip one armament or insignia at camp. All jobs can use these prototype items. Replaced equipment returns to shared storage.</p>${Object.entries(EQUIPMENT).map(([id, item]) => `<div class="inventory-row"><div>${item.name}<p>${item.description}</p></div><button data-equip="${id}" ${c.mapId || c.equipment === id || (id !== 'training' && !state.inventory.equipment[id]) ? 'disabled' : ''} style="padding:8px 12px">${c.equipment === id ? 'Equipped' : id === 'training' ? 'Equip' : `Equip · ${state.inventory.equipment[id]} stored`}</button></div>`).join('')}${modalError}`);
+  const items = Object.keys(EQUIPMENT).map(id => ({ id, card: null, count: state.inventory.equipment[id] || 0 }));
+  for (const [key, count] of Object.entries(state.inventory.socketed)) {
+    if (count > 0) { const [id, card] = key.split('/'); items.push({ id, card, count }); }
+  }
+  const equipped = c.card ? CARDS[c.card].name : 'Empty socket';
+  const stock = items.map(({ id, card, count }) => {
+    const worn = c.equipment === id && (c.card || null) === card;
+    return `<div class="inventory-row"><div>${EQUIPMENT[id].name}${card ? ' · ' + CARDS[card].name : ''}<p>${EQUIPMENT[id].description}</p></div><button data-equip="${id}" data-card="${card || ''}" ${c.mapId || worn || (id !== 'training' && !count) ? 'disabled' : ''}>${worn ? 'Equipped' : id === 'training' ? 'Equip' : 'Equip · ' + count}</button></div>`;
+  }).join('');
+  showModal(`${c.name}’s equipment`, `<p>Change equipment and sockets at camp. Stored gear keeps its card.</p>${stock}<h3>${EQUIPMENT[c.equipment].name} · ${c.equipment === 'training' ? 'No socket' : equipped}</h3>${cardRows(c)}${c.card ? `<button data-socket="" ${c.mapId ? 'disabled' : ''}>Remove card</button>` : ''}${modalError}`);
+}
+function cardRows(character) {
+  return Object.entries(CARDS).map(([id, card]) => {
+    const count = state.inventory.cards[id] || 0;
+    return `<div class="inventory-row monster-card"><img src="${sprites.monsterPortrait(id)}" alt=""><div><strong>${card.name}</strong><p>${card.description} · Morroc Dunes · ${count} loose</p></div>${character ? `<button data-socket="${id}" ${!count || character.mapId || character.card === id || character.equipment === 'training' ? 'disabled' : ''}>Socket</button>` : ''}</div>`;
+  }).join('');
 }
 const EXPEDITION_GOALS = [
   'Deploy both starting Novices',
@@ -235,7 +250,7 @@ function storage() {
     const costs = ingredients.map(([key, qty]) => `${key} ${state.inventory.materials[key] || 0}/${qty}`).join(' · ');
     return `<div class="inventory-row"><div><strong>${EQUIPMENT[id].name}</strong><p>${costs} · ${price} Zeny</p></div><button data-forge="${id}" ${ready ? '' : 'disabled'}>Forge</button></div>`;
   }).join('');
-  showModal('The fruits of your adventures.', `<p>All expedition loot arrives in shared storage. Equipment is assigned individually at camp.</p><h3>Materials</h3>${Object.entries(state.inventory.materials).length ? Object.entries(state.inventory.materials).map(([name, count]) => `<div class="inventory-row">${esc(name)}<span>${number(count)}</span></div>`).join('') : '<p>No materials yet. Your first expedition is waiting.</p>'}<h3>Equipment</h3>${Object.entries(state.inventory.equipment).map(([id, count]) => `<div class="inventory-row"><div>${EQUIPMENT[id].name}<p>${EQUIPMENT[id].description}</p></div><span>${count} stored</span></div>`).join('')}<p style="margin-top:17px">Field enemies have a small chance to drop equipment. Baphomet always drops a Sanctuary relic. Crafted gear can be equipped at camp.</p><h3>Prontera forge</h3><p>A Blacksmith resting at camp halves the Zeny fee. Guild funds · ${number(state.inventory.zeny)} Zeny</p>${recipes}${modalError}`, 'SHARED STORAGE');
+  showModal('The fruits of your adventures.', `<p>All expedition loot arrives in shared storage. Equipment is assigned individually at camp.</p><h3>Materials</h3>${Object.entries(state.inventory.materials).length ? Object.entries(state.inventory.materials).map(([name, count]) => `<div class="inventory-row">${esc(name)}<span>${number(count)}</span></div>`).join('') : '<p>No materials yet. Your first expedition is waiting.</p>'}<h3>Equipment</h3>${Object.entries(state.inventory.equipment).map(([id, count]) => `<div class="inventory-row"><div>${EQUIPMENT[id].name}<p>${EQUIPMENT[id].description}</p></div><span>${count} stored</span></div>`).join('')}<p style="margin-top:17px">Field enemies have a small chance to drop equipment. Baphomet always drops a Sanctuary relic. Crafted gear can be equipped at camp.</p><h3>Monster cards</h3>${cardRows()}<h3>Prontera forge</h3><p>A Blacksmith resting at camp halves the Zeny fee. Guild funds · ${number(state.inventory.zeny)} Zeny</p>${recipes}${modalError}`, 'SHARED STORAGE');
 }
 function rename() {
   const c = selectedCharacters()[0]; if (!c || selected.size !== 1) return toast('Choose one adventurer to rename.');
@@ -292,9 +307,11 @@ document.addEventListener('click', event => {
   }
   const service = event.target.closest('[data-camp-unit]');
   if (service) { selected = new Set([service.dataset.campUnit]); if (service.dataset.service === 'advance') advanceJob(); else { issue({ type: service.dataset.service }); camp(); } }
+  const socket = event.target.closest('[data-socket]');
+  if (socket && issue({ type: 'socket', card: socket.dataset.socket || null }, { quiet: true })) equipment();
   const forge = event.target.closest('[data-forge]');
   if (forge && issue({ type: 'forge', item: forge.dataset.forge }, { quiet: true })) { storage(); toast('Forged equipment added to shared storage.'); }
-  const equip = event.target.closest('[data-equip]'); if (equip && issue({ type: 'equip', item: equip.dataset.equip })) equipment();
+  const equip = event.target.closest('[data-equip]'); if (equip && issue({ type: 'equip', item: equip.dataset.equip, card: equip.dataset.card || null })) equipment();
   const modalAction = event.target.closest('[data-modal-action]')?.dataset.modalAction;
   if (modalAction === 'recover-all') { const ids = state.characters.filter(c => !c.mapId).map(c => c.id); if (issue({ type: 'recover', ids })) camp(); }
   if (modalAction === 'supply-all') { const ids = state.characters.filter(c => !c.mapId).map(c => c.id); if (issue({ type: 'resupply', ids })) camp(); }

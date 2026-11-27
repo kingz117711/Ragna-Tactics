@@ -38,7 +38,7 @@ def verify():
     wardrobe = json.loads((DEST / 'wardrobe/source-catalog.json').read_text(encoding='utf-8'))
     mobs = json.loads((DEST / 'mobs/source-catalog.json').read_text(encoding='utf-8'))
     assert index['anchor'] == wardrobe['anchor'] and index['classes'] == wardrobe['classes']
-    assert len(index['wardrobe']) == 28 and len(index['monsters']) == 4
+    assert len(index['wardrobe']) == 28 and len(index['monsters']) == 6
     for key, rec in index['wardrobe'].items():
         assert rec == wardrobe['assets'][key], key
     for key, rec in index['monsters'].items():
@@ -68,7 +68,7 @@ def main():
         for kind in ['meta', 'image']:
             sources[wardrobe_path + rec[kind]] = ('wardrobe/' + rec[kind], rec[kind + 'Sha256'])
     mob_catalog = json.loads(fetch(base + 'assets/native-fields/v1/mobs.json'))
-    monsters = {key: mob_catalog['monsters'][key] for key in ['1002', '1007', '1010', '1039']}
+    monsters = {key: mob_catalog['monsters'][key] for key in ['1002', '1007', '1010', '1039', '1001', '1019']}
     for key, rec in monsters.items():
         sources[rec['texture']] = ('mobs/' + key + '.webp', None)
 

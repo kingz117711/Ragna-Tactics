@@ -40,10 +40,10 @@ export class Renderer {
     const ctx = cv.getContext('2d'); ctx.translate(900, 550);
     let seed = mapId === 'meadow' ? 182 : mapId === 'forest' ? 492 : 739;
     const rng = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
-    const arena = mapId === 'arena', forest = mapId === 'forest';
+    const arena = mapId === 'arena', forest = mapId === 'forest', dunes = mapId === 'morroc';
     const boundary = [project(-16, -16), project(16, -16), project(16, 16), project(-16, 16)];
     polygon(ctx, boundary.map(p => ({ x: p.x, y: p.y + 18 })), '#182e28');
-    polygon(ctx, boundary, arena ? '#555b5a' : forest ? '#436352' : '#6b8959', '#8aa47855');
+    polygon(ctx, boundary, dunes ? '#be9967' : arena ? '#555b5a' : forest ? '#436352' : '#6b8959', '#8aa47855');
     ctx.save(); ctx.beginPath(); boundary.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath(); ctx.clip();
     for (let i = 0; i < 7500; i++) {
       const x = (rng() - 0.5) * 32, y = (rng() - 0.5) * 32, p = project(x, y), r = rng();
@@ -60,7 +60,10 @@ export class Renderer {
     for (let i = 0; i < 1000; i++) {
       const x = (rng() - 0.5) * 31, y = (rng() - 0.5) * 31, p = project(x, y);
       if (Math.abs(x) < 3.5) continue;
-      if (arena) {
+      if (dunes) {
+        ctx.strokeStyle = '#e2bb8455'; ctx.beginPath(); ctx.moveTo(p.x - 6, p.y);
+        ctx.quadraticCurveTo(p.x, p.y - 3, p.x + 9, p.y); ctx.stroke();
+      } else if (arena) {
         ctx.fillStyle = '#a1a69a45'; ctx.fillRect(p.x, p.y, 3 + rng() * 7, 1 + rng() * 3);
       } else {
         ctx.strokeStyle = rng() > 0.4 ? '#b7ca8160' : '#254e3590'; ctx.lineWidth = 1;
@@ -79,7 +82,10 @@ export class Renderer {
     // Perimeter scenery stays outside the playable boundary.
     for (let i = 0; i < 80; i++) {
       const edge = i % 4, t = rng() * 33 - 16.5, p = project(edge < 2 ? (edge ? 16.8 : -16.8) : t, edge < 2 ? t : (edge === 2 ? -16.8 : 16.8));
-      if (arena) {
+      if (dunes) {
+        const h = 8 + rng() * 24;
+        polygon(ctx, [{x:p.x-h,y:p.y},{x:p.x-3,y:p.y-h},{x:p.x+h,y:p.y-3},{x:p.x+8,y:p.y+4}], '#946d50', '#ab8161');
+      } else if (arena) {
         const h = 12 + rng() * 36;
         polygon(ctx, [{ x: p.x - 8, y: p.y }, { x: p.x - 8, y: p.y - h }, { x: p.x + 4, y: p.y - h - 4 }, { x: p.x + 12, y: p.y - h }, { x: p.x + 12, y: p.y - 2 }], '#767d75', '#a6ac8c30');
       } else {

@@ -45,7 +45,7 @@ band takes damage when the countdown ends. The centre and outer ground are safe.
   or Thief. All recruits start as Novices. Achievement-based growth to five units.
 - Six second jobs at first Job Lv. 40, with original sprites and signature skills.
 - Forge Iron armaments and Guard insignias from field loot in shared storage.
-- Two concurrent farming maps and one real-time boss expedition.
+- Three concurrent farming maps and one real-time boss expedition.
 - Party linkage, shared targets/EXP, basic following, healing, skill priorities,
   HP-based potions/retreat, movement overrides, hold, and focus fire.
 - Shared materials, Zeny, equipment drops, item assignment, and camp services.
@@ -57,7 +57,7 @@ band takes damage when the countdown ends. The centre and outer ground are safe.
 - Pure simulation tests, browser scenarios, static build, and a CI workflow template.
 
 This is a foundation, not a complete MMORPG. Multiplayer, transcendent jobs, detailed
-navigation/formations, cards, expanded crafting, and final balance are future milestones.
+navigation/formations, expanded card sets, expanded crafting, and final balance are future milestones.
 Terrain is provisional procedural scenery; imported character and mob art is original.
 
 ## Development and checks

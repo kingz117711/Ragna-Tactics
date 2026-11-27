@@ -68,3 +68,7 @@
 ## Second jobs and Prontera forging
 
 Six second jobs with native sprites and signature skills now unlock at first Job Lv. 40. Added material recipes and a camp Blacksmith discount.
+
+## Morroc Dunes and monster cards
+
+Added a concurrent desert field, native Scorpion and Peco Peco sprites, two collectible cards, camp socketing and card-aware equipment storage. Offline reports include card drops.

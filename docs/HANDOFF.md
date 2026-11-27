@@ -1,5 +1,13 @@
 # Milestone handoff — 2026-11-27
 
+## Morroc Dunes and card builds
+
+Scorpions and Peco Pecos drop attack and defense cards. A character can socket
+one card into equipped non-training gear at camp. Unequipping stores the gear
+with its card attached. Shared storage shows both species and their bonuses.
+Old v1 guilds receive the new field and empty card storage on load.
+Read NEXT-AGENT.md for the continuation prompt.
+
 ## Second jobs and forging
 
 At first Job Lv. 40, use Job path at camp to become a Knight, Wizard, Hunter,

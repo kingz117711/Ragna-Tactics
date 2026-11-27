@@ -361,3 +361,27 @@ test('forging spends shared loot once and applies the resident Blacksmith discou
   assert.ok(forge()); assert.equal(inv.equipment.guard, 2);
   assert.deepEqual(inv.materials, { Fluff: 0, Resin: 0 });
 });
+
+test('socketed duplicates can be stored, transferred and unsocketed independently', () => {
+  const s = createGame(), [a,b] = s.characters, inv = s.inventory;
+  inv.equipment.iron = 2; inv.cards.scorpion = 1;
+  const act = (c, type, args) => command(s, { type, ids: [c.id], ...args });
+  for (const c of [a,b]) assert.equal(act(c,'equip',{item:'iron'}), null);
+  const atk = stats(a).atk;
+  assert.equal(act(a,'socket',{card:'scorpion'}), null);
+  assert.equal(stats(a).atk, atk + 6); assert.equal(stats(b).atk, atk);
+  assert.equal(act(a,'equip',{item:'training'}), null);
+  assert.equal(inv.socketed['iron/scorpion'], 1);
+  assert.equal(act(b,'equip',{item:'iron',card:'scorpion'}), null);
+  assert.equal(inv.equipment.iron, 1); assert.equal(inv.cards.scorpion, 0);
+  assert.equal(act(b,'socket',{card:null}), null);
+  assert.equal(inv.cards.scorpion, 1); assert.equal(stats(b).atk, atk);
+});
+test('Dunes card hunting settles the same earned cards live and offline', () => {
+  const s = createGame(11);
+  for (const c of s.characters) { c.job='knight'; c.level=45; c.hp=stats(c).hp; }
+  deploy(s,'morroc'); const live = structuredClone(s);
+  const report = settleOffline(s,600); advance(live,600);
+  assert.deepEqual(s.inventory,live.inventory);
+  assert.ok(report.loot.some(drop => drop.name.endsWith(' Card') && drop.count > 0));
+});

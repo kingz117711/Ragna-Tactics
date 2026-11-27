@@ -1,5 +1,5 @@
 // Pure, serializable simulation. No DOM, storage, wall clock, or camera dependencies.
-import { FORGE, jobChoices, promotionLevel, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
+import { CARDS, FORGE, jobChoices, promotionLevel, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
 
 export function random(state) {
   state.seed = (Math.imul(state.seed, 1664525) + 1013904223) >>> 0;
@@ -7,8 +7,8 @@ export function random(state) {
 }
 export function stats(c) {
   const job = JOBS[c.job], item = EQUIPMENT[c.equipment];
-  return { ...job, hp: job.hp + (c.level - 1) * 14, atk: job.atk + (c.level - 1) * 2 + item.atk,
-    def: job.def + Math.floor((c.level - 1) / 3) + item.def, sp: 45 + c.level * 4 };
+  return { ...job, hp: job.hp + (c.level - 1) * 14, atk: job.atk + (c.level - 1) * 2 + item.atk + (CARDS[c.card]?.atk || 0),
+    def: job.def + Math.floor((c.level - 1) / 3) + item.def + (CARDS[c.card]?.def || 0), sp: 45 + c.level * 4 };
 }
 export function character(id, name, sex = 'm') {
   return { id, ownerId: 'local-player', name, sex, job: 'novice', level: 1, exp: 0, jobLevel: 1, jobExp: 0,
@@ -42,14 +42,18 @@ function ensureLeaders(s) {
 }
 export function createGame(seed = 712711) {
   const s = { version: VERSION, ownerId: 'local-player', seed, time: 0, nextId: 1, characters: [character('c1', 'Aren'), character('c2', 'Lyra', 'f')],
-    parties: [], maps: {}, inventory: { zeny: 150, materials: {}, equipment: { iron: 0, guard: 0, sanctuary: 0 } },
+    parties: [], maps: {}, inventory: { zeny: 150, materials: {}, cards: {}, socketed: {}, equipment: { iron: 0, guard: 0, sanctuary: 0 } },
     milestones: { bossKills: 0, forestKills: 0, expeditionStep: 0 }, journal: [], effects: [] };
-  for (const map of Object.values(MAPS)) {
-    s.maps[map.id] = { id: map.id, monsters: [], telegraph: null, bossTimer: 8, bossDefeated: false, respawn: 0 };
-    for (let i = 0; i < map.count; i++) spawn(s, map.id, map.id === 'meadow' && i % 3 === 0 ? 'fabre' : map.monster);
-  }
+  for (const map of Object.values(MAPS)) populateField(s, map);
   log(s, 'Your guild begins with two Novices. Deploy them together or explore separately.');
   return s;
+}
+export function populateField(s, map) {
+  s.maps[map.id] = { id: map.id, monsters: [], telegraph: null, bossTimer: 8, bossDefeated: false, respawn: 0 };
+  for (let i = 0; i < map.count; i++) {
+    const alternate = { meadow: 'fabre', morroc: 'peco' }[map.id];
+    spawn(s, map.id, alternate && i % 3 === 0 ? alternate : map.monster);
+  }
 }
 export function log(s, message) {
   s.journal.unshift({ id: s.nextId++, time: s.time, message });
@@ -197,11 +201,28 @@ function applyCommand(s, cmd) {
     if (selected.length !== 1 || !Object.hasOwn(EQUIPMENT, cmd.item)) return 'Choose one character and an item.';
     const c = selected[0];
     if (c.mapId) return 'Change equipment at camp.';
-    if (c.equipment === cmd.item) return null;
-    if (cmd.item !== 'training' && !(s.inventory.equipment[cmd.item] > 0)) return 'That item is not in storage.';
-    if (c.equipment !== 'training') s.inventory.equipment[c.equipment]++;
-    if (cmd.item !== 'training') s.inventory.equipment[cmd.item]--;
-    c.equipment = cmd.item; c.hp = Math.min(c.hp, stats(c).hp); return null;
+    const card = cmd.card ?? null;
+    if (card !== null && (!Object.hasOwn(CARDS, card) || cmd.item === 'training')) return 'Unknown socketed item.';
+    if (c.equipment === cmd.item && (c.card || null) === card) return null;
+    const stock = card ? s.inventory.socketed : s.inventory.equipment;
+    const key = card ? cmd.item + '/' + card : cmd.item;
+    if (cmd.item !== 'training' && !(stock[key] > 0)) return 'That item is not in storage.';
+    if (c.equipment !== 'training') {
+      const oldStock = c.card ? s.inventory.socketed : s.inventory.equipment;
+      const oldKey = c.card ? c.equipment + '/' + c.card : c.equipment;
+      oldStock[oldKey] = (oldStock[oldKey] || 0) + 1;
+    }
+    if (cmd.item !== 'training') stock[key]--;
+    c.equipment = cmd.item; c.card = card; c.hp = Math.min(c.hp, stats(c).hp); return null;
+  }
+  if (cmd.type === 'socket') {
+    const c = selected[0], card = cmd.card;
+    if (selected.length !== 1 || c.mapId || c.equipment === 'training') return 'Equip a field armament or insignia at camp.';
+    if (card !== null && (!Object.hasOwn(CARDS, card) || !(s.inventory.cards[card] > 0))) return 'That card is unavailable.';
+    if (card === (c.card || null)) return 'Socket already has that configuration.';
+    if (c.card) s.inventory.cards[c.card] = (s.inventory.cards[c.card] || 0) + 1;
+    if (card) s.inventory.cards[card]--;
+    c.card = card; return null;
   }
   if (cmd.type === 'tactic') {
     if (!Object.hasOwn(TACTICS, cmd.tactic)) return 'Unknown tactic.';
@@ -320,6 +341,11 @@ function kill(s, m, killer) {
   s.inventory.zeny += def.zeny;
   s.inventory.materials[def.material] = (s.inventory.materials[def.material] || 0) + (killer.assignment === 'materials' ? 2 : 1);
   if (random(s) < 0.035) { const item = random(s) < 0.6 ? 'iron' : 'guard'; s.inventory.equipment[item]++; log(s, `${def.name} dropped ${EQUIPMENT[item].name}.`); }
+  if (Object.hasOwn(CARDS, m.kind) && random(s) < 0.06) {
+    s.inventory.cards[m.kind] = (s.inventory.cards[m.kind] || 0) + 1;
+    log(s, CARDS[m.kind].name + ' discovered in ' + MAPS[m.mapId].name + '! Socket it into equipment at camp.');
+    effect(s, m.mapId, m.x, m.y, CARDS[m.kind].name, 'loot');
+  }
   if (m.mapId === 'forest') s.milestones.forestKills++;
   if (m.kind === 'baphomet') {
     s.milestones.bossKills++; s.inventory.equipment.sanctuary++; s.maps.arena.bossDefeated = true;
@@ -533,14 +559,14 @@ export function advance(s, seconds, options) {
 export function settleOffline(s, elapsedSeconds) {
   const seconds = Math.min(OFFLINE_CAP, Math.max(0, Number.isFinite(elapsedSeconds) ? elapsedSeconds : 0));
   const before = { zeny: s.inventory.zeny, kills: s.milestones.enemiesDefeated ?? 0,
-    materials: { ...s.inventory.materials }, equipment: { ...s.inventory.equipment },
+    cards: { ...s.inventory.cards }, materials: { ...s.inventory.materials }, equipment: { ...s.inventory.equipment },
     levels: s.characters.map(c => ({ id: c.id, level: c.level, jobLevel: c.jobLevel, potions: c.potions })) };
   // Bosses require active play. Returning disconnects the expedition without rewards.
   for (const c of s.characters) if (c.mapId === 'arena') { c.mapId = null; c.status = c.hp > 0 ? 'camp' : 'down'; c.targetId = null; c.order = 'farm'; c.destination = null; }
   if (seconds > 0) advance(s, seconds, { offline: true, effects: false });
   const report = { seconds, capped: elapsedSeconds > OFFLINE_CAP, zeny: s.inventory.zeny - before.zeny,
     kills: (s.milestones.enemiesDefeated ?? 0) - before.kills,
-    loot: [...Object.entries(s.inventory.materials).map(([name, count]) => ({ name, count: count - (before.materials[name] || 0) })),
+    loot: [...Object.entries(s.inventory.cards).map(([id, count]) => ({ name: CARDS[id].name, count: count - (before.cards[id] || 0) })), ...Object.entries(s.inventory.materials).map(([name, count]) => ({ name, count: count - (before.materials[name] || 0) })),
       ...Object.entries(s.inventory.equipment).map(([id, count]) => ({ name: EQUIPMENT[id].name, count: count - before.equipment[id] }))]
       .filter(drop => drop.count > 0),
     characters: s.characters.map(c => ({ name: c.name, levels: c.level - before.levels.find(v => v.id === c.id).level,

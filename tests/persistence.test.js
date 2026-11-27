@@ -57,3 +57,12 @@ test('invalid saved tactics are rejected rather than trusted at the simulation b
     assert.throws(() => decodeSave(JSON.stringify(envelope)));
   }
 });
+
+test('pre-Dunes guilds gain a populated field with unique ids and empty card storage', () => {
+  const s = createGame();
+  delete s.maps.morroc; delete s.inventory.cards; delete s.inventory.socketed;
+  const restored = decodeSave(encodeSave(s)).state;
+  assert.equal(restored.maps.morroc.monsters.length,8);
+  assert.deepEqual(restored.inventory.cards,{});
+  assert.deepEqual(decodeSave(encodeSave(restored)).state,restored);
+});
