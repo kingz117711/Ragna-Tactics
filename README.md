@@ -48,7 +48,8 @@ band takes damage when the countdown ends. The centre and outer ground are safe.
 - Three concurrent farming maps and two real-time boss expeditions.
 - Party linkage, shared targets/EXP, basic following, healing, skill priorities,
   HP-based potions/retreat, movement overrides, hold, and focus fire.
-- Shared materials, Zeny, equipment drops, item assignment, and camp services.
+- Six trainable attributes, repeatable hunting bounties, elemental caster loadouts, and a field guide.
+- Three collectible monster cards, socketed equipment transfers, shared loot and camp forging.
 - Original locally served character/monster sprites from the owner's existing
   project, with pinned source hashes and original animation metadata.
 - Angled overhead map view with zoom/pan/follow and desktop/touch controls.

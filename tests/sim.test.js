@@ -433,3 +433,26 @@ test('bounties count subsequent matching field kills offline and pay a single cl
   assert.ok(command(s,{type:'bounty-claim',id:'harvest'}));
   assert.equal(accept('harvest'),null); assert.equal(s.bounty.kills,0);
 });
+
+test('prepared magic resolves each splash victim against its own affinity', () => {
+  const s=createGame(); promote(s,0,'mage');
+  assert.equal(command(s,{type:'attune',ids:['c1'],element:'wind'}),null);
+  deploy(s,'meadow',['c1']); const c=s.characters[0], mobs=s.maps.meadow.monsters;
+  const poring=mobs.find(m=>m.kind==='poring'), fabre=mobs.find(m=>m.kind==='fabre');
+  for(const m of [poring,fabre]) Object.assign(m,{x:c.x,y:c.y,hp:400});
+  c.targetId=fabre.id;
+  assert.ok(command(s,{type:'attune',ids:['c1'],element:'fire'}));
+  assert.equal(command(s,{type:'skill',ids:['c1']}),null);
+  assert.equal(400-poring.hp,Math.round(stats(c).atk*1.4*1.5));
+  assert.equal(400-fabre.hp,Math.round(stats(c).atk*2.4-MONSTERS.fabre.def));
+  assert.equal(stats(c).skill,'Lightning Bolt');
+});
+
+test('Caravan brooch converts drops from both regions into wearable gear', () => {
+  const s=createGame(); s.inventory.zeny=180;
+  s.inventory.materials={'Scorpion Tail':8,'Peco Feather':5,Resin:4};
+  assert.equal(command(s,{type:'forge',item:'dune'}),null);
+  assert.equal(s.inventory.zeny,0); assert.equal(s.inventory.equipment.dune,1);
+  assert.equal(command(s,{type:'equip',item:'dune',ids:['c1']}),null);
+  assert.equal(stats(s.characters[0]).atk,16); assert.equal(s.inventory.equipment.dune,0);
+});

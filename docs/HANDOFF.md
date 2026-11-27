@@ -1,5 +1,13 @@
 # Milestone handoff — 2026-11-27
 
+## Elemental magic and field guide
+
+Mages and Wizards prepare Fire, Water, Wind or Earth magic at camp using their
+Spellbook. Each enemy hit uses its own affinity, including splash targets.
+The Field guide lists habitats, weaknesses and drops and opens each map.
+
+The Caravan brooch is a socketable forge recipe combining Scorpion Tails, Peco Feathers, and Willow Resin.
+
 ## Guild bounty board
 
 Open Bounties under Field Notes. A guild can accept one repeatable hunt for

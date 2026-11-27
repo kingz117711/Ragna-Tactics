@@ -1,4 +1,4 @@
-import { BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, MONSTERS, HUNT_RADII, VERSION, MAPS, JOBS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS } from './data.js';
+import { ELEMENTS, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, MONSTERS, HUNT_RADII, VERSION, MAPS, JOBS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS } from './data.js';
 import { availablePoints, populateField, createGame, advanceExpeditionGoals } from './sim.js';
 export const SAVE_KEY = 'ragna-tactics:save:v1';
 export const BACKUP_KEY = 'ragna-tactics:backup:v1';
@@ -18,6 +18,7 @@ export function validateState(s) {
     valid(c && /^c[1-5]$/.test(c.id) && !ids.has(c.id)); ids.add(c.id);
     valid(c.ownerId === s.ownerId && text(c.name, 20) && c.name.trim().length && ['m', 'f'].includes(c.sex));
     valid(own(JOBS, c.job) && own(EQUIPMENT, c.equipment) && own(TACTICS, c.tactic));
+    valid(c.element === undefined || (['mage','wizard'].includes(c.job) && own(ELEMENTS,c.element)));
     valid(c.card == null || (c.equipment !== 'training' && own(CARDS, c.card)));
     // Schema-v1 saves predate per-character tactics; derive their settings from the saved preset.
     c.tactics = { ...TACTIC_PRESETS[c.tactic], ...(c.tactics || {}) };
@@ -70,7 +71,8 @@ export function validateState(s) {
   }
   valid(s.inventory && finite(s.inventory.zeny) && s.inventory.materials && typeof s.inventory.materials === 'object' && !Array.isArray(s.inventory.materials));
   for (const [key, value] of Object.entries(s.inventory.materials || {})) valid(Object.values(MONSTERS).some(monster => monster.material === key) && Number.isInteger(value) && finite(value));
-  for (const key of ['iron', 'guard', 'sanctuary']) valid(Number.isInteger(s.inventory.equipment?.[key]) && finite(s.inventory.equipment[key]));
+  if (s.inventory.equipment && s.inventory.equipment.dune === undefined) s.inventory.equipment.dune = 0;
+  for (const key of ['dune', 'iron', 'guard', 'sanctuary']) valid(Number.isInteger(s.inventory.equipment?.[key]) && finite(s.inventory.equipment[key]));
   for (const key of ['bossKills', 'forestKills']) valid(Number.isInteger(s.milestones?.[key]) && finite(s.milestones[key]));
   // New tutorial progress is optional in old v1 envelopes; infer forward from current state.
   if (s.milestones.expeditionStep === undefined) {

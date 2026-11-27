@@ -84,3 +84,9 @@ Added six trainable attributes with previews and permanent stat allocation. Old 
 ## Bounty board
 
 Added three repeatable hunting contracts, shared live and offline guild progress, and explicit reward claims.
+
+## Spells and the monster field guide
+
+Added eight elemental spell loadouts across Mage and Wizard, affinity-based skill damage, native monster portraits, weaknesses and map shortcuts.
+
+Added the Caravan brooch recipe, a cross-region reward for desert and forest materials.

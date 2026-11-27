@@ -336,3 +336,16 @@ test('accept a guild contract and claim the completed hunt after reloading', asy
   await expect(page.locator('[data-bounty="accept"][data-id="harvest"]')).toBeEnabled();
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).state.inventory.equipment.iron)).toBe(1);
 });
+
+test('prepare elemental magic and use the field guide to find a weak target', async ({page}) => {
+  const s=createGame(); s.characters[0].job='wizard';
+  await page.addInitScript(raw=>{if(!localStorage.length)localStorage.setItem('ragna-tactics:save:v1',raw);},encodeSave(s));
+  await boot(page); await page.locator('[data-character="c1"]').first().click();
+  await page.locator('[data-action="spellbook"]').click(); await page.locator('[data-attune="earth"]').click();
+  await expect(page.locator('[data-attune="earth"]')).toHaveText('Prepared');
+  await page.locator('#modal').screenshot({path:'artifacts/elemental-magic.png'});
+  await page.locator('#modal-close').click(); await page.locator('#guide-button').click();
+  const entry=page.locator('.bounty-entry').filter({has:page.getByRole('heading',{name:'Phreeoni',exact:true})});
+  await expect(entry).toContainText('Weak to Earth');
+  await entry.getByRole('button').click(); await expect(page.locator('#map-name')).toHaveText('Sandsea Hollow');
+});

@@ -33,6 +33,7 @@ export function jobChoices(job) {
   return Object.entries(JOBS).filter(([id, data]) => id !== 'novice' && (data.parent || 'novice') === job);
 }
 export const FORGE = {
+  dune: { zeny: 180, materials: { 'Scorpion Tail': 8, 'Peco Feather': 5, Resin: 4 } },
   iron: { zeny: 75, materials: { Jellopy: 12, Resin: 3 } },
   guard: { zeny: 60, materials: { Fluff: 6, Resin: 4 } },
 };
@@ -45,6 +46,22 @@ export const MONSTERS = {
   willow: { name: 'Willow', sprite: '1010', hp: 120, atk: 13, def: 3, exp: 26, jobExp: 16, zeny: 13, material: 'Resin', speed: 1.6, range: 1.7, interval: 1.9 },
   baphomet: { name: 'Baphomet', sprite: '1039', hp: 2400, atk: 19, def: 5, exp: 220, jobExp: 100, zeny: 300, material: 'Sanctuary Sigil', speed: 1.6, range: 2.6, interval: 1.8 },
 };
+export const ELEMENTS = {
+  fire: { name:'Fire', beats:'earth', mage:'Fire Bolt', wizard:'Meteor Storm' },
+  water: { name:'Water', beats:'fire', mage:'Cold Bolt', wizard:'Storm Gust' },
+  wind: { name:'Wind', beats:'water', mage:'Lightning Bolt', wizard:'Lord of Vermilion' },
+  earth: { name:'Earth', beats:'wind', mage:'Stone Spike', wizard:'Heaven’s Drive' },
+};
+export const AFFINITIES = { poring:'water', fabre:'earth', willow:'earth', peco:'fire', scorpion:'fire', phreeoni:'wind', baphomet:'neutral' };
+export function spellElement(c) {
+  if (c.job !== 'mage' && c.job !== 'wizard') return null;
+  return c.element || (c.job === 'mage' ? 'fire' : 'water');
+}
+export function affinityMultiplier(element, kind) {
+  if (!element) return 1;
+  if (ELEMENTS[element].beats === AFFINITIES[kind]) return 1.5;
+  return element === AFFINITIES[kind] ? 0.75 : 1;
+}
 export const BOUNTIES = {
   harvest: { name: 'Jellopy harvest', map: 'meadow', target: 'poring', count: 12, zeny: 70, item: 'iron' },
   timber: { name: 'Willow patrol', map: 'forest', target: 'willow', count: 16, zeny: 160, item: 'guard' },
@@ -65,6 +82,7 @@ export const CARDS = {
   peco: { name: 'Peco Peco Card', description: '+4 DEF', atk: 0, def: 4 },
 };
 export const EQUIPMENT = {
+  dune: { name: 'Caravan brooch', atk: 6, def: 2, description: '+6 attack · +2 defense · forged from Morroc and Willow Wood materials.' },
   training: { name: 'Training weapon', atk: 0, def: 0, description: 'A dependable first companion.' },
   iron: { name: 'Iron armament', atk: 5, def: 0, description: '+5 attack · suitable for every first job.' },
   guard: { name: 'Guard insignia', atk: 1, def: 3, description: '+1 attack · +3 defense.' },

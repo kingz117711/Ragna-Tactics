@@ -1,5 +1,5 @@
 // Pure, serializable simulation. No DOM, storage, wall clock, or camera dependencies.
-import { BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
+import { ELEMENTS, affinityMultiplier, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
 
 export function random(state) {
   state.seed = (Math.imul(state.seed, 1664525) + 1013904223) >>> 0;
@@ -11,7 +11,9 @@ export function availablePoints(c) {
 export function stats(c) {
   const job = JOBS[c.job], item = EQUIPMENT[c.equipment];
   const { str = 0, vit = 0, agi = 0, int = 0, dex = 0, luk = 0 } = c.attributes || {};
-  return { ...job, interval: job.interval / (1 + agi / 100), skillBonus: dex * 2, crit: luk / 100, regen: 0.9 + int * 0.025,
+  const element = spellElement(c);
+  const spell = element ? ELEMENTS[element][c.job] : job.skill;
+  return { ...job, element, skill: spell, interval: job.interval / (1 + agi / 100), skillBonus: dex * 2, crit: luk / 100, regen: 0.9 + int * 0.025,
     hp: job.hp + (c.level - 1) * 14 + vit * 10, atk: job.atk + (c.level - 1) * 2 + item.atk + str * 2 + (CARDS[c.card]?.atk || 0),
     def: job.def + Math.floor((c.level - 1) / 3) + item.def + Math.floor(vit / 3) + (CARDS[c.card]?.def || 0), sp: 45 + c.level * 4 + int * 4 };
 }
@@ -47,7 +49,7 @@ function ensureLeaders(s) {
 }
 export function createGame(seed = 712711) {
   const s = { version: VERSION, ownerId: 'local-player', seed, time: 0, nextId: 1, characters: [character('c1', 'Aren'), character('c2', 'Lyra', 'f')],
-    parties: [], maps: {}, inventory: { zeny: 150, materials: {}, cards: {}, socketed: {}, equipment: { iron: 0, guard: 0, sanctuary: 0 } },
+    parties: [], maps: {}, inventory: { zeny: 150, materials: {}, cards: {}, socketed: {}, equipment: { dune: 0, iron: 0, guard: 0, sanctuary: 0 } },
     milestones: { bossKills: 0, forestKills: 0, expeditionStep: 0 }, journal: [], effects: [] };
   for (const map of Object.values(MAPS)) populateField(s, map);
   log(s, 'Your guild begins with two Novices. Deploy them together or explore separately.');
@@ -234,6 +236,12 @@ function applyCommand(s, cmd) {
     }
     if (cmd.item !== 'training') stock[key]--;
     c.equipment = cmd.item; c.card = card; c.hp = Math.min(c.hp, stats(c).hp); return null;
+  }
+  if (cmd.type === 'attune') {
+    const c = selected[0];
+    if (selected.length !== 1 || c.mapId || !spellElement(c) || !Object.hasOwn(ELEMENTS,cmd.element)) return 'Choose one caster and prepare an element at camp.';
+    c.element = cmd.element;
+    log(s,c.name + ' prepared ' + stats(c).skill + '.'); return null;
   }
   if (cmd.type === 'allocate') {
     const c = selected[0], additions = cmd.points;
@@ -426,11 +434,12 @@ function useSkill(s, c, target, manual = false) {
     const splash = st.splash || (c.job === 'mage' ? 3 : 0);
     const centre = c.job === 'knight' || c.job === 'blacksmith' ? c : target;
     const secondary = splash ? s.maps[c.mapId].monsters.filter(m => m !== target && m.hp > 0 && distance(m, centre) < splash) : [];
-    if (!damage(s, c, target, st.atk * multiplier + st.skillBonus, st.range)) return false;
+    if (!damage(s, c, target, (st.atk * multiplier + st.skillBonus) * affinityMultiplier(st.element,target.kind), st.range)) return false;
+    if (affinityMultiplier(st.element,target.kind) > 1) effect(s,c.mapId,target.x,target.y,'Weakness!', 'skill');
     const stagger = c.job === 'blacksmith' || c.job === 'wizard';
     if (stagger && target.hp > 0) target.timer = Math.max(target.timer, 2);
     for (const m of secondary.slice(0, c.job === 'hunter' ? 2 : secondary.length)) {
-      if (damage(s, c, m, st.atk * 1.4 + st.skillBonus, st.range + splash) && stagger && m.hp > 0) m.timer = Math.max(m.timer, 2);
+      if (damage(s, c, m, (st.atk * 1.4 + st.skillBonus) * affinityMultiplier(st.element,m.kind), st.range + splash) && stagger && m.hp > 0) m.timer = Math.max(m.timer, 2);
     }
     if (c.job === 'swordsman') for (const m of s.maps[c.mapId].monsters) if (m.hp > 0 && distance(m, c) < 5) m.targetId = c.id;
   }
