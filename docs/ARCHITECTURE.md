@@ -62,6 +62,8 @@ load; valid schema-v1 saves continue using the same envelope/version. Commands v
 tactic keys, types, and bounds in the simulation. Damage and healing are independent
 of sprite rendering. Acolytes heal linked allies; solo Acolytes can heal themselves
 and attack. Monsters pick nearby targets.
+Payon Cave uses the same map simulation and save migration path as Morroc Dunes. The support job spellbook defaults to healing. Preparing Holy magic routes manual and automatic casts through the existing range and elemental damage rules.
+
 Baphomet marks an area 2.5 seconds before Dark Cross resolves and summons adds.
 Below half health, Sanctuary Ring marks a band with inner radius 3 and outer
 radius 8 for three seconds. Hit checks and projected ring geometry use world units.

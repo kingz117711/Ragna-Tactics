@@ -1,5 +1,12 @@
 # Milestone handoff — 2026-11-27
 
+## Payon Cave
+
+Hunt slow Zombies and ranged Archer Skeletons. Acolytes and Priests can prepare
+Holy Light or Magnus Exorcismus at camp and return to their healing spell there.
+The guild board offers a skeleton hunt. Skel-Bones, Decayed Nails and Peco
+Feathers forge a socketable Payon reliquary. Archer Skeleton Cards grant +8 ATK.
+
 ## Elemental magic and field guide
 
 Mages and Wizards prepare Fire, Water, Wind or Earth magic at camp using their

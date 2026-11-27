@@ -456,3 +456,15 @@ test('Caravan brooch converts drops from both regions into wearable gear', () =>
   assert.equal(command(s,{type:'equip',item:'dune',ids:['c1']}),null);
   assert.equal(stats(s.characters[0]).atk,16); assert.equal(s.inventory.equipment.dune,0);
 });
+
+test('Payon rewards a prepared Holy Priest and preserves the healing loadout', () => {
+  const s=createGame(), [priest]=s.characters; priest.job='priest';
+  const prepare = element => command(s,{type:'attune',ids:[priest.id],element});
+  assert.ok(prepare('water')); assert.equal(prepare('holy'),null);
+  deploy(s,'payon',[priest.id]); const mobs=s.maps.payon.monsters;
+  for(const m of mobs) Object.assign(m,{x:priest.x,y:priest.y,hp:300});
+  priest.targetId=mobs[0].id; assert.equal(command(s,{type:'skill',ids:[priest.id]}),null);
+  assert.ok(mobs.every(m=>m.hp<300)); assert.equal(stats(priest).skill,'Magnus Exorcismus');
+  assert.ok(prepare('support')); priest.mapId=null;
+  assert.equal(prepare('support'),null); assert.equal(stats(priest).skill,'Sanctuary');
+});

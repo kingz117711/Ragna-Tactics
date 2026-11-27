@@ -18,7 +18,7 @@ export function validateState(s) {
     valid(c && /^c[1-5]$/.test(c.id) && !ids.has(c.id)); ids.add(c.id);
     valid(c.ownerId === s.ownerId && text(c.name, 20) && c.name.trim().length && ['m', 'f'].includes(c.sex));
     valid(own(JOBS, c.job) && own(EQUIPMENT, c.equipment) && own(TACTICS, c.tactic));
-    valid(c.element === undefined || (['mage','wizard'].includes(c.job) && own(ELEMENTS,c.element)));
+    valid(c.element === undefined || (own(ELEMENTS,c.element) && own(ELEMENTS[c.element],c.job)));
     valid(c.card == null || (c.equipment !== 'training' && own(CARDS, c.card)));
     // Schema-v1 saves predate per-character tactics; derive their settings from the saved preset.
     c.tactics = { ...TACTIC_PRESETS[c.tactic], ...(c.tactics || {}) };
@@ -53,7 +53,7 @@ export function validateState(s) {
   for (const c of s.characters) valid(!c.partyId || parties.has(c.partyId));
   const monsterIds = new Set();
   for (const key of Object.keys(MAPS)) {
-    if (['morroc','lair'].includes(key) && s.maps && !Object.hasOwn(s.maps, key)) continue;
+    if (['morroc','lair','payon'].includes(key) && s.maps && !Object.hasOwn(s.maps, key)) continue;
     const m = s.maps?.[key]; valid(m && m.id === key && Array.isArray(m.monsters) && m.monsters.length <= 30);
     valid(finite(m.bossTimer, -1, 100) && typeof m.bossDefeated === 'boolean');
     valid(m.telegraph === null || (coordinate(m.telegraph) && finite(m.telegraph.radius, 0, 10) && finite(m.telegraph.remaining, -1, 10) && finite(m.telegraph.duration, 0.1, 10)));
@@ -72,7 +72,8 @@ export function validateState(s) {
   valid(s.inventory && finite(s.inventory.zeny) && s.inventory.materials && typeof s.inventory.materials === 'object' && !Array.isArray(s.inventory.materials));
   for (const [key, value] of Object.entries(s.inventory.materials || {})) valid(Object.values(MONSTERS).some(monster => monster.material === key) && Number.isInteger(value) && finite(value));
   if (s.inventory.equipment && s.inventory.equipment.dune === undefined) s.inventory.equipment.dune = 0;
-  for (const key of ['dune', 'iron', 'guard', 'sanctuary']) valid(Number.isInteger(s.inventory.equipment?.[key]) && finite(s.inventory.equipment[key]));
+  if (s.inventory.equipment && s.inventory.equipment.reliquary === undefined) s.inventory.equipment.reliquary = 0;
+  for (const key of ['reliquary', 'dune', 'iron', 'guard', 'sanctuary']) valid(Number.isInteger(s.inventory.equipment?.[key]) && finite(s.inventory.equipment[key]));
   for (const key of ['bossKills', 'forestKills']) valid(Number.isInteger(s.milestones?.[key]) && finite(s.milestones[key]));
   // New tutorial progress is optional in old v1 envelopes; infer forward from current state.
   if (s.milestones.expeditionStep === undefined) {
@@ -96,7 +97,7 @@ export function validateState(s) {
   valid(s.milestones.enemiesDefeated === undefined || (Number.isSafeInteger(s.milestones.enemiesDefeated) && finite(s.milestones.enemiesDefeated)));
   valid(Array.isArray(s.journal) && s.journal.length <= 35 && s.journal.every(e => Number.isSafeInteger(e.id) && finite(e.time) && text(e.message, 500)));
   valid(s.nextId > Math.max(0, ...[...monsterIds, ...parties].map(id => Number(id.slice(1))), ...s.journal.map(e => e.id)));
-  for (const key of ['morroc','lair']) if (!s.maps[key]) populateField(s, MAPS[key]);
+  for (const key of ['morroc','lair','payon']) if (!s.maps[key]) populateField(s, MAPS[key]);
   for (const field of ['cards', 'socketed']) {
     if (s.inventory[field] === undefined) s.inventory[field] = {};
     const stock = s.inventory[field];

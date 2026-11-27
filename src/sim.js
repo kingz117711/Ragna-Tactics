@@ -49,7 +49,7 @@ function ensureLeaders(s) {
 }
 export function createGame(seed = 712711) {
   const s = { version: VERSION, ownerId: 'local-player', seed, time: 0, nextId: 1, characters: [character('c1', 'Aren'), character('c2', 'Lyra', 'f')],
-    parties: [], maps: {}, inventory: { zeny: 150, materials: {}, cards: {}, socketed: {}, equipment: { dune: 0, iron: 0, guard: 0, sanctuary: 0 } },
+    parties: [], maps: {}, inventory: { zeny: 150, materials: {}, cards: {}, socketed: {}, equipment: { reliquary: 0, dune: 0, iron: 0, guard: 0, sanctuary: 0 } },
     milestones: { bossKills: 0, forestKills: 0, expeditionStep: 0 }, journal: [], effects: [] };
   for (const map of Object.values(MAPS)) populateField(s, map);
   log(s, 'Your guild begins with two Novices. Deploy them together or explore separately.');
@@ -58,7 +58,7 @@ export function createGame(seed = 712711) {
 export function populateField(s, map) {
   s.maps[map.id] = { id: map.id, monsters: [], telegraph: null, bossTimer: 8, bossDefeated: false, respawn: 0 };
   for (let i = 0; i < map.count; i++) {
-    const alternate = { meadow: 'fabre', morroc: 'peco' }[map.id];
+    const alternate = { meadow: 'fabre', morroc: 'peco', payon:'skeleton' }[map.id];
     spawn(s, map.id, alternate && i % 3 === 0 ? alternate : map.monster);
   }
 }
@@ -239,8 +239,9 @@ function applyCommand(s, cmd) {
   }
   if (cmd.type === 'attune') {
     const c = selected[0];
-    if (selected.length !== 1 || c.mapId || !spellElement(c) || !Object.hasOwn(ELEMENTS,cmd.element)) return 'Choose one caster and prepare an element at camp.';
-    c.element = cmd.element;
+    if (selected.length !== 1 || c.mapId || !(Object.hasOwn(ELEMENTS,cmd.element) && Object.hasOwn(ELEMENTS[cmd.element],c.job) || cmd.element === 'support' && roleOf(c) === 'support')) return 'Choose one caster and prepare an element at camp.';
+    if (cmd.element === 'support') delete c.element;
+    else c.element = cmd.element;
     log(s,c.name + ' prepared ' + stats(c).skill + '.'); return null;
   }
   if (cmd.type === 'allocate') {
@@ -418,7 +419,7 @@ function damage(s, c, m, value, attackRange = stats(c).range) {
 function useSkill(s, c, target, manual = false) {
   const st = stats(c);
   if (c.cooldown > 0 || c.sp < st.cost) return false;
-  if (c.job === 'novice' || roleOf(c) === 'support') {
+  if (c.job === 'novice' || (roleOf(c) === 'support' && !st.element)) {
     const allies = c.job === 'novice' ? [c] : partyMembers(s, c).filter(v => active(v) && v.mapId === c.mapId && distance(v, c) <= 8);
     const healAt = effectiveTactics(c).healAt;
     const injured = allies.filter(v => v.hp < stats(v).hp * (manual ? 1 : healAt)).sort((a, b) => a.hp / stats(a).hp - b.hp / stats(b).hp)[0];
@@ -431,7 +432,7 @@ function useSkill(s, c, target, manual = false) {
   } else {
     if (!target || target.mapId !== c.mapId || distance(c, target) > st.range) return false;
     const multiplier = c.job === 'assassin' ? (target.hp < MONSTERS[target.kind].hp / 2 ? 4 : 2.8) : roleOf(c) === 'ranged' && c.job !== 'archer' ? 2.4 : 2;
-    const splash = st.splash || (c.job === 'mage' ? 3 : 0);
+    const splash = st.splash || (c.job === 'mage' || (c.job === 'priest' && st.element === 'holy') ? 3 : 0);
     const centre = c.job === 'knight' || c.job === 'blacksmith' ? c : target;
     const secondary = splash ? s.maps[c.mapId].monsters.filter(m => m !== target && m.hp > 0 && distance(m, centre) < splash) : [];
     if (!damage(s, c, target, (st.atk * multiplier + st.skillBonus) * affinityMultiplier(st.element,target.kind), st.range)) return false;
@@ -529,7 +530,7 @@ function tickMonster(s, map, m, dt) {
   const def = MONSTERS[m.kind];
   let target = s.characters.find(c => c.id === m.targetId && active(c) && c.mapId === map.id && distance(c, m) < 20);
   if (!target) {
-    const nearby = s.characters.filter(c => active(c) && c.mapId === map.id && distance(c, m) < (MAPS[map.id].boss ? 25 : 3.5));
+    const nearby = s.characters.filter(c => active(c) && c.mapId === map.id && distance(c, m) < (MAPS[map.id].boss ? 25 : Math.max(3.5,def.range)));
     target = nearby.sort((a, b) => distance(a, m) - distance(b, m))[0];
   }
   m.targetId = target?.id || null; m.stance = m.attackFlash > 0 ? 'attack' : 'idle';

@@ -11,7 +11,7 @@ a new artwork license or transfer ownership.
 - Male/female native bodies for Novice and the six first jobs and their six second jobs.
 - One original default hairstyle per gender, with class-specific layer placement.
 - Original native monster atlases: Poring (1002), Fabre (1007), Willow (1010),
-  Baphomet (1039), Scorpion (1001), Peco Peco (1019), and Phreeoni (1159).
+  Baphomet (1039), Scorpion (1001), Peco Peco (1019), Phreeoni (1159), Zombie (1015), and Archer Skeleton (1016).
 - Original wardrobe and monster catalogs, retained as provenance.
 
 Exact source repository, commit, paths, SHA-256 hashes, and byte lengths are in

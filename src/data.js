@@ -6,6 +6,7 @@ export const OFFLINE_CAP = 4 * 60 * 60;
 export const MAPS = {
   meadow: { id: 'meadow', name: 'South Prontera', subtitle: 'A quiet beginning', tier: 'FIELD · LV 1–4', color: '#91b27d', monster: 'poring', count: 8, radius: 16 },
   forest: { id: 'forest', name: 'Willow Wood', subtitle: 'Beyond the familiar paths', tier: 'FIELD · LV 4–8', color: '#698a7b', monster: 'willow', count: 7, radius: 16 },
+  payon: { id: 'payon', name: 'Payon Cave', subtitle: 'Lanterns beneath the eastern ridge', tier: 'DUNGEON · LV 12–18', color: '#a49bb9', monster: 'zombie', count: 8, radius: 16 },
   morroc: { id: 'morroc', name: 'Morroc Dunes', subtitle: 'The southern caravan road', tier: 'FIELD · LV 8–14', color: '#cba976', monster: 'scorpion', count: 8, radius: 16 },
   arena: { id: 'arena', boss: true, name: 'The Broken Sanctuary', subtitle: 'Something stirs beneath the ruins', tier: 'BOSS · PARTY RECOMMENDED', color: '#807e95', monster: 'baphomet', count: 1, radius: 16 },
 };
@@ -33,11 +34,14 @@ export function jobChoices(job) {
   return Object.entries(JOBS).filter(([id, data]) => id !== 'novice' && (data.parent || 'novice') === job);
 }
 export const FORGE = {
+  reliquary: { zeny:240, materials:{ 'Decayed Nail':8, 'Skel-Bone':5, 'Peco Feather':4 } },
   dune: { zeny: 180, materials: { 'Scorpion Tail': 8, 'Peco Feather': 5, Resin: 4 } },
   iron: { zeny: 75, materials: { Jellopy: 12, Resin: 3 } },
   guard: { zeny: 60, materials: { Fluff: 6, Resin: 4 } },
 };
 export const MONSTERS = {
+  zombie: { name: 'Zombie', sprite: '1015', hp: 320, atk: 31, def: 4, exp: 69, jobExp: 35, zeny: 25, material: 'Decayed Nail', speed: 1.2, range: 1.5, interval: 2 },
+  skeleton: { name: 'Archer Skeleton', sprite: '1016', hp: 185, atk: 25, def: 2, exp: 65, jobExp: 38, zeny: 24, material: 'Skel-Bone', speed: 2, range: 7, interval: 1.7 },
   phreeoni: { name: 'Phreeoni', sprite: '1159', hp: 5100, atk: 33, def: 8, exp: 550, jobExp: 300, zeny: 700, material: 'Tongue of the Desert', speed: 1.8, range: 3.2, interval: 1.6 },
   scorpion: { name: 'Scorpion', sprite: '1001', hp: 175, atk: 24, def: 6, exp: 44, jobExp: 26, zeny: 20, material: 'Scorpion Tail', speed: 1.45, range: 2, interval: 2.4 },
   peco: { name: 'Peco Peco', sprite: '1019', hp: 210, atk: 16, def: 2, exp: 46, jobExp: 28, zeny: 22, material: 'Peco Feather', speed: 3.8, range: 1.7, interval: 1.2 },
@@ -47,13 +51,15 @@ export const MONSTERS = {
   baphomet: { name: 'Baphomet', sprite: '1039', hp: 2400, atk: 19, def: 5, exp: 220, jobExp: 100, zeny: 300, material: 'Sanctuary Sigil', speed: 1.6, range: 2.6, interval: 1.8 },
 };
 export const ELEMENTS = {
+  holy: { name:'Holy', beats:'undead', acolyte:'Holy Light', priest:'Magnus Exorcismus' },
   fire: { name:'Fire', beats:'earth', mage:'Fire Bolt', wizard:'Meteor Storm' },
   water: { name:'Water', beats:'fire', mage:'Cold Bolt', wizard:'Storm Gust' },
   wind: { name:'Wind', beats:'water', mage:'Lightning Bolt', wizard:'Lord of Vermilion' },
   earth: { name:'Earth', beats:'wind', mage:'Stone Spike', wizard:'Heaven’s Drive' },
 };
-export const AFFINITIES = { poring:'water', fabre:'earth', willow:'earth', peco:'fire', scorpion:'fire', phreeoni:'wind', baphomet:'neutral' };
+export const AFFINITIES = { zombie:'undead', skeleton:'undead', poring:'water', fabre:'earth', willow:'earth', peco:'fire', scorpion:'fire', phreeoni:'wind', baphomet:'neutral' };
 export function spellElement(c) {
+  if (c.job === 'acolyte' || c.job === 'priest') return c.element === 'holy' ? 'holy' : null;
   if (c.job !== 'mage' && c.job !== 'wizard') return null;
   return c.element || (c.job === 'mage' ? 'fire' : 'water');
 }
@@ -63,6 +69,7 @@ export function affinityMultiplier(element, kind) {
   return element === AFFINITIES[kind] ? 0.75 : 1;
 }
 export const BOUNTIES = {
+  crypt: { name: 'Silence the sentries', map:'payon', target:'skeleton', count:12, zeny:360, item:'guard' },
   harvest: { name: 'Jellopy harvest', map: 'meadow', target: 'poring', count: 12, zeny: 70, item: 'iron' },
   timber: { name: 'Willow patrol', map: 'forest', target: 'willow', count: 16, zeny: 160, item: 'guard' },
   caravan: { name: 'Caravan escort', map: 'morroc', target: 'scorpion', count: 20, zeny: 420, item: 'iron' },
@@ -77,11 +84,13 @@ export const ATTRIBUTES = {
 };
 export const ATTRIBUTE_CAP = 60;
 export const CARDS = {
+  skeleton: { name:'Archer Skeleton Card', description:'+8 ATK', atk:8, def:0 },
   phreeoni: { name: 'Phreeoni Card', description: '+4 ATK · +3 DEF', atk: 4, def: 3 },
   scorpion: { name: 'Scorpion Card', description: '+6 ATK', atk: 6, def: 0 },
   peco: { name: 'Peco Peco Card', description: '+4 DEF', atk: 0, def: 4 },
 };
 export const EQUIPMENT = {
+  reliquary: { name:'Payon reliquary', atk:3, def:6, description:'+3 attack · +6 defense · a feather-bound ward from Payon Cave.' },
   dune: { name: 'Caravan brooch', atk: 6, def: 2, description: '+6 attack · +2 defense · forged from Morroc and Willow Wood materials.' },
   training: { name: 'Training weapon', atk: 0, def: 0, description: 'A dependable first companion.' },
   iron: { name: 'Iron armament', atk: 5, def: 0, description: '+5 attack · suitable for every first job.' },

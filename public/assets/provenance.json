@@ -28,6 +28,18 @@
       "bytes": 403510
     },
     {
+      "local": "mobs/1015.webp",
+      "source": "assets/native-fields/v1/mobs/1015.webp",
+      "sha256": "a93d6db71bb9e1bc58cf923f0cbce6245d5d5e5153fde6fc5cc9086f9ca053a2",
+      "bytes": 453060
+    },
+    {
+      "local": "mobs/1016.webp",
+      "source": "assets/native-fields/v1/mobs/1016.webp",
+      "sha256": "32f52ff893108e37cde5c6b01af7eb5bf8c4158cbf676fd1d1ee0201449a71e7",
+      "bytes": 452420
+    },
+    {
       "local": "mobs/1019.webp",
       "source": "assets/native-fields/v1/mobs/1019.webp",
       "sha256": "af716c6e0b2966e85c795fffc10bbee773c3e763c904ae2406b2cd01bb451a00",

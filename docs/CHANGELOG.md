@@ -90,3 +90,7 @@ Added three repeatable hunting contracts, shared live and offline guild progress
 Added eight elemental spell loadouts across Mage and Wizard, affinity-based skill damage, native monster portraits, weaknesses and map shortcuts.
 
 Added the Caravan brooch recipe, a cross-region reward for desert and forest materials.
+
+## Payon Cave
+
+Added two native undead monsters, Holy offensive loadouts for support jobs, a repeatable bounty, Archer Skeleton Cards and the Payon reliquary.

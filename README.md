@@ -45,11 +45,11 @@ band takes damage when the countdown ends. The centre and outer ground are safe.
   or Thief. All recruits start as Novices. Achievement-based growth to five units.
 - Six second jobs at first Job Lv. 40, with original sprites and signature skills.
 - Forge Iron armaments and Guard insignias from field loot in shared storage.
-- Three concurrent farming maps and two real-time boss expeditions.
+- Four concurrent farming maps and two real-time boss expeditions.
 - Party linkage, shared targets/EXP, basic following, healing, skill priorities,
   HP-based potions/retreat, movement overrides, hold, and focus fire.
 - Six trainable attributes, repeatable hunting bounties, elemental caster loadouts, and a field guide.
-- Three collectible monster cards, socketed equipment transfers, shared loot and camp forging.
+- Four collectible monster cards, socketed equipment transfers, shared loot and camp forging.
 - Original locally served character/monster sprites from the owner's existing
   project, with pinned source hashes and original animation metadata.
 - Angled overhead map view with zoom/pan/follow and desktop/touch controls.

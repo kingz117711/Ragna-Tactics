@@ -66,3 +66,12 @@ test('pre-Dunes guilds gain a populated field with unique ids and empty card sto
   assert.deepEqual(restored.inventory.cards,{});
   assert.deepEqual(decodeSave(encodeSave(restored)).state,restored);
 });
+
+test('older guild acquires Payon without changing owned equipment or assignments', () => {
+  const s=createGame(); delete s.maps.payon; delete s.inventory.equipment.reliquary;
+  s.characters[0].mapId='forest'; s.inventory.equipment.iron=2;
+  const loaded=decodeSave(encodeSave(s)).state;
+  assert.equal(loaded.characters[0].mapId,'forest'); assert.equal(loaded.inventory.equipment.iron,2);
+  assert.equal(loaded.inventory.equipment.reliquary,0); assert.ok(loaded.maps.payon.monsters.some(m=>m.kind==='skeleton'));
+  assert.deepEqual(decodeSave(encodeSave(loaded)).state,loaded);
+});

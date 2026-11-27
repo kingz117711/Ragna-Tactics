@@ -63,7 +63,7 @@ priority and an explicit way to return to the previous assignment.
 - Offline uses the same fixed-step simulation, existing supplies, builds, and
   tactics for all farming teams concurrently. Defeat ends that character's farming.
   Boss teams return to camp without boss rewards when an absence is settled.
-- Two fields and Baphomet are an introductory content set. Numbers, drop rates,
+- Four farming fields and the Baphomet and Phreeoni encounters form the current content set. Numbers, drop rates,
   maps, item names, boss difficulty, and scenery are provisional.
 
 ## Keep out of the initial scope

@@ -349,3 +349,29 @@ test('prepare elemental magic and use the field guide to find a weak target', as
   await expect(entry).toContainText('Weak to Earth');
   await entry.getByRole('button').click(); await expect(page.locator('#map-name')).toHaveText('Sandsea Hollow');
 });
+
+test('settle a split guild, craft the Payon ward, prepare Holy magic and deploy', async ({page}) => {
+  const s=createGame(), {command,stats}=await import('../../src/sim.js');
+  for (const [i,c] of s.characters.entries()) {
+    c.job=i?'hunter':'priest'; c.assignment='materials'; c.level=45; c.hp=stats(c).hp; c.sp=stats(c).sp;
+    command(s,{type:'deploy',ids:[c.id],mapId:i?'morroc':'payon'});
+  }
+  await page.addInitScript(raw=>{if(!localStorage.length)localStorage.setItem('ragna-tactics:save:v1',raw);},encodeSave(s,Date.now()-600000));
+  await boot(page); await expect(page.locator('#modal')).toContainText('Skel-Bone');
+  await page.locator('#continue-adventure').click();
+  await page.locator('#storage-button').click(); await page.locator('[data-forge="reliquary"]').click();
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).state.inventory.equipment.reliquary)).toBe(1);
+  await page.locator('#modal-close').click();
+  await page.locator('[data-character="c1"]').first().click();
+  await page.locator('[data-action="retreat"]').click();
+  await page.locator('[data-action="spellbook"]').click();
+  await page.locator('#modal-close').click();
+  await expect.poll(async()=>page.evaluate(()=>JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).state.characters[0].mapId),{timeout:20000}).toBeNull();
+  await page.locator('[data-action="spellbook"]').click(); await page.locator('[data-attune="holy"]').click();
+  await page.locator('#modal-close').click(); await page.locator('[data-action="deploy"]').click();
+  await page.locator('input[value="payon"]').check(); await page.locator('#deployment-form button.primary').click();
+  await expect(page.locator('#map-name')).toHaveText('Payon Cave');
+  await page.locator('#battlefield').screenshot({path:'artifacts/payon-cave.png'});
+  await page.setViewportSize({width:390,height:844});
+  await page.locator('#battlefield').screenshot({path:'artifacts/payon-mobile.png'});
+});
