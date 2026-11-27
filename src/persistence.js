@@ -1,5 +1,5 @@
-import { CARDS, MONSTERS, HUNT_RADII, VERSION, MAPS, JOBS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS } from './data.js';
-import { populateField, createGame, advanceExpeditionGoals } from './sim.js';
+import { ATTRIBUTES, ATTRIBUTE_CAP, CARDS, MONSTERS, HUNT_RADII, VERSION, MAPS, JOBS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS } from './data.js';
+import { availablePoints, populateField, createGame, advanceExpeditionGoals } from './sim.js';
 export const SAVE_KEY = 'ragna-tactics:save:v1';
 export const BACKUP_KEY = 'ragna-tactics:backup:v1';
 const finite = (v, low = 0, high = 1e12) => typeof v === 'number' && Number.isFinite(v) && v >= low && v <= high;
@@ -35,7 +35,12 @@ export function validateState(s) {
     valid(c.targetId === null || /^m\d+$/.test(c.targetId));
     valid(['idle', 'walk', 'attack'].includes(c.stance) && Number.isInteger(c.direction) && finite(c.direction, 0, 7));
     for (const key of ['exp', 'jobExp', 'hp', 'sp', 'cooldown', 'attackTimer', 'attackFlash', 'potions', 'kills', 'earned']) valid(finite(c[key]));
-    valid(c.hp <= 2000 && c.sp <= 1000 && c.potions <= 1000);
+    if (c.attributes !== undefined) {
+      valid(c.attributes && typeof c.attributes === 'object' && !Array.isArray(c.attributes));
+      for (const [id, count] of Object.entries(c.attributes)) valid(own(ATTRIBUTES,id) && Number.isInteger(count) && finite(count,0,ATTRIBUTE_CAP));
+      valid(availablePoints(c) >= 0);
+    }
+    valid(c.hp <= 2600 && c.sp <= 1000 && c.potions <= 1000);
   }
   valid(Array.isArray(s.parties) && s.parties.length <= 2);
   const parties = new Set();

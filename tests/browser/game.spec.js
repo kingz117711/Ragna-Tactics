@@ -301,3 +301,17 @@ test('deploy a second-job duo to Sandsea Hollow and read the MVP party order', a
   await expect(page.locator('#boss-status')).toContainText('Sand Pact',{ timeout:14000 });
   await page.locator('#battlefield').screenshot({path:'artifacts/phreeoni.png'});
 });
+
+test('preview and commit a personal stat build at camp', async ({page}) => {
+  const s = createGame(); s.characters[0].level = 4;
+  await page.addInitScript(raw => { if (!localStorage.length) localStorage.setItem('ragna-tactics:save:v1',raw); },encodeSave(s));
+  await boot(page); await page.locator('[data-character="c1"]').first().click();
+  await page.locator('[data-action="attributes"]').click();
+  await page.getByRole('button',{name:'Increase Vitality'}).click();
+  await page.getByRole('button',{name:'Increase Strength'}).click();
+  await expect(page.locator('#stat-remaining')).toHaveText('4 points available');
+  await page.locator('#modal').screenshot({path:'artifacts/stat-training.png'});
+  await page.locator('#train-stats').click();
+  await page.reload(); await expect(page.locator('#loading')).toBeHidden();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).state.characters[0].attributes)).toEqual({vit:1,str:1});
+});

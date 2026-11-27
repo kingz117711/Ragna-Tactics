@@ -2,4 +2,4 @@
 
 Continue building Ragna Tactics from the latest head of PR #2. If merged, use the updated base. Read AGENTS.md and docs/HANDOFF.md. Inspect the latest commit before choosing work.
 
-Build stat allocation for all adventurers. Award stat points from earned Base levels. Give STR, AGI, VIT, INT, DEX and LUK concrete simulation effects, show a preview before spending, and preserve old saves. Continue with a guild bounty board that rewards field hunts. Verify actual play, run all checks and update this handoff before pushing to the PR.
+Build a guild bounty board with a repeatable contract for each farming field. Accept one contract at a time, count only subsequent matching kills, and award a single claim. Keep live and offline progress identical, show where the target lives and expose the reward. Test accepting, hunting, reloading and claiming through the normal UI. Then build additional job-specific skill choices. Update this prompt and push the playable milestone.

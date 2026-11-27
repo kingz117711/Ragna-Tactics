@@ -1,14 +1,19 @@
 // Pure, serializable simulation. No DOM, storage, wall clock, or camera dependencies.
-import { CARDS, FORGE, jobChoices, promotionLevel, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
+import { ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
 
 export function random(state) {
   state.seed = (Math.imul(state.seed, 1664525) + 1013904223) >>> 0;
   return state.seed / 4294967296;
 }
+export function availablePoints(c) {
+  return 2 * (c.level - 1) - Object.values(c.attributes || {}).reduce((sum, points) => sum + points, 0);
+}
 export function stats(c) {
   const job = JOBS[c.job], item = EQUIPMENT[c.equipment];
-  return { ...job, hp: job.hp + (c.level - 1) * 14, atk: job.atk + (c.level - 1) * 2 + item.atk + (CARDS[c.card]?.atk || 0),
-    def: job.def + Math.floor((c.level - 1) / 3) + item.def + (CARDS[c.card]?.def || 0), sp: 45 + c.level * 4 };
+  const { str = 0, vit = 0, agi = 0, int = 0, dex = 0, luk = 0 } = c.attributes || {};
+  return { ...job, interval: job.interval / (1 + agi / 100), skillBonus: dex * 2, crit: luk / 100, regen: 0.9 + int * 0.025,
+    hp: job.hp + (c.level - 1) * 14 + vit * 10, atk: job.atk + (c.level - 1) * 2 + item.atk + str * 2 + (CARDS[c.card]?.atk || 0),
+    def: job.def + Math.floor((c.level - 1) / 3) + item.def + Math.floor(vit / 3) + (CARDS[c.card]?.def || 0), sp: 45 + c.level * 4 + int * 4 };
 }
 export function character(id, name, sex = 'm') {
   return { id, ownerId: 'local-player', name, sex, job: 'novice', level: 1, exp: 0, jobLevel: 1, jobExp: 0,
@@ -215,6 +220,21 @@ function applyCommand(s, cmd) {
     if (cmd.item !== 'training') stock[key]--;
     c.equipment = cmd.item; c.card = card; c.hp = Math.min(c.hp, stats(c).hp); return null;
   }
+  if (cmd.type === 'allocate') {
+    const c = selected[0], additions = cmd.points;
+    if (selected.length !== 1 || c.mapId || !additions || typeof additions !== 'object' || Array.isArray(additions)) return 'Train one adventurer at camp.';
+    const draft = { ...c.attributes };
+    let total = 0;
+    for (const [id, amount] of Object.entries(additions)) {
+      if (!Object.hasOwn(ATTRIBUTES,id) || !Number.isSafeInteger(amount) || amount <= 0) return 'Invalid stat allocation.';
+      draft[id] = (draft[id] || 0) + amount;
+      if (draft[id] > ATTRIBUTE_CAP) return 'An attribute has reached its cap.';
+      total += amount;
+    }
+    if (!total || total > availablePoints(c)) return 'Choose an allocation within your available points.';
+    c.attributes = draft;
+    log(s, c.name + ' trained ' + total + ' stat points at camp.'); return null;
+  }
   if (cmd.type === 'socket') {
     const c = selected[0], card = cmd.card;
     if (selected.length !== 1 || c.mapId || c.equipment === 'training') return 'Equip a field armament or insignia at camp.';
@@ -377,7 +397,7 @@ function useSkill(s, c, target, manual = false) {
     if (!injured) return false;
     const recipients = c.job === 'priest' ? allies.filter(a => a.hp < stats(a).hp) : [injured];
     for (const ally of recipients) {
-      const amount = Math.min(stats(ally).hp - ally.hp, c.job === 'novice' ? 28 : 45 + c.level * 5);
+      const amount = Math.min(stats(ally).hp - ally.hp, (c.job === 'novice' ? 28 : 45 + c.level * 5) + st.skillBonus);
       ally.hp += amount; effect(s, c.mapId, ally.x, ally.y, '+' + Math.round(amount), 'heal');
     }
   } else {
@@ -386,11 +406,11 @@ function useSkill(s, c, target, manual = false) {
     const splash = st.splash || (c.job === 'mage' ? 3 : 0);
     const centre = c.job === 'knight' || c.job === 'blacksmith' ? c : target;
     const secondary = splash ? s.maps[c.mapId].monsters.filter(m => m !== target && m.hp > 0 && distance(m, centre) < splash) : [];
-    if (!damage(s, c, target, st.atk * multiplier, st.range)) return false;
+    if (!damage(s, c, target, st.atk * multiplier + st.skillBonus, st.range)) return false;
     const stagger = c.job === 'blacksmith' || c.job === 'wizard';
     if (stagger && target.hp > 0) target.timer = Math.max(target.timer, 2);
     for (const m of secondary.slice(0, c.job === 'hunter' ? 2 : secondary.length)) {
-      if (damage(s, c, m, st.atk * 1.4, st.range + splash) && stagger && m.hp > 0) m.timer = Math.max(m.timer, 2);
+      if (damage(s, c, m, st.atk * 1.4 + st.skillBonus, st.range + splash) && stagger && m.hp > 0) m.timer = Math.max(m.timer, 2);
     }
     if (c.job === 'swordsman') for (const m of s.maps[c.mapId].monsters) if (m.hp > 0 && distance(m, c) < 5) m.targetId = c.id;
   }
@@ -402,7 +422,7 @@ function tickCharacter(s, c, dt) {
   const st = stats(c), tactics = effectiveTactics(c);
   if (!c.mapId) { c.stance = 'idle'; if (c.status !== 'down') { c.hp = Math.min(st.hp, c.hp + 12 * dt); c.sp = Math.min(st.sp, c.sp + 8 * dt); } return; }
   if (c.hp <= 0) { log(s, c.name + ' fell and returned to camp. Recover before redeploying.'); c.hp = 0; c.mapId = null; c.status = 'down'; c.targetId = null; c.destination = null; return; }
-  c.sp = Math.min(st.sp, c.sp + 0.9 * dt);
+  c.sp = Math.min(st.sp, c.sp + st.regen * dt);
   if (c.hp < st.hp * tactics.potionAt && c.potions > 0) { c.hp = Math.min(st.hp, c.hp + 65); c.potions--; effect(s, c.mapId, c.x, c.y, '+Potion', 'heal'); }
   // Priority: an explicit Retreat is honored; an explicit Move finishes before
   // safety automation interrupts it; otherwise low HP retreats before combat AI.
@@ -464,7 +484,9 @@ function tickCharacter(s, c, dt) {
   if (tactics.autoSkill) useSkill(s, c, target);
   if (target.hp > 0 && c.attackTimer <= 0 && target.mapId === c.mapId && distance(c, target) <= st.range) {
     c.attackTimer = st.interval; c.attackFlash = 0.4; c.stance = 'attack';
-    damage(s, c, target, st.atk * (0.9 + random(s) * 0.2), st.range);
+    const critical = st.crit > 0 && random(s) < st.crit;
+    damage(s, c, target, st.atk * (0.9 + random(s) * 0.2) * (critical ? 1.5 : 1), st.range);
+    if (critical) effect(s, c.mapId, target.x, target.y, 'Critical!', 'skill');
   }
 }
 function tickMonster(s, map, m, dt) {

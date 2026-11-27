@@ -45,6 +45,15 @@ export const MONSTERS = {
   willow: { name: 'Willow', sprite: '1010', hp: 120, atk: 13, def: 3, exp: 26, jobExp: 16, zeny: 13, material: 'Resin', speed: 1.6, range: 1.7, interval: 1.9 },
   baphomet: { name: 'Baphomet', sprite: '1039', hp: 2400, atk: 19, def: 5, exp: 220, jobExp: 100, zeny: 300, material: 'Sanctuary Sigil', speed: 1.6, range: 2.6, interval: 1.8 },
 };
+export const ATTRIBUTES = {
+  str: { name: 'Strength', effect: '+2 attack per point' },
+  agi: { name: 'Agility', effect: '+1% basic attack rate per point' },
+  vit: { name: 'Vitality', effect: '+10 max HP per point, +1 defense per 3 points' },
+  int: { name: 'Intelligence', effect: '+4 max SP and faster SP recovery per point' },
+  dex: { name: 'Dexterity', effect: '+2 skill damage or healing per point' },
+  luk: { name: 'Luck', effect: '+1% chance per point for a 150% basic attack' },
+};
+export const ATTRIBUTE_CAP = 60;
 export const CARDS = {
   phreeoni: { name: 'Phreeoni Card', description: '+4 ATK · +3 DEF', atk: 4, def: 3 },
   scorpion: { name: 'Scorpion Card', description: '+6 ATK', atk: 6, def: 0 },

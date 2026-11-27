@@ -1,5 +1,11 @@
 # Milestone handoff — 2026-11-27
 
+## Character builds
+
+Open Stats on one adventurer. Each earned Base level grants two points, including
+levels in older saves. At camp, preview and train STR, AGI, VIT, INT, DEX and LUK.
+The simulation uses the bonuses live and offline. Job changes preserve them.
+
 ## Sandsea Hollow MVP
 
 Deploy two first-job or higher adventurers for Phreeoni. During Sand Pact,

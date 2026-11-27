@@ -406,3 +406,17 @@ test('Phreeoni pays one MVP card live, while leaving the fight offline gives no 
   assert.equal(s.inventory.cards.phreeoni,1); assert.ok(s.maps.lair.bossDefeated);
   advance(s,20); assert.equal(s.inventory.cards.phreeoni,1);
 });
+
+test('stat training spends earned points atomically and survives job advancement', () => {
+  const s = createGame(), c = s.characters[0]; c.level = 10; c.jobLevel = 10;
+  const train = points => command(s,{type:'allocate',ids:['c1'],points});
+  const before = stats(c);
+  assert.ok(train({vit:5,str:15})); assert.equal(c.attributes,undefined);
+  assert.equal(train({str:2,agi:2,vit:3,int:3,dex:3,luk:5}),null);
+  const after = stats(c); assert.equal(after.hp-before.hp,30); assert.equal(after.def-before.def,1);
+  assert.equal(after.atk-before.atk,4); assert.ok(after.interval < before.interval);
+  assert.equal(after.crit,0.05); assert.equal(after.sp-before.sp,12); assert.equal(after.skillBonus,6);
+  assert.ok(train({str:1}));
+  assert.equal(command(s,{type:'promote',ids:['c1'],job:'mage'}),null);
+  assert.equal(stats(c).crit,0.05);
+});

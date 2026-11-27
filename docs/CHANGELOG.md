@@ -76,3 +76,7 @@ Added a concurrent desert field, native Scorpion and Peco Peco sprites, two coll
 ## Sandsea Hollow
 
 Added Phreeoni, a new live MVP arena, alternating gather/scatter mechanics, and a guaranteed socketable MVP card.
+
+## Character builds
+
+Added six trainable attributes with previews and permanent stat allocation. Old characters receive their full earned point budget.
