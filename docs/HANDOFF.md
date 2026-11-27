@@ -1,5 +1,12 @@
 # Milestone handoff — 2026-11-27
 
+## Transcendent jobs
+
+At second Job Lv. 50, advance at camp to Lord Knight, High Priest, High Wizard,
+Whitesmith, Sniper or Assassin Cross. This direct advancement keeps Base level,
+personal attributes, prepared elements, gear, cards and refinement. Each line
+has native male and female body art and an upgraded combat specialty.
+
 ## Equipment refinement
 
 Open Equipment at camp with field gear equipped. Each successful refinement adds

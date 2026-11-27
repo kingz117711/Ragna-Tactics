@@ -1,5 +1,5 @@
 // Pure, serializable simulation. No DOM, storage, wall clock, or camera dependencies.
-import { REFINEMENT, gearKey, ELEMENTS, affinityMultiplier, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
+import { combatJob, REFINEMENT, gearKey, ELEMENTS, affinityMultiplier, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
 
 export function random(state) {
   state.seed = (Math.imul(state.seed, 1664525) + 1013904223) >>> 0;
@@ -12,7 +12,7 @@ export function stats(c) {
   const job = JOBS[c.job], item = EQUIPMENT[c.equipment];
   const { str = 0, vit = 0, agi = 0, int = 0, dex = 0, luk = 0 } = c.attributes || {};
   const element = spellElement(c);
-  const spell = element ? ELEMENTS[element][c.job] : job.skill;
+  const spell = element ? ELEMENTS[element][combatJob(c.job)] : job.skill;
   return { ...job, element, skill: spell, interval: job.interval / (1 + agi / 100), skillBonus: dex * 2, crit: luk / 100, regen: 0.9 + int * 0.025,
     hp: job.hp + (c.level - 1) * 14 + vit * 10, atk: job.atk + (c.level - 1) * 2 + item.atk + 2 * (c.refine || 0) + str * 2 + (CARDS[c.card]?.atk || 0),
     def: job.def + Math.floor((c.level - 1) / 3) + item.def + (c.refine || 0) + Math.floor(vit / 3) + (CARDS[c.card]?.def || 0), sp: 45 + c.level * 4 + int * 4 };
@@ -123,7 +123,7 @@ export function command(s, cmd) {
   return result;
 }
 export function forgePrice(s, item) {
-  return Math.ceil(FORGE[item].zeny * (s.characters.some(c => c.job === 'blacksmith' && !c.mapId && c.hp > 0) ? 0.5 : 1));
+  return Math.ceil(FORGE[item].zeny * (s.characters.some(c => combatJob(c.job) === 'blacksmith' && !c.mapId && c.hp > 0) ? 0.5 : 1));
 }
 function applyCommand(s, cmd) {
   const selected = s.characters.filter(c => cmd.ids?.includes(c.id));
@@ -249,7 +249,7 @@ function applyCommand(s, cmd) {
   }
   if (cmd.type === 'attune') {
     const c = selected[0];
-    if (selected.length !== 1 || c.mapId || !(Object.hasOwn(ELEMENTS,cmd.element) && Object.hasOwn(ELEMENTS[cmd.element],c.job) || cmd.element === 'support' && roleOf(c) === 'support')) return 'Choose one caster and prepare an element at camp.';
+    if (selected.length !== 1 || c.mapId || !(Object.hasOwn(ELEMENTS,cmd.element) && Object.hasOwn(ELEMENTS[cmd.element],combatJob(c.job)) || cmd.element === 'support' && roleOf(c) === 'support')) return 'Choose one caster and prepare an element at camp.';
     if (cmd.element === 'support') delete c.element;
     else c.element = cmd.element;
     log(s,c.name + ' prepared ' + stats(c).skill + '.'); return null;
@@ -430,32 +430,34 @@ function damage(s, c, m, value, attackRange = stats(c).range) {
   return true;
 }
 function useSkill(s, c, target, manual = false) {
-  const st = stats(c);
+  const st = stats(c), job = combatJob(c.job);
   if (c.cooldown > 0 || c.sp < st.cost) return false;
-  if (c.job === 'novice' || (roleOf(c) === 'support' && !st.element)) {
-    const allies = c.job === 'novice' ? [c] : partyMembers(s, c).filter(v => active(v) && v.mapId === c.mapId && distance(v, c) <= 8);
+  if (job === 'novice' || (roleOf(c) === 'support' && !st.element)) {
+    const allies = job === 'novice' ? [c] : partyMembers(s, c).filter(v => active(v) && v.mapId === c.mapId && distance(v, c) <= 8);
     const healAt = effectiveTactics(c).healAt;
     const injured = allies.filter(v => v.hp < stats(v).hp * (manual ? 1 : healAt)).sort((a, b) => a.hp / stats(a).hp - b.hp / stats(b).hp)[0];
     if (!injured) return false;
-    const recipients = c.job === 'priest' ? allies.filter(a => a.hp < stats(a).hp) : [injured];
+    const recipients = job === 'priest' ? allies.filter(a => a.hp < stats(a).hp) : [injured];
     for (const ally of recipients) {
-      const amount = Math.min(stats(ally).hp - ally.hp, (c.job === 'novice' ? 28 : 45 + c.level * 5) + st.skillBonus);
+      const amount = Math.min(stats(ally).hp - ally.hp, (job === 'novice' ? 28 : 45 + c.level * 5) + st.skillBonus);
+      if (c.job === 'highPriest') ally.sp = Math.min(stats(ally).sp,ally.sp + 5);
       ally.hp += amount; effect(s, c.mapId, ally.x, ally.y, '+' + Math.round(amount), 'heal');
     }
   } else {
     if (!target || target.mapId !== c.mapId || distance(c, target) > st.range) return false;
-    const multiplier = c.job === 'assassin' ? (target.hp < MONSTERS[target.kind].hp / 2 ? 4 : 2.8) : roleOf(c) === 'ranged' && c.job !== 'archer' ? 2.4 : 2;
-    const splash = st.splash || (c.job === 'mage' || (c.job === 'priest' && st.element === 'holy') ? 3 : 0);
-    const centre = c.job === 'knight' || c.job === 'blacksmith' ? c : target;
+    const multiplier = job === 'assassin' ? (target.hp < MONSTERS[target.kind].hp / 2 ? (c.job === 'assassinCross' ? 5 : 4) : 2.8) : roleOf(c) === 'ranged' && c.job !== 'archer' ? 2.4 : 2;
+    const splash = st.splash || (job === 'mage' || (job === 'priest' && st.element === 'holy') ? 3 : 0);
+    const centre = job === 'knight' || job === 'blacksmith' ? c : target;
     const secondary = splash ? s.maps[c.mapId].monsters.filter(m => m !== target && m.hp > 0 && distance(m, centre) < splash) : [];
     if (!damage(s, c, target, (st.atk * multiplier + st.skillBonus) * affinityMultiplier(st.element,target.kind), st.range)) return false;
     if (affinityMultiplier(st.element,target.kind) > 1) effect(s,c.mapId,target.x,target.y,'Weakness!', 'skill');
-    const stagger = c.job === 'blacksmith' || c.job === 'wizard';
-    if (stagger && target.hp > 0) target.timer = Math.max(target.timer, 2);
-    for (const m of secondary.slice(0, c.job === 'hunter' ? 2 : secondary.length)) {
-      if (damage(s, c, m, (st.atk * 1.4 + st.skillBonus) * affinityMultiplier(st.element,m.kind), st.range + splash) && stagger && m.hp > 0) m.timer = Math.max(m.timer, 2);
+    const staggerTime = c.job === 'whitesmith' ? 3 : 2;
+    const stagger = job === 'blacksmith' || job === 'wizard';
+    if (stagger && target.hp > 0) target.timer = Math.max(target.timer, staggerTime);
+    for (const m of secondary.slice(0, job === 'hunter' ? (c.job === 'sniper' ? 4 : 2) : secondary.length)) {
+      if (damage(s, c, m, (st.atk * 1.4 + st.skillBonus) * affinityMultiplier(st.element,m.kind), st.range + splash) && stagger && m.hp > 0) m.timer = Math.max(m.timer, staggerTime);
     }
-    if (c.job === 'swordsman') for (const m of s.maps[c.mapId].monsters) if (m.hp > 0 && distance(m, c) < 5) m.targetId = c.id;
+    if (job === 'swordsman') for (const m of s.maps[c.mapId].monsters) if (m.hp > 0 && distance(m, c) < 5) m.targetId = c.id;
   }
   c.sp -= st.cost; c.cooldown = st.cooldown; c.attackFlash = 0.5; c.stance = 'attack';
   effect(s, c.mapId, c.x, c.y, st.skill, 'skill'); return true;

@@ -98,3 +98,7 @@ Added two native undead monsters, Holy offensive loadouts for support jobs, a re
 ## Payon equipment refinement
 
 Added ore drops, three guaranteed refinement ranks, and independent storage of refined and carded gear.
+
+## Transcendent progression
+
+Added six camp promotions with native wardrobes, upgraded combat specialties and preserved caster loadouts.

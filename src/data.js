@@ -29,7 +29,25 @@ const secondJobs = {
   assassin: { parent: 'thief', native: 12, name: 'Assassin', hp: 165, atk: 23, def: 4, skill: 'Sonic Blow', description: 'Burst down a single foe. Deals extra damage below half health.', cost: 12 },
 };
 for (const [id, job] of Object.entries(secondJobs)) JOBS[id] = { ...JOBS[job.parent], ...job };
-export function promotionLevel(job) { return job === 'novice' ? 10 : JOBS[job].parent ? Infinity : 40; }
+const transcendent = {
+  lordKnight: { parent:'knight', native:4008, name:'Lord Knight', hp:325, atk:34, def:12, splash:5, skill:'Spiral Pierce', description:'A sweeping spear strike draws enemies within five tiles.' },
+  highPriest: { parent:'priest', native:4009, name:'High Priest', hp:220, atk:22, def:6, skill:'High Sanctuary', description:'Group healing also restores 5 SP to each injured ally.' },
+  highWizard: { parent:'wizard', native:4010, name:'High Wizard', hp:172, atk:39, def:3, splash:5.5, description:'Amplified elemental spells hit a wider area and stagger foes.' },
+  whitesmith: { parent:'blacksmith', native:4011, name:'Whitesmith', hp:265, atk:32, def:9, skill:'Cart Termination', description:'An empowered hammer strike staggers enemies for three seconds. Retains the camp forge discount.' },
+  sniper: { parent:'hunter', native:4012, name:'Sniper', hp:195, atk:31, def:5, range:9, skill:'Falcon Assault', description:'Your falcon strikes the target and up to four nearby enemies.' },
+  assassinCross: { parent:'assassin', native:4013, name:'Assassin Cross', hp:225, atk:31, def:6, skill:'Soul Breaker', description:'A finishing strike deals five times attack to enemies below half HP.' },
+};
+for (const [id, job] of Object.entries(transcendent)) JOBS[id] = { ...JOBS[job.parent], ...job, mastery: job.parent };
+export const combatJob = job => JOBS[job].mastery || job;
+export function promotionLevel(job) { return job === 'novice' ? 10 : JOBS[job].mastery ? Infinity : JOBS[job].parent ? 50 : 40; }
+export function jobLineage(job) {
+  const path = [];
+  while (job && job !== 'novice') {
+    path.unshift(JOBS[job].name);
+    job = JOBS[job].parent;
+  }
+  return ['Novice', ...path];
+}
 export function jobChoices(job) {
   return Object.entries(JOBS).filter(([id, data]) => id !== 'novice' && (data.parent || 'novice') === job);
 }
@@ -59,9 +77,10 @@ export const ELEMENTS = {
 };
 export const AFFINITIES = { zombie:'undead', skeleton:'undead', poring:'water', fabre:'earth', willow:'earth', peco:'fire', scorpion:'fire', phreeoni:'wind', baphomet:'neutral' };
 export function spellElement(c) {
-  if (c.job === 'acolyte' || c.job === 'priest') return c.element === 'holy' ? 'holy' : null;
-  if (c.job !== 'mage' && c.job !== 'wizard') return null;
-  return c.element || (c.job === 'mage' ? 'fire' : 'water');
+  const job = combatJob(c.job);
+  if (job === 'acolyte' || job === 'priest') return c.element === 'holy' ? 'holy' : null;
+  if (job !== 'mage' && job !== 'wizard') return null;
+  return c.element || (job === 'mage' ? 'fire' : 'water');
 }
 export function affinityMultiplier(element, kind) {
   if (!element) return 1;
@@ -128,6 +147,7 @@ export const JOB_ROLES = {
   mage: 'ranged', archer: 'ranged', acolyte: 'support',
 };
 for (const [id, job] of Object.entries(secondJobs)) JOB_ROLES[id] = JOB_ROLES[job.parent];
+for (const [id, job] of Object.entries(transcendent)) JOB_ROLES[id] = JOB_ROLES[job.parent];
 export const ROLE_LABELS = {
   frontline: 'Frontline — approaches and engages',
   ranged: 'Ranged — keeps attack distance',

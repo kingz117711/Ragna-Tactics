@@ -29,7 +29,7 @@ and failover, concurrent maps, party EXP, equipment transfers, retreat/defeat,
 boss rewards, deterministic results, exact offline/live parity, four-hour cap,
 legacy tactics defaults, corrupt-save recovery, and invalid import rejection.
 
-Asset verification is offline. It checks all 67 original files against pinned
+Asset verification is offline. It checks all 91 original files against pinned
 hashes/lengths and checks the derived runtime index against original catalogs.
 Build emits only runtime files/assets and credits in `dist/`, excluding repo
 metadata, test tools, secrets, and development documentation.
