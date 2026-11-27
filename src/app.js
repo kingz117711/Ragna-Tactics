@@ -1,4 +1,4 @@
-import { MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
+import { HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
 import { command, tick, stats, rosterLimit, engaged, effectiveTactics, isLeader } from './sim.js';
 import { SAVE_KEY, loadGame, saveGame, encodeSave, decodeSave } from './persistence.js';
 import { Sprites } from './sprites.js';
@@ -11,6 +11,10 @@ const number = value => Math.floor(value).toLocaleString();
 const duration = seconds => seconds >= 3600 ? `${(seconds / 3600).toFixed(1)}h` : `${Math.floor(seconds / 60)}m ${Math.floor(seconds % 60)}s`;
 let state, renderer, sprites, ready = false, writable = false, settling = false, selected = new Set(['c1', 'c2']);
 let hovered = null, orderMode = null, coachDismissed = false, saveError = false, hiddenAt = null;
+let previewPointer = null;
+const radiusControl = $('hunt-radius');
+for (const radius of HUNT_RADII) radiusControl.add(new Option(String(radius), String(radius)));
+radiusControl.value = String(DEFAULT_HUNT_RADIUS);
 let multiSelect = false, tacticsExpanded = false;
 let toastTimer, accumulator = 0, lastTime = performance.now(), lastUI = 0, lastSave = performance.now(), inspectorKey = '';
 const modal = $('modal');
@@ -66,7 +70,8 @@ function renderUI() {
   const pressed = { move: orderMode === 'move', rally: orderMode === 'rally', hold: !!units.length && activeOrders.every(v => v === 'hold'),
     resume: !!units.length && activeOrders.every(v => v === 'farm'), retreat: !!units.length && activeOrders.every(v => v === 'retreat') };
   for (const [action, value] of Object.entries(pressed)) document.querySelector(`[data-action="${action}"]`).setAttribute('aria-pressed', String(value));
-  $('order-hint').textContent = orderMode === 'rally' ? 'Tap the centre of your hunting area · Esc to cancel' : 'Choose a destination · Esc to cancel';
+  $('hunt-tools').hidden = orderMode !== 'rally';
+  $('order-instruction').textContent = orderMode === 'rally' ? 'Tap the centre of your hunting area · Esc to cancel' : 'Choose a destination · Esc to cancel';
   $('battlefield').style.cursor = orderMode ? 'crosshair' : hovered ? 'pointer' : 'grab';
   $('roster-count').textContent = `${state.characters.length} / 5`;
   const focusedPartyMember = document.activeElement?.matches('.party-member') ? document.activeElement.dataset.character : null;
@@ -271,6 +276,7 @@ document.addEventListener('click', event => {
     else if (action === 'equipment') equipment(); else if (action === 'rename') rename(); else if (action === 'leader') issue({ type: 'leader' });
     else if (action === 'move' || action === 'rally') {
       if (action === 'rally' && renderer.mapId === 'arena') return toast('Choose a farming field to mark a hunting area.');
+      $('toast').hidden = true;
       orderMode = orderMode === action ? null : action;
       renderUI();
     }
@@ -346,6 +352,7 @@ canvas.addEventListener('pointerdown', event => {
 canvas.addEventListener('pointermove', event => {
   if (!ready) return;
   const r = canvas.getBoundingClientRect(), x = event.clientX - r.left, y = event.clientY - r.top;
+  previewPointer = { x, y };
   hovered = renderer.hit(x, y)?.id || null;
   if (pointer?.down && pointer.id === event.pointerId && pointer.button === 0) {
     if (Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) > 5) pointer.moved = true;
@@ -360,7 +367,7 @@ canvas.addEventListener('pointerup', event => {
   const r = canvas.getBoundingClientRect(), x = event.clientX - r.left, y = event.clientY - r.top, hit = renderer.hit(x, y);
   if (orderMode || event.button === 2) {
     const p = renderer.world(x, y), ids = state.characters.filter(c => selected.has(c.id) && c.mapId === renderer.mapId).map(c => c.id);
-    if (issue({ type: orderMode || 'move', mapId: renderer.mapId, point: p, ids }, { quiet: true })) {
+    if (issue({ type: orderMode || 'move', radius: Number(radiusControl.value), mapId: renderer.mapId, point: p, ids }, { quiet: true })) {
       acknowledgePoint(event);
       orderMode = null;
     }
@@ -368,6 +375,15 @@ canvas.addEventListener('pointerup', event => {
   else if (hit) { const ids = state.characters.filter(c => selected.has(c.id) && c.mapId === renderer.mapId).map(c => c.id); if (issue({ type: 'focus', targetId: hit.id, ids }, { quiet: true })) acknowledgePoint(event); }
   renderUI();
 });
+canvas.addEventListener('pointerleave', () => { previewPointer = null; });
+$('hunt-here').onclick = () => {
+  const unit = selectedCharacters().find(c => c.mapId === renderer.mapId);
+  if (!unit) return toast('Select an adventurer on this field.');
+  if (issue({ type: 'rally', mapId: renderer.mapId, ids: selectedCharacters().filter(c => c.mapId === renderer.mapId).map(c => c.id),
+    radius: Number(radiusControl.value), point: { x: unit.x, y: unit.y } })) {
+    orderMode = null; renderUI(); document.querySelector('[data-action="rally"]').focus();
+  }
+};
 canvas.addEventListener('pointercancel', () => { pointer = null; });
 canvas.addEventListener('wheel', event => { if (!ready) return; event.preventDefault(); const r = canvas.getBoundingClientRect(); renderer.zoom(Math.exp(-event.deltaY * 0.001), event.clientX - r.left, event.clientY - r.top); renderUI(); }, { passive: false });
 document.addEventListener('keydown', event => {
@@ -393,7 +409,8 @@ function frame(now) {
   if (!ready || !state || document.hidden || settling) { lastTime = now; return; }
   accumulator += Math.min((now - lastTime) / 1000, 0.5); lastTime = now;
   while (accumulator >= STEP) { tick(state); accumulator -= STEP; }
-  renderer.draw(state, selected, hovered, accumulator);
+  const preview = orderMode === 'rally' && previewPointer ? renderer.world(previewPointer.x, previewPointer.y) : null;
+  renderer.draw(state, selected, hovered, accumulator, preview && { ...preview, radius: Number(radiusControl.value) });
   if (now - lastUI > 500) { renderUI(); lastUI = now; }
   if (now - lastSave > 5000) { persist(); lastSave = now; }
 }

@@ -59,3 +59,8 @@
   and `npm run build`. Browser tests and screenshots could not run: Playwright's
   Chromium binary is missing and download from `cdn.playwright.dev` was blocked;
   `npm run test:build` is likewise pending a browser-enabled environment.
+
+## 2026-11-27 - Adjustable hunting areas
+
+- Added three hunting radii, a placement preview and a keyboard-accessible centre-on-unit action. Existing marked areas retain their radius after loading.
+- Browser tests launch this checkout on a dedicated port. Added party, save, invalid-order and touch/keyboard coverage for the editor.

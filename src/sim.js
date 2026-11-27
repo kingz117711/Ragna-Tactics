@@ -1,5 +1,5 @@
 // Pure, serializable simulation. No DOM, storage, wall clock, or camera dependencies.
-import { VERSION, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
+import { HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
 
 export function random(state) {
   state.seed = (Math.imul(state.seed, 1664525) + 1013904223) >>> 0;
@@ -219,6 +219,8 @@ function applyCommand(s, cmd) {
     return cast ? null : 'Skill needs SP, a ready cooldown, and a valid target in range (or missing HP).';
   }
   if (cmd.type === 'rally') {
+    const radius = cmd.radius === undefined ? DEFAULT_HUNT_RADIUS : cmd.radius;
+    if (!HUNT_RADII.includes(radius)) return 'Choose a supported hunting radius.';
     const field = s.maps[cmd.mapId];
     if (!field || field.id === 'arena' || !point(cmd.point)) return 'Choose a point inside a farming field.';
     const farmers = units.filter(c => active(c) && c.mapId === field.id);
@@ -226,7 +228,7 @@ function applyCommand(s, cmd) {
     for (const c of farmers) {
       c.home = { ...cmd.point };
       c.farmCenter = { ...cmd.point };
-      c.farmRadius = 6;
+      c.farmRadius = radius;
       c.order = 'farm';
       c.targetId = null;
       c.destination = null;

@@ -43,7 +43,7 @@ npm run test:build
 ```
 
 Linux CI may need `npx playwright install --with-deps chromium` instead. The runner
-starts the local server or reuses an existing one. Use `PLAYWRIGHT_CHROMIUM_PATH`
+starts this checkout on its own port (5183 by default, configurable with TEST_PORT). Use `PLAYWRIGHT_CHROMIUM_PATH`
 only if you intentionally need a specific installed executable.
 
 Scenarios cover fresh deployment/parties/camera switching/orders/reload, job changes

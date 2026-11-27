@@ -957,6 +957,8 @@ kbd{
   white-space:nowrap;
   pointer-events:none
 }
+#hunt-tools:not([hidden]) { display:flex; align-items:center; justify-content:center; gap:10px; margin-top:6px; pointer-events:auto; }
+#hunt-tools select, #hunt-tools button { font:inherit; padding:5px 8px; color:#f7ecd2; background:#263e34; border:1px solid #546b59; border-radius:4px; }
 .boss-status{
   position:absolute;
   top:100px;

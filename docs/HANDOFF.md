@@ -1,5 +1,17 @@
 # Milestone handoff — 2026-11-27
 
+## Hunt area controls
+
+Open Hunt area on a farming field. Choose a radius of 3, 6, or 10 world units.
+Hover to preview and tap/click to mark the centre, or activate Centre on unit
+to use the first selected adventurer on this field. Farm resumes the saved
+area after a manual order. The original default is 6. Browser tests now launch a
+dedicated checkout-specific server to avoid picking up another worktree.
+
+Next milestone: play the first expedition through third recruitment using fresh
+guilds, measure starter pair performance and fix the most consequential friction.
+Use the manual gameplay gate in TESTING.md.
+
 ## Combat reliability, first expedition goals, and browser QA
 
 Basic attack and skill damage now revalidates map identity and actual attack range at

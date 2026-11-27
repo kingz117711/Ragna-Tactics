@@ -1,3 +1,5 @@
+export const HUNT_RADII = [3, 6, 10];
+export const DEFAULT_HUNT_RADIUS = 6;
 export const VERSION = 1;
 export const STEP = 0.1;
 export const OFFLINE_CAP = 4 * 60 * 60;

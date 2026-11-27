@@ -37,7 +37,7 @@ the source. Existing multi-map, reward, and save invariants still pass.
 ## Then: tactical depth and navigation
 
 - Configurable skill-priority/condition rules with useful presets.
-- An explicit farming area/rally point editor and clearly visible leash radius.
+- Hunt area sizes and placement previews are implemented. Playtest how players use them to divide a field.
 - Tested collision/navigation, reachable rally/retreat points, and party spacing.
 - Tank threat/taunt behavior, support range discipline, and ranged repositioning.
 - Additional boss mechanics that reward orders rather than pure stat increases.

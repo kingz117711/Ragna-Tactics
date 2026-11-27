@@ -93,7 +93,7 @@ export class Renderer {
     }
     this.terrain.set(mapId, cv); return cv;
   }
-  draw(s, selected, hovered, frameRemainder = 0) {
+  draw(s, selected, hovered, frameRemainder = 0, huntPreview = null) {
     const ctx = this.ctx, z = this.camera.zoom, map = s.maps[this.mapId];
     if (this.followId) { const c = s.characters.find(c => c.id === this.followId && c.mapId === this.mapId); if (c) { const p = project(c.x, c.y); this.camera.x += (p.x - this.camera.x) * 0.08; this.camera.y += (p.y - this.camera.y) * 0.08; } }
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
@@ -114,6 +114,12 @@ export class Renderer {
       }
       if (c.destination) { const t = project(c.destination.x, c.destination.y); ctx.setLineDash([5, 7]); ctx.strokeStyle = '#e8ca88aa'; ctx.lineWidth = 1.5 / z; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(t.x, t.y); ctx.stroke(); ctx.setLineDash([]); ellipse(ctx, t.x, t.y, 13, 6, '#e8ca8830', '#e8ca88'); }
       if (c.order === 'hold') { const h = project(c.home.x, c.home.y); ellipse(ctx, h.x, h.y, 95, 47, '#e8ca8808', '#e8ca8860'); }
+    }
+    if (huntPreview && Math.abs(huntPreview.x) <= 15 && Math.abs(huntPreview.y) <= 15) {
+      const h = project(huntPreview.x, huntPreview.y), radius = huntPreview.radius * Math.SQRT2;
+      ctx.save(); ctx.lineWidth = 1.5 / z; ctx.setLineDash([6 / z, 4 / z]);
+      ellipse(ctx, h.x, h.y, radius * 22, radius * 11, '#efd38c18', '#ffdf92');
+      ctx.restore();
     }
     const telegraph = map.telegraph;
     if (telegraph) {

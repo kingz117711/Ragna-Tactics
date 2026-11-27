@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test';
 import { createGame, gainExp } from '../../src/sim.js';
 import { encodeSave } from '../../src/persistence.js';
 const boot = async page => { await page.goto('/'); await expect(page.locator('#loading')).toBeHidden({ timeout: 20000 }); };
-test('hunt orders work by touch and respect reduced motion', async ({ browser }) => {
-  const context = await browser.newContext({ hasTouch: true, reducedMotion: 'reduce', viewport: { width: 390, height: 844 }, baseURL: 'http://127.0.0.1:5173' });
+test('hunt orders work by touch and respect reduced motion', async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ hasTouch: true, reducedMotion: 'reduce', viewport: { width: 390, height: 844 }, baseURL });
   try {
     const page = await context.newPage();
     await boot(page);
@@ -11,9 +11,15 @@ test('hunt orders work by touch and respect reduced motion', async ({ browser })
     await page.locator('#deployment-form button.primary').tap();
     await page.locator('[data-action="rally"]').tap();
     await expect(page.locator('[data-action="rally"]')).toHaveAttribute('aria-pressed', 'true');
+    await page.getByLabel('Radius').selectOption('3');
     await page.locator('#battlefield').tap({ position: { x: 195, y: 240 } });
     await expect(page.locator('#order-hint')).toBeHidden();
-    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).state.characters.every(c => c.farmRadius === 6))).toBe(true);
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).state.characters.every(c => c.farmRadius === 3))).toBe(true);
+    await page.locator('[data-action="rally"]').tap();
+    await page.getByLabel('Radius').selectOption('10');
+    await page.getByRole('button', { name: 'Centre on unit' }).press('Enter');
+    await expect(page.locator('#order-hint')).toBeHidden();
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).state.characters.every(c => c.farmRadius === 10))).toBe(true);
     await expect(page.locator('.input-pulse')).toHaveCount(0);
   } finally { await context.close(); }
 });

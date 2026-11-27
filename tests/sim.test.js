@@ -22,6 +22,21 @@ test('a marked hunt survives manual repositioning, resume and offline settlement
   settleOffline(s, 15);
   assert.ok(Math.hypot(farmer.x - point.x, farmer.y - point.y) < 1.1);
 });
+test('rally radius is validated before changing either party member and survives a save', async () => {
+  const { encodeSave, decodeSave } = await import('../src/persistence.js');
+  const s = createGame();
+  command(s, { type: 'party', ids });
+  deploy(s);
+  const rally = { type: 'rally', ids: ['c1'], mapId: 'meadow', point: { x: 1, y: 2 } };
+  for (const radius of [3, 10, undefined]) {
+    assert.equal(command(s, { ...rally, radius }), null);
+    const loaded = decodeSave(encodeSave(s)).state;
+    assert.ok(loaded.characters.every(c => c.farmRadius === (radius ?? 6)));
+  }
+  const before = structuredClone(s);
+  for (const radius of [0, null, '6', 11]) assert.ok(command(s, { ...rally, radius }));
+  assert.deepEqual(s, before);
+});
 test('Novice job readiness is recorded once and shared kills count once in an away report', () => {
   const s = createGame();
   gainExp(s, s.characters[0], 0, 1000);

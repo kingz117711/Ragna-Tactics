@@ -1,4 +1,4 @@
-import { VERSION, MAPS, JOBS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS } from './data.js';
+import { HUNT_RADII, VERSION, MAPS, JOBS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS } from './data.js';
 import { createGame, advanceExpeditionGoals } from './sim.js';
 export const SAVE_KEY = 'ragna-tactics:save:v1';
 export const BACKUP_KEY = 'ragna-tactics:backup:v1';
@@ -26,7 +26,7 @@ export function validateState(s) {
     valid(c.partyId === null || /^p\d+$/.test(c.partyId));
     valid(Number.isInteger(c.level) && finite(c.level, 1, 99) && Number.isInteger(c.jobLevel) && finite(c.jobLevel, 1, c.job === 'novice' ? 10 : 50));
     valid(coordinate(c) && coordinate(c.home) && (c.destination === null || coordinate(c.destination)));
-    valid(c.farmRadius === undefined || c.farmRadius === 6);
+    valid(c.farmRadius === undefined || HUNT_RADII.includes(c.farmRadius));
     valid(c.farmCenter === undefined || coordinate(c.farmCenter));
     valid(['farm', 'move', 'hold', 'focus', 'retreat'].includes(c.order));
     valid(['camp', 'down', 'farming', 'fighting', 'moving', 'holding', 'searching', 'retreating'].includes(c.status));
