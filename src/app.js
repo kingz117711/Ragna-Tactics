@@ -31,6 +31,9 @@ function issue(cmd, { close = false, quiet = false } = {}) {
   if (!writable || settling) return false;
   const message = command(state, { ids: [...selected], ...cmd });
   if (message) { error(message); return false; }
+  // Accepted movement/hunt orders pulse at their actual world destination —
+  // deliberately distinct from the button press animation.
+  if (cmd.point && ['move', 'rally'].includes(cmd.type)) renderer.pulseOrder(cmd.mapId || renderer.mapId, cmd.point, cmd.type);
   if (close) closeModal();
   if (!quiet) toast({ party: 'Party formed. Orders now apply to the whole party.', split: 'Selected adventurers are now independent.', resume: 'Farming assignments resumed.', hold: 'Holding position. Nearby enemies will be engaged.', retreat: 'Retreating to the camp exit.', recover: 'Rested and ready for the next expedition.', resupply: 'Potion supplies replenished.', promote: 'Job advancement complete. Your adventurer is ready for a new path.', recruit: 'A new Novice joined the guild.' }[cmd.type] || 'Orders received.');
   persist(); renderUI(); return true;
@@ -68,6 +71,10 @@ function renderUI() {
   const present = state.characters.filter(c => c.mapId === mapId).length;
   $('map-population').textContent = `${present} adventurer${present === 1 ? '' : 's'} · ${state.maps[mapId].monsters.filter(m => m.hp > 0).length} enemies in the field`;
   $('zoom-label').textContent = Math.round(renderer.camera.zoom * 100) + '%';
+  // The minimap description doubles as the accessible live view of the camera.
+  const cam = renderer.world(renderer.width / 2, renderer.height / 2);
+  const here = state.characters.filter(c => c.mapId === mapId).map(c => `${c.name} ${Math.round(c.x)},${Math.round(c.y)}`).join(' · ');
+  $('minimap').setAttribute('aria-label', `Minimap of ${map.name}. Camera centred at ${Math.round(cam.x)}, ${Math.round(cam.y)}. ${here || 'No adventurers on this field.'} Click to move the view.`);
   $('first-expedition').hidden = coachDismissed || state.characters.some(c => c.kills || c.mapId) || state.time > 180;
   $('selection-title').textContent = units.length === 1 ? units[0].name : `${units.length} adventurers selected`;
   $('selection-description').textContent = units.some(c => c.partyId) ? 'Party commands include linked members' : units.length ? 'Independent adventurers · your orders' : 'Select an adventurer in your roster';
@@ -92,7 +99,7 @@ function renderUI() {
   $('job-names').textContent = eligible.map(c => c.name).join(', ');
   const cards = state.characters.map(c => {
     const st = stats(c), mapName = c.mapId ? MAPS[c.mapId].name : 'Guild camp';
-    return `<button class="character-card ${selected.has(c.id) ? 'selected' : ''} ${c.status === 'down' ? 'defeated' : c.hp / st.hp <= 0.3 ? 'low-health' : ''}" data-character="${c.id}" aria-pressed="${selected.has(c.id)}" aria-label="${esc(c.name)}, ${JOBS[c.job].name}, level ${c.level}, ${mapName}"><div class="portrait"><img src="${sprites.portrait(c)}" alt="" draggable="false"></div><div><div class="character-name">${esc(c.name)}<span>Lv. ${c.level}</span></div><div class="character-job">${JOBS[c.job].name} · Job ${c.jobLevel}${c.partyId ? ' · Linked' : ''}</div><div class="hp-track" title="HP ${Math.ceil(c.hp)} / ${st.hp}"><i style="width:${Math.max(0, Math.min(100, c.hp / st.hp * 100))}%"></i></div><div class="sp-track" title="SP ${Math.floor(c.sp)} / ${st.sp}"><i style="width:${Math.max(0, Math.min(100, c.sp / st.sp * 100))}%"></i></div><div class="character-location"><span>${mapName}</span><span class="status ${c.status === 'down' ? 'status-danger' : c.hp / st.hp <= 0.3 ? 'status-warning' : ''}">${c.status === 'camp' ? 'Resting' : c.status === 'down' ? 'Defeated' : c.status[0].toUpperCase() + c.status.slice(1)}</span></div></div></button>`;
+    return `<button class="character-card ${selected.has(c.id) ? 'selected' : ''} ${c.status === 'down' ? 'defeated' : c.hp / st.hp <= 0.3 ? 'low-health' : ''}" data-character="${c.id}" aria-pressed="${selected.has(c.id)}" aria-label="${esc(c.name)}, ${JOBS[c.job].name}, level ${c.level}, ${mapName}"><div class="portrait"><img src="${sprites.portrait(c)}" alt="" draggable="false"></div><div><div class="character-name">${esc(c.name)}<span>Lv. ${c.level}</span></div><div class="character-job">${JOBS[c.job].name} · Job ${c.jobLevel}${c.partyId ? ' · Linked' : ''}</div><div class="hp-track" title="HP ${Math.ceil(c.hp)} / ${st.hp}"><i style="width:${Math.max(0, Math.min(100, c.hp / st.hp * 100))}%"></i></div><div class="character-location"><span>${mapName}</span><span class="status ${c.status === 'down' ? 'status-danger' : c.hp / st.hp <= 0.3 ? 'status-warning' : ''}">${c.status === 'camp' ? 'Resting' : c.status === 'down' ? 'Defeated' : c.status[0].toUpperCase() + c.status.slice(1)}</span></div></div></button>`;
   }).join('');
   // Keep outer buttons stable so keyboard focus survives HP updates.
   if (!pointer?.down) {
@@ -239,7 +246,9 @@ function renderExpeditionGoals() {
   const step = Math.max(0, Math.min(6, state.milestones.expeditionStep || 0));
   const rows = EXPEDITION_GOALS.map((label, index) => `<li class="${index < step ? 'complete' : index === step ? 'current' : ''}"><span>${index < step ? '✓' : index + 1}</span>${label}</li>`).join('');
   const action = ['Deploy starting pair', 'Continue farming', 'Choose a first job', 'Prepare party & supplies', 'Challenge Baphomet', 'Recruit a Novice'][step];
-  html('expedition-goals', `<div class="goals-heading"><span class="eyebrow">EXPEDITION GOALS</span><span>${step}/6</span></div><ol>${rows}</ol>${step < 6 ? `<button class="goal-next" data-goal-next>${action} <span>↗</span></button>` : '<p class="goals-complete">Your first expedition is complete.</p>'}`);
+  // Attribute must serialize exactly as innerHTML reads it back, otherwise the
+  // 500ms re-render detaches the button under a pending click.
+  html('expedition-goals', `<div class="goals-heading"><span class="eyebrow">EXPEDITION GOALS</span><span>${step}/6</span></div><ol>${rows}</ol>${step < 6 ? `<button class="goal-next" data-goal-next="">${action} <span>↗</span></button>` : '<p class="goals-complete">Your first expedition is complete.</p>'}`);
 }
 function takeGoalAction() {
   const step = Math.max(0, Math.min(6, state.milestones.expeditionStep || 0));
@@ -484,6 +493,39 @@ $('hunt-here').onclick = () => {
     orderMode = null; renderUI(); document.querySelector('[data-action="rally"]').focus();
   }
 };
+// Minimap: click or drag to jump the camera to a world point.
+const minimap = $('minimap');
+let minimapDragging = false;
+const minimapNavigate = event => {
+  if (!ready) return;
+  const r = minimap.getBoundingClientRect();
+  const world = renderer.minimapToWorld(minimap,
+    (event.clientX - r.left) * (minimap.width / r.width),
+    (event.clientY - r.top) * (minimap.height / r.height));
+  renderer.centerOn(world);
+  renderUI();
+};
+minimap.addEventListener('pointerdown', event => { if (!ready) return; minimapDragging = true; minimap.setPointerCapture(event.pointerId); minimapNavigate(event); });
+minimap.addEventListener('pointermove', event => { if (minimapDragging) minimapNavigate(event); });
+minimap.addEventListener('pointerup', () => { minimapDragging = false; });
+minimap.addEventListener('pointercancel', () => { minimapDragging = false; });
+$('find-unit').onclick = () => {
+  const onMap = state.characters.filter(c => c.mapId === renderer.mapId);
+  if (!onMap.length) return toast('No adventurers are on this field.');
+  const index = onMap.findIndex(c => selected.has(c.id));
+  const next = onMap[(index + 1) % onMap.length];
+  selected = new Set([next.id]); inspectorKey = '';
+  renderer.centerOn(next); renderer.followId = next.id;
+  renderUI();
+};
+$('detail-toggle').onclick = () => {
+  document.body.classList.toggle('detail-open');
+  $('detail-toggle').setAttribute('aria-expanded', String(document.body.classList.contains('detail-open')));
+};
+$('stack-close').onclick = () => {
+  document.body.classList.remove('detail-open');
+  $('detail-toggle').setAttribute('aria-expanded', 'false');
+};
 canvas.addEventListener('pointercancel', () => { pointer = null; });
 canvas.addEventListener('wheel', event => { if (!ready) return; event.preventDefault(); const r = canvas.getBoundingClientRect(); renderer.zoom(Math.exp(-event.deltaY * 0.001), event.clientX - r.left, event.clientY - r.top); renderUI(); }, { passive: false });
 document.addEventListener('keydown', event => {
@@ -492,6 +534,7 @@ document.addEventListener('keydown', event => {
   if (key === 'escape') orderMode = null;
   else if (key === 'm') orderMode = 'move';
   else if (key === 'f') renderer.fit();
+  else if (key === 'g') $('find-unit').click();
   else if (key === '+' || key === '=') renderer.zoom(1.15);
   else if (key === '-') renderer.zoom(1 / 1.15);
   else if ({ h: 'hold', r: 'resume', q: 'skill', t: 'retreat' }[key]) issue({ type: { h: 'hold', r: 'resume', q: 'skill', t: 'retreat' }[key] });
@@ -511,6 +554,7 @@ function frame(now) {
   while (accumulator >= STEP) { tick(state); accumulator -= STEP; }
   const preview = orderMode === 'rally' && previewPointer ? renderer.world(previewPointer.x, previewPointer.y) : null;
   renderer.draw(state, selected, hovered, accumulator, preview && { ...preview, radius: Number(radiusControl.value) });
+  renderer.drawMinimap($('minimap'), state, selected);
   if (now - lastUI > 500) { renderUI(); lastUI = now; }
   if (now - lastSave > 5000) { persist(); lastSave = now; }
 }

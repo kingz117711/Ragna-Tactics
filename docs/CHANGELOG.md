@@ -102,3 +102,32 @@ Added ore drops, three guaranteed refinement ranks, and independent storage of r
 ## Transcendent progression
 
 Added six camp promotions with native wardrobes, upgraded combat specialties and preserved caster loadouts.
+
+## 2026-11-27 — Larger South Prontera and single-screen interface
+
+- South Prontera is now a larger field with a camp exit, branching roads, the Poring
+  Meadow, and a separate Fabre Thicket. Each map has its own bounds, and hunting
+  radius now decides where a character farms.
+- Added pan, zoom, Find (cycles through and follows adventurers), a compact minimap
+  with party markers, the visible camera area, and click-to-navigate.
+- Rebuilt the layout as one screen: the battlefield is largest, the roster, map
+  switcher and command bar stay visible on desktop, and equipment, jobs, stats,
+  storage, bounties and the field guide open in on-demand panels. Phones use roster
+  portraits and bottom sheets. No page scrolling during ordinary play.
+- Imported 11 original terrain images (3 tiles, 8 props) and their upstream anchor
+  file from the pinned Prontera-Grind commit (103 original files total), with native
+  anchors and provenance. See ASSET-CREDITS.md
+  for the gaps.
+- Rendering: terrain is drawn in cached chunks with a small margin. The cache is a
+  bounded LRU of 96 chunks, which covers the whole largest map. Measured on the
+  sandbox's headless Chromium: static frame draw 0.4 ms median (141.6 ms before the
+  cache fix), and a real mouse pan at 1366×768 held 16.7 ms median, 16.8 ms p99, with
+  no frames over 33 ms. Camera movement does not touch the simulation.
+- Fixed: the minimap canvas inherited `left/top:0` and sat in the top-left corner.
+- Redeploying starts a fresh expedition and clears the previous hunting area.
+- Saves from earlier versions still load. Validation is bounds-aware per map.
+- Validation: syntax/import checks (8 modules), 61/61 simulation and persistence
+  tests, 27 browser scenarios (including a two-area South Prontera playthrough that
+  reloads the guild and checks areas, radii, maps and kills), 103 asset files verified,
+  static build, and built-site browser check. Screenshots at 1366×768, 1440×900 and
+  390×844 were inspected.
