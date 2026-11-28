@@ -1,4 +1,4 @@
-import { combatJob, gearKey, gearVariant, REFINEMENT, ELEMENTS, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, MONSTERS, HUNT_RADII, VERSION, MAPS, mapBounds, JOBS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS } from './data.js';
+import { combatJob, classBuilds, defaultBuild, gearKey, gearVariant, REFINEMENT, ORE_INFO, ELEMENTS, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, MONSTERS, HUNT_RADII, VERSION, MAPS, mapBounds, JOBS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS, STATUS } from './data.js';
 import { availablePoints, populateField, createGame, advanceExpeditionGoals } from './sim.js';
 export const SAVE_KEY = 'ragna-tactics:save:v1';
 export const BACKUP_KEY = 'ragna-tactics:backup:v1';
@@ -21,6 +21,13 @@ export function validateState(s) {
     valid(c.ownerId === s.ownerId && text(c.name, 20) && c.name.trim().length && ['m', 'f'].includes(c.sex));
     valid(own(JOBS, c.job) && own(EQUIPMENT, c.equipment) && own(TACTICS, c.tactic));
     valid(c.element === undefined || (own(ELEMENTS,c.element) && own(ELEMENTS[c.element],combatJob(c.job))));
+    if (c.buildId === undefined) c.buildId = defaultBuild(c.job);
+    valid(c.buildId === null || classBuilds(c.job).some(build => build.id === c.buildId));
+    if (c.buffTimer === undefined) c.buffTimer = 0;
+    if (c.buffAtk === undefined) c.buffAtk = 0;
+    valid(finite(c.buffTimer, 0, 60) && finite(c.buffAtk, 0, 0.5));
+    if (c.cast === undefined) c.cast = null;
+    valid(c.cast === null || (c.mapId && c.cast && finite(c.cast.remaining, 0, 10) && finite(c.cast.total, 0.01, 10) && text(c.cast.skill, 80) && (c.cast.targetId === null || /^m\d+$/.test(c.cast.targetId))));
     valid(c.refine === undefined || (Number.isInteger(c.refine) && finite(c.refine,0,REFINEMENT.length-1) && (!c.refine || c.equipment !== 'training')));
     valid(c.card == null || (c.equipment !== 'training' && own(CARDS, c.card)));
     // Schema-v1 saves predate per-character tactics; derive their settings from the saved preset.
@@ -31,7 +38,7 @@ export function validateState(s) {
     valid(c.mapId === null || own(MAPS, c.mapId));
     const field = c.mapId ? mapBounds(c.mapId) : null;
     valid(c.partyId === null || /^p\d+$/.test(c.partyId));
-    valid(Number.isInteger(c.level) && finite(c.level, 1, 99) && Number.isInteger(c.jobLevel) && finite(c.jobLevel, 1, c.job === 'novice' ? 10 : 50));
+    valid(Number.isInteger(c.level) && finite(c.level, 1, 99) && Number.isInteger(c.jobLevel) && finite(c.jobLevel, 1, JOBS[c.job].jobLevelCap || (c.job === 'novice' ? 10 : 50)));
     valid(coordinate(c, field) && coordinate(c.home, field) && (c.destination === null || coordinate(c.destination, field)));
     valid(c.farmRadius === undefined || HUNT_RADII.includes(c.farmRadius));
     valid(c.farmCenter === undefined || coordinate(c.farmCenter, field));
@@ -68,14 +75,18 @@ export function validateState(s) {
     for (const enemy of m.monsters) {
       valid(/^m\d+$/.test(enemy.id) && !monsterIds.has(enemy.id)); monsterIds.add(enemy.id);
       valid(own(MONSTERS, enemy.kind) && enemy.mapId === key && coordinate(enemy, mapField));
+      if (enemy.statuses === undefined) enemy.statuses = {};
+      valid(enemy.statuses && typeof enemy.statuses === 'object' && !Array.isArray(enemy.statuses));
+      for (const [status, record] of Object.entries(enemy.statuses)) valid(own(STATUS, status) && record && finite(record.remaining, 0, 30) && finite(record.potency, 0, 100) && ids.has(record.sourceId));
       valid(finite(enemy.hp, -10000, 10000) && finite(enemy.timer, -10, 100) && finite(enemy.respawn, -1, 100));
       valid(enemy.targetId === null || ids.has(enemy.targetId));
       valid(['idle', 'walk', 'attack'].includes(enemy.stance) && Number.isInteger(enemy.direction) && finite(enemy.direction, 0, 7));
       valid(finite(enemy.attackFlash, 0, 2));
     }
   }
+  for (const c of s.characters) if (c.cast?.targetId) valid(s.maps[c.mapId]?.monsters.some(m => m.id === c.cast.targetId));
   valid(s.inventory && finite(s.inventory.zeny) && s.inventory.materials && typeof s.inventory.materials === 'object' && !Array.isArray(s.inventory.materials));
-  for (const [key, value] of Object.entries(s.inventory.materials || {})) valid((key === 'Emveretarcon' || Object.values(MONSTERS).some(monster => monster.material === key)) && Number.isInteger(value) && finite(value));
+  for (const [key, value] of Object.entries(s.inventory.materials || {})) valid((Object.hasOwn(ORE_INFO, key) || Object.values(MONSTERS).some(monster => monster.material === key)) && Number.isInteger(value) && finite(value));
   if (s.inventory.equipment && s.inventory.equipment.dune === undefined) s.inventory.equipment.dune = 0;
   if (s.inventory.equipment && s.inventory.equipment.reliquary === undefined) s.inventory.equipment.reliquary = 0;
   for (const key of ['reliquary', 'dune', 'iron', 'guard', 'sanctuary']) valid(Number.isInteger(s.inventory.equipment?.[key]) && finite(s.inventory.equipment[key]));

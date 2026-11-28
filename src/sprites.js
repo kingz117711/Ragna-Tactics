@@ -4,7 +4,7 @@ const image = src => new Promise((resolve, reject) => {
 });
 const json = async src => { const r = await fetch(src); if (!r.ok) throw new Error('Missing asset: ' + src); return r.json(); };
 export class Sprites {
-  constructor() { this.assets = new Map(); this.portraits = new Map(); this.index = null; }
+  constructor() { this.assets = new Map(); this.portraits = new Map(); this.heroFrames = new Map(); this.index = null; this.roTerrain = null; }
   async init() {
     this.index = await json('/assets/index.json');
     await Promise.all(Object.entries(this.index.wardrobe).map(async ([key, rec]) => {
@@ -29,23 +29,67 @@ export class Sprites {
         }),
       ]);
     }
+    if (this.index.roTerrain) {
+      const source = this.index.roTerrain;
+      const [manifest, atlas] = await Promise.all([
+        json('/assets/' + source.manifest), image('/assets/' + source.file)
+      ]);
+      this.roTerrain = { manifest, atlas, tiles: new Map() };
+    }
   }
-  tile(name) { return this.assets.get('tile-' + name) || null; }
+  tile(name) {
+    if (this.roTerrain) {
+      const cached = this.roTerrain.tiles.get(name);
+      if (cached) return cached;
+      const rec = this.roTerrain.manifest.tiles[name];
+      if (rec) {
+        const cv = document.createElement('canvas'); cv.width = rec.w; cv.height = rec.h;
+        cv.getContext('2d').drawImage(this.roTerrain.atlas, rec.x, rec.y, rec.w, rec.h, 0, 0, rec.w, rec.h);
+        this.roTerrain.tiles.set(name, cv);
+        return cv;
+      }
+    }
+    return this.assets.get('tile-' + name) || null;
+  }
   prop(name) { return this.assets.get('prop-' + name) || null; }
+  heroFrame(job, sex, route, body, hair, bodyIndex, hairIndex) {
+    const cacheKey = `${job}/${sex}/${route}/${bodyIndex}/${hairIndex}`;
+    const cached = this.heroFrames.get(cacheKey);
+    if (cached) {
+      this.heroFrames.delete(cacheKey); this.heroFrames.set(cacheKey, cached);
+      return cached;
+    }
+    const anchor = this.index.anchor;
+    const layers = [...body.metadata.poses[bodyIndex].map(layer => [layer, body.atlas]),
+      ...hair.metadata.poses[hairIndex].map(layer => [layer, hair.atlas])].sort((a, b) => a[0][6] - b[0][6]);
+    const left = Math.floor(Math.min(...layers.map(([p]) => p[4] - anchor[0])));
+    const top = Math.floor(Math.min(...layers.map(([p]) => p[5] - anchor[1])));
+    const right = Math.ceil(Math.max(...layers.map(([p]) => p[4] - anchor[0] + p[2])));
+    const bottom = Math.ceil(Math.max(...layers.map(([p]) => p[5] - anchor[1] + p[3])));
+    const canvas = document.createElement('canvas'); canvas.width = right - left; canvas.height = bottom - top;
+    const ctx = canvas.getContext('2d'); ctx.imageSmoothingEnabled = false;
+    for (const [p, atlas] of layers) ctx.drawImage(atlas, p[0], p[1], p[2], p[3], p[4] - anchor[0] - left, p[5] - anchor[1] - top, p[2], p[3]);
+    const frame = { canvas, left, top };
+    this.heroFrames.set(cacheKey, frame);
+    if (this.heroFrames.size > 128) this.heroFrames.delete(this.heroFrames.keys().next().value);
+    return frame;
+  }
   hero(ctx, c, ms, stance = c.stance, direction = c.direction, scale = 0.7) {
-    const job = JOBS[c.job].native;
+    // Fall back to the nearest imported ancestor outfit; this is a placeholder, not a claim that the ancestor is the new job's authentic sprite.
+    let visualClass = c.job;
+    while (visualClass && !this.assets.has(`base-${JOBS[visualClass]?.native}-${c.sex}`)) visualClass = JOBS[visualClass]?.parent;
+    const job = JOBS[visualClass || 'novice'].native;
     const body = this.assets.get(`base-${job}-${c.sex}`), hair = this.assets.get(`hair-${c.sex}-2-0`);
     if (!body || !hair) return;
-    const key = stance + direction;
-    const action = body.metadata.actions[key];
-    const head = hair.metadata.actions[job + ':' + key];
+    const route = stance + direction;
+    const action = body.metadata.actions[route];
+    const head = hair.metadata.actions[job + ':' + route];
     if (!action || !head) return;
     const at = Math.floor(ms / action.delay) % action.frames.length;
     const headAt = Math.floor(ms / head.delay) % head.frames.length;
-    const layers = [...body.metadata.poses[action.frames[at]].map(layer => [layer, body.atlas]),
-      ...hair.metadata.poses[head.frames[headAt]].map(layer => [layer, hair.atlas])].sort((a, b) => a[0][6] - b[0][6]);
+    const frame = this.heroFrame(job, c.sex, route, body, hair, action.frames[at], head.frames[headAt]);
     ctx.save(); ctx.scale(scale, scale); ctx.imageSmoothingEnabled = false;
-    for (const [p, atlas] of layers) ctx.drawImage(atlas, p[0], p[1], p[2], p[3], p[4] - this.index.anchor[0], p[5] - this.index.anchor[1], p[2], p[3]);
+    ctx.drawImage(frame.canvas, frame.left, frame.top);
     ctx.restore();
   }
   monster(ctx, mob, ms) {

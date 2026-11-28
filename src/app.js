@@ -1,4 +1,4 @@
-import { jobLineage, combatJob, REFINEMENT, gearVariant, AFFINITIES, ELEMENTS, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
+import { jobLineage, combatJob, REFINEMENT, ORE_INFO, gearVariant, AFFINITIES, ELEMENTS, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, promotionRequirement, classBuilds, selectedBuild, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
 import { availablePoints, forgePrice, command, tick, stats, rosterLimit, engaged, effectiveTactics, isLeader } from './sim.js';
 import { SAVE_KEY, loadGame, saveGame, encodeSave, decodeSave } from './persistence.js';
 import { Sprites } from './sprites.js';
@@ -16,7 +16,7 @@ const radiusControl = $('hunt-radius');
 for (const radius of HUNT_RADII) radiusControl.add(new Option(String(radius), String(radius)));
 radiusControl.value = String(DEFAULT_HUNT_RADIUS);
 let multiSelect = false, tacticsExpanded = false;
-let toastTimer, accumulator = 0, lastTime = performance.now(), lastUI = 0, lastSave = performance.now(), inspectorKey = '';
+let toastTimer, accumulator = 0, lastTime = performance.now(), lastUI = 0, lastMinimap = 0, lastSave = performance.now(), inspectorKey = '';
 const modal = $('modal');
 function html(id, content) { if ($(id).innerHTML !== content) $(id).innerHTML = content; }
 function toast(message) { $('toast').textContent = message; $('toast').hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { $('toast').hidden = true; }, 4500); }
@@ -94,7 +94,7 @@ function renderUI() {
   }).join('') : '<div class="party-empty">No linked parties · select two or more adventurers to form one.</div>');
   if (focusedPartyMember) $('party-overview').querySelector(`[data-character="${focusedPartyMember}"]`)?.focus({ preventScroll: true });
   renderExpeditionGoals();
-  const eligible = state.characters.filter(c => c.jobLevel >= promotionLevel(c.job));
+  const eligible = state.characters.filter(c => c.jobLevel >= promotionLevel(c.job) && c.level >= promotionRequirement(c.job).baseLevel);
   $('job-notice').hidden = eligible.length === 0;
   $('job-names').textContent = eligible.map(c => c.name).join(', ');
   const cards = state.characters.map(c => {
@@ -150,7 +150,7 @@ function renderInspector(units) {
     content = `<div class="inspector-title">${units.length ? 'Better, together.' : 'Choose your adventurer.'}</div><p>${units.length ? 'Link your adventurers into a party to share targets, support each other, and earn shared EXP. Or deploy separately to cover more ground.' : 'Select a portrait to inspect equipment, tactics, and progression.'}</p>${units.length ? `<div class="detail-row"><span>Selected supplies</span><strong>${potions} potions</strong></div><label class="form-label">Tactics<select id="tactic-select"><option value="" disabled selected>Apply to selection…</option>${Object.entries(TACTICS).map(([key, t]) => `<option value="${key}">${t.name}</option>`).join('')}</select></label><p>Job changes become available at Novice Job Lv. 10. Every character chooses their own path.</p>` : ''}`;
   } else {
     const c = units[0], st = stats(c);
-    content = `<div class="inspector-title">${JOBS[c.job].name} <span class="tiny muted">${JOBS[c.job].role}</span></div><div class="detail-row"><span>Base Lv. ${c.level}</span><strong>${number(c.exp)} / ${baseNeed(c.level)} EXP</strong></div><div class="progress"><i style="width:${Math.min(100, c.exp / baseNeed(c.level) * 100)}%"></i></div><div class="detail-row"><span>Job Lv. ${c.jobLevel}${c.job === 'novice' ? ' / 10' : ' / 50'}</span><strong>${c.jobLevel >= promotionLevel(c.job) ? 'Job change ready' : `${number(c.jobExp)} / ${jobNeed(c.jobLevel)}`}</strong></div><div class="progress"><i style="width:${Math.min(100, c.jobExp / jobNeed(c.jobLevel) * 100)}%"></i></div><div class="detail-row"><span>HP / SP</span><strong>${Math.ceil(c.hp)}/${st.hp} · ${Math.floor(c.sp)}/${st.sp}</strong></div><div class="detail-row"><span>ATK / DEF · Potions</span><strong>${st.atk} / ${st.def} · ${c.potions}</strong></div><div class="detail-row"><span>Combat role</span><strong>${ROLE_LABELS[JOB_ROLES[c.job]]}${c.partyId ? ` · ${isLeader(state, c) ? 'Party leader' : 'Follower'}` : ''}</strong></div><label class="form-label">Starting preset<select id="tactic-select">${Object.entries(TACTICS).map(([key, t]) => `<option value="${key}" ${c.tactic === key ? 'selected' : ''}>${t.name}</option>`).join('')}</select></label>${tacticsMarkup(c)}<label class="form-label">Farming objective<select id="assignment-select">${[['balanced', 'Balanced farming'], ['experience', 'Training · +15% Base EXP'], ['materials', 'Gathering · double materials']].map(([key, label]) => `<option value="${key}" ${c.assignment === key ? 'selected' : ''}>${label}</option>`).join('')}</select></label><div class="detail-row"><span>Assignment · status</span><strong>${c.mapId ? `${MAPS[c.mapId].name} · ${c.status}` : c.status === 'down' ? 'Defeated · camp' : 'Guild camp'}</strong></div><div class="detail-actions">${(st.element || JOB_ROLES[c.job] === 'support') ? '<button data-action="spellbook">Spellbook</button>' : ''}<button data-action="attributes">Stats · ${availablePoints(c)} pts</button><button data-action="equipment">Equipment</button><button data-action="advance">Job path</button><button data-action="rename">Rename</button>${c.partyId && !isLeader(state, c) ? '<button data-action="leader" title="Make this adventurer the party leader">Lead party</button>' : ''}</div><p><span style="color:var(--gold)">${st.skill}</span> · ${st.cost} SP · ${c.cooldown > 0 ? c.cooldown.toFixed(1) + 's remaining' : 'Ready'}<br>${st.element ? ELEMENTS[st.element].name + ' magic · strong against ' + (ELEMENTS[ELEMENTS[st.element].beats]?.name || 'Undead') : st.description || JOBS[c.job].description}</p>`;
+    content = `<div class="inspector-title">${JOBS[c.job].name} <span class="tiny muted">${JOBS[c.job].role}</span></div><div class="detail-row"><span>Base Lv. ${c.level}</span><strong>${number(c.exp)} / ${baseNeed(c.level)} EXP</strong></div><div class="progress"><i style="width:${Math.min(100, c.exp / baseNeed(c.level) * 100)}%"></i></div><div class="detail-row"><span>Job Lv. ${c.jobLevel} / ${JOBS[c.job].jobLevelCap || (c.job === 'novice' ? 10 : 50)}</span><strong>${c.jobLevel >= promotionLevel(c.job) ? 'Job change ready' : `${number(c.jobExp)} / ${jobNeed(c.jobLevel)}`}</strong></div><div class="progress"><i style="width:${Math.min(100, c.jobExp / jobNeed(c.jobLevel) * 100)}%"></i></div><div class="detail-row"><span>HP / SP</span><strong>${Math.ceil(c.hp)}/${st.hp} · ${Math.floor(c.sp)}/${st.sp}</strong></div><div class="detail-row"><span>ATK / DEF · Potions</span><strong>${st.atk} / ${st.def} · ${c.potions}</strong></div><div class="detail-row"><span>Combat role</span><strong>${ROLE_LABELS[JOB_ROLES[c.job]]}${c.partyId ? ` · ${isLeader(state, c) ? 'Party leader' : 'Follower'}` : ''}</strong></div><label class="form-label">Starting preset<select id="tactic-select">${Object.entries(TACTICS).map(([key, t]) => `<option value="${key}" ${c.tactic === key ? 'selected' : ''}>${t.name}</option>`).join('')}</select></label>${tacticsMarkup(c)}<label class="form-label">Farming objective<select id="assignment-select">${[['balanced', 'Balanced farming'], ['experience', 'Training · +15% Base EXP'], ['materials', 'Gathering · double materials']].map(([key, label]) => `<option value="${key}" ${c.assignment === key ? 'selected' : ''}>${label}</option>`).join('')}</select></label><div class="detail-row"><span>Assignment · status</span><strong>${c.mapId ? `${MAPS[c.mapId].name} · ${c.status}` : c.status === 'down' ? 'Defeated · camp' : 'Guild camp'}</strong></div><div class="detail-actions">${(st.element || JOB_ROLES[c.job] === 'support') ? '<button data-action="spellbook">Spellbook</button>' : ''}<button data-action="attributes">Stats · ${availablePoints(c)} pts</button><button data-action="equipment">Equipment</button>${classBuilds(c.job).length > 1 ? '<button data-action="builds">Build</button>' : ''}<button data-action="advance">Job path</button><button data-action="rename">Rename</button>${c.partyId && !isLeader(state, c) ? '<button data-action="leader" title="Make this adventurer the party leader">Lead party</button>' : ''}</div><p><span style="color:var(--gold)">${st.skill}</span> · ${st.cost} SP · ${c.cast ? `Casting · ${c.cast.remaining.toFixed(1)}s` : c.cooldown > 0 ? c.cooldown.toFixed(1) + 's cooldown' : 'Ready'} · Hit ${Math.round(st.hit * 100)}% · Flee ${Math.round(st.flee * 100)}%<br>${st.element ? ELEMENTS[st.element].name + ' magic · strong against ' + (ELEMENTS[ELEMENTS[st.element].beats]?.name || 'Undead') : st.description || JOBS[c.job].description}</p>`;
   }
   if (content !== inspectorKey) { html('inspector', content); inspectorKey = content; }
 }
@@ -161,7 +161,7 @@ function deployment() {
   $('deployment-form').onsubmit = event => { event.preventDefault(); const mapId = new FormData(event.currentTarget).get('destination'); if (issue({ type: 'deploy', mapId }, { close: true, quiet: true })) { coachDismissed = true; switchMap(mapId); toast('Expedition started. Your adventurers will farm automatically.'); } };
 }
 function camp() {
-  showModal('Back at the guild camp.', `<p>Recover and change jobs here. Deployed adventurers must retreat before they can use camp services.</p>${state.characters.map(c => `<div class="camp-unit"><img src="${sprites.portrait(c)}" alt=""><div><strong>${esc(c.name)} · ${JOBS[c.job].name}</strong><p>${c.mapId ? `At ${MAPS[c.mapId].name}${engaged(state, c) ? ' · In combat' : ''}` : c.status === 'down' ? 'Defeated · recovery needed' : `At camp · ${c.potions} potions`}</p></div><button data-camp-unit="${c.id}" data-service="${c.mapId ? 'retreat' : c.status !== 'down' && c.jobLevel >= promotionLevel(c.job) ? 'advance' : 'recover'}">${c.mapId ? 'Recall' : c.status !== 'down' && c.jobLevel >= promotionLevel(c.job) ? 'Choose job' : 'Recover'}</button></div>`).join('')}<div class="camp-actions"><button data-modal-action="recover-all">Recover at camp</button><button data-modal-action="supply-all">Refill camp potions · 2z each</button></div><p style="margin-top:15px">Recovery is free in this foundation. Refills bring each character to ten potions. Each potion restores 65 HP automatically below 45% HP.</p>${modalError}`);
+  showModal('Back at the guild camp.', `<p>Recover and change jobs here. Deployed adventurers must retreat before they can use camp services.</p>${state.characters.map(c => `<div class="camp-unit"><img src="${sprites.portrait(c)}" alt=""><div><strong>${esc(c.name)} · ${JOBS[c.job].name}</strong><p>${c.mapId ? `At ${MAPS[c.mapId].name}${engaged(state, c) ? ' · In combat' : ''}` : c.status === 'down' ? 'Defeated · recovery needed' : `At camp · ${c.potions} potions`}</p></div><button data-camp-unit="${c.id}" data-service="${c.mapId ? 'retreat' : c.status !== 'down' && c.jobLevel >= promotionLevel(c.job) && c.level >= promotionRequirement(c.job).baseLevel ? 'advance' : 'recover'}">${c.mapId ? 'Recall' : c.status !== 'down' && c.jobLevel >= promotionLevel(c.job) && c.level >= promotionRequirement(c.job).baseLevel ? 'Choose job' : 'Recover'}</button></div>`).join('')}<div class="camp-actions"><button data-modal-action="recover-all">Recover at camp</button><button data-modal-action="supply-all">Refill camp potions · 2z each</button></div><p style="margin-top:15px">Recovery is free in this foundation. Refills bring each character to ten potions. Each potion restores 65 HP automatically below 45% HP.</p>${modalError}`);
 }
 function advanceJob(id = [...selected][0]) {
   const c = state.characters.find(v => v.id === id);
@@ -172,7 +172,7 @@ function advanceJob(id = [...selected][0]) {
     showModal(JOBS[c.job].name, `<div class="milestone-note">${jobLineage(c.job).join(' → ')}</div><h3>${JOBS[c.job].skill}</h3><p>${JOBS[c.job].description}</p>`, 'TRANSCENDENT JOB');
     return;
   }
-  showModal(first ? 'Choose a new beginning.' : 'Advance your calling.', `<p>${esc(c.name)} · ${JOBS[c.job].name} · Job Lv. ${c.jobLevel} / ${gate}</p><p>Return to camp at Job Lv. ${gate} to advance. Keep your Base level and equipment. Your new job begins at Job Lv. 1.</p><form id="job-form"><div class="modal-grid">${choices.map(([key, job]) => `<label class="choice-card"><input type="radio" name="job" value="${key}" required><img class="job-preview" src="${sprites.portrait({ ...c, job: key })}" alt=""><span class="tiny"> ${job.role}</span><strong>${job.name}</strong><p>${job.description}</p></label>`).join('')}</div>${modalError}<div class="modal-footer"><span>Each adventurer chooses independently.</span><button type="submit" class="primary" ${c.jobLevel < gate || c.mapId || c.status === 'down' ? 'disabled' : ''}>Choose job <span>✧</span></button></div></form>`, first ? 'NOVICE → FIRST JOB' : (JOBS[c.job].parent ? 'SECOND JOB → TRANSCENDENT' : 'FIRST JOB → SECOND JOB'));
+  showModal(first ? 'Choose a new beginning.' : 'Advance your calling.', `<p>${esc(c.name)} · ${JOBS[c.job].name} · Job Lv. ${c.jobLevel} / ${gate}</p><p>Return to camp at Job Lv. ${gate}${promotionRequirement(c.job).baseLevel > 1 ? ` and Base Lv. ${promotionRequirement(c.job).baseLevel}` : ''} to advance. Keep your equipment. Your new job begins at Job Lv. 1.</p><form id="job-form"><div class="modal-grid">${choices.map(([key, job]) => `<label class="choice-card"><input type="radio" name="job" value="${key}" required><img class="job-preview" src="${sprites.portrait({ ...c, job: key })}" alt=""><span class="tiny"> ${job.role}</span><strong>${job.name}</strong><p>${job.description}</p></label>`).join('')}</div>${modalError}<div class="modal-footer"><span>Each adventurer chooses independently.</span><button type="submit" class="primary" ${c.jobLevel < gate || c.level < promotionRequirement(c.job).baseLevel || c.mapId || c.status === 'down' ? 'disabled' : ''}>Choose job <span>✧</span></button></div></form>`, first ? 'NOVICE → FIRST JOB' : (JOBS[c.job].parent ? 'SECOND JOB → TRANSCENDENT' : 'FIRST JOB → SECOND JOB'));
   $('job-form').onsubmit = event => { event.preventDefault(); const job = new FormData(event.currentTarget).get('job'); issue({ type: 'promote', job, ids: [c.id] }, { close: true }); };
 }
 function recruit() {
@@ -223,9 +223,11 @@ function equipment() {
     const worn = c.equipment === id && (c.card || null) === card && (c.refine || 0) === rank;
     return `<div class="inventory-row"><div>${rank ? '+' + rank + ' ' : ''}${EQUIPMENT[id].name}${card ? ' · ' + CARDS[card].name : ''}<p>${EQUIPMENT[id].description}</p></div><button data-equip="${id}" data-rank="${rank}" data-card="${card || ''}" ${c.mapId || worn || (id !== 'training' && !count) ? 'disabled' : ''}>${worn ? 'Equipped' : id === 'training' ? 'Equip' : 'Equip · ' + count}</button></div>`;
   }).join('');
-  const rank = c.refine || 0, cost = REFINEMENT[rank+1], ore = state.inventory.materials.Emveretarcon || 0;
+  const rank = c.refine || 0, cost = REFINEMENT[rank+1];
+  const material = cost && (cost.material || EQUIPMENT[c.equipment].refineMaterial);
+  const ore = material ? state.inventory.materials[material] || 0 : 0;
   const workshop = c.equipment === 'training' ? '<p>Equip field gear to unlock refinement.</p>' : cost
-    ? `<div class="inventory-row"><div><strong>Refine to +${rank+1}</strong><p>+2 ATK · +1 DEF · ${ore}/${cost.ore} Emveretarcon · ${cost.zeny} Zeny</p><p>Ore drops from Payon undead, most often Archer Skeletons.</p></div><button data-refine="${rank+1}" ${c.mapId || ore < cost.ore || state.inventory.zeny < cost.zeny ? 'disabled' : ''}>Refine</button></div>` : '<p>Maximum refinement · +6 ATK and +3 DEF</p>';
+    ? `<div class="inventory-row"><div><strong>Refine to +${rank+1}</strong><p>+2 ATK · +1 DEF · ${ore}/${cost.ore} ${material} · ${cost.zeny} Zeny</p><p>${rank < 3 ? 'Emveretarcon comes from Payon undead.' : `${material} drops in Payon Cave; weapon gear uses Oridecon and defensive gear uses Elunium.`}</p></div><button data-refine="${rank+1}" ${c.mapId || ore < cost.ore || state.inventory.zeny < cost.zeny ? 'disabled' : ''}>Refine</button></div>` : '<p>Maximum refinement · +10 ATK and +5 DEF</p>';
   showModal(`${c.name}’s equipment`, `<p>Change equipment and sockets at camp. Stored gear keeps its card.</p>${stock}<h3>${rank ? '+' + rank + ' ' : ''}${EQUIPMENT[c.equipment].name} · ${c.equipment === 'training' ? 'No socket' : equipped}</h3>${workshop}${cardRows(c)}${c.card ? `<button data-socket="" ${c.mapId ? 'disabled' : ''}>Remove card</button>` : ''}${modalError}`);
 }
 function cardRows(character) {
@@ -298,6 +300,13 @@ function spellbook() {
   const rows = support + Object.entries(ELEMENTS).filter(([,e]) => e[combatJob(c.job)]).map(([id, e]) => `<div class="inventory-row"><div><strong>${e[combatJob(c.job)]}</strong><p>${e.name} magic · strong against ${ELEMENTS[e.beats]?.name || 'Undead'}</p></div><button data-attune="${id}" ${current === id || c.mapId ? 'disabled' : ''}>${current === id ? 'Prepared' : 'Prepare'}</button></div>`).join('');
   showModal(c.name + '’s spellbook', `<p>Prepare one spell at camp for manual casts and automatic farming. Weakness adds 50% spell damage. Matching the enemy element reduces it by 25%.</p>${rows}${modalError}`,'ELEMENTAL MAGIC');
 }
+function buildBook() {
+  const c = selectedCharacters()[0];
+  if (!c || selected.size !== 1) return toast('Select one adventurer to configure a build.');
+  const current = selectedBuild(c.job, c.buildId);
+  const rows = classBuilds(c.job).map(build => `<section class="build-option ${current?.id === build.id ? 'active' : ''}"><div><span class="eyebrow">${build.style.toUpperCase()} · ${build.rotation}</span><h3>${build.name}</h3><p>Signature: ${build.skills.at(-1)} · ${build.resource}</p><p>${build.skills.join(' · ')}</p></div><button data-build="${build.id}" ${current?.id === build.id || c.mapId || c.status === 'down' ? 'disabled' : ''}>${current?.id === build.id ? 'Active build' : 'Prepare build'}</button></section>`).join('');
+  showModal(c.name + '’s combat build', `<p>Builds set the automatic skill rotation and combat behavior. Change builds at camp; your choice is saved with this adventurer.</p>${rows || '<p>This class has no combat build options yet.</p>'}${modalError}`, 'CLASS TRAINING');
+}
 function fieldGuide() {
   const habitats = { zombie:'payon', skeleton:'payon', poring:'meadow', fabre:'meadow', willow:'forest', scorpion:'morroc', peco:'morroc', baphomet:'arena', phreeoni:'lair' };
   const rows = Object.entries(habitats).map(([id,mapId]) => {
@@ -326,6 +335,23 @@ function storage() {
   }).join('');
   showModal('The fruits of your adventures.', `<p>All expedition loot arrives in shared storage. Equipment is assigned individually at camp.</p><h3>Materials</h3>${Object.entries(state.inventory.materials).length ? Object.entries(state.inventory.materials).map(([name, count]) => `<div class="inventory-row">${esc(name)}<span>${number(count)}</span></div>`).join('') : '<p>No materials yet. Your first expedition is waiting.</p>'}<h3>Equipment</h3>${Object.entries(state.inventory.equipment).map(([id, count]) => `<div class="inventory-row"><div>${EQUIPMENT[id].name}<p>${EQUIPMENT[id].description}</p></div><span>${count} stored</span></div>`).join('')}<p style="margin-top:17px">Field enemies have a small chance to drop equipment. Baphomet always drops a Sanctuary relic. Crafted gear can be equipped at camp.</p><h3>Monster cards</h3>${cardRows()}<h3>Prontera forge</h3><p>A Blacksmith resting at camp halves the Zeny fee. Guild funds · ${number(state.inventory.zeny)} Zeny</p>${recipes}${modalError}`, 'SHARED STORAGE');
 }
+function bag() {
+  const storedGear = Object.entries(state.inventory.equipment).filter(([id, count]) => id !== 'training' && count > 0)
+    .map(([id, count]) => `<div class="inventory-row"><div><strong>${EQUIPMENT[id].name}</strong><p>${EQUIPMENT[id].description}</p></div><span>×${number(count)}</span></div>`).join('');
+  const refinedGear = Object.entries(state.inventory.socketed).filter(([, count]) => count > 0).map(([key, count]) => {
+    const { item, card, rank } = gearVariant(key);
+    return `<div class="inventory-row"><div><strong>${rank ? '+' + rank + ' ' : ''}${EQUIPMENT[item].name}${card ? ' · ' + CARDS[card].name : ''}</strong><p>${EQUIPMENT[item].description}</p></div><span>×${number(count)}</span></div>`;
+  }).join('');
+  const materialNames = new Set([...Object.keys(state.inventory.materials), ...Object.keys(ORE_INFO)]);
+  const materials = [...materialNames].sort((a, b) => a.localeCompare(b)).map(name =>
+    `<div class="inventory-row"><div><strong>${esc(name)}</strong><p>${ORE_INFO[name]?.description || 'Field crafting material.'}</p></div><span>×${number(state.inventory.materials[name] || 0)}</span></div>`).join('');
+  const potions = state.characters.map(c => {
+    const refill = Math.max(0, 10 - c.potions) * 2;
+    return `<div class="inventory-row"><div><strong>Red Potion · ${esc(c.name)}</strong><p>${number(c.potions)} carried · auto-use restores 65 HP.</p></div><button data-bag-restock="${c.id}" ${c.mapId || !refill || state.inventory.zeny < refill ? 'disabled' : ''}>${refill ? `Restock · ${refill}z` : 'Full'}</button></div>`;
+  }).join('');
+  const selected = selectedCharacters();
+  showModal('Guild bag', `<div class="bag-summary"><div><span>Guild funds</span><strong>${number(state.inventory.zeny)} Zeny</strong></div><div><span>Adventurers</span><strong>${state.characters.length} / 5</strong></div></div><div class="bag-grid"><section class="bag-section"><h3>Equipment</h3>${storedGear || refinedGear ? storedGear + refinedGear : '<p>No spare equipment stored.</p>'}<button class="bag-open-equipment" data-bag-equipment ${selected.length !== 1 ? 'disabled' : ''}>Manage selected adventurer’s gear</button></section><section class="bag-section"><h3>Materials &amp; ores</h3>${materials}</section><section class="bag-section"><h3>Consumables · Red Potions</h3><p>Restock at camp; characters use potions automatically according to their tactics.</p>${potions}</section><section class="bag-section"><h3>Monster cards</h3>${cardRows()}</section></div>${modalError}`, 'INVENTORY');
+}
 function rename() {
   const c = selectedCharacters()[0]; if (!c || selected.size !== 1) return toast('Choose one adventurer to rename.');
   showModal('A name for their story.', `<form id="rename-form"><label for="rename-name" class="form-label">Adventurer name</label><input type="text" id="rename-name" name="name" maxlength="20" required value="${esc(c.name)}">${modalError}<div class="modal-footer"><button class="primary">Save name</button></div></form>`);
@@ -341,18 +367,20 @@ function offlineReport(report) {
   showModal('Welcome back, guild leader.', `<p>Your adventurers kept their assignments while you were away.${report.capped ? ' The four-hour limit was applied.' : ''} Boss expeditions require active play and returned to camp.</p><div class="report-stats"><div class="report-stat"><strong>${duration(report.seconds)}</strong><span>FARMING TIME</span></div><div class="report-stat"><strong>${number(report.kills)}</strong><span>ENEMIES DEFEATED</span></div><div class="report-stat"><strong>${number(report.zeny)}</strong><span>ZENY EARNED</span></div></div>${report.loot.length ? `<h3>Loot brought back</h3>${report.loot.map(drop => `<div class="inventory-row">${esc(drop.name)}<span>×${number(drop.count)}</span></div>`).join('')}` : ''}${report.characters.map(c => `<div class="inventory-row"><div>${esc(c.name)}<p>${c.levels ? `+${c.levels} Base levels · ` : ''}${c.jobLevels ? `+${c.jobLevels} Job levels · ` : ''}${c.potions} potions used</p></div><span>${c.status === 'down' ? 'Needs recovery' : c.status === 'camp' ? 'At camp' : 'On assignment'}</span></div>`).join('')}<div class="modal-footer"><button class="primary" id="continue-adventure">Continue adventure <span>↗</span></button></div>`, 'EXPEDITION REPORT');
   $('continue-adventure').onclick = closeModal;
 }
-async function settle(elapsed) {
+async function settle(elapsed, { activeTab = false } = {}) {
   if (elapsed < 2) return;
-  settling = true; ready = false; $('loading').hidden = false; $('loading-text').textContent = 'Your adventurers are reporting in…';
+  settling = true; ready = false;
+  if (!activeTab) { $('loading').hidden = false; $('loading-text').textContent = 'Your adventurers are reporting in…'; }
   const worker = new Worker('/src/offline-worker.js', { type: 'module' });
   try {
     const result = await new Promise((resolve, reject) => {
       worker.onmessage = ({ data }) => data.error ? reject(new Error(data.error)) : resolve(data);
-      worker.onerror = () => reject(new Error('Offline farming could not be calculated. Your saved checkpoint is unchanged.'));
-      worker.postMessage({ state, elapsed });
+      worker.onerror = () => reject(new Error('Expedition catch-up could not be calculated. Your saved checkpoint is unchanged.'));
+      worker.postMessage({ state, elapsed, mode: activeTab ? 'active-tab' : 'offline' });
     });
     state = result.state; settling = false; persist();
-    if (elapsed >= 30) offlineReport(result.report);
+    if (!activeTab && elapsed >= 30) offlineReport(result.report);
+    if (activeTab && result.capped) toast('Background catch-up reached the four-hour safety limit.');
   } finally { worker.terminate(); settling = false; ready = true; lastTime = performance.now(); accumulator = 0; $('loading').hidden = true; }
 }
 
@@ -370,7 +398,7 @@ document.addEventListener('click', event => {
   const action = event.target.closest('[data-action]')?.dataset.action;
   if (action) {
     if (action === 'deploy') deployment(); else if (action === 'camp') camp(); else if (action === 'advance') advanceJob();
-    else if (action === 'spellbook') spellbook(); else if (action === 'attributes') attributes(); else if (action === 'equipment') equipment(); else if (action === 'rename') rename(); else if (action === 'leader') issue({ type: 'leader' });
+    else if (action === 'spellbook') spellbook(); else if (action === 'builds') buildBook(); else if (action === 'attributes') attributes(); else if (action === 'equipment') equipment(); else if (action === 'rename') rename(); else if (action === 'leader') issue({ type: 'leader' });
     else if (action === 'move' || action === 'rally') {
       if (action === 'rally' && MAPS[renderer.mapId].boss) return toast('Choose a farming field to mark a hunting area.');
       $('toast').hidden = true;
@@ -387,6 +415,8 @@ document.addEventListener('click', event => {
   if (socket && issue({ type: 'socket', card: socket.dataset.socket || null }, { quiet: true })) equipment();
   const attune = event.target.closest('[data-attune]');
   if (attune && issue({ type:'attune',element:attune.dataset.attune },{quiet:true})) spellbook();
+  const build = event.target.closest('[data-build]');
+  if (build && issue({ type:'build', buildId:build.dataset.build },{quiet:true})) buildBook();
   const field = event.target.closest('[data-guide-map]');
   if (field) { closeModal(); switchMap(field.dataset.guideMap); }
   const bounty = event.target.closest('[data-bounty]');
@@ -394,6 +424,13 @@ document.addEventListener('click', event => {
   const forge = event.target.closest('[data-forge]');
   if (forge && issue({ type: 'forge', item: forge.dataset.forge }, { quiet: true })) { storage(); toast('Forged equipment added to shared storage.'); }
   const equip = event.target.closest('[data-equip]'); if (equip && issue({ type: 'equip', item: equip.dataset.equip, card: equip.dataset.card || null, rank:Number(equip.dataset.rank) })) equipment();
+  const bagRestock = event.target.closest('[data-bag-restock]');
+  if (bagRestock) {
+    const id = bagRestock.dataset.bagRestock; selected = new Set([id]);
+    if (issue({ type: 'resupply', ids: [id] }, { quiet: true })) bag();
+    return;
+  }
+  if (event.target.closest('[data-bag-equipment]')) { closeModal(); equipment(); return; }
   const modalAction = event.target.closest('[data-modal-action]')?.dataset.modalAction;
   if (modalAction === 'recover-all') { const ids = state.characters.filter(c => !c.mapId).map(c => c.id); if (issue({ type: 'recover', ids })) camp(); }
   if (modalAction === 'supply-all') { const ids = state.characters.filter(c => !c.mapId).map(c => c.id); if (issue({ type: 'resupply', ids })) camp(); }
@@ -435,7 +472,7 @@ $('select-all').onclick = () => { selected = new Set(state.characters.map(c => c
 $('multi-select').onclick = () => { multiSelect = !multiSelect; $('multi-select').setAttribute('aria-pressed', multiSelect); $('multi-select').textContent = multiSelect ? 'Multi ✓' : 'Multi'; };
 $('first-deploy').onclick = () => { selected = new Set(state.characters.map(c => c.id)); deployment(); };
 $('dismiss-coach').onclick = () => { coachDismissed = true; renderUI(); };
-$('recruit-button').onclick = recruit; $('settings-button').onclick = settings; $('guide-button').onclick = fieldGuide; $('bounty-button').onclick = bountyBoard; $('storage-button').onclick = storage; $('world-button').onclick = worldOverview;
+$('recruit-button').onclick = recruit; $('settings-button').onclick = settings; $('bag-button').onclick = bag; $('guide-button').onclick = fieldGuide; $('bounty-button').onclick = bountyBoard; $('storage-button').onclick = storage; $('world-button').onclick = worldOverview;
 $('modal-close').onclick = closeModal;
 $('save-button').onclick = () => { persist(); toast(saveError ? 'Export your guild to preserve progress.' : 'Guild saved.'); };
 $('zoom-in').onclick = () => { renderer.zoom(1.18); renderUI(); }; $('zoom-out').onclick = () => { renderer.zoom(1 / 1.18); renderUI(); };
@@ -544,7 +581,7 @@ document.addEventListener('keydown', event => {
 document.addEventListener('visibilitychange', async () => {
   if (!state || !writable || settling) return;
   if (document.hidden) { hiddenAt = Date.now(); persist(); }
-  else if (hiddenAt) { const elapsed = (Date.now() - hiddenAt) / 1000; hiddenAt = null; try { await settle(elapsed); renderUI(); } catch (err) { toast(err.message); } lastTime = performance.now(); }
+  else if (hiddenAt) { const elapsed = (Date.now() - hiddenAt) / 1000; hiddenAt = null; try { await settle(elapsed, { activeTab: true }); renderUI(); } catch (err) { toast(err.message); } lastTime = performance.now(); }
 });
 window.addEventListener('pagehide', persist);
 function frame(now) {
@@ -554,7 +591,7 @@ function frame(now) {
   while (accumulator >= STEP) { tick(state); accumulator -= STEP; }
   const preview = orderMode === 'rally' && previewPointer ? renderer.world(previewPointer.x, previewPointer.y) : null;
   renderer.draw(state, selected, hovered, accumulator, preview && { ...preview, radius: Number(radiusControl.value) });
-  renderer.drawMinimap($('minimap'), state, selected);
+  if (now - lastMinimap >= 100) { renderer.drawMinimap($('minimap'), state, selected); lastMinimap = now; }
   if (now - lastUI > 500) { renderUI(); lastUI = now; }
   if (now - lastSave > 5000) { persist(); lastSave = now; }
 }

@@ -256,6 +256,26 @@ h2{
   font-size:18px;
   border-color:transparent
 }
+.bag-button{
+  border:1px solid #c8ab6555;
+  border-radius:4px;
+  padding:6px 10px;
+  color:#e9d9ad;
+  font-size:10px;
+  letter-spacing:.7px;
+  background:#203536;
+}
+.bag-button:hover,.bag-button:focus-visible{border-color:var(--gold);background:#294141}
+.bag-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0 18px}
+.bag-summary>div{display:flex;flex-direction:column;gap:4px;padding:12px;border:1px solid var(--line);border-radius:5px;background:#182e30}
+.bag-summary span{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.bag-summary strong{color:var(--gold);font-weight:600}
+.bag-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bag-section{min-width:0;padding:12px;border:1px solid var(--line);border-radius:5px;background:#162b2d}
+.bag-section h3{margin:0 0 9px;color:#e5d5ab;font-family:Georgia,serif}
+.bag-section>p{font-size:10px;line-height:1.5;color:#9aada3}
+.bag-section .inventory-row{padding:9px 0}
+.bag-open-equipment{width:100%;margin-top:9px;padding:9px;font-size:10px}
 .app-layout{
   display:grid;
   grid-template-columns:212px minmax(400px,1fr) 258px;
@@ -1610,8 +1630,10 @@ select{
     font-size:24px
   }
   .top-resources{
-    gap:10px
+    gap:8px
   }
+  .bag-button{padding:5px 7px;font-size:9px}
+  .bag-grid{grid-template-columns:1fr}
   .currency>.muted{
     display:none
   }
@@ -2016,3 +2038,9 @@ select{
 .bounty-entry { display:grid; grid-template-columns:64px 1fr; gap:14px; padding:16px 0; border-top:1px solid #435449; }
 .bounty-entry img { width:60px; height:70px; object-fit:contain; image-rendering:pixelated; }
 .bounty-entry h3, .bounty-entry p { margin:5px 0; }
+.build-option { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:12px; padding:13px 0; border-top:1px solid #435449; }
+.build-option.active { color:#f1e6c7; }
+.build-option h3, .build-option p { margin:4px 0; }
+.build-option p { color:var(--muted); font-size:12px; }
+.build-option button { min-width:105px; }
+@media(max-width:520px) { .build-option { grid-template-columns:1fr; } .build-option button { justify-self:start; } }

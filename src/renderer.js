@@ -1,4 +1,4 @@
-import { MAPS, MONSTERS, mapBounds } from './data.js';
+import { MAPS, MONSTERS, STEP, mapBounds } from './data.js';
 import { stats } from './sim.js';
 export const project = (x, y) => ({ x: (x - y) * 22, y: (x + y) * 11 });
 export const unproject = (x, y) => ({ x: (x / 22 + y / 11) / 2, y: (y / 11 - x / 22) / 2 });
@@ -6,14 +6,14 @@ const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 // Scenery reaches one world unit past the playable bounds, as before.
 const visual = mapId => { const b = mapBounds(mapId); return { x: b.x + 1, y: b.y + 1 }; };
 const CHUNK = 8;          // world units per cached terrain chunk
-const CHUNK_CACHE = 96;   // bounded LRU; covers the whole largest map (meadow ≈63 chunks) plus margin, ≈24 MB worst case
+const CHUNK_CACHE = 160;  // bounded LRU; covers a full South Prontera view plus margin, ≈40 MB worst case
 const CELL = 4;           // world units per ground tile cell
 
 // Shared with tests so click→world math always matches the live camera fit.
 export function fitZoom(mapId, width, height) {
   const b = visual(mapId);
   const halfW = (b.x + b.y) * 22, halfH = (b.x + b.y) * 11;
-  return clamp(Math.min(width / (halfW * 2 + 102), (height - 100) / (halfH * 2 + 96)), 0.35, 1.15);
+  return clamp(Math.min(width / (halfW * 2 + 102), (height - 100) / (halfH * 2 + 96)), 0.2, 1.15);
 }
 function polygon(ctx, points, fill, stroke) {
   ctx.beginPath(); points.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath();
@@ -55,7 +55,7 @@ export class Renderer {
     this.canvas = canvas; this.ctx = canvas.getContext('2d'); this.sprites = sprites;
     this.camera = { x: 0, y: 0, zoom: 0.8 }; this.mapId = 'meadow'; this.terrain = new Map(); this.hits = []; this.animations = new Map();
     this.width = 1000; this.height = 650; this.followId = null; this.grid = false;
-    this.orderMarks = [];
+    this.orderMarks = []; this.renderPositions = new Map(); this.positionTime = null; this.positionMap = null;
     this.reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
     this.resizeObserver = new ResizeObserver(() => this.resize()); this.resizeObserver.observe(canvas);
   }
@@ -84,7 +84,7 @@ export class Renderer {
   screen(p) { const q = project(p.x, p.y); return { x: this.width / 2 + (q.x - this.camera.x) * this.camera.zoom, y: this.height / 2 + 20 + (q.y - this.camera.y) * this.camera.zoom }; }
   world(x, y) { return unproject((x - this.width / 2) / this.camera.zoom + this.camera.x, (y - this.height / 2 - 20) / this.camera.zoom + this.camera.y); }
   zoom(delta, x = this.width / 2, y = this.height / 2) {
-    const before = this.world(x, y); this.camera.zoom = clamp(this.camera.zoom * delta, 0.35, 1.8);
+    const before = this.world(x, y); this.camera.zoom = clamp(this.camera.zoom * delta, 0.2, 1.8);
     const after = this.world(x, y), a = project(before.x, before.y), b = project(after.x, after.y);
     this.camera.x += a.x - b.x; this.camera.y += a.y - b.y;
     this.clampCamera();
@@ -141,11 +141,12 @@ export class Renderer {
     const base = cave ? '#504859' : dunes ? '#be9967' : arena ? '#555b5a' : forest ? '#436352' : '#6b8959';
     ctx.fillStyle = base;
     ctx.fillRect(r.x0 - 2, r.y0 - 2, r.x1 - r.x0 + 4, r.y1 - r.y0 + 4);
-    // Global ground features are drawn whole inside every chunk clip so they
-    // continue seamlessly across chunk borders.
+    // Feature paths remain beneath the original RO ground-texture cells. The
+    // world-sized path graph and deterministic cells meet cleanly at chunk seams.
     this.paintGlobalGround(ctx, mapId, r);
-    if (meadow) this.paintTileCells(ctx, mapId, r);
-    this.paintGroundDetail(ctx, mapId, r, cave, arena, forest, dunes, meadow);
+    this.paintTileCells(ctx, mapId, r);
+    // Authentic texture crops already contain surface detail; procedural grain
+    // would muddy the source pixels and add work to each chunk build.
   }
   paintGlobalGround(ctx, mapId, r) {
     const cave = mapId === 'payon', arena = mapId === 'arena', forest = mapId === 'forest';
@@ -197,25 +198,19 @@ export class Renderer {
     }
   }
   paintTileCells(ctx, mapId, r) {
-    const map = MAPS[mapId];
-    const terrain = this.sprites.index?.terrain;
-    const tiles = terrain?.tiles;
-    if (!tiles) return;
+    const map = MAPS[mapId], plan = map?.terrain;
+    if (!plan || !this.sprites.tile(plan.base)) return;
     const cx0 = Math.floor(r.x0 / CELL), cx1 = Math.ceil(r.x1 / CELL);
     const cy0 = Math.floor(r.y0 / CELL), cy1 = Math.ceil(r.y1 / CELL);
+    const b = mapBounds(mapId);
     for (let gy = cy0; gy < cy1; gy++) for (let gx = cx0; gx < cx1; gx++) {
       const wx = gx * CELL + CELL / 2, wy = gy * CELL + CELL / 2;
-      let name;
-      if (roadDistance(map, wx, wy) <= 2.1) name = 'dirt_path';
-      else {
-        const zone = (map.zones || []).find(z => Math.hypot(wx - z.x, wy - z.y) <= z.r * 0.9);
-        if (zone) name = zone.kind === 'poring' ? 'grass_blossom' : 'grass_olive';
-        else {
-          const h = chunkSeed(mapId, gx, gy);
-          name = (h % 100) < 68 ? 'grass_blossom' : 'grass_olive';
-        }
-      }
-      const img = this.sprites.tile(name);
+      const h = chunkSeed(mapId, gx, gy);
+      const edge = Math.min(b.x - Math.abs(wx), b.y - Math.abs(wy)) < 2.6;
+      let name = edge ? plan.edge : plan.base;
+      if (!edge && roadDistance(map, wx, wy) <= 2.7) name = plan.path;
+      else if (!edge && plan.accent && h % 100 < 13) name = plan.accent;
+      const img = this.sprites.tile(name || plan.base);
       if (!img) continue;
       const O = project(gx * CELL, gy * CELL);
       const u = project(gx * CELL + CELL, gy * CELL), v = project(gx * CELL, gy * CELL + CELL);
@@ -320,9 +315,34 @@ export class Renderer {
     }
   }
 
+  syncRenderPositions(s) {
+    const heroes = s.characters.filter(c => c.mapId === this.mapId && c.hp > 0);
+    const entities = [...heroes.map(unit => ({ unit, hero: true })),
+      ...s.maps[this.mapId].monsters.filter(unit => unit.hp > 0).map(unit => ({ unit, hero: false }))];
+    if (this.positionTime !== s.time || this.positionMap !== this.mapId) {
+      const next = new Map();
+      for (const { unit } of entities) {
+        const previous = this.renderPositions.get(unit.id);
+        next.set(unit.id, {
+          fromX: previous?.x ?? unit.x, fromY: previous?.y ?? unit.y,
+          x: unit.x, y: unit.y,
+        });
+      }
+      this.renderPositions = next; this.positionTime = s.time; this.positionMap = this.mapId;
+    }
+    return entities;
+  }
+  entityPosition(unit, alpha) {
+    const p = this.renderPositions.get(unit.id);
+    if (!p) return unit;
+    return { x: p.fromX + (p.x - p.fromX) * alpha, y: p.fromY + (p.y - p.fromY) * alpha };
+  }
+
   /* ---------- main draw ---------- */
   draw(s, selected, hovered, frameRemainder = 0, huntPreview = null) {
     const ctx = this.ctx, z = this.camera.zoom, map = s.maps[this.mapId], now = performance.now();
+    const entities = this.syncRenderPositions(s);
+    const alpha = clamp(frameRemainder / STEP, 0, 1);
     if (this.followId) { const c = s.characters.find(c => c.id === this.followId && c.mapId === this.mapId); if (c) { const p = project(c.x, c.y); this.camera.x += (p.x - this.camera.x) * 0.08; this.camera.y += (p.y - this.camera.y) * 0.08; } this.clampCamera(); }
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     const bg = ctx.createRadialGradient(this.width / 2, this.height / 2, 30, this.width / 2, this.height / 2, this.width * 0.75);
@@ -385,12 +405,11 @@ export class Renderer {
       ctx.stroke();
       ctx.restore();
     }
-    const heroes = s.characters.filter(c => c.mapId === this.mapId && c.hp > 0);
-    const entities = [...heroes.map(c => ({ unit: c, hero: true })), ...map.monsters.filter(m => m.hp > 0).map(m => ({ unit: m, hero: false }))];
     entities.sort((a, b) => a.unit.x + a.unit.y - b.unit.x - b.unit.y);
     this.hits = [];
     for (const { unit: c, hero } of entities) {
-      const p = project(c.x, c.y), screen = this.screen(c), isSelected = hero && selected.has(c.id);
+      const position = this.entityPosition(c, alpha);
+      const p = project(position.x, position.y), screen = this.screen(position), isSelected = hero && selected.has(c.id);
       ctx.save(); ctx.translate(p.x, p.y);
       ellipse(ctx, 0, 1, hero ? 18 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? 48 : 18, hero ? 8 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? 20 : 8, '#0c201e45');
       if (isSelected || hovered === c.id) { ctx.lineWidth = 2 / z; ellipse(ctx, 0, 0, hero ? 23 : 28, hero ? 10 : 12, isSelected ? '#e4cc8720' : '#e9866f18', hero ? '#edd79b' : '#e9866f'); }
@@ -415,7 +434,7 @@ export class Renderer {
     for (const e of s.effects) {
       if (e.mapId && e.mapId !== this.mapId) continue;
       const p = project(e.x, e.y); ctx.save(); ctx.globalAlpha = Math.min(1, e.life * 2); ctx.font = `600 ${e.kind === 'skill' ? 12 : 15}px 'Segoe UI', sans-serif`; ctx.textAlign = 'center';
-      ctx.fillStyle = e.kind === 'heal' ? '#c8e9a5' : e.kind === 'loot' ? '#f2d38d' : e.kind === 'danger' ? '#ff9b86' : '#fff0c7';
+      ctx.fillStyle = e.kind === 'heal' ? '#c8e9a5' : e.kind === 'loot' ? '#f2d38d' : e.kind === 'danger' ? '#ff9b86' : e.kind === 'status' ? '#a9d8ff' : e.kind === 'cast' ? '#d5a9ff' : '#fff0c7';
       ctx.shadowColor = '#102421'; ctx.shadowBlur = 4; ctx.fillText(e.text, p.x, p.y - 50 - (1.1 - e.life) * 28); ctx.restore();
     }
     ctx.restore();

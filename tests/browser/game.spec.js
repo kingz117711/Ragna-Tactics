@@ -250,6 +250,48 @@ test('closing a hidden tab preserves the checkpoint time for offline rewards', a
   const closingCheckpoint = await page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).savedAt);
   expect(closingCheckpoint).toBe(hiddenCheckpoint);
 });
+test('switching tabs catches up live simulation silently, including active boss fights', async ({ page }) => {
+  const s = createGame();
+  const { command } = await import('../../src/sim.js');
+  command(s, { type: 'deploy', ids: ['c1', 'c2'], mapId: 'arena' });
+  await page.addInitScript(raw => localStorage.setItem('ragna-tactics:save:v1', raw), encodeSave(s));
+  await boot(page);
+  const before = await readSave(page);
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  const hiddenCheckpoint = await page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).savedAt);
+  await page.clock.setFixedTime(new Date(hiddenCheckpoint + 12_000));
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect.poll(async () => (await readSave(page)).time, { timeout: 30000 }).toBeGreaterThan(before.time + 10);
+  await expect(page.locator('#modal')).toBeHidden();
+  const after = await readSave(page);
+  expect(after.maps.arena.bossTimer).not.toBe(before.maps.arena.bossTimer);
+  expect(after.journal.some(entry => /Away report/.test(entry.message))).toBe(false);
+});
+test('the guild bag exposes equipment, personal Red Potions, refinement ores, and camp restock', async ({ page }) => {
+  const s = createGame(); s.inventory.zeny = 150;
+  s.inventory.materials = { Emveretarcon: 2, Oridecon: 1, Elunium: 1 };
+  s.inventory.equipment.iron = 1; s.characters[0].potions = 5;
+  await page.addInitScript(raw => localStorage.setItem('ragna-tactics:save:v1', raw), encodeSave(s));
+  await boot(page); await page.locator('#bag-button').click();
+  await expect(page.locator('#modal-title')).toHaveText('Guild bag');
+  await expect(page.locator('#modal')).toContainText('Oridecon');
+  await expect(page.locator('#modal')).toContainText('Elunium');
+  await expect(page.locator('#modal')).toContainText('Red Potion · Aren');
+  await page.locator('[data-bag-restock="c1"]').click();
+  await expect.poll(async () => { const s = await readSave(page); return [s.characters[0].potions, s.inventory.zeny]; }).toEqual([10, 140]);
+  await page.locator('[data-bag-equipment]').click();
+  await expect(page.locator('#modal-title')).toContainText('equipment');
+  await page.locator('[data-equip="iron"]').click();
+  await page.locator('[data-refine="1"]').click();
+  await expect(page.locator('#modal')).toContainText('+1 Iron armament');
+});
+
 test('mobile camp access and additive selection stay available without a keyboard', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 }); await boot(page);
   await page.getByRole('button', { name: 'Manage guild camp' }).click(); await expect(page.locator('#modal-title')).toContainText('guild camp');
@@ -421,17 +463,17 @@ test('South Prontera holds two separate hunting areas and both teams keep farmin
   await page.locator('[data-character="c1"]').click();
   await page.locator('[data-action="rally"]').click();
   await page.getByLabel('Radius').selectOption('3');
-  await clickWorld(page, -8, -2);
+  await clickWorld(page, -25, 17);
   await expect.poll(async () => (await readSave(page)).characters[0].farmRadius).toBe(3);
   await page.locator('[data-character="c2"]').click();
   await page.locator('[data-action="rally"]').click();
   await page.getByLabel('Radius').selectOption('10');
-  await clickWorld(page, 12, 4);
+  await clickWorld(page, 23, 8);
   await expect.poll(async () => (await readSave(page)).characters[1].farmRadius).toBe(10);
   const areas = await readSave(page);
   // Click→world has sub-pixel rounding; the areas must be the intended spots.
-  expect(Math.hypot(areas.characters[0].farmCenter.x + 8, areas.characters[0].farmCenter.y + 2)).toBeLessThan(1);
-  expect(Math.hypot(areas.characters[1].farmCenter.x - 12, areas.characters[1].farmCenter.y - 4)).toBeLessThan(1);
+  expect(Math.hypot(areas.characters[0].farmCenter.x + 25, areas.characters[0].farmCenter.y - 17)).toBeLessThan(1);
+  expect(Math.hypot(areas.characters[1].farmCenter.x - 23, areas.characters[1].farmCenter.y - 8)).toBeLessThan(1);
   expect(areas.characters[0].farmCenter).not.toEqual(areas.characters[1].farmCenter);
   // Send Lyra to Willow Wood; Aren must keep farming the meadow unattended.
   // (Redeploying out of an active fight is refused — retreat to camp first.)
@@ -447,14 +489,14 @@ test('South Prontera holds two separate hunting areas and both teams keep farmin
   await expect.poll(async () => (await readSave(page)).characters[0].kills, { timeout: 25000 }).toBeGreaterThan(0);
   await expect.poll(async () => (await readSave(page)).characters[1].kills, { timeout: 30000 }).toBeGreaterThan(0);
   const after = await readSave(page);
-  expect(Math.hypot(after.characters[0].farmCenter.x + 8, after.characters[0].farmCenter.y + 2)).toBeLessThan(1);
+  expect(Math.hypot(after.characters[0].farmCenter.x + 25, after.characters[0].farmCenter.y - 17)).toBeLessThan(1);
   expect(after.characters[0].farmRadius).toBe(3);
   expect(after.characters[1].mapId).toBe('forest');
   // Reload the guild: hunting areas, radii, map assignments and kills must persist.
   await page.reload(); await expect(page.locator('#loading')).toBeHidden();
   const reloaded = await readSave(page);
   expect(reloaded.characters[0].farmRadius).toBe(3);
-  expect(Math.hypot(reloaded.characters[0].farmCenter.x + 8, reloaded.characters[0].farmCenter.y + 2)).toBeLessThan(1);
+  expect(Math.hypot(reloaded.characters[0].farmCenter.x + 25, reloaded.characters[0].farmCenter.y - 17)).toBeLessThan(1);
   // Redeploying starts a fresh expedition, so Lyra's Thicket area was cleared on deploy (by design).
   expect(reloaded.characters[1].farmRadius).toBeUndefined();
   expect(reloaded.characters[1].mapId).toBe('forest');

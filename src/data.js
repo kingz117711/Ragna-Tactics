@@ -1,65 +1,65 @@
+import { RENEWAL_JOBS, BUILD_FAMILIES, STATUS_EFFECTS } from './renewal.js';
+
 export const HUNT_RADII = [3, 6, 10];
 export const DEFAULT_HUNT_RADIUS = 6;
 export const VERSION = 1;
 export const STEP = 0.1;
 export const OFFLINE_CAP = 4 * 60 * 60;
-// bounds are half-extents in world units per axis. Every map carries its own
-// dimensions; camp/deploy/road/zones describe South Prontera's landmarks.
+// RO fields span broad, connected hunting grounds rather than small combat pads.
+// Coordinates are game-world units; source-map names in MAP-RESEARCH.md are visual references.
 export const MAPS = {
   meadow: {
     id: 'meadow', name: 'South Prontera', subtitle: 'A quiet beginning', tier: 'FIELD · LV 1–4', color: '#91b27d', monster: 'poring', count: 12, radius: 16,
-    bounds: { x: 26, y: 20 },
-    camp: { x: -17, y: 13 },
-    deploy: { x: -11, y: 6 },
+    bounds: { x: 42, y: 32 }, terrain: { base: 'grass_olive', accent: 'grass_blossom', path: 'dirt_path', edge: 'cliff_rock' },
+    camp: { x: -35, y: 26 }, deploy: { x: -27, y: 19 },
     zones: [
-      { kind: 'poring', x: -7, y: -1, r: 9, label: 'Poring Meadow' },
-      { kind: 'fabre', x: 13, y: 5, r: 7.5, label: 'Fabre Thicket' },
+      { kind: 'poring', x: -25, y: 17, r: 12, label: 'Poring Meadow' },
+      { kind: 'fabre', x: 23, y: 8, r: 12, label: 'Fabre Thicket' },
     ],
     road: [
-      [[-17, 13], [-9, 10], [-2, 7]],
-      [[-2, 7], [-6, 3], [-8, 0]],
-      [[-2, 7], [5, 6], [12, 5]],
+      [[-35, 26], [-31, 21], [-25, 17], [-12, 13], [1, 11], [14, 9], [23, 8]],
+      [[1, 11], [4, 3], [3, -7], [6, -18], [10, -29]],
+      [[-12, 13], [-20, 6], [-25, -4], [-28, -15]],
     ],
     scenery: {
       border: ['tree_tall_cluster', 'tree_sapling', 'tree_bush_bright'],
       props: [
-        { id: 'house_prontera', x: -21.5, y: 16.5 },
-        { id: 'lantern_stone', x: -15.6, y: 11.4 },
-        { id: 'lantern_stone', x: -18.6, y: 15.8 },
-        { id: 'standing_stone', x: -0.4, y: 8.9 },
-        { id: 'tree_bush_bright', x: -13.5, y: -6.5 },
-        { id: 'tree_bush_bright', x: -2.5, y: -8.5 },
-        { id: 'tree_bush_bright', x: -12.5, y: 3.5 },
-        { id: 'tree_sapling', x: -4.5, y: -6.5 },
-        { id: 'tree_sapling', x: -12.5, y: -1.5 },
-        { id: 'rock_boulder_mossy', x: 16.5, y: 1.5 },
-        { id: 'rock_boulder_mossy', x: 10.5, y: 9.5 },
-        { id: 'rock_cliff_crag', x: 18.5, y: 7.5 },
-        { id: 'tree_tall_cluster', x: 20.5, y: 2.5, scale: 0.95 },
-        { id: 'tree_tall_cluster', x: 9.5, y: 12.5, scale: 0.9 },
-        { id: 'tree_tall_cluster', x: -16.5, y: -11.5, scale: 1.05 },
+        { id: 'house_prontera', x: -39, y: 28 },
+        { id: 'lantern_stone', x: -33, y: 23 },
+        { id: 'lantern_stone', x: -37, y: 29 },
+        { id: 'standing_stone', x: 1, y: 13 },
+        { id: 'tree_bush_bright', x: -18, y: 5 },
+        { id: 'tree_bush_bright', x: -5, y: 1 },
+        { id: 'tree_bush_bright', x: 18, y: 18 },
+        { id: 'tree_sapling', x: -20, y: -2 },
+        { id: 'tree_sapling', x: -11, y: 20 },
+        { id: 'rock_boulder_mossy', x: 30, y: 2 },
+        { id: 'rock_boulder_mossy', x: 15, y: 22 },
+        { id: 'rock_cliff_crag', x: 34, y: 12 },
+        { id: 'tree_tall_cluster', x: 36, y: 4, scale: 0.95 },
+        { id: 'tree_tall_cluster', x: 8, y: 25, scale: 0.9 },
+        { id: 'tree_tall_cluster', x: -25, y: -20, scale: 1.05 },
       ],
     },
   },
   forest: {
-    id: 'forest', name: 'Willow Wood', subtitle: 'Beyond the familiar paths', tier: 'FIELD · LV 4–8', color: '#698a7b', monster: 'willow', count: 7, radius: 16, bounds: { x: 15, y: 15 },
+    id: 'forest', name: 'Willow Wood', subtitle: 'Beyond the familiar paths', tier: 'FIELD · LV 4–8', color: '#698a7b', monster: 'willow', count: 7, radius: 16,
+    bounds: { x: 32, y: 27 }, terrain: { base: 'grass_forest', accent: 'grass_olive', path: 'dirt_payon', edge: 'cliff_rock' },
+    road: [[[-29, 22], [-16, 10], [-4, 2], [8, -6], [29, -23]]],
     scenery: {
       border: ['tree_tall_cluster', 'tree_bush_bright'],
       props: [
-        { id: 'tree_tall_cluster', x: -8.5, y: -7.5, scale: 1.05 },
-        { id: 'tree_tall_cluster', x: 7.5, y: -8.5 },
-        { id: 'tree_tall_cluster', x: 9.5, y: 5.5, scale: 0.95 },
-        { id: 'tree_tall_cluster', x: -6.5, y: 9.5, scale: 1.1 },
-        { id: 'tree_bush_bright', x: 6.5, y: -3.5 },
-        { id: 'tree_bush_bright', x: -9.5, y: 3.5 },
+        { id: 'tree_tall_cluster', x: -20, y: -12, scale: 1.05 }, { id: 'tree_tall_cluster', x: 18, y: -17 },
+        { id: 'tree_tall_cluster', x: 24, y: 12, scale: 0.95 }, { id: 'tree_tall_cluster', x: -17, y: 20, scale: 1.1 },
+        { id: 'tree_bush_bright', x: 15, y: -3 }, { id: 'tree_bush_bright', x: -22, y: 7 },
       ],
     },
   },
-  payon: { id: 'payon', name: 'Payon Cave', subtitle: 'Lanterns beneath the eastern ridge', tier: 'DUNGEON · LV 12–18', color: '#a49bb9', monster: 'zombie', count: 8, radius: 16, bounds: { x: 15, y: 15 }, scenery: { border: ['rock_cliff_crag', 'rock_boulder_mossy'] } },
-  morroc: { id: 'morroc', name: 'Morroc Dunes', subtitle: 'The southern caravan road', tier: 'FIELD · LV 8–14', color: '#cba976', monster: 'scorpion', count: 8, radius: 16, bounds: { x: 15, y: 15 }, scenery: { border: ['rock_boulder_mossy', 'rock_cliff_crag'] } },
-  arena: { id: 'arena', boss: true, name: 'The Broken Sanctuary', subtitle: 'Something stirs beneath the ruins', tier: 'BOSS · PARTY RECOMMENDED', color: '#807e95', monster: 'baphomet', count: 1, radius: 16, bounds: { x: 15, y: 15 }, scenery: { border: ['standing_stone', 'rock_cliff_crag'] } },
+  payon: { id: 'payon', name: 'Payon Cave', subtitle: 'Lanterns beneath the eastern ridge', tier: 'DUNGEON · LV 12–18', color: '#a49bb9', monster: 'zombie', count: 8, radius: 16, bounds: { x: 29, y: 27 }, terrain: { base: 'ruin_cobble', accent: 'cliff_rock', path: 'dirt_payon', edge: 'cliff_rock' }, road: [[[-26, 20], [-12, 12], [-3, 1], [10, -8], [26, -19]]], scenery: { border: ['rock_cliff_crag', 'rock_boulder_mossy'] } },
+  morroc: { id: 'morroc', name: 'Morroc Dunes', subtitle: 'The southern caravan road', tier: 'FIELD · LV 8–14', color: '#cba976', monster: 'scorpion', count: 8, radius: 16, bounds: { x: 33, y: 27 }, terrain: { base: 'sand', accent: 'sand_dark', path: 'dirt_path', edge: 'cliff_sand' }, road: [[[-30, 22], [-17, 13], [-4, 4], [10, -5], [29, -21]]], scenery: { border: ['rock_boulder_mossy', 'rock_cliff_crag'] } },
+  arena: { id: 'arena', boss: true, name: 'The Broken Sanctuary', subtitle: 'Something stirs beneath the ruins', tier: 'BOSS · PARTY RECOMMENDED', color: '#807e95', monster: 'baphomet', count: 1, radius: 16, bounds: { x: 22, y: 20 }, terrain: { base: 'ruin_cobble', accent: 'cliff_rock', path: 'ruin_cobble', edge: 'cliff_rock' }, scenery: { border: ['standing_stone', 'rock_cliff_crag'] } },
 };
-MAPS.lair = { id: 'lair', boss: true, name: 'Sandsea Hollow', subtitle: 'Beneath the caravan road', tier: 'MVP · LV 18+', color: '#c38667', monster: 'phreeoni', count: 1, radius: 16, bounds: { x: 15, y: 15 }, scenery: { border: ['rock_cliff_crag', 'rock_boulder_mossy'] } };
+MAPS.lair = { id: 'lair', boss: true, name: 'Sandsea Hollow', subtitle: 'Beneath the caravan road', tier: 'MVP · LV 18+', color: '#c38667', monster: 'phreeoni', count: 1, radius: 16, bounds: { x: 25, y: 23 }, terrain: { base: 'sand_dark', accent: 'sand', path: 'sand', edge: 'cliff_sand' }, scenery: { border: ['rock_cliff_crag', 'rock_boulder_mossy'] } };
 export const mapBounds = mapId => MAPS[mapId]?.bounds || { x: 15, y: 15 };
 export const JOBS = {
   novice: { name: 'Novice', native: 0, role: 'A new beginning', hp: 100, atk: 10, def: 1, range: 1.8, speed: 3.1, interval: 1.05, skill: 'First Aid', cost: 8, cooldown: 10, description: 'Recover your own HP. Learn the basics before choosing a path.' },
@@ -87,9 +87,65 @@ const transcendent = {
   sniper: { parent:'hunter', native:4012, name:'Sniper', hp:195, atk:31, def:5, range:9, skill:'Falcon Assault', description:'Your falcon strikes the target and up to four nearby enemies.' },
   assassinCross: { parent:'assassin', native:4013, name:'Assassin Cross', hp:225, atk:31, def:6, skill:'Soul Breaker', description:'A finishing strike deals five times attack to enemies below half HP.' },
 };
-for (const [id, job] of Object.entries(transcendent)) JOBS[id] = { ...JOBS[job.parent], ...job, mastery: job.parent };
-export const combatJob = job => JOBS[job].mastery || job;
-export function promotionLevel(job) { return job === 'novice' ? 10 : JOBS[job].mastery ? Infinity : JOBS[job].parent ? 50 : 40; }
+for (const [id, job] of Object.entries(transcendent)) JOBS[id] = { ...JOBS[job.parent], ...job, mastery: job.parent, tier: 'transcendent', jobLevelCap: 50 };
+for (const [id, job] of Object.entries(RENEWAL_JOBS)) {
+  const base = JOBS[job.parent];
+  JOBS[id] = { ...base, ...job, parent: job.parent, jobLevelCap: job.tier.includes('Third') || job.tier === 'third' ? 70 : 50,
+    mastery: job.tier === 'transcendent' ? job.parent : undefined };
+}
+const CLASS_FAMILY_FOR_JOB = {
+  knight:'knight', lordKnight:'knight', runeKnight:'knight', crusader:'crusader', paladin:'crusader', royalGuard:'crusader',
+  wizard:'wizard', highWizard:'wizard', warlock:'wizard', sage:'sage', professor:'sage', sorcerer:'sage',
+  hunter:'hunter', sniper:'hunter', ranger:'hunter', bard:'bard', clown:'bard', minstrel:'bard', dancer:'dancer', gypsy:'dancer', wanderer:'dancer',
+  priest:'priest', highPriest:'priest', archBishop:'priest', monk:'monk', champion:'monk', sura:'monk',
+  blacksmith:'blacksmith', whitesmith:'blacksmith', mechanic:'blacksmith', alchemist:'alchemist', creator:'alchemist', genetic:'alchemist',
+  assassin:'assassin', assassinCross:'assassin', guillotineCross:'assassin', rogue:'rogue', stalker:'rogue', shadowChaser:'rogue',
+};
+for (const [id, job] of Object.entries(JOBS)) {
+  if (!job.tier) job.tier = id === 'novice' ? 'novice' : job.parent ? 'second' : 'first';
+  if (!job.jobLevelCap) job.jobLevelCap = id === 'novice' ? 10 : 50;
+  if (!job.family) job.family = CLASS_FAMILY_FOR_JOB[id] || (job.parent ? JOBS[job.parent]?.family || job.parent : id);
+}
+export const CLASS_BUILDS = BUILD_FAMILIES;
+export const STATUS = STATUS_EFFECTS;
+export const BASE_CLASS_PROFILE = {
+  novice: { hp:100, atk:10, def:1, range:2, speed:3, interval:1.2, skill:'First Aid', cost:8, cooldown:10, description:'A flexible start; choose a role through job advancement.' },
+  knight: { hp:250, atk:25, def:8, range:2, speed:3.1, interval:1.05, skill:'Pierce', cost:11, cooldown:5, description:'A durable melee striker who can draw monster focus.' },
+  crusader: { hp:245, atk:22, def:12, range:2, speed:2.9, interval:1.15, skill:'Shield Charge', cost:12, cooldown:6, description:'A shield-bearing frontline protector.' },
+  wizard: { hp:135, atk:29, def:2, range:6, speed:3, interval:1.5, skill:'Storm Gust', cost:16, cooldown:6, splash:4, description:'Elemental area spells with cast windows and crowd control.' },
+  sage: { hp:155, atk:21, def:4, range:6, speed:3, interval:1.4, skill:'Dispell', cost:12, cooldown:6, description:'Elemental control and team enchantments.' },
+  hunter: { hp:155, atk:22, def:3, range:8, speed:3.4, interval:.9, skill:'Focused Arrow Strike', cost:12, cooldown:5, splash:3, description:'Bow, traps, and falcon options.' },
+  bard: { hp:145, atk:20, def:4, range:7, speed:3.2, interval:1, skill:'Arrow Vulcan', cost:12, cooldown:6, description:'Ranged damage and party songs.' },
+  dancer: { hp:145, atk:20, def:4, range:7, speed:3.2, interval:1, skill:'Slinging Arrow', cost:12, cooldown:6, description:'Ranged control and party dances.' },
+  priest: { hp:175, atk:16, def:4, range:4, speed:3.1, interval:1.1, skill:'Heal', cost:15, cooldown:5, description:'Healing, cleansing, buffs, and Holy damage.' },
+  monk: { hp:195, atk:25, def:6, range:2, speed:3.4, interval:.9, skill:'Raging Trifecta Blow', cost:12, cooldown:5, description:'Spirit-sphere combos and powerful finishers.' },
+  blacksmith: { hp:210, atk:23, def:6, range:2, speed:3, interval:1.1, skill:'Cart Termination', cost:11, cooldown:6, splash:2.5, description:'Heavy melee strikes, weapon buffs, and crafting.' },
+  alchemist: { hp:200, atk:20, def:7, range:3, speed:2.9, interval:1.2, skill:'Acid Demonstration', cost:14, cooldown:7, description:'Companion support, potions, and reagent attacks.' },
+  assassin: { hp:165, atk:23, def:4, range:2, speed:4, interval:.75, skill:'Sonic Blow', cost:12, cooldown:5, description:'Fast melee burst and poison pressure.' },
+  rogue: { hp:165, atk:20, def:4, range:6, speed:3.5, interval:.9, skill:'Triangle Shot', cost:10, cooldown:5, description:'Bow kiting, copied skills, and disruptive debuffs.' },
+};
+for (const [id, definition] of Object.entries(RENEWAL_JOBS)) {
+  Object.assign(JOBS[id], BASE_CLASS_PROFILE[definition.family] || {}, definition);
+  JOBS[id].parent = definition.parent;
+  JOBS[id].jobLevelCap = definition.tier.includes('Third') || definition.tier === 'third' ? 70 : 50;
+  if (definition.tier === 'transcendent') JOBS[id].mastery = definition.parent;
+  else delete JOBS[id].mastery;
+}
+const FAMILY_COMBAT_JOB = { knight:'knight', crusader:'crusader', wizard:'wizard', sage:'sage', hunter:'hunter', bard:'bard', dancer:'dancer', priest:'priest', monk:'monk', blacksmith:'blacksmith', alchemist:'alchemist', assassin:'assassin', rogue:'rogue' };
+export function combatJob(job) { return JOBS[job]?.combat || JOBS[job]?.mastery || FAMILY_COMBAT_JOB[JOBS[job]?.family] || job; }
+export function classBuilds(job) { return CLASS_BUILDS[JOBS[job]?.family] || CLASS_BUILDS[job] || []; }
+export function defaultBuild(job) { return classBuilds(job)[0]?.id || null; }
+export function selectedBuild(job, buildId) { return classBuilds(job).find(build => build.id === buildId) || classBuilds(job)[0] || null; }
+export function promotionRequirement(job) {
+  const tier = JOBS[job]?.tier;
+  if (tier === 'novice') return { jobLevel:10, baseLevel:1 };
+  if (tier === 'first' || tier === 'expanded') return { jobLevel:40, baseLevel:1 };
+  if (tier === 'transcendent') return { jobLevel:50, baseLevel:99 };
+  if (tier === 'second' || tier === 'expandedSecond') return { jobLevel:50, baseLevel:1 };
+  if (tier === 'third' || tier === 'expandedThird') return { jobLevel:50, baseLevel:99 };
+  return { jobLevel:Infinity, baseLevel:Infinity };
+}
+export function promotionLevel(job) { return promotionRequirement(job).jobLevel; }
 export function jobLineage(job) {
   const path = [];
   while (job && job !== 'novice') {
@@ -158,7 +214,18 @@ export const CARDS = {
   scorpion: { name: 'Scorpion Card', description: '+6 ATK', atk: 6, def: 0 },
   peco: { name: 'Peco Peco Card', description: '+4 DEF', atk: 0, def: 4 },
 };
-export const REFINEMENT = [null, { ore:2, zeny:60 }, { ore:4, zeny:140 }, { ore:7, zeny:300 }];
+export const ORE_INFO = {
+  Emveretarcon: { description: 'Payon refinement ore used for the first three ranks.' },
+  Elunium: { description: 'A defensive refinement ore found in Payon Cave.' },
+  Oridecon: { description: 'A weapon refinement ore found in Payon Cave.' },
+};
+export const REFINEMENT = [null,
+  { material: 'Emveretarcon', ore: 2, zeny: 60 },
+  { material: 'Emveretarcon', ore: 4, zeny: 140 },
+  { material: 'Emveretarcon', ore: 7, zeny: 300 },
+  { material: null, ore: 1, zeny: 500 },
+  { material: null, ore: 2, zeny: 900 },
+];
 export function gearKey(item, card, rank) {
   if (rank) return item + '/' + (card || '') + '/' + rank;
   return card ? item + '/' + card : item;
@@ -168,12 +235,12 @@ export function gearVariant(key) {
   return { item, card:card || null, rank:rank === undefined ? 0 : Number(rank) };
 }
 export const EQUIPMENT = {
-  reliquary: { name:'Payon reliquary', atk:3, def:6, description:'+3 attack · +6 defense · a feather-bound ward from Payon Cave.' },
-  dune: { name: 'Caravan brooch', atk: 6, def: 2, description: '+6 attack · +2 defense · forged from Morroc and Willow Wood materials.' },
+  reliquary: { name:'Payon reliquary', atk:3, def:6, refineMaterial:'Elunium', description:'+3 attack · +6 defense · a feather-bound ward from Payon Cave.' },
+  dune: { name: 'Caravan brooch', atk: 6, def: 2, refineMaterial:'Oridecon', description: '+6 attack · +2 defense · forged from Morroc and Willow Wood materials.' },
   training: { name: 'Training weapon', atk: 0, def: 0, description: 'A dependable first companion.' },
-  iron: { name: 'Iron armament', atk: 5, def: 0, description: '+5 attack · suitable for every first job.' },
-  guard: { name: 'Guard insignia', atk: 1, def: 3, description: '+1 attack · +3 defense.' },
-  sanctuary: { name: 'Sanctuary relic', atk: 9, def: 2, description: '+9 attack · +2 defense · earned from Baphomet.' },
+  iron: { name: 'Iron armament', atk: 5, def: 0, refineMaterial:'Oridecon', description: '+5 attack · suitable for every first job.' },
+  guard: { name: 'Guard insignia', atk: 1, def: 3, refineMaterial:'Elunium', description: '+1 attack · +3 defense.' },
+  sanctuary: { name: 'Sanctuary relic', atk: 9, def: 2, refineMaterial:'Oridecon', description: '+9 attack · +2 defense · earned from Baphomet.' },
 };
 export const TACTICS = {
   safe: { name: 'Safe farming', retreat: 0.22, skill: true },
@@ -198,6 +265,7 @@ export const JOB_ROLES = {
 };
 for (const [id, job] of Object.entries(secondJobs)) JOB_ROLES[id] = JOB_ROLES[job.parent];
 for (const [id, job] of Object.entries(transcendent)) JOB_ROLES[id] = JOB_ROLES[job.parent];
+for (const [id, job] of Object.entries(RENEWAL_JOBS)) JOB_ROLES[id] = job.role === 'support' ? 'support' : job.role === 'ranged' ? 'ranged' : 'frontline';
 export const ROLE_LABELS = {
   frontline: 'Frontline — approaches and engages',
   ranged: 'Ranged — keeps attack distance',

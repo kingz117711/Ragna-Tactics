@@ -1,7 +1,7 @@
 {
   "repository": "KzeR7/Prontera-Grind",
   "commit": "f47bf27e3092c385ba050da1cdb2fde4176f5183",
-  "note": "Original files copied byte-for-byte. Runtime index is a derived subset. Reuse does not grant ownership of underlying Ragnarok artwork.",
+  "note": "Original files copied byte-for-byte. Runtime index is a derived subset. Reuse does not grant ownership of underlying Ragnarok artwork. The HD terrain atlas is the pinned subset documented in Updates/map-textures-preview/README.md; underlying Ragnarok artwork remains the rights holders' property.",
   "files": [
     {
       "local": "mobs/1001.webp",
@@ -116,6 +116,18 @@
       "source": "Updates/map-sprites-v2/work/props/tree_tall_cluster.png",
       "sha256": "d4c7f3d191f63ff1873754da27697d9015c6ffd272d00249f641e7e5c3fe9e33",
       "bytes": 84746
+    },
+    {
+      "local": "terrain/ro-tiles-hd.json",
+      "source": "Updates/map-sprites-v2/ro-tiles-hd.json",
+      "sha256": "bdaa17695844845545964651f4a85febaaccc719325244b6999f23fb7c896f13",
+      "bytes": 2530
+    },
+    {
+      "local": "terrain/ro-tiles-hd.png",
+      "source": "Updates/map-sprites-v2/ro-tiles-hd.png",
+      "sha256": "d179e5746065455f5698e40ae7724a4d4c0af15c3574dc529d7acb2da0e806a0",
+      "bytes": 4411279
     },
     {
       "local": "terrain/tiles/dirt_path.png",
