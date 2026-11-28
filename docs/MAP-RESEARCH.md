@@ -18,10 +18,20 @@ playability from [the runtime map registry](../src/data.js). Keep planned entrie
 out of runtime saves, deployment and encounter simulation until their terrain,
 spawn groups and starting positions are ready.
 
-After the South Prontera pilot, build **Kingfisher Reach** first. Its reed beds
-and shallow crossings exercise the grass-to-water transitions. Add separate
-hunting pockets with consistent travel between them. Use **Lantern Steps** for
-the next terrain family and **Saltglass Flats** to test long-range party tracking.
+Location names follow Ragnarok Online. The level bands and encounter notes
+are Ragna Tactics design targets. The atlas groups nearby locations for browsing.
+The early fields and boss locations draw on Gravity's world and monster guides.
+Later destinations include locations listed in the official Eden Group guides.
+
+- [Gravity’s regional map index](https://ro.gnjoy.com/guide/runemidgarts/maparea.asp?mapSeq=291&parentMapSeq=157)
+- [iRO classic location names](https://renewal.playragnarok.com/news/newslist.aspx/1000?page=172)
+- [Gravity’s Baphomet entry](https://ro.gnjoy.com/guide/runemidgarts/popup/monsterview.asp?monsterID=BAPHOMET) and [Phreeoni entry](https://ro.gnjoy.com/guide/runemidgarts/popup/monsterview.asp?monsterID=PHREEONI)
+- [iRO Eden Group quests](https://playragnarok.com/news/updatedetail.aspx?id=246) and [late-game hunting areas](https://renewal.playragnarok.com/news/eventdetail.aspx?id=104&p=37)
+
+After the South Prontera pilot, build **Prontera Culvert** first. Use its
+water channels to exercise bank transitions and short hunting loops. Follow
+with **Sunken Ship** for prop layering and **Ant Hell** for separate party
+routes with clear regrouping points.
 For each release, use the atlas ID in the map registry, add the corresponding
 save migration and validate deployment, minimap markers, combat rewards and
 offline progression. Progression above Lv. 99 also needs an EXP curve, stat and

@@ -43,7 +43,7 @@ export const MAPS = {
     },
   },
   forest: {
-    id: 'forest', name: 'Willow Wood', subtitle: 'Beyond the familiar paths', tier: 'FIELD · LV 4–8', color: '#698a7b', monster: 'willow', count: 7, radius: 16,
+    id: 'forest', name: 'Payon Forest', subtitle: 'Beyond the familiar paths', tier: 'FIELD · LV 4–8', color: '#698a7b', monster: 'willow', count: 7, radius: 16,
     bounds: { x: 32, y: 27 }, terrain: { base: 'grass_forest', accent: 'grass_olive', path: 'dirt_payon', edge: 'cliff_rock' },
     road: [[[-29, 22], [-16, 10], [-4, 2], [8, -6], [29, -23]]],
     scenery: {
@@ -56,10 +56,10 @@ export const MAPS = {
     },
   },
   payon: { id: 'payon', name: 'Payon Cave', subtitle: 'Lanterns beneath the eastern ridge', tier: 'DUNGEON · LV 12–18', color: '#a49bb9', monster: 'zombie', count: 8, radius: 16, bounds: { x: 29, y: 27 }, terrain: { base: 'ruin_cobble', accent: 'cliff_rock', path: 'dirt_payon', edge: 'cliff_rock' }, road: [[[-26, 20], [-12, 12], [-3, 1], [10, -8], [26, -19]]], scenery: { border: ['rock_cliff_crag', 'rock_boulder_mossy'] } },
-  morroc: { id: 'morroc', name: 'Morroc Dunes', subtitle: 'The southern caravan road', tier: 'FIELD · LV 8–14', color: '#cba976', monster: 'scorpion', count: 8, radius: 16, bounds: { x: 33, y: 27 }, terrain: { base: 'sand', accent: 'sand_dark', path: 'dirt_path', edge: 'cliff_sand' }, road: [[[-30, 22], [-17, 13], [-4, 4], [10, -5], [29, -21]]], scenery: { border: ['rock_boulder_mossy', 'rock_cliff_crag'] } },
-  arena: { id: 'arena', boss: true, name: 'The Broken Sanctuary', subtitle: 'Something stirs beneath the ruins', tier: 'BOSS · PARTY RECOMMENDED', color: '#807e95', monster: 'baphomet', count: 1, radius: 16, bounds: { x: 22, y: 20 }, terrain: { base: 'ruin_cobble', accent: 'cliff_rock', path: 'ruin_cobble', edge: 'cliff_rock' }, scenery: { border: ['standing_stone', 'rock_cliff_crag'] } },
+  morroc: { id: 'morroc', name: 'Sograt Desert', subtitle: 'The southern caravan road', tier: 'FIELD · LV 8–14', color: '#cba976', monster: 'scorpion', count: 8, radius: 16, bounds: { x: 33, y: 27 }, terrain: { base: 'sand', accent: 'sand_dark', path: 'dirt_path', edge: 'cliff_sand' }, road: [[[-30, 22], [-17, 13], [-4, 4], [10, -5], [29, -21]]], scenery: { border: ['rock_boulder_mossy', 'rock_cliff_crag'] } },
+  arena: { id: 'arena', boss: true, name: 'Labyrinth Forest', subtitle: 'Baphomet awakens among the ruins', tier: 'BOSS · PARTY RECOMMENDED', color: '#807e95', monster: 'baphomet', count: 1, radius: 16, bounds: { x: 22, y: 20 }, terrain: { base: 'ruin_cobble', accent: 'cliff_rock', path: 'ruin_cobble', edge: 'cliff_rock' }, scenery: { border: ['standing_stone', 'rock_cliff_crag'] } },
 };
-MAPS.lair = { id: 'lair', boss: true, name: 'Sandsea Hollow', subtitle: 'Beneath the caravan road', tier: 'MVP · LV 18+', color: '#c38667', monster: 'phreeoni', count: 1, radius: 16, bounds: { x: 25, y: 23 }, terrain: { base: 'sand_dark', accent: 'sand', path: 'sand', edge: 'cliff_sand' }, scenery: { border: ['rock_cliff_crag', 'rock_boulder_mossy'] } };
+MAPS.lair = { id: 'lair', boss: true, name: 'Sograt Desert · Phreeoni', subtitle: 'Phreeoni beneath the caravan road', tier: 'MVP · LV 18+', color: '#c38667', monster: 'phreeoni', count: 1, radius: 16, bounds: { x: 25, y: 23 }, terrain: { base: 'sand_dark', accent: 'sand', path: 'sand', edge: 'cliff_sand' }, scenery: { border: ['rock_cliff_crag', 'rock_boulder_mossy'] } };
 export const mapBounds = mapId => MAPS[mapId]?.bounds || { x: 15, y: 15 };
 export const JOBS = {
   novice: { name: 'Novice', native: 0, role: 'A new beginning', hp: 100, atk: 10, def: 1, range: 1.8, speed: 3.1, interval: 1.05, skill: 'First Aid', cost: 8, cooldown: 10, description: 'Recover your own HP. Learn the basics before choosing a path.' },
@@ -236,7 +236,7 @@ export function gearVariant(key) {
 }
 export const EQUIPMENT = {
   reliquary: { name:'Payon reliquary', atk:3, def:6, refineMaterial:'Elunium', description:'+3 attack · +6 defense · a feather-bound ward from Payon Cave.' },
-  dune: { name: 'Caravan brooch', atk: 6, def: 2, refineMaterial:'Oridecon', description: '+6 attack · +2 defense · forged from Morroc and Willow Wood materials.' },
+  dune: { name: 'Caravan brooch', atk: 6, def: 2, refineMaterial:'Oridecon', description: '+6 attack · +2 defense · forged from Sograt Desert and Payon Forest materials.' },
   training: { name: 'Training weapon', atk: 0, def: 0, description: 'A dependable first companion.' },
   iron: { name: 'Iron armament', atk: 5, def: 0, refineMaterial:'Oridecon', description: '+5 attack · suitable for every first job.' },
   guard: { name: 'Guard insignia', atk: 1, def: 3, refineMaterial:'Elunium', description: '+1 attack · +3 defense.' },

@@ -47,7 +47,7 @@ test('new guild deploys, forms a party, switches maps, orders movement, and save
   await page.getByRole('button', { name: 'Plan your first expedition' }).click();
   await page.getByRole('button', { name: 'Begin expedition' }).click();
   await expect(page.locator('#map-population')).toContainText('2 adventurers');
-  await page.locator('[data-map="forest"]').click(); await expect(page.locator('#map-name')).toHaveText('Willow Wood');
+  await page.locator('[data-map="forest"]').click(); await expect(page.locator('#map-name')).toHaveText('Payon Forest');
   await expect(page.locator('#map-population')).toContainText('0 adventurers');
   await page.locator('[data-map="meadow"]').click();
   await page.locator('[data-action="move"]').click();
@@ -79,7 +79,7 @@ test('job advancement, boss deployment, and storage work from a progressed save'
   await page.locator('#select-all').click(); await page.getByRole('button', { name: 'Link as party' }).click();
   await page.locator('[data-action="deploy"]').click(); await page.locator('input[value="arena"]').check();
   await page.getByRole('button', { name: 'Begin expedition' }).click();
-  await expect(page.locator('#boss-status')).toBeVisible(); await expect(page.locator('#map-name')).toHaveText('The Broken Sanctuary');
+  await expect(page.locator('#boss-status')).toBeVisible(); await expect(page.locator('#map-name')).toHaveText('Labyrinth Forest');
   await page.screenshot({ path: 'artifacts/foundation-boss.png', fullPage: true });
   await page.locator('#storage-button').click(); await expect(page.locator('#modal')).toContainText('Sanctuary relic');
 });
@@ -198,9 +198,9 @@ test('move, hold, focus, retreat, resume, multi-map overview and character navig
   await page.locator('[data-action="retreat"]').click();
   await expect.poll(async () => (await saved()).characters[0].mapId, { timeout: 24000 }).toBeNull();
   await page.locator('#world-button').click();
-  await expect(page.locator('#modal')).toContainText('Willow Wood');
+  await expect(page.locator('#modal')).toContainText('Payon Forest');
   await page.locator('[data-world-character="c2"]').click();
-  await expect(page.locator('#map-name')).toHaveText('Willow Wood');
+  await expect(page.locator('#map-name')).toHaveText('Payon Forest');
   await expect.poll(async () => (await saved()).characters[1].mapId).toBe('forest');
 });
 test('expedition goal action deploys the starting pair and v1 saves without new fields still load', async ({ page }) => {
@@ -330,7 +330,7 @@ test('view Morroc and socket a Peco Peco Card at camp', async ({page}) => {
   const s = createGame(); s.inventory.cards.peco = 1; s.characters[0].equipment = 'guard';
   await page.addInitScript(raw => { if (!localStorage.length) localStorage.setItem('ragna-tactics:save:v1',raw); },encodeSave(s));
   await boot(page); await page.locator('[data-map="morroc"]').click();
-  await expect(page.locator('#map-name')).toHaveText('Morroc Dunes');
+  await expect(page.locator('#map-name')).toHaveText('Sograt Desert');
   await page.locator('[data-character="c1"]').first().click(); await page.locator('[data-action="equipment"]').click();
   await page.locator('[data-socket="peco"]').click();
   await expect(page.getByRole('heading',{name:'Guard insignia · Peco Peco Card'})).toBeVisible();
@@ -339,7 +339,7 @@ test('view Morroc and socket a Peco Peco Card at camp', async ({page}) => {
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).state.characters[0].card)).toBe('peco');
 });
 
-test('deploy a second-job duo to Sandsea Hollow and read the MVP party order', async ({page}) => {
+test('deploy a second-job duo to Sograt Desert · Phreeoni and read the MVP party order', async ({page}) => {
   const s = createGame();
   Object.assign(s.characters[0], {job:'knight',level:24,hp:550});
   Object.assign(s.characters[1], {job:'priest',level:24,hp:460});
@@ -397,7 +397,7 @@ test('prepare elemental magic and use the field guide to find a weak target', as
   await page.locator('#modal-close').click(); await page.locator('#guide-button').click();
   const entry=page.locator('.bounty-entry').filter({has:page.getByRole('heading',{name:'Phreeoni',exact:true})});
   await expect(entry).toContainText('Weak to Earth');
-  await entry.getByRole('button').click(); await expect(page.locator('#map-name')).toHaveText('Sandsea Hollow');
+  await entry.getByRole('button').click(); await expect(page.locator('#map-name')).toHaveText('Sograt Desert · Phreeoni');
 });
 
 test('settle a split guild, craft the Payon ward, prepare Holy magic and deploy', async ({page}) => {
@@ -480,7 +480,7 @@ test('South Prontera holds two separate hunting areas and both teams keep farmin
   expect(Math.hypot(areas.characters[0].farmCenter.x + 25, areas.characters[0].farmCenter.y - 17)).toBeLessThan(1);
   expect(Math.hypot(areas.characters[1].farmCenter.x - 23, areas.characters[1].farmCenter.y - 8)).toBeLessThan(1);
   expect(areas.characters[0].farmCenter).not.toEqual(areas.characters[1].farmCenter);
-  // Send Lyra to Willow Wood; Aren must keep farming the meadow unattended.
+  // Send Lyra to Payon Forest; Aren must keep farming the meadow unattended.
   // (Redeploying out of an active fight is refused — retreat to camp first.)
   await page.locator('[data-character="c2"]').click();
   await page.locator('[data-action="retreat"]').click();
@@ -686,7 +686,7 @@ test('atlas groups 27 destinations by region, filters through Lv. 150, and only 
   await expect(atlas.locator('[data-atlas-map]')).toHaveCount(6);
   await page.screenshot({ path: 'artifacts/world-atlas-desktop.png', animations: 'disabled' });
   await atlas.getByLabel('Recommended level').selectOption({ label: 'Lv. 126–150' });
-  await expect(atlas.getByRole('heading', { name: 'Cinder Crown' })).toBeVisible();
+  await expect(atlas.getByRole('heading', { name: 'Biolabs 3F' })).toBeVisible();
   await expect(atlas.getByRole('heading', { name: 'South Prontera' })).toHaveCount(0);
   await expect(atlas.locator('[data-atlas-map]')).toHaveCount(0);
   await atlas.getByLabel('Playable only').check();
@@ -694,7 +694,7 @@ test('atlas groups 27 destinations by region, filters through Lv. 150, and only 
   await atlas.getByLabel('Recommended level').selectOption('');
   await expect(atlas.locator('.atlas-map')).toHaveCount(6);
   await atlas.locator('[data-atlas-map=forest]').click();
-  await expect(page.locator('#map-name')).toHaveText('Willow Wood');
+  await expect(page.locator('#map-name')).toHaveText('Payon Forest');
   await expect(page.locator('#map-population')).toContainText('0 adventurers');
   await page.locator('#first-deploy').click();
   await page.getByRole('button', { name: /Browse the world atlas/ }).click();

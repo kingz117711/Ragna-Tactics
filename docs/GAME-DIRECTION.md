@@ -44,7 +44,7 @@ priority and an explicit way to return to the previous assignment.
   first-job choices currently cannot be reset. At first Job Lv. 40 a character can advance at camp to their corresponding second job.
 - Starting names Aren/Lyra; rename at any time. Default original male/female looks.
 - Third/fourth/fifth roster slots are earned from three independent achievements:
-  one boss clear, 35 Willow Wood kills, three boss clears. Each adds a slot.
+  one boss clear, 35 Payon Forest kills, three boss clears. Each adds a slot.
   These requirements are tuning, not fixed narrative milestones.
 - No permanent death. Defeat returns a unit to camp; it remains down until explicit
   recovery. Camp recovery is free during the prototype.

@@ -181,9 +181,9 @@ function renderUI() {
   const limit = rosterLimit(state), unlocked = state.characters.length < limit;
   $('recruit-label').textContent = unlocked ? 'Recruit a new Novice' : state.characters.length === 5 ? 'Your roster is complete' : 'Unlock your next adventurer';
   html('milestones', [
-    [state.milestones.bossKills >= 1, 'Defeat the sanctuary boss', 'Unlock adventurer slot 3'],
-    [state.milestones.forestKills >= 35, `Willow Wood · ${Math.min(35, state.milestones.forestKills)}/35 kills`, 'Unlock another roster slot'],
-    [state.milestones.bossKills >= 3, `Sanctuary clears · ${Math.min(3, state.milestones.bossKills)}/3`, 'Complete your five-person guild'],
+    [state.milestones.bossKills >= 1, 'Defeat Baphomet', 'Unlock adventurer slot 3'],
+    [state.milestones.forestKills >= 35, `${MAPS.forest.name} · ${Math.min(35, state.milestones.forestKills)}/35 kills`, 'Unlock another roster slot'],
+    [state.milestones.bossKills >= 3, `Baphomet clears · ${Math.min(3, state.milestones.bossKills)}/3`, 'Complete your five-person guild'],
   ].map(([done, title, subtitle]) => `<div class="milestone ${done ? 'complete' : ''}"><span class="diamond">${done ? '◆' : '◇'}</span><div><b>${title}</b><br>${subtitle}</div></div>`).join(''));
   renderInspector(units);
   html('journal', state.journal.slice(0, 12).map(e => `<div class="journal-entry"><time>${Math.floor(e.time / 60).toString().padStart(2, '0')}:${Math.floor(e.time % 60).toString().padStart(2, '0')}</time><span>${esc(e.message)}</span></div>`).join(''));
@@ -416,7 +416,7 @@ function advanceJob(id = [...selected][0]) {
 }
 function recruit() {
   if (state.characters.length >= rosterLimit(state)) {
-    showModal('Make room for another story.', `<p>Your guild begins with two adventurers and can grow to five. Complete these milestones to unlock additional roster slots.</p><div class="milestone-note">${state.milestones.bossKills >= 1 ? '✓' : '◇'} Clear the sanctuary boss once.<br>${state.milestones.forestKills >= 35 ? '✓' : '◇'} Defeat 35 enemies in Willow Wood (${state.milestones.forestKills}/35).<br>${state.milestones.bossKills >= 3 ? '✓' : '◇'} Clear the sanctuary boss three times (${state.milestones.bossKills}/3).</div><p style="margin-top:17px">Each completed milestone unlocks one slot. Every new adventurer arrives as a Lv. 1 Novice.</p>`, 'GUILD GROWTH'); return;
+    showModal('Make room for another story.', `<p>Your guild begins with two adventurers and can grow to five. Complete these milestones to unlock additional roster slots.</p><div class="milestone-note">${state.milestones.bossKills >= 1 ? '✓' : '◇'} Defeat Baphomet once.<br>${state.milestones.forestKills >= 35 ? '✓' : '◇'} Defeat 35 enemies in ${MAPS.forest.name} (${state.milestones.forestKills}/35).<br>${state.milestones.bossKills >= 3 ? '✓' : '◇'} Defeat Baphomet three times (${state.milestones.bossKills}/3).</div><p style="margin-top:17px">Each completed milestone unlocks one slot. Every new adventurer arrives as a Lv. 1 Novice.</p>`, 'GUILD GROWTH'); return;
   }
   showModal('A new adventurer arrives.', `<p>A fresh start, a new role, another possibility for your party. Your recruit begins as a Novice.</p><form id="recruit-form"><label class="form-label" for="recruit-name">Adventurer name</label><input id="recruit-name" name="name" type="text" maxlength="20" placeholder="Give them a name" required><label class="form-label" for="recruit-sex">Appearance</label><select name="sex" id="recruit-sex"><option value="m">Male</option><option value="f">Female</option></select>${modalError}<div class="modal-footer"><span>Free recruitment · ${state.characters.length + 1}/${rosterLimit(state)} unlocked slots</span><button class="primary">Welcome to the guild <span>+</span></button></div></form>`);
   $('recruit-form').onsubmit = event => { event.preventDefault(); const data = new FormData(event.currentTarget); if (issue({ type: 'recruit', name: data.get('name'), sex: data.get('sex') }, { close: true })) selected = new Set([state.characters.at(-1).id]); renderUI(); };
@@ -498,7 +498,7 @@ function gearLoadout(c) {
 function cardRows(character) {
   return Object.entries(CARDS).map(([id, card]) => {
     const count = state.inventory.cards[id] || 0;
-    return `<div class="inventory-row monster-card"><img src="${sprites.monsterPortrait(id)}" alt=""><div><strong>${card.name}</strong><p>${card.description} · ${id === 'phreeoni' ? 'Sandsea Hollow MVP' : id === 'skeleton' ? 'Payon Cave' : 'Morroc Dunes'} · ${count} loose</p></div>${character ? `<button data-socket="${id}" ${!count || character.mapId || character.card === id || character.equipment === 'training' ? 'disabled' : ''}>Socket</button>` : ''}</div>`;
+    return `<div class="inventory-row monster-card"><img src="${sprites.monsterPortrait(id)}" alt=""><div><strong>${card.name}</strong><p>${card.description} · ${id === 'phreeoni' ? MAPS.lair.name : id === 'skeleton' ? MAPS.payon.name : MAPS.morroc.name} · ${count} loose</p></div>${character ? `<button data-socket="${id}" ${!count || character.mapId || character.card === id || character.equipment === 'training' ? 'disabled' : ''}>Socket</button>` : ''}</div>`;
   }).join('');
 }
 const EXPEDITION_GOALS = [

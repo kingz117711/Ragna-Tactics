@@ -10,8 +10,8 @@ the biome, encounter type and design hook. The expedition still needs confirmati
 to deploy. The implemented base-level cap is 99.
 
 Use the stable destination IDs and [map pipeline](MAP-RESEARCH.md) for future
-maps. Start with the existing South Prontera terrain pilot, then use Kingfisher
-Reach to exercise a new field and verify the transition from planning to play.
+maps. Start with the existing South Prontera terrain pilot, then use Prontera
+Culvert to exercise a new dungeon and verify the transition from planning to play.
 
 Combat settings remember all hits, highlights, or hidden text in this browser.
 Camera shake is optional, defaults off and observes reduced motion. Automatic
@@ -101,7 +101,7 @@ Open Stats on one adventurer. Each earned Base level grants two points, includin
 levels in older saves. At camp, preview and train STR, AGI, VIT, INT, DEX and LUK.
 The simulation uses the bonuses live and offline. Job changes preserve them.
 
-## Sandsea Hollow MVP
+## Sograt Desert · Phreeoni MVP
 
 Deploy two first-job or higher adventurers for Phreeoni. During Sand Pact,
 gather in the blue circle around the marked ally to divide damage. Leave
@@ -109,7 +109,7 @@ the red circle during Sinkhole. A live clear awards the Phreeoni Card.
 Both boss expeditions recall their teams offline. Baphomet keeps its own
 progression and roster unlocks.
 
-## Morroc Dunes and card builds
+## Sograt Desert and card builds
 
 Scorpions and Peco Pecos drop attack and defense cards. A character can socket
 one card into equipped non-training gear at camp. Unequipping stores the gear

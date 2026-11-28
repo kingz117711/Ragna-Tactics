@@ -215,7 +215,7 @@ export function advanceExpeditionGoals(s) {
       'Both starting Novices are deployed. Keep hunting until one reaches Job Lv. 10.',
       'Both Novices are ready to choose first jobs. Return to camp to advance.',
       'Both first jobs are chosen. Form a party and check supplies before the boss.',
-      'Your party is prepared. Baphomet awaits in the Broken Sanctuary.',
+      `Your party is prepared. Baphomet awaits in ${MAPS.arena.name}.`,
       'Baphomet is defeated. The guild can recruit a third Novice.',
       'A third Novice joined the guild. The expedition goals are complete.',
     ];
@@ -680,7 +680,7 @@ function kill(s, m, killer) {
   if (m.mapId === 'forest') s.milestones.forestKills++;
   if (m.kind === 'phreeoni') {
     s.maps.lair.bossDefeated = true; s.maps.lair.telegraph = null;
-    log(s, 'Phreeoni defeated! The Sandsea Hollow MVP card is in shared storage.');
+    log(s, 'Phreeoni defeated! The MVP card is in shared storage.');
   }
   if (m.kind === 'baphomet') {
     s.milestones.bossKills++; s.inventory.equipment.sanctuary++; s.maps.arena.bossDefeated = true;

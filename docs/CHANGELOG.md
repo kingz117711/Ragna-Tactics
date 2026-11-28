@@ -143,7 +143,8 @@ Added a non-modal Character workspace, paper doll with gear deltas and card sock
 ## 2026-11-28 — World atlas and combat motion
 
 - Added 27 destinations across six regional groups, with recommended level
-  filters through Lv. 150 and a playable-only filter. Six live destinations
+  filters through Lv. 150 and a playable-only filter. Destination names reference
+  Ragnarok Online locations. Six live destinations
   link to the field viewer and the deployment picker.
 - Interpolated unit positions and camera tracking across simulation steps.
   Walking animation keeps its phase through directional changes. The map overview
