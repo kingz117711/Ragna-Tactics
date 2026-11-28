@@ -238,11 +238,20 @@ function shopPriceLabel(key) { return number(shopPrice(key)) + 'z'; }
 // Set bonuses come out of rAthena's combo scripts as flat stats and percentages; show them
 // with the same names the item lines use so the added value is readable at a glance.
 const SET_STAT_LABELS = { atk: 'ATK', matk: 'MATK', def: 'DEF', mdef: 'MDEF', hp: 'Max HP', sp: 'Max SP',
-  hpRegen: 'HP recovery', spRegen: 'SP recovery', atkPct: 'ATK', matkPct: 'MATK', defPct: 'DEF',
-  hpPct: 'Max HP', spPct: 'Max SP', fleePct: 'Flee', crit: 'Crit', speed: 'ASPD' };
+  flee: 'Flee', hit: 'HIT', crit: 'Crit', speed: 'ASPD', str: 'STR', agi: 'AGI', vit: 'VIT', int: 'INT',
+  dex: 'DEX', luk: 'LUK', hpRegen: 'HP recovery', spRegen: 'SP recovery', atkPct: 'ATK', matkPct: 'MATK',
+  defPct: 'DEF', mdefPct: 'MDEF', hpPct: 'Max HP', spPct: 'Max SP', fleePct: 'Flee', critPct: 'Crit',
+  speedPct: 'ASPD', aspdPct: 'ASPD', hitPct: 'HIT' };
 function setBonusText(set) {
   return Object.entries(set.bonus || {}).map(([key, value]) =>
     `${SET_STAT_LABELS[key] || key} ${key.endsWith('Pct') ? `+${value}%` : `${value > 0 ? '+' : ''}${value}`}`).join(' · ');
+}
+// Upstream grants some effects this game has no model for (elemental resistance, perfect
+// dodge, cast delay). Say so next to the modelled part rather than dropping it silently.
+function setUnmodelledText(set) {
+  const count = (set.unmodelled || []).length;
+  if (!count) return '';
+  return `+${count === 1 ? '1 effect' : `${count} effects`} this game does not model`;
 }
 function setGatesText(set) {
   return (set.requires || []).map(rule => rule.on === 'Refine'
@@ -254,7 +263,7 @@ function gearSetLines(item) {
   return gearSetsFor(item?.roId).map(set => {
     const others = set.items.filter(id => String(id) !== String(item.roId))
       .map(id => GEAR_ITEMS[Object.keys(GEAR_ITEMS).find(key => GEAR_ITEMS[key].roId === Number(id))]?.name || `#${id}`);
-    return `<small class="set-line">Set: ${esc(set.name)} — needs ${esc(others.join(', '))} · ${esc(setBonusText(set))}${setGatesText(set) ? ` (${esc(setGatesText(set))})` : ''}</small>`;
+    return `<small class="set-line">Set: ${esc(set.name)} — needs ${esc(others.join(', '))} · ${esc(setBonusText(set))}${setUnmodelledText(set) ? ` ${esc(setUnmodelledText(set))}` : ''}${setGatesText(set) ? ` (${esc(setGatesText(set))})` : ''}</small>`;
   }).join('');
 }
 // The stock is a curated cross-section of the whole game, from starter knives to
@@ -596,7 +605,7 @@ function gearSetSummary(c) {
       return GEAR_ITEMS[key]?.name || `#${id}`;
     });
     return `<div class="gear-set ${done ? 'is-active' : ''}"><strong>${esc(set.name)}</strong>
-      <small>${done ? 'Active' : 'Incomplete'} · ${esc(setBonusText(set))}${setGatesText(set) ? ` · ${esc(setGatesText(set))}` : ''}</small>
+      <small>${done ? 'Active' : 'Incomplete'} · ${esc(setBonusText(set))}${setUnmodelledText(set) ? ` · ${esc(setUnmodelledText(set))}` : ''}${setGatesText(set) ? ` · ${esc(setGatesText(set))}` : ''}</small>
       <small>${missing.map(name => `<span>${esc(name)}</span>`).join(' + ')}</small></div>`;
   };
   return `<section class="gear-sets"><h4>Gear sets</h4>${active.map(set => row(set, true)).join('')}${partial.map(set => row(set, false)).join('')}</section>`;
