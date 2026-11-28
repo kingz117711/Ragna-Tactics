@@ -1,5 +1,34 @@
 # Changelog
 
+## 2026-11-28 — Map visual pass
+
+Redesigned all six field maps toward Ragnarok Origin / Ragnarok 3 rendering
+quality. See [MAP-VISUAL-PASS.md](MAP-VISUAL-PASS.md) for the full technique
+reference.
+
+- Fixed a real seam bug: `CanvasPattern`s were cached per image and shared between
+  chunk canvases, so neighbouring chunks sampled different tile phases. The cache
+  is now per context.
+- Roads are built from a pale halo, ragged clods along the shoulders and a packed
+  centre, all translucent, and are traced as splines — grass always shows through,
+  so a path never has a cut edge.
+- `softTileArea` rewritten: four-corner projected bounds, a mask that is the union
+  of 14 overlapping falloff lobes, composited in device space. Cobbled paving and
+  sand patches now have ragged, feathered borders with no ring banding.
+- The field sits on a raised plateau: shadowed lip, broken rim light, a ring of
+  boulder props and a treeline mass beyond. Rim props join the scenery list.
+- Edge wilds are a treeline (shadow wash plus overlapping canopies) instead of
+  per-cell confetti.
+- Bridges are derived from water crossings rather than authored coordinates.
+  `trails` are now invisible guides only — painting them as roads left path stubs
+  in open fields.
+- Cave surfaces switched to grey slate with a cobbled walkway; still water no
+  longer sparkles. Desert shrubs are splayed dry twigs; decal density cut.
+- The wide-zoom overview is two-tier: a cheap painting on the first frame, the
+  detailed one on the next, and its canvas is bounded in resolution.
+- Validation: 83/83 tests, syntax/import checks (11 modules), 150 asset files
+  verified, static build, and a six-map visual sweep at two zoom levels.
+
 ## 2026-11-27 — Playable foundation 0.1
 
 - Established the owner-confirmed direction and a root AGENTS.md for continuation.

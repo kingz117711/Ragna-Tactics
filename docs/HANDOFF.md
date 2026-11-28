@@ -1,5 +1,19 @@
 # Milestone handoff — 2026-11-28
 
+## Map visual pass
+
+All six fields were repainted toward Ragnarok Origin / Ragnarok 3 quality. The
+composition lives entirely in `src/terrain.js`; `data.js` remains gameplay-only.
+[docs/MAP-VISUAL-PASS.md](MAP-VISUAL-PASS.md) explains every pass, the seam
+invariants, and the mistakes that are easy to reintroduce (principally: patterns
+cached per image instead of per context, `softTileArea` using two projected corners
+instead of four, and mask lobes applied one at a time).
+
+Verified with 83/83 unit tests, syntax/import checks over 11 modules, 150 verified
+asset files, a static build, and a six-map screenshot sweep at fit and gameplay
+zoom. Remaining art gaps: tree/hero scale, minimap overlay styling, and water
+crossings for maps without streams.
+
 ## World atlas and combat presentation
 
 Open **World atlas** above the playable quick links or from the deployment picker.

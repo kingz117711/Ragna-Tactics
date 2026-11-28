@@ -165,14 +165,17 @@ export const biomeFor = mapId => BIOMES[MAP_BIOME[mapId] || 'prontera'];
 // The kit ships a character strip so every prop keeps its painted proportions;
 // these are presentation values only, never gameplay collision sizes.
 export const PROP_FACTOR = {
-  tree_ancient_large: 1, tree_ancient_variant: 1, tree_tall_cluster: 0.95, tree_sapling: 0.55,
-  tree_bush_bright: 0.4, rock_cliff_crag: 0.7, river_stone_post: 0.55, rock_boulder_mossy: 0.45,
+  // The kit's canopies are painted large; at gameplay zoom they dwarf the
+  // monsters, so the big trees come down a notch and the pocket forest keeps its
+  // depth from count rather than from individual scale.
+  tree_ancient_large: 0.82, tree_ancient_variant: 0.8, tree_tall_cluster: 0.76, tree_sapling: 0.5,
+  tree_bush_bright: 0.38, rock_cliff_crag: 0.62, river_stone_post: 0.55, rock_boulder_mossy: 0.45,
   palm_giant: 0.9, palm_tall: 0.85, palm_double: 0.9, cactus_flower: 0.45, cactus_small: 0.4,
   ruin_pillar: 0.6, ruin_column_fallen: 0.4, ruin_stump: 0.45, ruin_curb: 0.35, desert_bone: 0.45,
-  bamboo_grove: 0.95, tree_dead: 0.7, tombstone: 0.45, house_ruin: 0.75, tree_cherry: 0.8,
+  bamboo_grove: 0.8, tree_dead: 0.62, tombstone: 0.45, house_ruin: 0.75, tree_cherry: 0.8,
   lantern_stone: 0.55, bridge_red_arch: 0.7, torii_gate: 0.75, shrine_stone: 0.65,
   stalagmite: 0.6, crystal_cluster: 0.45, standing_stone: 0.55, tree_dark_gnarled: 1,
-  house_prontera: 0.75, tower_geffen: 1.2, pier_post: 0.45,
+  house_prontera: 0.7, tower_geffen: 1.05, pier_post: 0.45,
 };
 export const propScale = (id, scale = 1) => 0.7 * (PROP_FACTOR[id] ?? 1) * scale;
 
@@ -806,16 +809,18 @@ function paintRoads(ctx, sprites, mapId, biome, rect) {
           const ang = p.angle;
           for (const side of [-1, 1]) {
             if (hash2(i, side + 17, 919) < 0.32) continue;
-            const off = w * (0.34 + hash2(i, side + 3, 907) * 0.34) * side;
+            const off = w * (0.3 + hash2(i, side + 3, 907) * 0.3) * side;
             const jx = (hash2(i, side + 11, 911) - 0.5) * 1.1;
             const jy = (hash2(i, side + 13, 913) - 0.5) * 1.1;
             const px = p.x + Math.cos(ang + Math.PI / 2) * off + jx;
             const py = p.y + Math.sin(ang + Math.PI / 2) * off + jy;
-            const rr = 0.5 + hash2(i, side + 23, 929) * 0.85;
+            const rr = 0.34 + hash2(i, side + 23, 929) * 0.5;
             ctx.save();
-            ctx.globalAlpha = (0.3 + hash2(i, side + 19, 923) * 0.35) * band;
+            ctx.globalAlpha = (0.26 + hash2(i, side + 19, 923) * 0.3) * band;
             ctx.beginPath();
-            ctx.ellipse(px, py, rr, rr * 0.72, 0, 0, Math.PI * 2);
+            // Elongated along the direction of travel, so the clods read as
+            // scuffed dirt rather than pebbles.
+            ctx.ellipse(px, py, rr * 1.5, rr, ang, 0, Math.PI * 2);
             ctx.clip();
             tileFill(ctx, sprites, biome.path, { x0: px - rr - 0.6, y0: py - rr - 0.6, x1: px + rr + 0.6, y1: py + rr + 0.6 }, TILE_UNITS * 0.75, 1);
             ctx.restore();
