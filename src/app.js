@@ -6,6 +6,7 @@ import { Sprites } from './sprites.js';
 import { Renderer } from './renderer.js';
 import { acknowledgePoint } from './feedback.js';
 import { ATLAS_LEVELS, ATLAS_SIZE, filterAtlas } from './atlas.js';
+import { readGmFlag, writeGmFlag, gmPanel, gmLink } from './gm.js';
 
 const $ = id => document.getElementById(id);
 const esc = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -21,6 +22,10 @@ let pendingJob = null, statDraft = {};
 let workspacePage = 'gear', workspaceSlot = 'weapon', workspaceOpen = false, inspectedId;
 let multiSelect = false, tacticsExpanded = false;
 let atlasLevel = '', atlasPlayable = false, atlasFromDeployment = false;
+// GM tools are opt-in: `?gm=1` in the URL enables the tab on this device and the
+// choice persists, so a reload does not lose it. Turning the tab off from inside
+// the panel clears the flag again.
+let gmEnabled = readGmFlag(location.search, localStorage);
 const DISPLAY_KEY = 'ragna-tactics-display';
 function readDisplaySettings() {
   try {
@@ -699,8 +704,62 @@ function rename() {
 function download(text, filename) {
   const url = URL.createObjectURL(new Blob([text], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+// ---------------------------------------------------------------------------
+// GM tools
+// ---------------------------------------------------------------------------
+function showGm() {
+  if (!gmEnabled) return;
+  const c = selectedCharacters()[0] || state.characters[0];
+  if (c && !selected.has(c.id)) selected = new Set([c.id]);
+  const mapId = renderer.mapId;
+  showModal('GM tools', gmPanel({
+    characters: state.characters,
+    selectedId: c?.id,
+    mapId,
+    mapName: MAPS[mapId]?.name,
+    zeny: state.inventory.zeny,
+    fxCount: 176,
+  }), 'DEVELOPER PLAYGROUND');
+  modal.classList.add('gm-dialog');
+  modal.dataset.page = 'gm';
+  gmRefresh();
+}
+// The panel is re-rendered after every action so the stats it reports stay live.
+function gmRefresh() {
+  if (!modal.open || modal.dataset.page !== 'gm') return;
+  const c = selectedCharacters()[0] || state.characters[0];
+  $('modal-body').innerHTML = gmPanel({
+    characters: state.characters, selectedId: c?.id, mapId: renderer.mapId,
+    mapName: MAPS[renderer.mapId]?.name, zeny: state.inventory.zeny, fxCount: 176,
+  });
+}
+// A GM action always runs through `command()`, so the save stays valid.
+function gmAction(action, extra = {}) {
+  const c = selectedCharacters()[0] || state.characters[0];
+  const ids = c ? [c.id] : [];
+  const message = command(state, { type: 'gm', action, ids, mapId: renderer.mapId, ...extra });
+  if (message) error(message);
+  else { persist(); }
+  renderUI(); gmRefresh();
+  return !message;
+}
+// Where to play gallery effects: the middle of the party on this field, or the
+// field's own centre when nobody is deployed.
+function gmOrigin() {
+  const here = state.characters.filter(c => c.mapId === renderer.mapId);
+  if (here.length) return { x: here.reduce((sum, c) => sum + c.x, 0) / here.length, y: here.reduce((sum, c) => sum + c.y, 0) / here.length };
+  return { x: 0, y: 0 };
+}
+function toggleGm(on) {
+  gmEnabled = on;
+  writeGmFlag(on, localStorage);
+  $('gm-button').hidden = !on;
+  if (!on) toast('GM tab hidden. Add ?gm=1 to the address bar to bring it back.');
+  else toast('GM tools enabled on this device.');
+}
 function settings() {
-  showModal('Your adventure, at your pace.', `<p>Your guild saves automatically on this device. Export a copy to keep a backup or move to another browser. Single-player progress is local; multiplayer will arrive in a later phase.</p><div class="settings-actions"><button data-modal-action="export">Export guild</button><button data-modal-action="import">Import guild</button><button data-modal-action="save">Save now</button></div><h3>Combat display</h3><div class="combat-settings"><label>Combat text <select id="combat-text"><option value="all">All hits</option><option value="highlights">Skill, critical, boss and healing</option><option value="hidden">Hide combat text</option></select></label><label><input type="checkbox" id="combat-shake"> Shake on critical hits and boss impacts</label></div><h3>Field commands</h3><div class="help-grid"><span><b>Click portrait / character</b> · Select</span><span><b>Shift + click</b> · Select several</span><span><b>Double-click portrait</b> · Follow on map</span><span><b>Right-click ground / M</b> · Move</span><span><b>Click enemy</b> · Focus target</span><span><b>H / R</b> · Hold / Resume farming</span><span><b>Q / T</b> · Skill / Retreat</span><span><b>1–3</b> · Selected adventurer’s hotbar</span><span><b>Scroll / + / −</b> · Zoom</span><span><b>Drag ground</b> · Pan camera</span><span><b>F / Esc</b> · Fit map / Cancel order</span></div><h3>While you’re away</h3><p>All deployed farming teams continue for up to four hours, using their actual combat rules, supplies, and tactics. Defeated characters stop earning. Boss expeditions return to camp without an offline boss reward. Keep just one game tab open.</p><p>Party members share one EXP pool with a 12% group bonus. Training assignments earn 15% more Base EXP; gathering assignments collect double materials. No permanent death.</p><div class="milestone-note">First milestone: grow two Novices into first jobs, assemble a party, and defeat Baphomet to unlock another adventurer.</div><h3>Start over</h3><button class="danger-button" data-modal-action="reset" style="padding:10px 15px">Start a new guild…</button>`, 'SETTINGS & FIELD GUIDE');
+  showModal('Your adventure, at your pace.', `<p>Your guild saves automatically on this device. Export a copy to keep a backup or move to another browser. Single-player progress is local; multiplayer will arrive in a later phase.</p><div class="settings-actions"><button data-modal-action="export">Export guild</button><button data-modal-action="import">Import guild</button><button data-modal-action="save">Save now</button></div><h3>Combat display</h3><div class="combat-settings"><label>Combat text <select id="combat-text"><option value="all">All hits</option><option value="highlights">Skill, critical, boss and healing</option><option value="hidden">Hide combat text</option></select></label><label><input type="checkbox" id="combat-shake"> Shake on critical hits and boss impacts</label></div><h3>Field commands</h3><div class="help-grid"><span><b>Click portrait / character</b> · Select</span><span><b>Shift + click</b> · Select several</span><span><b>Double-click portrait</b> · Follow on map</span><span><b>Right-click ground / M</b> · Move</span><span><b>Click enemy</b> · Focus target</span><span><b>H / R</b> · Hold / Resume farming</span><span><b>Q / T</b> · Skill / Retreat</span><span><b>1–3</b> · Selected adventurer’s hotbar</span><span><b>Scroll / + / −</b> · Zoom</span><span><b>Drag ground</b> · Pan camera</span><span><b>F / Esc</b> · Fit map / Cancel order</span></div><h3>While you’re away</h3><p>All deployed farming teams continue for up to four hours, using their actual combat rules, supplies, and tactics. Defeated characters stop earning. Boss expeditions return to camp without an offline boss reward. Keep just one game tab open.</p><p>Party members share one EXP pool with a 12% group bonus. Training assignments earn 15% more Base EXP; gathering assignments collect double materials. No permanent death.</p><div class="milestone-note">First milestone: grow two Novices into first jobs, assemble a party, and defeat Baphomet to unlock another adventurer.</div><h3>Developer tools</h3><p>GM tools are a testing playground: max level, class changes, every skill, gear, milestones, field controls and a full skill-FX gallery. They are hidden by default.${gmEnabled ? ' The GM tab is currently on.' : ''} Re-enable the tab any time by opening <code>${esc(gmLink(location.href))}</code>.</p><div class="settings-actions"><button data-modal-action="gm">${gmEnabled ? 'Open GM tools' : 'Enable GM tools'}</button></div>
+  <h3>Start over</h3><button class="danger-button" data-modal-action="reset" style="padding:10px 15px">Start a new guild…</button>`, 'SETTINGS & FIELD GUIDE');
   $('combat-text').value = displaySettings.combatText;
   $('combat-shake').checked = displaySettings.cameraShake;
   const saveDisplay = () => {
@@ -751,6 +810,34 @@ document.addEventListener('click', event => {
       if (modal.open && modal.dataset.page === 'skills') characterSkills(c); else renderWorkspace();
     }
     return;
+  }
+  // GM panel controls. Levels are read from the inputs; every other action is a
+  // plain command. Kept ahead of the workspace handler so `data-gm` wins.
+  const gmControl = event.target.closest('[data-gm], [data-gm-level]');
+  if (gmControl) {
+    const action = gmControl.dataset.gm;
+    if (action === 'hide') { closeModal(); toggleGm(false); return; }
+    if (action === 'set-levels') {
+      const body = $('modal-body');
+      const level = Number(body.querySelector('[data-gm-level="base"]')?.value);
+      const jobLevel = Number(body.querySelector('[data-gm-level="job"]')?.value);
+      gmAction('set-levels', { level, jobLevel }); return;
+    }
+    if (action === 'change-job') {
+      const job = $('modal-body').querySelector('[data-gm-job]')?.value;
+      if (job && gmAction('change-job', { job })) toast('Class changed.');
+      return;
+    }
+    if (action === 'fx-one') {
+      const fx = $('modal-body').querySelector('[data-gm-fx]')?.value;
+      const point = gmOrigin();
+      if (gmAction('fx-one', { fx, point })) toast('Playing ' + fx + '.');
+      return;
+    }
+    if (action === 'fx-all') { if (gmAction('fx-all', { point: gmOrigin() })) toast('Playing every skill flourish.'); return; }
+    if (action === 'respawn' || action === 'kill-field' || action === 'boss') { gmAction(action); return; }
+    if (action === 'give-zeny') { gmAction(action, { amount: 1000000 }); return; }
+    if (action) { gmAction(action); return; }
   }
   const ws = event.target.closest('#adventurer-panel button');
   if (ws && ws.id !== 'workspace-close') {
@@ -867,6 +954,7 @@ document.addEventListener('click', event => {
   if (modalAction === 'export') { persist(); download(encodeSave(state), 'ragna-tactics-guild.json'); }
   if (modalAction === 'import') $('import-file').click();
   if (modalAction === 'save') { persist(); toast(saveError ? 'Save unavailable. Export a backup instead.' : 'Your guild is saved on this device.'); }
+  if (modalAction === 'gm') { closeModal(); toggleGm(true); showGm(); }
   if (modalAction === 'reset') showModal('Begin another story?', '<p>This replaces the guild saved on this device. Export your current guild first if you want to keep it.</p><div class="modal-footer"><button data-modal-action="export">Export current guild</button><button data-modal-action="reset-confirm" class="danger-button">Replace with a new guild</button></div>');
   if (modalAction === 'reset-confirm') { localStorage.removeItem(SAVE_KEY); location.reload(); }
 });
@@ -919,6 +1007,8 @@ $('first-deploy').onclick = () => { selected = new Set(state.characters.map(c =>
 $('dismiss-coach').onclick = () => { coachDismissed = true; renderUI(); };
 $('adventurer-workspace').onclick = () => setWorkspace(!workspaceOpen);
 $('workspace-close').onclick = () => { setWorkspace(false); $('adventurer-workspace').focus(); };
+$('gm-button').hidden = !gmEnabled;
+$('gm-button').onclick = showGm;
 $('recruit-button').onclick = recruit; $('settings-button').onclick = settings; $('bag-button').onclick = bag; $('guide-button').onclick = fieldGuide; $('bounty-button').onclick = bountyBoard; $('storage-button').onclick = storage; $('world-button').onclick = () => worldOverview();
 $('modal-close').onclick = closeModal;
 $('save-button').onclick = () => { persist(); toast(saveError ? 'Export your guild to preserve progress.' : 'Guild saved.'); };

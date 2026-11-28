@@ -533,7 +533,11 @@ export class Renderer {
     ctx.textAlign = 'center'; ctx.lineJoin = 'round';
     for (const e of effects) {
       if (e.mapId !== this.mapId) continue;
-      const age = clamp(EFFECT_LIFETIME - e.life + frameRemainder, 0, EFFECT_LIFETIME);
+      // GM gallery effects carry their own lifetime and no text; they exist only
+      // to play a flourish, so they must not respect the combat-text filter.
+      const lifetime = e.life0 || EFFECT_LIFETIME;
+      const age = clamp(lifetime - e.life + frameRemainder, 0, lifetime);
+      if (e.kind === 'fx') { if (e.fx) this.drawSkillFx(this.screen(e), e.fx, age * (EFFECT_LIFETIME / lifetime), z); continue; }
       const emphasized = EMPHASIZED_HITS.has(e.kind);
       const point = this.screen(e);
       if (point.x < -70 || point.x > this.width + 70 || point.y < -25 || point.y > this.height + 190) continue;

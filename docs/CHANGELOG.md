@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-11-28 — GM tools
+
+- Added an opt-in GM playground (`src/gm.js`) with a `GM` tab in the top bar:
+  max level (Base 99 + 196 attribute points + full HP/SP), manual level entry, a
+  class-change dropdown covering all 59 jobs, learn-every-skill / reset, guild-wide
+  ops (max party, +Zeny, all materials, every gear piece, five of every card, 100
+  potions each, unlock milestones, fill the roster), field controls (repopulate,
+  clear, boss clear, party heal, retreat, respawn) and a full skill-FX gallery that
+  plays all 176 flourishes on the current field.
+- Every GM action runs through the normal `command()` boundary, so it is
+  journaled, persisted and still passes the save validator — no debug back door
+  into the state.
+- The tab is off by default: `?gm=1` enables it on that device and remembers the
+  choice, `?gm=0` (or the panel's Hide button) turns it off again. Settings also
+  offers an Enable GM tools button and the exact recovery link.
+
 ## 2026-11-28 — Class skill trees, RO skill FX, and complete attack swings
 
 - Rebuilt the skill system around a 229-skill catalog covering all 59 jobs, each

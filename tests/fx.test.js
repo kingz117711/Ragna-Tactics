@@ -262,3 +262,94 @@ test('the Skills workspace renders for every class and build', async () => {
     assert.match(buildCards(id), /build-card/, `${id} shows its family's builds`);
   }
 });
+
+test('GM tools reach every gated system without producing an invalid save', async () => {
+  const { createGame, command } = await import('../src/sim.js');
+  const { validateState } = await import('../src/persistence.js');
+  const GM = await import('../src/gm.js');
+  const { JOBS, SKILLS, FX_IDS } = await import('../src/data.js');
+  const s = createGame(), c = s.characters[0];
+
+  // Max level fills the attribute pool exactly: no points overspent.
+  assert.equal(command(s, { type: 'gm', action: 'max-level', ids: ['c1'] }), null);
+  assert.equal(c.level, GM.MAX_BASE_LEVEL);
+  assert.equal(c.jobLevel, 10, 'a Novice caps at Job Lv. 10');
+  const spent = Object.values(c.attributes).reduce((a, b) => a + b, 0);
+  assert.equal(spent, 2 * (GM.MAX_BASE_LEVEL - 1), '196 points spent, none spare');
+
+  // A GM class change clamps the job level to the new class's cap and seeds the
+  // line's own training, including ancestor skills.
+  for (const job of ['runeKnight', 'sniper', 'doram', 'novice']) {
+    assert.equal(command(s, { type: 'gm', action: 'change-job', ids: ['c1'], job }), null);
+    assert.equal(c.job, job);
+    assert.ok(c.jobLevel <= (JOBS[job].jobLevelCap || 10), `${job} job level within cap`);
+    assert.ok(c.activeSkills.every(id => SKILLS[id]), 'slots hold real skills');
+  }
+  assert.match(command(s, { type: 'gm', action: 'change-job', ids: ['c1'], job: 'notAJob' }), /Unknown class/);
+
+  // Train every skill the line teaches, at max rank, then reset to the kit.
+  command(s, { type: 'gm', action: 'change-job', ids: ['c1'], job: 'sniper' });
+  assert.equal(command(s, { type: 'gm', action: 'learn-all', ids: ['c1'] }), null);
+  const learned = Object.keys(c.skills);
+  assert.ok(learned.length >= 15, `sniper line trained (${learned.length} skills)`);
+  for (const id of learned) assert.equal(c.skills[id], SKILLS[id].maxRank);
+  assert.ok(c.activeSkills.length <= 4);
+  assert.equal(command(s, { type: 'gm', action: 'reset-skills', ids: ['c1'] }), null);
+  assert.ok(Object.keys(c.skills).length <= 2, 'reset leaves the signature kit only');
+
+  // Whole-guild ops: roster, milestones (which gate the roster limit), wealth.
+  assert.equal(command(s, { type: 'gm', action: 'unlock' }), null);
+  assert.equal(command(s, { type: 'gm', action: 'roster' }), null);
+  assert.equal(s.characters.length, 5);
+  const zeny = s.inventory.zeny;
+  command(s, { type: 'gm', action: 'give-zeny', amount: 1000000 });
+  assert.equal(s.inventory.zeny, zeny + 1000000);
+  command(s, { type: 'gm', action: 'max-party' });
+  assert.ok(s.characters.every(x => x.level === GM.MAX_BASE_LEVEL));
+  command(s, { type: 'gm', action: 'materials' });
+  command(s, { type: 'gm', action: 'gear' });
+  command(s, { type: 'gm', action: 'cards' });
+  assert.ok(s.inventory.gearItems.length >= 21, 'every gear piece stocked');
+  assert.ok(Object.values(s.inventory.cards).every(n => n >= 5));
+
+  // Field controls and the FX gallery.
+  assert.equal(command(s, { type: 'gm', action: 'respawn', mapId: 'meadow' }), null);
+  assert.equal(command(s, { type: 'gm', action: 'kill-field', mapId: 'meadow' }), null);
+  assert.ok(s.maps.meadow.monsters.every(m => m.hp === 0));
+  assert.equal(command(s, { type: 'gm', action: 'fx-all', mapId: 'meadow', point: { x: 0, y: 0 } }), null);
+  assert.equal(s.effects.length, FX_IDS.length, 'one effect per flourish');
+  assert.ok(s.effects.every(e => e.kind === 'fx' && FX_IDS.includes(e.fx)));
+  assert.equal(command(s, { type: 'gm', action: 'fx-one', mapId: 'meadow', fx: 'meteor', point: { x: 0, y: 0 } }), null);
+  assert.equal(s.effects.length, 1);
+  assert.equal(command(s, { type: 'gm', action: 'fx-clear' }), null);
+  assert.equal(s.effects.length, 0);
+  assert.match(command(s, { type: 'gm', action: 'nonsense' }), /Unknown GM action/);
+
+  // The panel markup renders and offers every class.
+  const html = GM.gmPanel({ characters: s.characters, selectedId: 'c1', mapId: 'meadow', mapName: 'South Prontera', zeny: s.inventory.zeny, fxCount: FX_IDS.length });
+  for (const action of ['max-level', 'change-job', 'learn-all', 'fx-all', 'hide']) assert.match(html, new RegExp(`data-gm="${action}"`));
+  for (const job of Object.keys(JOBS)) assert.match(GM.jobOptions(), new RegExp(`value="${job}"`));
+  assert.equal((GM.jobOptions('sniper').match(/value="sniper" selected/g) || []).length, 1);
+
+  // Everything above still validates as a save.
+  validateState(s);
+});
+
+test('the GM tab is opt-in and remembers the choice', async () => {
+  const GM = await import('../src/gm.js');
+  const store = new Map();
+  const storage = { getItem: k => store.get(k) ?? null, setItem: (k, v) => store.set(k, v), removeItem: k => store.delete(k) };
+  // Hidden unless asked for, remembered across reloads, and switchable off again.
+  assert.equal(GM.readGmFlag('', storage), false, 'hidden by default');
+  assert.equal(GM.readGmFlag('?gm=1', storage), true, '?gm=1 turns it on');
+  assert.equal(GM.readGmFlag('', storage), true, 'and it survives a reload');
+  assert.equal(GM.readGmFlag('?gm=0', storage), false, '?gm=0 turns it off');
+  assert.equal(GM.readGmFlag('?area=meadow', storage), false, 'other query params do not enable it');
+  // Private mode and blocked storage must never throw.
+  assert.equal(GM.readGmFlag('', { getItem() { throw new Error('denied'); } }), false);
+  assert.doesNotThrow(() => GM.writeGmFlag(true, { setItem() { throw new Error('denied'); } }));
+  // The recovery link keeps every existing query parameter.
+  assert.match(GM.gmLink('http://localhost:5173/?area=meadow'), /gm=1/);
+  assert.match(GM.gmLink('http://localhost:5173/?area=meadow'), /area=meadow/);
+  assert.equal(GM.GM_STORAGE_KEY, 'ragna-tactics:gm');
+});

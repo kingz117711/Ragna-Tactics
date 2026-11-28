@@ -1,4 +1,5 @@
 // Pure, serializable simulation. No DOM, storage, wall clock, or camera dependencies.
+import * as GM from './gm.js';
 import { FIRST_JOB_KIT, FIELD_SKILLS, FIELD_SKILL_ALIASES, fieldSkillAvailable, SKILLS, canLearnSkill, skillUnlockLevel, learnedRank, learnedSkillPower, activeSkill, activeSkillId, activeSkillList, activeSlots, ACTIVE_SLOTS, defaultSkills, skillMultiplier, skillPoints, prereqMet, missingPrereqs, learnedPassive, passiveBonus, combatJob, REFINEMENT, gearKey, defaultBuild, selectedBuild, ELEMENTS, affinityMultiplier, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, promotionRequirement, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, mapBounds, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, refineSuccessPercent, refineCost, refineSafeLimit, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STATUS, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
 
 // The elemental spellbook's flourish per element.
@@ -263,6 +264,39 @@ function applyCommand(s, cmd) {
   const individual = cmd.individual === true && selected.length === 1 &&
     ['move','hold','focus','retreat','resume','rally'].includes(cmd.type);
   const units = individual ? selected : expandSelection(s, cmd.ids || []);
+  // GM tools run through the same command boundary as normal orders so every
+  // effect is validated, journaled and saved; the panel that calls them is only
+  // mounted when the developer enables it.
+  if (cmd.type === 'gm') {
+    const target = selected[0] || null;
+    switch (cmd.action) {
+      case 'max-level': return target ? GM.maxLevel(target) : 'Select one adventurer.';
+      case 'max-party': return GM.maxParty(s);
+      case 'set-levels': return target ? GM.setLevels(target, { level: cmd.level, jobLevel: cmd.jobLevel }) : 'Select one adventurer.';
+      case 'fill-points': return target ? GM.fillAttributePoints(target) : 'Select one adventurer.';
+      case 'change-job': return target ? GM.changeJob(s, target, cmd.job) : 'Select one adventurer.';
+      case 'learn-all': return target ? GM.learnEverySkill(target) : 'Select one adventurer.';
+      case 'reset-skills': return target ? GM.resetSkills(target) : 'Select one adventurer.';
+      case 'learn-everything': return GM.unlockAllSkillsEverywhere(s);
+      case 'give-zeny': return GM.giveZeny(s, cmd.amount);
+      case 'materials': return GM.grantMaterials(s);
+      case 'gear': return GM.stockGear(s);
+      case 'cards': return GM.grantCards(s);
+      case 'potions': return GM.restockPotions(s);
+      case 'unlock': return GM.unlockMilestones(s);
+      case 'roster': return GM.fillRoster(s);
+      case 'heal': if (!target) return 'Select one adventurer.'; { const st = stats(target); target.hp = st.hp; target.sp = st.sp; if (target.status === 'down') target.status = target.mapId ? 'farming' : 'camp'; return null; }
+      case 'heal-party': return GM.healParty(s);
+      case 'retreat-party': return GM.retreatParty(s);
+      case 'respawn': return GM.respawnField(s, cmd.mapId);
+      case 'kill-field': return GM.killField(s, cmd.mapId);
+      case 'boss': return GM.defeatBoss(s, cmd.mapId);
+      case 'fx-all': return GM.spawnFxGallery(s, cmd.mapId, undefined, cmd.point);
+      case 'fx-one': return GM.spawnFxGallery(s, cmd.mapId, [cmd.fx], cmd.point);
+      case 'fx-clear': return GM.clearFx(s);
+      default: return 'Unknown GM action.';
+    }
+  }
   if (cmd.type === 'recruit') {
     if (s.characters.length >= rosterLimit(s)) return 'Complete guild milestones to unlock another slot.';
     const name = String(cmd.name || '').trim().slice(0, 20);
