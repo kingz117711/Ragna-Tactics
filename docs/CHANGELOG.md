@@ -1,5 +1,30 @@
 # Changelog
 
+## 2026-11-28 — Real RO class sprites, skill icons, and a full equipment catalog
+
+- **Every one of the 59 jobs now renders its own native Ragnarok Online body.**
+  `scripts/import_class_sprites.py` decodes the client's `.spr` / `.act` files
+  (`devilm/costume-ro`, plus the client weapon sprites Prontera-Grind already pins)
+  and composites them like the client: body at the ACT origin, head at
+  `body attach - head attach`, held weapon shifted the same way. 40 classes ×
+  two genders = 80 outfits in `public/assets/wardrobe/classes/` (146 files, 6.6 MiB),
+  listed in the derived `index.json` key `classWardrobe`. Idle, walk and attack in
+  eight directions with the client's own delays. Nothing is redrawn or recoloured.
+- **Genuine RO skill icons** (161) and **item icons** (524), imported from the
+  client texture set and `nadesh52/ragnarok-asset`; the procedural placeholders are gone.
+- **Equipment catalog rebuilt from rAthena** (`db/re/item_db_equip.yml`, fetched on
+  demand and hash-pinned): 524 icon-backed weapons/armour with real stats, class
+  restrictions and shop values.
+- **Guild-camp merchant**: a `shop` modal with slot tabs, level-band groups, real
+  item icons, who-can-equip-it hints and a live purse; `gear-buy` runs through the
+  normal command boundary and lands the instance in shared storage.
+- New guards: `tests/assets.test.js` (every job has both genders on disk, the class
+  pack indexes exactly the missing outfits, every shop row has a genuine icon and a
+  price) and `tools/smoke-assets.mjs` (`npm run smoke`, jsdom, 11 checks) booting the
+  real app to prove icons, sprites and the merchant resolve to files.
+- `npm run assets:verify` now also verifies the class pack, both icon sets and that
+  the gear catalog is up to date.
+
 ## 2026-11-28 — GM tools
 
 - Added an opt-in GM playground (`src/gm.js`) with a `GM` tab in the top bar:

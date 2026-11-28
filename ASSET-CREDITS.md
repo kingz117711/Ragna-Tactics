@@ -69,3 +69,52 @@ rAthena's `db/re/item_db_equip.yml` at commit
 [`6b917c1808cc93c65f27f47079b2c58a11df7c6c`](https://github.com/rathena/rathena/blob/6b917c1808cc93c65f27f47079b2c58a11df7c6c/db/re/item_db_equip.yml).
 The upstream project declares GPL-3.0; its license text and source notice are
 included under `licenses/`. This notice does not apply to Ragnarok Online artwork.
+
+`scripts/build_gear_catalog.py` fetches that file into `db/` on first use and
+re-derives `src/gear-catalog.json` and the merchant's stock from it; `db/` is not
+committed. Its SHA-256 is pinned in the script.
+
+## Class sprites for the full job roster
+
+`public/assets/wardrobe/classes/` holds native body sprites for the 40 classes the shipped
+wardrobe does not cover (Crusader through Summoner / Spirit Handler, jobs 14–4308, both
+genders). They are decoded from the Ragnarok Online client's own `.spr` / `.act` files and
+composited exactly the way the client does it: the body ACT frame at the ACT origin, the
+head at `body attach point - head attach point`, and the weapon the class holds during its
+attack animation shifted the same way. Nothing is redrawn, recoloured or traced.
+
+| What | Repository | Path |
+| --- | --- | --- |
+| Class bodies, heads | [`devilm/costume-ro`](https://github.com/devilm/costume-ro) | `data/sprite/인간족/몸통/{남,여}`, `data/sprite/인간족/머리통/{남,여}`, `data/sprite/도람족/…` |
+| Held weapon sprites | [`rAthena-Thailand/ClientROThailand`](https://github.com/rAthena-Thailand/ClientROThailand) | `Client-2025-06-04/Pre-Renewal/data/sprite/인간족/<job>/` |
+
+Files are fetched through the GitHub contents API (the sandbox cannot reach
+`raw.githubusercontent.com`) and pinned by git blob id and SHA-256; the same pins
+Prontera-Grind already publishes for these client files are reused where the path matches,
+and [`public/assets/class-provenance.json`](public/assets/class-provenance.json) records
+every source and every generated file. `public/assets/index.json` gains one derived key,
+`classWardrobe`, listing the new outfits only.
+
+```sh
+python3 scripts/import_class_sprites.py            # fetch (cached), rebuild the pack
+python3 scripts/import_class_sprites.py --verify   # offline hash + ground-line check
+```
+
+The pack ships idle, walk and attack, eight directions each, with the client's own frame
+delays. The head hairstyle is style 2, the one the shipped wardrobe already renders. The
+Summoner (Doram) line uses the client's Doram race art (small bodies, their own heads).
+
+## Skill icons
+
+`public/assets/skill-icons/` holds 161 genuine Ragnarok Online skill icons, and
+`public/assets/equipment-icons/` 524 genuine item icons (24×24). The skill icons come from
+the client's `texture/유저인터페이스/item/` set via
+[`Althaeas/Data.grf`](https://github.com/Althaeas/Data.grf); the item icons from
+[`nadesh52/ragnarok-asset`](https://github.com/nadesh52/ragnarok-asset)
+(`icon/<itemId>.png`). Per-file source, hash and the item/skill mapping are in
+`public/assets/skill-icons/provenance.json`, `public/assets/equipment-icons/provenance.json`,
+`scripts/skillicon_map.json` and `scripts/build_gear_catalog.py`.
+
+Item statistics in `src/gear-catalog.json` come from rAthena's
+`db/re/item_db_equip.yml` (GPL-3.0, see `licenses/`). Only icon-backed, sellable gear is
+curated into the catalog and the merchant's 157-key stock.

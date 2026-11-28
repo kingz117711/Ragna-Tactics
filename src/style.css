@@ -2400,6 +2400,11 @@ select{
 .skill-icon::before, .skill-icon::after {
   content: ''; position: absolute; background: var(--fx); opacity: .92;
 }
+/* Real Ragnarok Online client icons: pixel art at native 24x24, so the tile is
+   just a frame and the procedural glyph layers are switched off. */
+.skill-icon-art { background: #0d1716; border-color: #33443f; box-shadow: inset 0 0 0 1px #000; padding: 0; overflow: hidden; }
+.skill-icon-art::before, .skill-icon-art::after { content: none; }
+.skill-icon-art img { display: block; width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
 /* Glyph per flourish family: set from data-fx in the markup. */
 .skill-icon[data-fx^="fire"], .skill-icon[data-fx^="ignition"], .skill-icon[data-fx^="meteor"],
 .skill-icon[data-fx^="comet"], .skill-icon[data-fx^="melt"], .skill-icon[data-fx^="dragon"],
@@ -2451,6 +2456,8 @@ select{
 .skill-icon-md::before { transform: scale(1.18); }
 .skill-icon-lg { width: 44px; height: 44px; border-radius: 10px; }
 .skill-icon-lg::before { transform: scale(1.5); }
+.skill-icon-lg.skill-icon-art { width: 48px; height: 48px; }
+.skill-icon-md.skill-icon-art { border-radius: 8px; }
 
 .skill-row { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 10px; }
 .skill-row-body { min-width: 0; }
@@ -2606,3 +2613,23 @@ select{
   .gm-grid{grid-template-columns:1fr 1fr}
   .gm-row{flex-direction:column;align-items:stretch}
 }
+
+/* ===========================================================================
+   Real Ragnarok Online item art in the merchant, bag and gear sheet.
+   Native 24x24 pixels, scaled with nearest-neighbour so the icons stay crisp.
+   =========================================================================== */
+.gear-icon{width:24px;height:24px;image-rendering:pixelated;flex:0 0 auto;align-self:center}
+.inventory-row .gear-icon{margin-right:2px}
+.shop-purse{font-variant-numeric:tabular-nums;color:var(--gold)}
+.shop-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 14px}
+.shop-tabs button{padding:6px 10px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);border-radius:6px;background:#101c1b;color:var(--muted)}
+.shop-tabs button.is-on{border-color:var(--gold);color:var(--gold);background:#16241f}
+.shop-band{margin:0 0 16px}
+.shop-band h3{margin:0 0 8px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:5px}
+.shop-grid{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.shop-item{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:10px;border:1px solid var(--line);border-radius:8px;background:#0f1a19;padding:8px 10px}
+.shop-item.locked{opacity:.62}
+.shop-icon{width:32px;height:32px;image-rendering:pixelated;justify-self:center}
+.shop-body strong{display:block;font-size:11px}
+.shop-body small{display:block;color:#93a8a2;font-size:10px;line-height:1.35}
+.shop-item button{padding:6px 9px;font-size:10px;white-space:nowrap}

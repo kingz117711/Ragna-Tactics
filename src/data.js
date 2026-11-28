@@ -1,6 +1,9 @@
 import { SKILLS } from './skills-catalog.js';
 import { canLearnSkill as canLearnSkillFor } from './skills.js';
 import { RENEWAL_JOBS, BUILD_FAMILIES, STATUS_EFFECTS } from './renewal.js';
+// Generated from rAthena's renewal item database by scripts/build_gear_catalog.py.
+import GEAR_CATALOG from './gear-catalog.json' with { type: 'json' };
+import GEAR_SHOP_KEYS from './gear-shop.json' with { type: 'json' };
 
 export const HUNT_RADII = [3, 6, 10];
 export const DEFAULT_HUNT_RADIUS = 6;
@@ -275,6 +278,24 @@ export const GEAR_ITEMS = {
   glove:{name:'Glove',roId:2604,slot:'accessory1',dex:2,armorLevel:1,slots:0,weight:10,buy:30000,equipLevel:20,refineable:false,excluded:['novice']},
   ring:{name:'Ring',roId:2601,slot:'accessory2',str:2,armorLevel:1,slots:0,weight:10,buy:30000,equipLevel:20,refineable:false,excluded:['novice']},
 };
+// The wider shop inventory: real Ragnarok Online items whose stats are read
+// straight from rAthena's renewal item database and whose shop icons are the
+// client's own item art (scripts/build_gear_catalog.py + import_equipment_icons.py).
+// Keys stay stable because saves store item ids.
+const CATALOG = typeof GEAR_CATALOG === 'object' ? GEAR_CATALOG : {};
+export const GEAR_ITEMS_CORE = { ...GEAR_ITEMS };
+export const GEAR_SHOP = Array.isArray(GEAR_SHOP_KEYS) ? GEAR_SHOP_KEYS : Object.keys(CATALOG);
+for (const [roId, item] of Object.entries(CATALOG)) {
+  const key = item.key || ('ro_' + roId);
+  if (GEAR_ITEMS[key]) continue;
+  const entry = { ...item, roId: Number(roId) };
+  delete entry.key;
+  GEAR_ITEMS[key] = entry;
+}
+export function gearIconPath(item) {
+  if (!item?.roId) return null;
+  return '/assets/equipment-icons/' + item.roId + '.png';
+}
 export const GEAR_AFFIXES = {
   mighty:{name:'Mighty',stat:'atk',min:2,max:8,slots:['weapon']},arcane:{name:'Arcane',stat:'matk',min:3,max:10,slots:['weapon','accessory1','accessory2']},
   sturdy:{name:'Sturdy',stat:'def',min:1,max:5,slots:['armor','shield','head','garment','footwear']},vital:{name:'Vital',stat:'hp',min:12,max:55,slots:['armor','shield','head','garment','footwear','accessory1','accessory2']},

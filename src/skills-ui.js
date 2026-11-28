@@ -94,12 +94,25 @@ export function skillGate(c, id) {
   };
 }
 
-// Skill icon: a small rune tile. Emoji-free, so it renders identically offline.
+// Skill icons are the original Ragnarok Online client icons, imported as PNGs
+// by scripts/import_skill_icons.py and routed through index.json. A skill whose
+// icon the client does not ship keeps the procedural rune tile, so no surface
+// ever renders an empty box.
+export const SKILL_ICON_ROUTES = {};
+export function setSkillIconRoutes(routes) {
+  for (const key of Object.keys(SKILL_ICON_ROUTES)) delete SKILL_ICON_ROUTES[key];
+  for (const [id, file] of Object.entries(routes || {})) {
+    if (SKILLS[id]) SKILL_ICON_ROUTES[id] = '/assets/skill-icons/' + file + '.png';
+  }
+}
 export function skillIcon(id, { size = 'sm', className = '' } = {}) {
   const def = SKILLS[id];
   if (!def) return '';
   const fx = def.fx || 'slash';
-  return `<span class="skill-icon skill-icon-${esc(size)} ${className}" data-fx="${esc(fx)}" data-icon="${esc(def.icon)}" aria-hidden="true"></span>`;
+  const art = SKILL_ICON_ROUTES[id];
+  const tile = `<span class="skill-icon skill-icon-${esc(size)} ${className}" data-fx="${esc(fx)}" data-icon="${esc(def.icon)}" aria-hidden="true"></span>`;
+  if (!art) return tile;
+  return `<span class="skill-icon skill-icon-${esc(size)} skill-icon-art ${className}" data-fx="${esc(fx)}" data-icon="${esc(def.icon)}" aria-hidden="true"><img src="${esc(art)}" alt="" width="24" height="24" loading="lazy" decoding="async"></span>`;
 }
 
 const pips = (rank, max) => `<span class="skill-pips" aria-label="${rank} of ${max}">${Array.from({ length: Math.min(max, 10) }, (_, i) => `<i class="${i < rank ? 'on' : ''}"></i>`).join('')}${max > 10 ? `<b>${rank}/${max}</b>` : ''}</span>`;

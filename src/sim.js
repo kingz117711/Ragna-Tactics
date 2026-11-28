@@ -1,6 +1,6 @@
 // Pure, serializable simulation. No DOM, storage, wall clock, or camera dependencies.
 import * as GM from './gm.js';
-import { FIRST_JOB_KIT, FIELD_SKILLS, FIELD_SKILL_ALIASES, fieldSkillAvailable, SKILLS, canLearnSkill, skillUnlockLevel, learnedRank, learnedSkillPower, activeSkill, activeSkillId, activeSkillList, activeSlots, ACTIVE_SLOTS, defaultSkills, skillMultiplier, skillPoints, prereqMet, missingPrereqs, learnedPassive, passiveBonus, combatJob, REFINEMENT, gearKey, defaultBuild, selectedBuild, ELEMENTS, affinityMultiplier, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, promotionRequirement, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, mapBounds, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, refineSuccessPercent, refineCost, refineSafeLimit, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STATUS, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
+import { FIRST_JOB_KIT, FIELD_SKILLS, FIELD_SKILL_ALIASES, fieldSkillAvailable, SKILLS, canLearnSkill, skillUnlockLevel, learnedRank, learnedSkillPower, activeSkill, activeSkillId, activeSkillList, activeSlots, ACTIVE_SLOTS, defaultSkills, skillMultiplier, skillPoints, prereqMet, missingPrereqs, learnedPassive, passiveBonus, combatJob, REFINEMENT, gearKey, defaultBuild, selectedBuild, ELEMENTS, affinityMultiplier, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, promotionRequirement, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, mapBounds, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, GEAR_SHOP, gearFitsSlot, ITEMS, refineSuccessPercent, refineCost, refineSafeLimit, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STATUS, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
 
 // The elemental spellbook's flourish per element.
 const ELEMENT_FX = { fire: 'fireBall', water: 'frostNova', wind: 'jupitel', earth: 'quake', holy: 'holyLight', ghost: 'soulBlast', poison: 'venom' };
@@ -256,6 +256,22 @@ export function command(s, cmd) {
   if (result === null) advanceExpeditionGoals(s);
   return result;
 }
+// Merchant price. The client price is the base, but dozens of endgame pieces are listed
+// at a nominal 1-20z in the database (god items, event gear), which would make Asprika
+// cheaper than a Cotton Shirt. When the listed price is clearly a placeholder for the
+// item's stats, price the item from its power and required level instead.
+export function shopPrice(itemId) {
+  const item = GEAR_ITEMS[itemId];
+  if (!item) return Infinity;
+  const listed = item.buy || 0;
+  const power = (item.atk || 0) + (item.matk || 0) + (item.def || 0) + (item.mdef || 0) * 2;
+  const level = Math.max(1, item.equipLevel || 1);
+  // A bounty pays 5-25 Zeny per monster and the guild starts with 150, so the ladder
+  // runs from a few hundred Zeny to a few tens of thousands, not to six figures.
+  const derived = 180 + power * 55 + level * level * 9 + (item.slots || 0) * 400;
+  const base = listed >= Math.max(1000, derived * 0.5) ? listed : Math.max(listed, derived);
+  return Math.max(120, Math.min(48000, Math.round(base * 1.25)));
+}
 export function forgePrice(s, item) {
   return Math.ceil(FORGE[item].zeny * (s.characters.some(c => combatJob(c.job) === 'blacksmith' && !c.mapId && c.hp > 0) ? 0.5 : 1));
 }
@@ -329,6 +345,20 @@ function applyCommand(s, cmd) {
     s.inventory.equipment[cmd.item]++;
     log(s, 'Forged ' + EQUIPMENT[cmd.item].name + '.');
     return null;
+  }
+  if (cmd.type === 'gear-buy') {
+    const item = GEAR_ITEMS[cmd.item];
+    if (!item) return 'Unknown equipment.';
+    if (!GEAR_SHOP.includes(cmd.item)) return 'That equipment is not on the merchant\u2019s list.';
+    const price = shopPrice(cmd.item);
+    if (s.inventory.zeny < price) return `The merchant wants ${price} Zeny for that.`;
+    const buyer = s.characters.find(c => c.id === cmd.id) || s.characters[0];
+    if (!buyer) return 'No adventurer can carry that yet.';
+    if (!canEquipGear(buyer.job, cmd.item, buyer.level)) return 'None of your adventurers can equip that yet.';
+    s.inventory.zeny -= price;
+    const instance = addGearToBag(s, cmd.item);
+    log(s, `Bought ${item.name} for ${price} Zeny.`);
+    return instance ? null : 'The merchant is out of stock.';
   }
   if (!selected.length) return 'Select at least one adventurer.';
   if (cmd.type === 'party') {

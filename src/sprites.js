@@ -22,6 +22,13 @@ export class Sprites {
       if (metadata.layers) metadata.poses = metadata.poses.map(pose => pose.map(i => metadata.layers[i]));
       this.assets.set(key, { metadata, atlas });
     }));
+    // Class pack: native bodies for every job the shipped wardrobe does not cover. Same
+    // format and its own directory, so a missing pack simply falls back to the parent job.
+    await Promise.all(Object.entries(this.index.classWardrobe || {}).map(async ([key, rec]) => {
+      const [metadata, atlas] = await Promise.all([json('/assets/wardrobe/classes/' + rec.meta), image('/assets/wardrobe/classes/' + rec.image)]);
+      if (metadata.layers) metadata.poses = metadata.poses.map(pose => pose.map(i => metadata.layers[i]));
+      this.assets.set(key, { metadata, atlas });
+    }));
     await Promise.all(Object.entries(this.index.monsters).map(async ([id, record]) => {
       this.assets.set('mob-' + id, { record, atlas: await image('/assets/mobs/' + id + '.webp') });
     }));
@@ -50,7 +57,8 @@ export class Sprites {
     }
     const anchor = this.index.anchor;
     const layers = [...body.metadata.poses[bodyIndex].map(layer => [layer, body.atlas]),
-      ...hair.metadata.poses[hairIndex].map(layer => [layer, hair.atlas])].sort((a, b) => a[0][6] - b[0][6]);
+      ...(hairIndex === null ? [] : hair.metadata.poses[hairIndex].map(layer => [layer, hair.atlas]))]
+      .sort((a, b) => a[0][6] - b[0][6]);
     const left = Math.floor(Math.min(...layers.map(([p]) => p[4] - anchor[0])));
     const top = Math.floor(Math.min(...layers.map(([p]) => p[5] - anchor[1])));
     const right = Math.ceil(Math.max(...layers.map(([p]) => p[4] - anchor[0] + p[2])));
@@ -89,18 +97,20 @@ export class Sprites {
     while (visualClass && !this.assets.has(`base-${JOBS[visualClass]?.native}-${c.sex}`)) visualClass = JOBS[visualClass]?.parent;
     const job = JOBS[visualClass || 'novice'].native;
     const body = this.assets.get(`base-${job}-${c.sex}`), hair = this.assets.get(`hair-${c.sex}-2-0`);
-    if (!body || !hair) return;
+    if (!body) return;
     const route = stance + direction;
     const action = body.metadata.actions[route];
-    const head = hair.metadata.actions[job + ':' + route];
-    if (!action || !head) return;
+    if (!action) return;
+    // The class pack bakes the head into its own atlas, so those outfits need no hair route.
+    const head = body.metadata.headBaked ? null : hair?.metadata.actions[job + ':' + route];
+    if (!body.metadata.headBaked && !head) return;
     // Attack actions resolve once and then hold their last frame; idle and walk
     // loop. This is what makes a Novice (and every other class) swing read as a
     // complete, single animation rather than a stuttering restart.
     const loop = stance !== 'attack';
     const at = attackFrameIndex(action.frames.length, action.delay, ms, loop);
-    const headAt = attackFrameIndex(head.frames.length, head.delay, ms, loop);
-    const frame = this.heroFrame(job, c.sex, route, body, hair, action.frames[at], head.frames[headAt]);
+    const headAt = head ? attackFrameIndex(head.frames.length, head.delay, ms, loop) : 0;
+    const frame = this.heroFrame(job, c.sex, route, body, hair, action.frames[at], head ? head.frames[headAt] : null);
     ctx.save(); ctx.scale(scale, scale); ctx.imageSmoothingEnabled = false;
     ctx.drawImage(frame.canvas, frame.left, frame.top);
     ctx.restore();
