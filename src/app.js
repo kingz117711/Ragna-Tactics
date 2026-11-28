@@ -1,5 +1,6 @@
-import { FIELD_SKILLS, fieldSkillAvailable, jobLineage, combatJob, REFINEMENT, ORE_INFO, gearVariant, AFFINITIES, ELEMENTS, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, promotionRequirement, classBuilds, selectedBuild, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, refineCost, refineSuccessPercent, refineSafeLimit, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
+import { FIELD_SKILLS, fieldSkillAvailable, SKILLS, skillCatalog, learnedRank, learnedSkillPower, activeSkillId, jobLineage, combatJob, REFINEMENT, ORE_INFO, gearVariant, AFFINITIES, ELEMENTS, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, promotionRequirement, classBuilds, selectedBuild, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, refineCost, refineSuccessPercent, refineSafeLimit, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
 import { availablePoints, forgePrice, command, tick, stats, rosterLimit, engaged, effectiveTactics, isLeader, canEquipGear } from './sim.js';
+import { FX_LABELS, skillRow, learnedSkillRows, skillSummary } from './skills-ui.js';
 import { SAVE_KEY, loadGame, saveGame, encodeSave, decodeSave } from './persistence.js';
 import { Sprites } from './sprites.js';
 import { Renderer } from './renderer.js';
@@ -39,6 +40,7 @@ function toast(message) { $('toast').textContent = message; $('toast').hidden = 
 function showModal(title, content, eyebrow = 'GUILD MANAGEMENT') {
   modal.classList.remove('character-dialog', 'monitor-dialog', 'atlas-dialog');
   $('modal-title').textContent = title; $('modal-eyebrow').textContent = eyebrow; $('modal-body').innerHTML = content;
+  delete modal.dataset.page;
   if (!modal.open) modal.showModal();
 }
 function error(message) { const el = $('modal-error'); if (modal.open && el) el.textContent = message; else toast(message); }
@@ -212,7 +214,8 @@ function renderInspector(units) {
     content = `<div class="inspector-title">${units.length ? 'Better, together.' : 'Choose your adventurer.'}</div><p>${units.length ? 'Link your adventurers into a party to share targets, support each other, and earn shared EXP. Or deploy separately to cover more ground.' : 'Select a portrait to inspect equipment, tactics, and progression.'}</p>${units.length ? `<div class="detail-row"><span>Selected supplies</span><strong>${potions} potions</strong></div><label class="form-label">Tactics<select id="tactic-select"><option value="" disabled selected>Apply to selection…</option>${Object.entries(TACTICS).map(([key, t]) => `<option value="${key}">${t.name}</option>`).join('')}</select></label><p>Job changes become available at Novice Job Lv. 10. Every character chooses their own path.</p>` : ''}`;
   } else {
     const c = units[0], st = stats(c);
-    content = `<div class="inspector-title">${JOBS[c.job].name} <span class="tiny muted">${JOBS[c.job].role}</span></div><div class="detail-row"><span>Base Lv. ${c.level}</span><strong>${number(c.exp)} / ${baseNeed(c.level)} EXP</strong></div><div class="progress"><i style="width:${Math.min(100, c.exp / baseNeed(c.level) * 100)}%"></i></div><div class="detail-row"><span>Job Lv. ${c.jobLevel} / ${JOBS[c.job].jobLevelCap || (c.job === 'novice' ? 10 : 50)}</span><strong>${c.jobLevel >= promotionLevel(c.job) ? 'Job change ready' : `${number(c.jobExp)} / ${jobNeed(c.jobLevel)}`}</strong></div><div class="progress"><i style="width:${Math.min(100, c.jobExp / jobNeed(c.jobLevel) * 100)}%"></i></div><div class="detail-row"><span>HP / SP</span><strong>${Math.ceil(c.hp)}/${st.hp} · ${Math.floor(c.sp)}/${st.sp}</strong></div><div class="detail-row"><span>ATK / DEF · Potions</span><strong>${st.atk} / ${st.def} · ${c.potions}</strong></div><div class="detail-row"><span>Combat role</span><strong>${ROLE_LABELS[JOB_ROLES[c.job]]}${c.partyId ? ` · ${isLeader(state, c) ? 'Party leader' : 'Follower'}` : ''}</strong></div><label class="form-label">Starting preset<select id="tactic-select">${Object.entries(TACTICS).map(([key, t]) => `<option value="${key}" ${c.tactic === key ? 'selected' : ''}>${t.name}</option>`).join('')}</select></label>${tacticsMarkup(c)}<label class="form-label">Farming objective<select id="assignment-select">${[['balanced', 'Balanced farming'], ['experience', 'Training · +15% Base EXP'], ['materials', 'Gathering · double materials']].map(([key, label]) => `<option value="${key}" ${c.assignment === key ? 'selected' : ''}>${label}</option>`).join('')}</select></label><div class="detail-row"><span>Assignment · status</span><strong>${c.mapId ? `${MAPS[c.mapId].name} · ${c.status}` : c.status === 'down' ? 'Defeated · camp' : 'Guild camp'}</strong></div><div class="detail-actions">${(st.element || JOB_ROLES[c.job] === 'support') ? '<button data-action="spellbook">Spellbook</button>' : ''}<button data-action="attributes">Stats · ${availablePoints(c)} pts</button><button data-action="equipment">Equipment</button>${classBuilds(c.job).length > 1 ? '<button data-action="builds">Build</button>' : ''}<button data-action="advance">Job path</button><button data-action="rename">Rename</button>${c.partyId && !isLeader(state, c) ? '<button data-action="leader" title="Make this adventurer the party leader">Lead party</button>' : ''}</div><p><span style="color:var(--gold)">${st.skill}</span> · ${st.cost} SP · ${c.cast ? `Casting · ${c.cast.remaining.toFixed(1)}s` : c.cooldown > 0 ? c.cooldown.toFixed(1) + 's cooldown' : 'Ready'} · Hit ${Math.round(st.hit * 100)}% · Flee ${Math.round(st.flee * 100)}%<br>${st.element ? ELEMENTS[st.element].name + ' magic · strong against ' + (ELEMENTS[ELEMENTS[st.element].beats]?.name || 'Undead') : st.description || JOBS[c.job].description}</p>`;
+    const activeId = activeSkillId(c);
+    content = `<div class="inspector-title">${JOBS[c.job].name} <span class="tiny muted">${JOBS[c.job].role}</span></div><div class="detail-row"><span>Base Lv. ${c.level}</span><strong>${number(c.exp)} / ${baseNeed(c.level)} EXP</strong></div><div class="progress"><i style="width:${Math.min(100, c.exp / baseNeed(c.level) * 100)}%"></i></div><div class="detail-row"><span>Job Lv. ${c.jobLevel} / ${JOBS[c.job].jobLevelCap || (c.job === 'novice' ? 10 : 50)}</span><strong>${c.jobLevel >= promotionLevel(c.job) ? 'Job change ready' : `${number(c.jobExp)} / ${jobNeed(c.jobLevel)}`}</strong></div><div class="progress"><i style="width:${Math.min(100, c.jobExp / jobNeed(c.jobLevel) * 100)}%"></i></div><div class="detail-row"><span>HP / SP</span><strong>${Math.ceil(c.hp)}/${st.hp} · ${Math.floor(c.sp)}/${st.sp}</strong></div><div class="detail-row"><span>ATK / DEF · Potions</span><strong>${st.atk} / ${st.def} · ${c.potions}</strong></div><div class="detail-row"><span>Combat role</span><strong>${ROLE_LABELS[JOB_ROLES[c.job]]}${c.partyId ? ` · ${isLeader(state, c) ? 'Party leader' : 'Follower'}` : ''}</strong></div><label class="form-label">Starting preset<select id="tactic-select">${Object.entries(TACTICS).map(([key, t]) => `<option value="${key}" ${c.tactic === key ? 'selected' : ''}>${t.name}</option>`).join('')}</select></label>${tacticsMarkup(c)}<label class="form-label">Farming objective<select id="assignment-select">${[['balanced', 'Balanced farming'], ['experience', 'Training · +15% Base EXP'], ['materials', 'Gathering · double materials']].map(([key, label]) => `<option value="${key}" ${c.assignment === key ? 'selected' : ''}>${label}</option>`).join('')}</select></label><div class="detail-row"><span>Assignment · status</span><strong>${c.mapId ? `${MAPS[c.mapId].name} · ${c.status}` : c.status === 'down' ? 'Defeated · camp' : 'Guild camp'}</strong></div><div class="detail-actions">${(st.element || JOB_ROLES[c.job] === 'support') ? '<button data-action="spellbook">Spellbook</button>' : ''}<button data-action="attributes">Stats · ${availablePoints(c)} pts</button><button data-action="equipment">Equipment</button>${classBuilds(c.job).length > 1 ? '<button data-action="builds">Build</button>' : ''}<button data-action="advance">Job path</button><button data-action="rename">Rename</button>${c.partyId && !isLeader(state, c) ? '<button data-action="leader" title="Make this adventurer the party leader">Lead party</button>' : ''}</div><p><span style="color:var(--gold)">${st.skill}</span>${activeId ? ` <span class="tiny muted">R${learnedRank(c, activeId)} · ${FX_LABELS[SKILLS[activeId].fx] || SKILLS[activeId].fx}</span>` : ''} · ${st.cost} SP · ${c.cast ? `Casting · ${c.cast.remaining.toFixed(1)}s` : c.cooldown > 0 ? c.cooldown.toFixed(1) + 's cooldown' : 'Ready'} · Hit ${Math.round(st.hit * 100)}% · Flee ${Math.round(st.flee * 100)}%<br>${st.element ? ELEMENTS[st.element].name + ' magic · strong against ' + (ELEMENTS[ELEMENTS[st.element].beats]?.name || 'Undead') : st.description || JOBS[c.job].description}</p>`;
   }
   if (content !== inspectorKey) { html('inspector', content); inspectorKey = content; }
 }
@@ -233,6 +236,7 @@ function showCharacterModal(page, c, title, content) {
     `<button data-character-page="${id}" data-id="${c.id}" ${id === page ? 'aria-current="page"' : ''}>${label}</button>`
   ).join('');
   showModal(title, `<nav class="sheet-tabs" aria-label="Character pages">${nav}</nav><div class="sheet-page">${content}</div>`, c.name + ' · ' + JOBS[c.job].name);
+  modal.dataset.page = page;
   modal.classList.add('character-dialog');
   modal.scrollTop = 0;
 }
@@ -253,8 +257,12 @@ function characterOverview(c) {
 function characterSkills(c) {
   const st = stats(c), build = selectedBuild(c.job,c.buildId);
   const elemental = st.element || JOB_ROLES[c.job] === 'support';
-  showCharacterModal('skills',c,'Skills and builds',`<section class="sheet-profile"><div><span class="eyebrow">ACTIVE SKILL</span><h3>${esc(st.skill)}</h3><p>${st.cost} SP · ${st.cooldown}s cooldown</p></div></section>
+  const active = SKILLS[activeSkillId(c)];
+  const rows = learnedSkillRows(c);
+  showCharacterModal('skills',c,'Skills and builds',`<section class="sheet-profile"><div><span class="eyebrow">${active ? 'TRAINED SKILL' : 'ACTIVE SKILL'}</span><h3>${esc(st.skill)}</h3><p>${st.cost} SP · ${st.cooldown}s cooldown${active ? ' · rank ' + learnedRank(c, activeSkillId(c)) : ''}</p></div></section>
+    ${active ? `<p>${esc(active.text)}</p><p class="tiny muted">Flourish · ${esc(FX_LABELS[active.fx] || active.fx)}${active.element ? ' · ' + esc(ELEMENTS[active.element].name) : ''}${active.status ? ' · ' + esc(active.status) : ''} · +${learnedSkillPower(c)} skill damage</p>` : ''}
     <label class="tactics-toggle sheet-skill-toggle"><input type="checkbox" id="sheet-auto-skill" data-tactics-key="autoSkill" ${effectiveTactics(c).autoSkill ? 'checked' : ''}> Automatically use this adventurer’s skill</label>
+    <h3>Learned skills</h3>${rows || '<p>No skill ranks learned yet. Train at camp from the Character panel’s Skills page.</p>'}
     <h3>Combat build</h3><p>${build ? esc(build.name) + ' · ' + esc(build.style) : 'This job uses its signature skill.'}</p>
     <div class="detail-actions">${classBuilds(c.job).length > 1 ? '<button data-action="builds">Choose combat build</button>' : ''}${elemental ? '<button data-action="spellbook">Prepare spell</button>' : ''}</div>`);
 }
@@ -322,9 +330,16 @@ function workspaceSkills(c) {
     const rank = c.techniques?.ranks[id] || 0, level = skill.levels[rank];
     return `<article class="workspace-item"><div><strong>${skill.name} · Rank ${rank}/3</strong><p>${skill.text}</p><small>${skill.sp} SP · ${skill.time}s cooldown</small></div><button data-workspace-train="${id}" ${atCamp && level && c.jobLevel>=level ? '' : 'disabled'}>${!level ? 'Max rank' : c.jobLevel < level ? 'Job Lv. '+level : 'Learn rank '+(rank+1)}</button></article>`;
   }).join('');
-  return `<div class="workspace-section"><h3>Skill bar</h3><p><kbd>1</kbd> ${esc(st.skill)} · Signature</p>${slots}
+  const summary = skillSummary(c), line = summary.line;
+  const active = SKILLS[activeSkillId(c)];
+  const training = skillCatalog(c.job).map(([id]) => skillRow(c, id)).join('');
+  return `<div class="workspace-section"><h3>Skill bar</h3><p><kbd>1</kbd> ${esc(st.skill)} · ${active ? 'Trained skill' : 'Signature'}</p>${slots}
     <label class="workspace-auto"><input type="checkbox" id="workspace-auto" ${effectiveTactics(c).autoSkill ? 'checked' : ''}> Allow automatic skills</label>
-    <p>Learn ranks and assign hotbar slots at camp.</p>${rows || '<p>Choose your first job to unlock class techniques.</p>'}
+    <h3>Skill training · ${line}</h3>
+    <p>Learn ranks with Job levels. ${active ? `Casting <strong>${esc(active.name)}</strong> — ${esc(FX_LABELS[active.fx] || active.fx)}${active.element ? ' · ' + esc(ELEMENTS[active.element].name) : ''} · +${learnedSkillPower(c)} skill damage from learned ranks.` : 'Learn a skill to give this adventurer a trained cast.'}</p>
+    ${training || '<p>This line has no trainable skills yet.</p>'}
+    <h3>Techniques</h3>
+    <p>Assign a learned technique to hotbar key 2 or 3. Techniques keep their own cooldowns.</p>${rows || '<p>Choose your first job to unlock class techniques.</p>'}
     <button data-workspace-detail="skills">Combat builds and spells ↗</button></div>`;
 }
 function workspaceStats(c) {
@@ -711,6 +726,19 @@ async function settle(elapsed, { activeTab = false } = {}) {
 
 document.addEventListener('click', event => {
   if (!state || !ready) return;
+  // Skill training is reachable from both the Character panel and the Skills
+  // modal, so it is handled before either surface claims the click.
+  const skillAction = event.target.closest('[data-workspace-learn], [data-workspace-active]');
+  if (skillAction) {
+    const c = selectedCharacters()[0];
+    if (!c) return;
+    const id = skillAction.dataset.workspaceLearn || skillAction.dataset.workspaceActive;
+    const type = skillAction.dataset.workspaceLearn ? 'skill-learn' : 'skill-active';
+    if (issue({ type, ids: [c.id], skillId: id }, { quiet: true })) {
+      if (modal.open && modal.dataset.page === 'skills') characterSkills(c); else renderWorkspace();
+    }
+    return;
+  }
   const ws = event.target.closest('#adventurer-panel button');
   if (ws && ws.id !== 'workspace-close') {
     const c=selectedCharacters()[0], data=ws.dataset;
@@ -953,10 +981,13 @@ let minimapDragging = false;
 const navigateMinimap = (canvas,event) => {
   if (!ready) return;
   const r = canvas.getBoundingClientRect();
-  const world = renderer.minimapToWorld(canvas,
-    (event.clientX - r.left) * (canvas.width / r.width),
-    (event.clientY - r.top) * (canvas.height / r.height));
-  renderer.centerOn(world);
+  const mx = (event.clientX - r.left) * (canvas.width / r.width);
+  const my = (event.clientY - r.top) * (canvas.height / r.height);
+  // A click on a roster marker selects and follows that adventurer; empty ground
+  // still just moves the camera.
+  const unit = renderer.minimapCharacterAt(canvas, mx, my, state);
+  if (unit) { selected = new Set([unit.id]); inspectorKey = ''; renderer.centerOn(unit); renderer.followId = unit.id; renderUI(); return; }
+  renderer.centerOn(renderer.minimapToWorld(canvas, mx, my));
   renderUI();
 };
 minimap.addEventListener('pointerdown', event => { if (!ready) return; minimapDragging = true; minimap.setPointerCapture(event.pointerId); navigateMinimap(minimap,event); });

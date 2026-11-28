@@ -447,6 +447,32 @@ test('advance to High Wizard and retain the equipped elemental spell',async({pag
   await page.reload();await expect(page.locator('.character-card').first()).toContainText('High Wizard');
 });
 
+test('train skill ranks on the Skills page and cast the chosen skill in the field', async ({ page }) => {
+  const errors = []; page.on('pageerror', e => errors.push(e.message));
+  const s = createGame();
+  Object.assign(s.characters[0], { job: 'swordsman', jobLevel: 12, skills: {}, activeSkill: null });
+  await page.addInitScript(raw => { if (!localStorage.length) localStorage.setItem('ragna-tactics:save:v1', raw); }, encodeSave(s));
+  await boot(page);
+  await page.locator('[data-character="c1"]').first().click();
+  await page.locator('#adventurer-workspace').click();
+  await page.locator('[data-workspace-page="skills"]').click();
+  await expect(page.locator('.skill-row')).toHaveCount(3);
+  // Bash trains first and becomes the active cast.
+  await page.locator('[data-workspace-learn="bash"]').click();
+  await expect(page.locator('[data-workspace-active="bash"]')).toHaveText('Casting');
+  // Magnum Break arrives at Job Lv. 4 and can take over the cast.
+  await page.locator('[data-workspace-learn="magnum_break"]').click();
+  await page.locator('[data-workspace-active="magnum_break"]').click();
+  await expect(page.locator('[data-workspace-active="magnum_break"]')).toHaveText('Casting');
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).state.characters[0]);
+  expect(saved.skills).toEqual({ bash: 1, magnum_break: 1 });
+  expect(saved.activeSkill).toBe('magnum_break');
+  expect(errors).toEqual([]);
+  await page.reload(); await expect(page.locator('#loading')).toBeHidden();
+  await page.locator('[data-character="c1"]').first().click();
+  await expect(page.locator('#inspector')).toContainText('Magnum Break');
+});
+
 // ---------------------------------------------------------------- milestone: larger maps + single-screen interface
 
 const readSave = page => page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).state);

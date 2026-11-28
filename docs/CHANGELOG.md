@@ -153,3 +153,35 @@ Added a non-modal Character workspace, paper doll with gear deltas and card sock
   progress bar and impact accents. Automatic casts hold the unit in place and
   resolve before the next attack. Combat text and optional impact shake are
   display preferences, with reduced motion respected.
+
+## 2026-11-28 — Learnable skills and skill FX
+
+- Added `SKILLS`: a learnable catalog for every class family (Novice through
+  Rune Knight, Arch Bishop and the expanded lines). Each skill has multiple
+  ranks, a job-level unlock per rank, its own SP cost, cooldown, range, element,
+  status and an `fx` flourish id.
+- New commands: `skill-learn` (one rank at a time, camp only, job-level gated)
+  and `skill-active` (choose which learned skill is cast). Promotion resets
+  training and hands over the new line's rank-1 signature skill.
+- Learned skills now drive the cast: strikes hit one target, area skills sweep
+  at most three and stagger them, heals pick the most wounded allies, buffs
+  refresh instead of re-firing. Learned ranks add power to the trained skill
+  only, so existing build maths is unchanged.
+- Skill FX layer in the renderer: 13 flourishes (arc slash, thrust, blast ring,
+  bolt, holy sigil, mending motes, shockwave, wind spiral, venom, frost, spark,
+  ward and aura) drawn on the angled ground plane from `effect.fx`, with reduced
+  motion respected.
+- Skills are now a first-class Character panel page: rank grid with next-rank
+  gates, power preview, flourish label and a "cast this" control, shared by the
+  Skills modal. `tests/fx.test.js` covers the catalog, the flourish record and
+  the markup helpers with a headless canvas recorder.
+- Minimap roster jump (carried over from the terrain PR, map art excluded):
+  clicking a party marker on the minimap or the expanded overview now selects and
+  follows that adventurer; clicking empty ground still moves the camera.
+- Save validation: `skills`/`activeSkill` migrate for pre-skill v1 saves, rank
+  caps and unknown ids are rejected, and stale ranks from a previous job line are
+  dropped rather than failing the whole save.
+- Validation: `npm run check` ✅, `npm test` ✅ 95/95, `npm run assets:verify` ✅
+  103 files, `npm run build` ✅. Browser verification was added for the Skills
+  page flow but could not run here: Playwright's Chromium download is blocked in
+  this sandbox.

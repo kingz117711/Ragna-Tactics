@@ -306,6 +306,167 @@ export function fieldSkillAvailable(job, id) {
   }
   return false;
 }
+// ---------------------------------------------------------------------------
+// Learnable skill catalog
+// ---------------------------------------------------------------------------
+// Every entry belongs to a class *family* (JOBS[id].family), so a promotion keeps
+// the line's skills: Knight and Lord Knight both read the `knight` catalog.
+// A skill is trained in ranks at camp; each rank unlocks at a job level listed in
+// `unlock`. The last learned rank drives its power, SP cost and cooldown, and one
+// learned skill can be marked active to become the adventurer's signature cast.
+//
+// `fx` is a presentation id the renderer turns into a distinct flourish:
+//   slash | pierce | burst | bolt | holy | heal | quake | gale | venom | frost |
+//   spark | guard | aura
+const skill = (name, job, { maxRank = 1, unlock = [1], sp = 8, cooldown = 5, kind = 'strike', power = 2, radius = 0, element = null, status = null, fx = 'slash', text = '' }) =>
+  ({ name, job, maxRank, unlock, sp, cooldown, kind, power, radius, element, status, fx, text });
+
+export const SKILLS = {
+  // Novice -------------------------------------------------------------------
+  first_aid: skill('First Aid', 'novice', { maxRank: 2, unlock: [1, 5], sp: 8, cooldown: 9, kind: 'heal', power: 30, fx: 'heal', text: 'Restore your own wounds with improvised bandages.' }),
+
+  // Swordsman line -----------------------------------------------------------
+  bash: skill('Bash', 'swordsman', { maxRank: 3, unlock: [1, 5, 10], sp: 6, cooldown: 4, power: 1.9, fx: 'slash', text: 'A heavy two-handed blow that fixes enemy attention on you.' }),
+  magnum_break: skill('Magnum Break', 'swordsman', { maxRank: 2, unlock: [4, 9], sp: 10, cooldown: 7, kind: 'area', power: 1.35, radius: 2.8, element: 'fire', status: 'burning', fx: 'burst', text: 'Sweep every foe around you with a ring of fire.' }),
+  endure: skill('Endure', 'swordsman', { maxRank: 2, unlock: [7, 14], sp: 8, cooldown: 12, kind: 'buff', power: 0.09, radius: 3.5, fx: 'guard', text: 'Brace nearby allies; hits are shrugged off instead of staggering.' }),
+
+  // Knight line --------------------------------------------------------------
+  brandish_spear: skill('Brandish Spear', 'knight', { maxRank: 3, unlock: [1, 10, 22], sp: 11, cooldown: 6, kind: 'area', power: 1.5, radius: 3.5, fx: 'pierce', text: 'Broad spear sweep that drags everything nearby onto the knight.' }),
+  pierce: skill('Pierce', 'knight', { maxRank: 2, unlock: [3, 12], sp: 8, cooldown: 4, power: 2.2, fx: 'pierce', text: 'A focused thrust that punches clean through a single foe.' }),
+  spiral_pierce: skill('Spiral Pierce', 'knight', { maxRank: 2, unlock: [26, 40], sp: 14, cooldown: 8, kind: 'area', power: 1.75, radius: 4.2, status: 'stun', fx: 'gale', text: 'A corkscrewing thrust that staggers everything in reach.' }),
+
+  // Crusader line ------------------------------------------------------------
+  shield_charge: skill('Shield Charge', 'crusader', { maxRank: 3, unlock: [1, 8, 18], sp: 10, cooldown: 6, power: 1.8, status: 'stun', fx: 'burst', text: 'Slam a foe with your shield and leave it reeling.' }),
+  divine_protection: skill('Divine Protection', 'crusader', { maxRank: 2, unlock: [5, 15], sp: 9, cooldown: 12, kind: 'buff', power: 0.1, radius: 4, fx: 'holy', text: 'A holy ward grants nearby allies attack and steadiness.' }),
+  sacrifice: skill('Sacrifice', 'crusader', { maxRank: 2, unlock: [20, 34], sp: 13, cooldown: 9, kind: 'area', power: 1.6, radius: 3, element: 'holy', fx: 'holy', text: 'Spend your own vigour to sear nearby foes with holy light.' }),
+
+  // Mage line ---------------------------------------------------------------
+  fire_bolt: skill('Fire Bolt', 'mage', { maxRank: 3, unlock: [1, 6, 14], sp: 9, cooldown: 5, power: 2.1, element: 'fire', status: 'burning', fx: 'bolt', text: 'Hurl a searing bolt that keeps burning after the hit.' }),
+  cold_bolt: skill('Cold Bolt', 'mage', { maxRank: 2, unlock: [3, 11], sp: 9, cooldown: 5, power: 2, element: 'water', status: 'slow', fx: 'frost', text: 'Shards of ice slow the target to a crawl.' }),
+  sight: skill('Sight', 'mage', { maxRank: 1, unlock: [8], sp: 7, cooldown: 10, kind: 'buff', power: 0.08, radius: 4, fx: 'aura', text: 'Reveal hidden ground and sharpen your party’s aim.' }),
+
+  // Wizard line -------------------------------------------------------------
+  storm_gust: skill('Storm Gust', 'wizard', { maxRank: 3, unlock: [1, 12, 28], sp: 15, cooldown: 7, kind: 'area', power: 1.55, radius: 4, element: 'water', status: 'freeze', fx: 'frost', text: 'Freeze a wide cluster in a lattice of ice.' }),
+  jupitel_thunder: skill('Jupitel Thunder', 'wizard', { maxRank: 2, unlock: [6, 20], sp: 13, cooldown: 6, power: 2.4, element: 'wind', status: 'stun', fx: 'spark', text: 'Lightning jumps from the sky and leaves foes twitching.' }),
+  lord_of_vermilion: skill('Lord of Vermilion', 'wizard', { maxRank: 2, unlock: [26, 42], sp: 18, cooldown: 10, kind: 'area', power: 1.4, radius: 5, element: 'wind', fx: 'gale', text: 'A storm of violet lightning rakes the whole field.' }),
+
+  // Sage line ---------------------------------------------------------------
+  dispell: skill('Dispell', 'sage', { maxRank: 2, unlock: [1, 10], sp: 10, cooldown: 8, power: 1.6, element: 'wind', fx: 'aura', text: 'Strip a foe’s enchantments and stagger its guard.' }),
+  endow_blade: skill('Endow Blade', 'sage', { maxRank: 2, unlock: [4, 16], sp: 9, cooldown: 12, kind: 'buff', power: 0.12, radius: 4, element: 'fire', fx: 'spark', text: 'Charge every ally’s weapon with elemental force.' }),
+  spell_breaker: skill('Spell Breaker', 'sage', { maxRank: 2, unlock: [20, 36], sp: 12, cooldown: 7, kind: 'area', power: 1.45, radius: 3.2, status: 'silence', fx: 'burst', text: 'Shatter a caster cluster and silence the survivors.' }),
+
+  // Archer line -------------------------------------------------------------
+  double_strafe: skill('Double Strafe', 'archer', { maxRank: 3, unlock: [1, 6, 15], sp: 7, cooldown: 4, power: 1.9, fx: 'pierce', text: 'Two arrows loosed in the same breath.' }),
+  arrow_shower: skill('Arrow Shower', 'archer', { maxRank: 2, unlock: [4, 12], sp: 10, cooldown: 7, kind: 'area', power: 1.3, radius: 2.6, fx: 'bolt', text: 'Rain arrows over the target’s cluster.' }),
+  improve_concentration: skill('Improve Concentration', 'archer', { maxRank: 1, unlock: [9], sp: 8, cooldown: 14, kind: 'buff', power: 0.1, radius: 3.5, fx: 'aura', text: 'Steady breathing sharpens your party’s aim.' }),
+
+  // Hunter line -------------------------------------------------------------
+  blitz_beat: skill('Blitz Beat', 'hunter', { maxRank: 3, unlock: [1, 10, 24], sp: 12, cooldown: 5, kind: 'area', power: 1.4, radius: 3.8, fx: 'gale', text: 'Your falcon dives, raking the target and its neighbours.' }),
+  ankle_snare: skill('Ankle Snare', 'hunter', { maxRank: 2, unlock: [5, 17], sp: 8, cooldown: 8, power: 1.5, status: 'slow', fx: 'venom', text: 'A hidden snare pins a target in place.' }),
+  falcon_assault: skill('Falcon Assault', 'hunter', { maxRank: 2, unlock: [22, 38], sp: 13, cooldown: 7, kind: 'area', power: 1.7, radius: 4.4, fx: 'gale', text: 'The falcon strikes from above, scattering a whole pack.' }),
+
+  // Bard / Dancer lines -----------------------------------------------------
+  arrow_vulcan: skill('Arrow Vulcan', 'bard', { maxRank: 2, unlock: [1, 12], sp: 12, cooldown: 6, power: 2.2, fx: 'bolt', text: 'A rapid volley driven by song.' }),
+  song_of_bravery: skill('Song of Bravery', 'bard', { maxRank: 2, unlock: [6, 18], sp: 10, cooldown: 14, kind: 'buff', power: 0.13, radius: 5, fx: 'aura', text: 'A rousing chorus lifts the attack of every ally nearby.' }),
+  slinging_arrow: skill('Slinging Arrow', 'dancer', { maxRank: 2, unlock: [1, 12], sp: 10, cooldown: 6, power: 1.9, status: 'blind', fx: 'bolt', text: 'A whirling kick-shot that leaves the foe blinking.' }),
+  dance_of_vigour: skill('Dance of Vigour', 'dancer', { maxRank: 2, unlock: [6, 18], sp: 10, cooldown: 14, kind: 'buff', power: 0.12, radius: 5, fx: 'aura', text: 'A spinning dance that renews the party’s fighting spirit.' }),
+
+  // Acolyte line ------------------------------------------------------------
+  heal: skill('Heal', 'acolyte', { maxRank: 3, unlock: [1, 6, 14], sp: 9, cooldown: 4, kind: 'heal', power: 38, radius: 6, fx: 'heal', text: 'Mend the most wounded ally in reach.' }),
+  blessing: skill('Blessing', 'acolyte', { maxRank: 2, unlock: [4, 13], sp: 8, cooldown: 12, kind: 'buff', power: 0.1, radius: 4.5, fx: 'holy', text: 'Bless the party with steady hands and sharper strikes.' }),
+  holy_light: skill('Holy Light', 'acolyte', { maxRank: 2, unlock: [8, 18], sp: 10, cooldown: 5, power: 1.8, element: 'holy', fx: 'holy', text: 'A lance of holy light that burns the undead badly.' }),
+
+  // Priest line -------------------------------------------------------------
+  sanctuary: skill('Sanctuary', 'priest', { maxRank: 3, unlock: [1, 9, 20], sp: 14, cooldown: 6, kind: 'heal', power: 44, radius: 7, fx: 'heal', text: 'Consecrate the ground, healing every wounded ally on it.' }),
+  magnus_exorcismus: skill('Magnus Exorcismus', 'priest', { maxRank: 2, unlock: [12, 30], sp: 16, cooldown: 9, kind: 'area', power: 1.5, radius: 4.5, element: 'holy', fx: 'holy', text: 'A pillar of faith scorches the undead around you.' }),
+  kyrie_eleison: skill('Kyrie Eleison', 'priest', { maxRank: 1, unlock: [6], sp: 10, cooldown: 16, kind: 'buff', power: 0.12, radius: 4, fx: 'guard', text: 'A shield of prayer steadies every ally in reach.' }),
+
+  // Monk line ---------------------------------------------------------------
+  raging_trifecta: skill('Raging Trifecta Blow', 'monk', { maxRank: 3, unlock: [1, 8, 18], sp: 9, cooldown: 5, power: 1.85, fx: 'burst', text: 'A three-hit combination that ends in a heavy blow.' }),
+  asura_strike: skill('Asura Strike', 'monk', { maxRank: 2, unlock: [24, 42], sp: 20, cooldown: 12, power: 3.4, fx: 'quake', text: 'Every drop of spirit spent in one world-shaking punch.' }),
+  blade_stop: skill('Blade Stop', 'monk', { maxRank: 1, unlock: [14], sp: 9, cooldown: 10, kind: 'buff', power: 0.1, radius: 3, fx: 'guard', text: 'Catch the next blow and answer it.' }),
+
+  // Merchant line -----------------------------------------------------------
+  mammonite: skill('Mammonite', 'merchant', { maxRank: 3, unlock: [1, 6, 14], sp: 8, cooldown: 5, power: 2, fx: 'slash', text: 'A coin-driven strike that hits far above its weight.' }),
+  cart_revolution: skill('Cart Revolution', 'merchant', { maxRank: 2, unlock: [5, 15], sp: 11, cooldown: 8, kind: 'area', power: 1.35, radius: 3, fx: 'quake', text: 'Swing the pushcart through everything in front of you.' }),
+  crazy_uproar: skill('Crazy Uproar', 'merchant', { maxRank: 1, unlock: [10], sp: 8, cooldown: 14, kind: 'buff', power: 0.1, radius: 3.5, fx: 'aura', text: 'A bellowing roar that fires up nearby allies.' }),
+
+  // Blacksmith line ---------------------------------------------------------
+  hammer_fall: skill('Hammer Fall', 'blacksmith', { maxRank: 3, unlock: [1, 10, 22], sp: 11, cooldown: 6, kind: 'area', power: 1.45, radius: 3, status: 'stun', fx: 'quake', text: 'Bring the hammer down and stagger a whole cluster.' }),
+  power_thrust: skill('Power Thrust', 'blacksmith', { maxRank: 2, unlock: [5, 16], sp: 9, cooldown: 8, power: 2.3, fx: 'pierce', text: 'A forged strike that punches through armour.' }),
+  weapon_perfection: skill('Weapon Perfection', 'blacksmith', { maxRank: 1, unlock: [20], sp: 10, cooldown: 14, kind: 'buff', power: 0.1, radius: 4, fx: 'spark', text: 'Keeps every weapon in the party striking true.' }),
+
+  // Alchemist line ----------------------------------------------------------
+  acid_demonstration: skill('Acid Demonstration', 'alchemist', { maxRank: 3, unlock: [1, 10, 22], sp: 12, cooldown: 6, kind: 'area', power: 1.5, radius: 3, status: 'poison', fx: 'venom', text: 'Hurl a flask that eats through armour and flesh.' }),
+  potion_pitcher: skill('Potion Pitcher', 'alchemist', { maxRank: 2, unlock: [5, 17], sp: 9, cooldown: 8, kind: 'heal', power: 40, radius: 6, fx: 'heal', text: 'Toss a healing flask to the ally who needs it most.' }),
+  summon_homunculus: skill('Summon Homunculus', 'alchemist', { maxRank: 1, unlock: [26], sp: 14, cooldown: 15, kind: 'buff', power: 0.14, radius: 4, fx: 'aura', text: 'A small companion joins the fight and bolsters the party.' }),
+
+  // Thief line --------------------------------------------------------------
+  envenom: skill('Envenom', 'thief', { maxRank: 3, unlock: [1, 6, 15], sp: 7, cooldown: 4, power: 1.85, status: 'poison', fx: 'venom', text: 'A poisoned cut that keeps working after the strike.' }),
+  steal_coin: skill('Steal Coin', 'thief', { maxRank: 2, unlock: [4, 12], sp: 6, cooldown: 9, power: 1.4, fx: 'spark', text: 'Cut the purse strings while you cut the target.' }),
+  hiding: skill('Hiding', 'thief', { maxRank: 1, unlock: [9], sp: 6, cooldown: 14, kind: 'buff', power: 0.08, radius: 2.5, fx: 'aura', text: 'Slip out of sight and strike again from cover.' }),
+
+  // Assassin line -----------------------------------------------------------
+  sonic_blow: skill('Sonic Blow', 'assassin', { maxRank: 3, unlock: [1, 10, 24], sp: 12, cooldown: 5, power: 2.4, fx: 'slash', text: 'Six strikes so fast the air cracks; brutal against wounded foes.' }),
+  grimtooth: skill('Grimtooth', 'assassin', { maxRank: 2, unlock: [8, 22], sp: 11, cooldown: 7, kind: 'area', power: 1.4, radius: 3, status: 'poison', fx: 'venom', text: 'Drag a poisoned blade through everything nearby.' }),
+  soul_breaker: skill('Soul Breaker', 'assassin', { maxRank: 2, unlock: [26, 44], sp: 14, cooldown: 8, power: 3, fx: 'burst', text: 'A finishing strike that punishes a faltering enemy.' }),
+
+  // Rogue line --------------------------------------------------------------
+  triangle_shot: skill('Triangle Shot', 'rogue', { maxRank: 3, unlock: [1, 9, 20], sp: 10, cooldown: 5, power: 1.95, fx: 'pierce', text: 'Three arrows in a tight triangle.' }),
+  strip_armor: skill('Strip Armor', 'rogue', { maxRank: 2, unlock: [6, 18], sp: 9, cooldown: 8, power: 1.5, status: 'curse', fx: 'spark', text: 'Loosen a foe’s straps and leave it exposed.' }),
+  backstab: skill('Backstab', 'rogue', { maxRank: 2, unlock: [22, 38], sp: 12, cooldown: 7, power: 2.8, fx: 'slash', text: 'Step behind a target and drive the blade home.' }),
+};
+
+// Flourish ids the renderer can draw (see drawSkillFx in renderer.js). Kept here
+// so content and presentation cannot drift apart.
+export const FX_IDS = ['slash', 'pierce', 'burst', 'bolt', 'holy', 'heal', 'quake', 'gale', 'venom', 'frost', 'spark', 'guard', 'aura'];
+export function skillDef(id) { return Object.hasOwn(SKILLS, id) ? SKILLS[id] : null; }
+export function skillMaxRank(id) { return SKILLS[id]?.maxRank || 1; }
+// Ranks unlock at explicit job levels; a missing entry means "rank 1 only".
+export function skillUnlockLevel(id, rank) { return SKILLS[id]?.unlock?.[rank - 1] ?? SKILLS[id]?.unlock?.at(-1) ?? 1; }
+// A job reads the catalog of its class family, so a promotion keeps the line's
+// skills (Knight, Lord Knight and Rune Knight all train the knight catalog).
+// Expanded lines without their own catalog fall back to the novice basics.
+const SKILL_FAMILIES = new Set(Object.values(SKILLS).map(def => def.job));
+export function skillFamily(job) {
+  const family = JOBS[job]?.family || job;
+  return SKILL_FAMILIES.has(family) ? family : 'novice';
+}
+export function skillCatalog(job) {
+  const family = skillFamily(job);
+  return Object.entries(SKILLS).filter(([, def]) => def.job === family);
+}
+export function canLearnSkill(job, id) { return Object.hasOwn(SKILLS, id) && SKILLS[id].job === skillFamily(job); }
+export function learnedRank(c, id) {
+  if (!Object.hasOwn(SKILLS, id)) return 0;
+  const rank = Math.round(Number(c.skills?.[id]) || 0);
+  return Math.max(0, Math.min(skillMaxRank(id), rank));
+}
+// Every learned rank adds 18% of the skill's base power, and each learned rank of
+// the active skill adds +2 skill damage to every hit that adventurer lands.
+export function skillMultiplier(def, rank = 1) { return def.power + (Math.max(1, rank) - 1) * 0.18; }
+export function learnedSkillPower(c) {
+  let total = 0;
+  for (const id of Object.keys(c.skills || {})) total += learnedRank(c, id) * 2;
+  return total;
+}
+export function activeSkillId(c) {
+  const id = c.activeSkill;
+  if (!id || !canLearnSkill(c.job, id) || learnedRank(c, id) <= 0) return null;
+  return id;
+}
+export function activeSkill(c) { return SKILLS[activeSkillId(c)] || null; }
+// The signature skill a freshly promoted adventurer starts with: the weakest
+// rank-1 skill of the new line, so a new job always has a usable cast.
+export function signatureSkillId(job) {
+  const entry = skillCatalog(job).find(([id]) => skillUnlockLevel(id, 1) <= 1);
+  return entry ? entry[0] : null;
+}
+export function defaultSkills(job) {
+  const id = signatureSkillId(job);
+  return { skills: id ? { [id]: 1 } : {}, activeSkill: id };
+}
+
 export const TACTICS = {
   safe: { name: 'Safe farming', retreat: 0.22, skill: true },
   aggressive: { name: 'Aggressive', retreat: 0.1, skill: true },

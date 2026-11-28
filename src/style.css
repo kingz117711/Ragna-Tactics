@@ -2366,3 +2366,20 @@ select{
   .atlas-controls { top: -12px; }
   .atlas-map { min-height: 106px; }
 }
+
+/* Skill training rows · shared by the Character panel and the Skills page. */
+.skill-row { align-items: start; }
+.skill-row.skill-active { border-color:#e9c28266; box-shadow: inset 2px 0 #e9c282; }
+.skill-row div { min-width: 0; }
+.skill-row strong { display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+.skill-row p { margin: 2px 0 4px; }
+.skill-row small { display: block; color: #a9bdb1; font-size: 10px; line-height: 1.5; }
+.skill-row-actions { display: grid; gap: 5px; flex-shrink: 0; }
+.skill-row-actions button { padding: 5px 8px; font-size: 11px; }
+.skill-row-actions button[disabled] { opacity: .55; }
+.skill-row.skill-active .skill-row-actions button:last-child { color: #edd49e; }
+.workspace-section h3 + p { margin-top: 0; }
+@media (max-width: 520px) {
+  .skill-row { grid-template-columns: 1fr; }
+  .skill-row-actions { grid-auto-flow: column; justify-content: start; }
+}

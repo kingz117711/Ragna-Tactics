@@ -12,6 +12,15 @@ const EFFECT_LIFETIME = 1.1;
 const groundColor = mapId => mapId === 'payon' ? '#504859' : ['morroc', 'lair'].includes(mapId)
   ? '#be9967' : mapId === 'arena' ? '#555b5a' : mapId === 'forest' ? '#436352' : '#6b8959';
 const EMPHASIZED_HITS = new Set(['critical', 'skill-hit', 'boss-hit']);
+// Skill flourishes. Each trained skill carries an `fx` id from the catalog and
+// the simulation echoes it on the effect it raises, so the picture always matches
+// the skill that actually fired. Colours stay inside the palette.
+const FX_COLORS = {
+  slash: '#ffe7b4', pierce: '#d9f4ff', burst: '#ffb27a', bolt: '#ffd08a',
+  holy: '#fff4c2', heal: '#c8f7a8', quake: '#e8c79a', gale: '#c9f0ff',
+  venom: '#b7e58a', frost: '#bfe9ff', spark: '#e7d7ff', guard: '#d8e9c0',
+  aura: '#e4d5ff',
+};
 const EFFECT_STYLES = {
   hit: [15, '#fff1cd'], critical: [26, '#ffd16b'], 'skill-hit': [22, '#a5efff'],
   incoming: [14, '#ffaba0'], 'boss-hit': [23, '#ff9582'], heal: [17, '#c5f49b'],
@@ -69,7 +78,9 @@ export class Renderer {
     this.scenery = new Map(); this.overviews = new Map();
     this.combatText = 'all'; this.cameraShake = false; this.shake = 0;
     this.reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-    this.resizeObserver = new ResizeObserver(() => this.resize()); this.resizeObserver.observe(canvas);
+    // Optional so the drawing maths stays usable without a DOM (tests, workers).
+    this.resizeObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(() => this.resize()) : null;
+    this.resizeObserver?.observe(canvas);
   }
   resize() {
     const r = this.canvas.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
@@ -532,6 +543,7 @@ export class Renderer {
       }
       if (e.kind !== 'loot' && (this.combatText === 'hidden' ||
         (this.combatText === 'highlights' && !emphasized && !['heal', 'skill', 'cast', 'danger'].includes(e.kind)))) continue;
+      if (e.fx) this.drawSkillFx(point, e.fx, age, z);
       const [size, color] = EFFECT_STYLES[e.kind] || EFFECT_STYLES.hit;
       const bounce = emphasized && !reduced ? 1 + 0.23 * Math.max(0, 1 - age * 6) : 1;
       const x = point.x + (e.id % 5 - 2) * (emphasized ? 8 : 12);
@@ -543,6 +555,132 @@ export class Renderer {
       ctx.strokeText(e.text, x, y); ctx.fillText(e.text, x, y);
     }
     ctx.restore();
+  }
+  // Ground-plane flourish beneath a skill hit. Pure presentation: it reads the
+  // effect record and never touches the simulation.
+  drawSkillFx(point, fx, age, z) {
+    const ctx = this.ctx, reduced = this.reducedMotion.matches;
+    const t = clamp(age / (reduced ? 0.9 : 0.62), 0, 1);
+    if (t >= 1) return;
+    const color = FX_COLORS[fx] || '#f2e6c8';
+    const s = clamp(z, 0.5, 1.15), grow = reduced ? 0.8 : t;
+    ctx.save();
+    ctx.translate(point.x, point.y - 12 * z);
+    // Squash to match the angled overhead camera's ground plane, then emit the
+    // shape. Kept in one helper so tools/fx-preview.mjs can render the same paths.
+    ctx.scale(s, s * 0.55);
+    this.traceSkillFx(ctx, fx, t, grow, 14 + grow * 40, (1 - t) * 0.92, s, color);
+    ctx.restore();
+  }
+  // Shapes one flourish on an already-transformed context. `alpha` is the fade.
+  traceSkillFx(ctx, fx, t, grow, r, alpha, s, color) {
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.lineWidth = 2 / s;
+    if (fx === 'burst') {
+      ctx.lineWidth = 3 / s;
+      ctx.beginPath(); ctx.ellipse(0, 0, r, r, 0, 0, Math.PI * 2); ctx.stroke();
+      for (let i = 0; i < 8; i++) {
+        const a = i / 8 * Math.PI * 2;
+        ctx.beginPath(); ctx.moveTo(Math.cos(a) * r * 0.5, Math.sin(a) * r * 0.5); ctx.lineTo(Math.cos(a) * r * 1.1, Math.sin(a) * r * 1.1); ctx.stroke();
+      }
+    } else if (fx === 'slash') {
+      // Two crossed arcs read as a weapon arc even at the smallest zoom.
+      ctx.lineWidth = 3 / s;
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.92, -1.1, 1.1); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.92, Math.PI - 1.1, Math.PI + 1.1); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-r * 0.95, -r * 0.2); ctx.lineTo(r * 0.95, r * 0.2); ctx.stroke();
+    } else if (fx === 'pierce') {
+      ctx.beginPath(); ctx.moveTo(-r, 0); ctx.lineTo(r, 0); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(r * 0.8, -4); ctx.lineTo(r, 0); ctx.lineTo(r * 0.8, 4); ctx.stroke();
+    } else if (fx === 'bolt') {
+      // A single forked bolt dropping onto the target.
+      ctx.lineWidth = 3 / s;
+      ctx.beginPath(); ctx.moveTo(-r * 0.2, -r * 1.7);
+      for (let i = 0; i < 4; i++) ctx.lineTo((i % 2 ? 1 : -1) * r * 0.45, -r * 1.7 + (i + 1) * r * 0.4);
+      ctx.lineTo(0, 0); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(0, 0, r * 0.5, r * 0.5, 0, 0, Math.PI * 2); ctx.stroke();
+    } else if (fx === 'spark') {
+      // An arc ring crackling around the caster.
+      for (let i = 0; i < 5; i++) {
+        const a = i / 5 * Math.PI * 2 + 0.3;
+        ctx.beginPath(); ctx.arc(0, 0, r * 0.95, a, a + 0.7); ctx.stroke();
+      }
+      for (let i = 0; i < 5; i++) {
+        const a = i / 5 * Math.PI * 2 + 0.9, x = Math.cos(a) * r * 0.95, y = Math.sin(a) * r * 0.95;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a + 1.57) * r * 0.28, y + Math.sin(a + 1.57) * r * 0.28); ctx.stroke();
+      }
+    } else if (fx === 'holy') {
+      ctx.beginPath(); ctx.ellipse(0, 0, r * 0.55, r * 0.55, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha *= 0.55;
+      ctx.beginPath(); ctx.moveTo(0, -r * 2.2); ctx.lineTo(0, r * 0.4); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-r * 0.7, -r * 1.1); ctx.lineTo(r * 0.7, -r * 1.1); ctx.stroke();
+    } else if (fx === 'heal') {
+      // A rising cross of motes above a steady ring.
+      ctx.lineWidth = 3 / s;
+      ctx.beginPath(); ctx.moveTo(0, -r * 1.5); ctx.lineTo(0, -r * 0.6); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-r * 0.45, -r * 1.05); ctx.lineTo(r * 0.45, -r * 1.05); ctx.stroke();
+      for (let i = 0; i < 6; i++) {
+        const a = i / 6 * Math.PI * 2 + 0.4;
+        ctx.beginPath(); ctx.arc(Math.cos(a) * r * 0.62, Math.sin(a) * r * 0.62 - grow * 10, 3.4, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.beginPath(); ctx.ellipse(0, 0, r * 0.62, r * 0.62, 0, 0, Math.PI * 2); ctx.stroke();
+    } else if (fx === 'gale') {
+      // A widening vortex: three long arcs that never share a radius.
+      ctx.lineWidth = 3 / s;
+      for (let i = 0; i < 3; i++) {
+        const rad = r * (0.5 + i * 0.4);
+        ctx.beginPath(); ctx.arc(0, 0, rad, i * 1.9, i * 1.9 + 2.6); ctx.stroke();
+      }
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(r * 0.28, -r * 1.1); ctx.stroke();
+    } else if (fx === 'venom') {
+      // Splattered droplets with a drip trail.
+      for (let i = 0; i < 7; i++) {
+        const a = i / 7 * Math.PI * 2 + t * 1.4, d = r * (0.42 + (i % 3) * 0.22);
+        ctx.beginPath(); ctx.arc(Math.cos(a) * d, Math.sin(a) * d, 8 - (i % 3) * 1.6, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.lineWidth = 3 / s;
+      ctx.beginPath(); ctx.moveTo(-r * 0.1, 0); ctx.lineTo(-r * 0.1, r * 0.75); ctx.lineTo(r * 0.06, r * 0.55); ctx.stroke();
+    } else if (fx === 'frost') {
+      // A crystal hexagon with short inner spokes.
+      ctx.lineWidth = 3 / s;
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const a = i / 6 * Math.PI * 2 - Math.PI / 2;
+        const x = Math.cos(a) * r * 0.9, y = Math.sin(a) * r * 0.9;
+        i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      }
+      ctx.closePath(); ctx.stroke();
+      for (let i = 0; i < 6; i++) {
+        const a = i / 6 * Math.PI * 2 - Math.PI / 2;
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(a) * r * 0.5, Math.sin(a) * r * 0.5); ctx.stroke();
+      }
+    } else if (fx === 'guard') {
+      // Shield outline: flat top, tapered point.
+      ctx.lineWidth = 3 / s;
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.62, -r * 0.7); ctx.lineTo(r * 0.62, -r * 0.7); ctx.lineTo(r * 0.62, r * 0.1);
+      ctx.lineTo(0, r * 0.95); ctx.lineTo(-r * 0.62, r * 0.1); ctx.closePath(); ctx.stroke();
+    } else if (fx === 'quake') {
+      ctx.beginPath(); ctx.ellipse(0, 0, r, r, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(0, 0, r * 0.6, r * 0.6, 0, 0, Math.PI * 2); ctx.stroke();
+      for (let i = 0; i < 5; i++) {
+        const a = i / 5 * Math.PI * 2 + 0.5;
+        ctx.beginPath(); ctx.moveTo(Math.cos(a) * r * 0.62, Math.sin(a) * r * 0.62); ctx.lineTo(Math.cos(a) * r * 1.18, Math.sin(a) * r * 1.18); ctx.stroke();
+      }
+    } else if (fx === 'aura') {
+      // Pulsing rings so a buff is legible without a target.
+      for (let i = 0; i < 3; i++) {
+        ctx.globalAlpha = alpha * (1 - i * 0.24);
+        ctx.beginPath(); ctx.ellipse(0, 0, r * (0.3 + i * 0.34), r * (0.3 + i * 0.34), 0, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.globalAlpha = alpha;
+      ctx.beginPath(); ctx.ellipse(0, 0, r * 1.05, r * 1.05, 0, -0.5, 0.5); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.ellipse(0, 0, r * 0.7, r * 0.7, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha *= 0.5;
+      ctx.beginPath(); ctx.ellipse(0, 0, r * 0.4, r * 0.4, 0, 0, Math.PI * 2); ctx.stroke();
+    }
   }
   drawZoneLabels(ctx, z) {
     const map = MAPS[this.mapId];
@@ -593,6 +731,19 @@ export class Renderer {
   minimapToWorld(canvas, mx, my) {
     const { scale, offX, offY } = this.minimapTransform(canvas);
     return unproject((mx - offX) / scale, (my - offY) / scale);
+  }
+  // Hit-test a minimap click against roster markers so any adventurer on the
+  // field can be jumped to directly. Returns the character or null.
+  minimapCharacterAt(canvas, mx, my, s) {
+    const { scale, offX, offY } = this.minimapTransform(canvas);
+    let nearest = null, best = 9;
+    for (const c of s.characters) {
+      if (c.mapId !== this.mapId) continue;
+      const q = project(c.x, c.y);
+      const d = Math.hypot(mx - (offX + q.x * scale), my - (offY + q.y * scale));
+      if (d < best) { best = d; nearest = c; }
+    }
+    return nearest;
   }
   drawMinimap(canvas, s, selected) {
     const ctx = canvas.getContext('2d');

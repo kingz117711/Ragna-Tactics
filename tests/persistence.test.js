@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame, command, advance } from '../src/sim.js';
 import { SAVE_KEY, BACKUP_KEY, encodeSave, decodeSave, saveGame, loadGame } from '../src/persistence.js';
+import { stats } from '../src/sim.js';
 const memory = () => { const map = new Map(); return { getItem: k => map.get(k) ?? null, setItem: (k, v) => map.set(k, v), removeItem: k => map.delete(k) }; };
 test('save round-trip preserves farming assignments, parties, ownership, and progression', () => {
   const s = createGame(); command(s, { type: 'party', ids: ['c1', 'c2'] }); command(s, { type: 'deploy', ids: ['c1'], mapId: 'meadow' }); advance(s, 15);
@@ -74,4 +75,53 @@ test('older guild acquires Payon without changing owned equipment or assignments
   assert.equal(loaded.characters[0].mapId,'forest'); assert.equal(loaded.inventory.equipment.iron,2);
   assert.equal(loaded.inventory.equipment.reliquary,0); assert.ok(loaded.maps.payon.monsters.some(m=>m.kind==='skeleton'));
   assert.deepEqual(decodeSave(encodeSave(loaded)).state,loaded);
+});
+
+test('pre-skill saves receive the class line\'s signature skill and a usable active cast', () => {
+  const s = createGame();
+  s.characters[0].job = 'knight';
+  s.characters[1].job = 'wizard';
+  // Simulate a v1 character saved before learnable skills existed.
+  for (const c of s.characters) { delete c.skills; delete c.activeSkill; }
+  const loaded = decodeSave(encodeSave(s)).state;
+  assert.equal(loaded.characters[0].activeSkill, 'brandish_spear');
+  assert.deepEqual(loaded.characters[0].skills, { brandish_spear: 1 });
+  assert.equal(loaded.characters[1].activeSkill, 'storm_gust');
+  assert.equal(stats(loaded.characters[1]).hp > 0, true);
+});
+
+test('learned skill ranks and the active choice are validated on load', () => {
+  const s = createGame();
+  s.characters[0].job = 'swordsman';
+  s.characters[0].skills = { bash: 2, magnum_break: 1 };
+  s.characters[0].activeSkill = 'bash';
+  const loaded = decodeSave(encodeSave(s)).state.characters[0];
+  assert.deepEqual(loaded.skills, { bash: 2, magnum_break: 1 });
+  assert.equal(loaded.activeSkill, 'bash');
+
+  // An unknown skill id or an impossible rank is corruption, not a migration.
+  s.characters[0].skills = { bash: 2, not_a_skill: 1 };
+  assert.throws(() => decodeSave(encodeSave(s)), /unsupported format/);
+  s.characters[0].skills = { bash: 9 };
+  assert.throws(() => decodeSave(encodeSave(s)), /unsupported format/);
+  s.characters[0].skills = { bash: 2 };
+  s.characters[0].activeSkill = 'not_a_skill';
+  assert.throws(() => decodeSave(encodeSave(s)), /unsupported format/);
+  // A real-but-foreign active skill is treated like a stale job artifact and
+  // repaired to the strongest learned skill instead of binning the save.
+  s.characters[0].activeSkill = 'storm_gust';
+  assert.equal(decodeSave(encodeSave(s)).state.characters[0].activeSkill, 'bash');
+});
+
+test('ranks left behind by an earlier job line are dropped, not fatal', () => {
+  const s = createGame();
+  s.characters[0].job = 'swordsman';
+  s.characters[0].skills = { bash: 3 };
+  s.characters[0].activeSkill = 'bash';
+  // A save written mid-promotion can carry the previous line's training.
+  s.characters[0].job = 'knight';
+  const loaded = decodeSave(encodeSave(s)).state.characters[0];
+  assert.equal(loaded.job, 'knight');
+  assert.deepEqual(loaded.skills, {});
+  assert.equal(loaded.activeSkill, null);
 });

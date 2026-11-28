@@ -1,4 +1,4 @@
-import { FIELD_SKILLS, fieldSkillAvailable, combatJob, classBuilds, defaultBuild, gearKey, gearVariant, REFINEMENT, ORE_INFO, ELEMENTS, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, MONSTERS, HUNT_RADII, VERSION, MAPS, mapBounds, JOBS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, TACTICS, TACTIC_PRESETS, TARGET_PREFS, STATUS } from './data.js';
+import { FIELD_SKILLS, fieldSkillAvailable, SKILLS, canLearnSkill, skillMaxRank, learnedRank, signatureSkillId, defaultSkills, combatJob, classBuilds, defaultBuild, gearKey, gearVariant, REFINEMENT, ORE_INFO, ELEMENTS, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, MONSTERS, HUNT_RADII, VERSION, MAPS, mapBounds, JOBS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, TACTICS, TACTIC_PRESETS, TARGET_PREFS, STATUS } from './data.js';
 import { availablePoints, populateField, createGame, advanceExpeditionGoals } from './sim.js';
 export const SAVE_KEY = 'ragna-tactics:save:v1';
 export const BACKUP_KEY = 'ragna-tactics:backup:v1';
@@ -53,6 +53,26 @@ export function validateState(s) {
     }
     if (c.buildId === undefined) c.buildId = defaultBuild(c.job);
     valid(c.buildId === null || classBuilds(c.job).some(build => build.id === c.buildId));
+    // Schema-v1 saves predate learnable skills: seed the class line's signature
+    // skill at rank 1 so every existing adventurer has a usable active skill.
+    if (c.skills === undefined) c.skills = defaultSkills(c.job).skills;
+    valid(c.skills && typeof c.skills === 'object' && !Array.isArray(c.skills));
+    for (const [id, rank] of Object.entries(c.skills)) {
+      // A forged or unknown skill id is corruption; a rank beyond the cap is too.
+      valid(Object.hasOwn(SKILLS, id) && Number.isInteger(rank) && finite(rank, 1, skillMaxRank(id)));
+    }
+    // Ranks left over from an earlier job line are stale, like a stale build id:
+    // drop them instead of failing the whole save.
+    const learned = Object.keys(c.skills).filter(id => canLearnSkill(c.job, id) && learnedRank(c, id) > 0);
+    c.skills = Object.fromEntries(learned.map(id => [id, learnedRank(c, id)]));
+    if (c.activeSkill === undefined) c.activeSkill = learned.length ? (signatureSkillId(c.job) || learned[0]) : null;
+    valid(c.activeSkill === null || Object.hasOwn(SKILLS, c.activeSkill));
+    // The active skill must be one this adventurer actually knows; fall back to
+    // the strongest learned skill so a cast is never silently lost.
+    if (!c.activeSkill || !learned.includes(c.activeSkill)) {
+      c.activeSkill = learned.slice().sort((a, b) => learnedRank(c, b) - learnedRank(c, a))[0] || null;
+    }
+
     if (c.buffTimer === undefined) c.buffTimer = 0;
     if (c.buffAtk === undefined) c.buffAtk = 0;
     valid(finite(c.buffTimer, 0, 60) && finite(c.buffAtk, 0, 0.5));

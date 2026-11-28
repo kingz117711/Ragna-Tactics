@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame, command, advance, tick, gainExp, stats, settleOffline, rosterLimit, effectiveTactics, roleOf, advanceExpeditionGoals } from '../src/sim.js';
-import { OFFLINE_CAP, MONSTERS, mapBounds } from '../src/data.js';
+import { OFFLINE_CAP, MONSTERS, mapBounds, SKILLS } from '../src/data.js';
 const ids = ['c1', 'c2'];
 test('a marked hunt survives manual repositioning, resume and offline settlement', () => {
   const s = createGame();
@@ -600,4 +600,90 @@ test('equipment cards survive transfers and keep their effects on the worn insta
   assert.deepEqual(decodeSave(encodeSave(s)).state.inventory.gearItems[0].cards,['scorpion']);
   assert.equal(equip(b.id),null); assert.deepEqual(b.gear.weapon.cards,['scorpion']);
   assert.equal(socket(b.id,null),null); assert.equal(s.inventory.cards.scorpion,1);
+});
+
+test('skills are trained by job level, one rank at a time, and never outside camp', () => {
+  const s = createGame(), c = s.characters[0];
+  Object.assign(c, { job: 'swordsman', jobLevel: 1, skills: {}, activeSkill: null });
+  const learn = id => command(s, { type: 'skill-learn', ids: ['c1'], skillId: id });
+  // Rank 2 of Bash unlocks at Job Lv. 5; the first rank is immediate.
+  assert.equal(learn('bash'), null);
+  assert.equal(c.skills.bash, 1);
+  assert.equal(c.activeSkill, 'bash', 'the first trained skill becomes the active cast');
+  assert.match(learn('bash'), /Job Lv\. 5/);
+  // Another line's skill is refused outright.
+  assert.match(learn('fire_bolt'), /class line/);
+  c.jobLevel = 5;
+  assert.equal(learn('bash'), null);
+  assert.equal(c.skills.bash, 2);
+  // A learned skill can take over the cast without losing the earlier rank.
+  assert.equal(learn('magnum_break'), null);
+  assert.equal(c.activeSkill, 'bash');
+  assert.equal(command(s, { type: 'skill-active', ids: ['c1'], skillId: 'magnum_break' }), null);
+  assert.equal(c.activeSkill, 'magnum_break');
+  assert.equal(stats(c).skill, 'Magnum Break');
+  // Training is a camp activity.
+  command(s, { type: 'deploy', ids: ['c1'], mapId: 'meadow' });
+  assert.match(learn('bash'), /camp/);
+  assert.match(command(s, { type: 'skill-active', ids: ['c1'], skillId: 'bash' }), /camp/);
+});
+
+test('trained ranks raise skill damage, add flourish data, and respect the area target cap', () => {
+  const run = rank => {
+    const s = createGame(4242), c = s.characters[0];
+    Object.assign(c, { job: 'swordsman', level: 20, jobLevel: 20, skills: { bash: 1, magnum_break: rank }, activeSkill: 'magnum_break' });
+    command(s, { type: 'deploy', ids: ['c1'], mapId: 'meadow' });
+    c.sp = stats(c).sp; c.cooldown = 0;
+    const mobs = s.maps.meadow.monsters;
+    for (const m of mobs) Object.assign(m, { x: 0, y: 0, hp: 4000, timer: 0, statuses: {} });
+    Object.assign(c, { x: 0, y: 0, home: { x: 0, y: 0 } });
+    c.targetId = mobs[0].id;
+    // Four casts share one seed, so both ranks see the same hit/miss rolls and
+    // only the rank scaling differs.
+    for (let i = 0; i < 4; i++) {
+      c.cooldown = 0; c.sp = stats(c).sp;
+      assert.equal(command(s, { type: 'skill', ids: ['c1'] }), null);
+    }
+    const hit = mobs.filter(m => m.hp < 4000);
+    const damage = mobs.reduce((sum, m) => sum + (4000 - m.hp), 0);
+    return { state: s, hit, damage, st: stats(c) };
+  };
+  const low = run(1), high = run(2);
+  // Area skills are capped at three targets per cast and stagger them.
+  assert.ok(low.hit.length > 0 && low.hit.length <= 3);
+  assert.ok(low.hit.every(m => m.timer >= 2));
+  // Rank 2 is strictly stronger than rank 1 for the same adventurer.
+  assert.ok(high.damage > low.damage, `${high.damage} should exceed ${low.damage}`);
+  assert.ok(high.st.skillPower > low.st.skillPower);
+  // Burning is applied by Magnum Break and reported as an effect with its flourish.
+  const fx = low.state.effects.filter(e => e.kind === 'skill' && e.fx === 'burst');
+  assert.ok(fx.length > 0, 'the burst flourish travels with the effect record');
+  assert.ok(low.hit.some(m => m.statuses.burning));
+});
+
+test('healing skills restore the most wounded ally once per cooldown', () => {
+  const s = createGame(), [healer, ally] = s.characters;
+  Object.assign(healer, { job: 'acolyte', jobLevel: 12, skills: { heal: 2 }, activeSkill: 'heal' });
+  assert.equal(command(s, { type: 'party', ids: ['c1', 'c2'] }), null);
+  assert.equal(command(s, { type: 'deploy', ids: ['c1', 'c2'], mapId: 'meadow' }), null);
+  healer.x = ally.x = 0; healer.y = ally.y = 0;
+  ally.hp = 30; healer.hp = stats(healer).hp;
+  assert.equal(command(s, { type: 'skill', ids: ['c1'] }), null);
+  assert.ok(ally.hp > 30 && ally.hp <= stats(ally).hp);
+  assert.ok(s.effects.some(e => e.kind === 'heal' && e.fx === 'heal' && e.text.startsWith('+')));
+  const healed = ally.hp;
+  assert.ok(command(s, { type: 'skill', ids: ['c1'] }), 'the cooldown blocks an immediate second cast');
+  assert.equal(ally.hp, healed);
+});
+
+test('a job change starts the new line\'s training from its signature skill', () => {
+  const s = createGame(), c = s.characters[0];
+  Object.assign(c, { job: 'swordsman', jobLevel: 50, skills: { bash: 3, magnum_break: 2 }, activeSkill: 'magnum_break' });
+  assert.equal(command(s, { type: 'promote', ids: ['c1'], job: 'knight' }), null);
+  assert.deepEqual(c.skills, { brandish_spear: 1 });
+  assert.equal(c.activeSkill, 'brandish_spear');
+  assert.equal(stats(c).skill, 'Brandish Spear');
+  assert.ok(Object.hasOwn(SKILLS, c.activeSkill));
+  // The trained cast carries a flourish the renderer can draw.
+  assert.ok(stats(c).skillFx);
 });

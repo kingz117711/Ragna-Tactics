@@ -1,5 +1,26 @@
 # Milestone handoff — 2026-11-28
 
+## Character skills and skill FX
+
+Skills are trained in the Character panel → **Skills** page. Each class family has
+its own catalog (`SKILLS` in `src/data.js`); every skill has ranks that unlock at
+job levels. Training is camp-only, one rank per command (`skill-learn`), and the
+player picks which learned skill casts (`skill-active`). A promotion wipes ranks
+and starts the new line with its rank-1 signature skill, so nobody is ever left
+without a cast.
+
+Rules to keep: strikes hit one target, area skills sweep at most three foes and
+stagger them, heals take the most wounded allies, buffs refresh rather than spam.
+Learned ranks add damage to the trained skill only (`stats(c).skillPower`) so the
+existing build rotation maths stay stable. Skill presentation is `SKILLS[id].fx`
+→ `Renderer.drawSkillFx`, and the simulation copies that id onto `effect.fx`;
+`tests/fx.test.js` fails if a catalog entry names a flourish the renderer cannot
+draw. Modal/page markup for skills lives in `src/skills-ui.js` so it can be
+tested without a DOM.
+
+Next: expand the catalogs for the expanded lines (taekwon, ninja, gunslinger,
+doram) and add a monster-side skill FX set for boss casts.
+
 ## World atlas and combat presentation
 
 Open **World atlas** above the playable quick links or from the deployment picker.
