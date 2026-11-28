@@ -1,5 +1,5 @@
-import { FIELD_SKILLS, fieldSkillAvailable, SKILLS, skillCatalog, learnedRank, learnedSkillPower, activeSkillId, skillPoints, activeSlots, ACTIVE_SLOTS, prereqMet, missingPrereqs, skillFamily, STATUS, jobLineage, combatJob, REFINEMENT, ORE_INFO, gearVariant, AFFINITIES, ELEMENTS, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, promotionRequirement, classBuilds, selectedBuild, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, GEAR_SHOP, gearIconPath, gearFitsSlot, ITEMS, refineCost, refineSuccessPercent, refineSafeLimit, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
-import { availablePoints, forgePrice, shopPrice, command, tick, stats, rosterLimit, engaged, effectiveTactics, isLeader, canEquipGear } from './sim.js';
+import { FIELD_SKILLS, fieldSkillAvailable, SKILLS, skillCatalog, learnedRank, learnedSkillPower, activeSkillId, skillPoints, activeSlots, ACTIVE_SLOTS, prereqMet, missingPrereqs, skillFamily, STATUS, jobLineage, combatJob, REFINEMENT, ORE_INFO, gearVariant, AFFINITIES, ELEMENTS, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, promotionRequirement, classBuilds, selectedBuild, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, GEAR_SHOP, gearIconPath, gearFitsSlot, GEAR_SETS, gearSetsFor, ITEMS, refineCost, refineSuccessPercent, refineSafeLimit, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
+import { availablePoints, forgePrice, shopPrice, command, tick, stats, rosterLimit, engaged, effectiveTactics, isLeader, canEquipGear, activeGearSets } from './sim.js';
 import { FX_LABELS, skillRow, learnedSkillRows, skillSummary, skillTree, buildCards, rotationStrip, skillIcon, setSkillIconRoutes } from './skills-ui.js';
 import { SAVE_KEY, loadGame, saveGame, encodeSave, decodeSave } from './persistence.js';
 import { Sprites } from './sprites.js';
@@ -235,6 +235,28 @@ function deployment(destinationId = renderer.mapId) {
 // client's own item icon.
 let shopSlot = 'weapon';
 function shopPriceLabel(key) { return number(shopPrice(key)) + 'z'; }
+// Set bonuses come out of rAthena's combo scripts as flat stats and percentages; show them
+// with the same names the item lines use so the added value is readable at a glance.
+const SET_STAT_LABELS = { atk: 'ATK', matk: 'MATK', def: 'DEF', mdef: 'MDEF', hp: 'Max HP', sp: 'Max SP',
+  hpRegen: 'HP recovery', spRegen: 'SP recovery', atkPct: 'ATK', matkPct: 'MATK', defPct: 'DEF',
+  hpPct: 'Max HP', spPct: 'Max SP', fleePct: 'Flee', crit: 'Crit', speed: 'ASPD' };
+function setBonusText(set) {
+  return Object.entries(set.bonus || {}).map(([key, value]) =>
+    `${SET_STAT_LABELS[key] || key} ${key.endsWith('Pct') ? `+${value}%` : `${value > 0 ? '+' : ''}${value}`}`).join(' · ');
+}
+function setGatesText(set) {
+  return (set.requires || []).map(rule => rule.on === 'Refine'
+    ? `${GEAR_SLOTS[rule.slot] || rule.slot} refine +${rule.value}`
+    : `Base Lv. ${rule.op}${rule.value}`).join(' · ');
+}
+// One line per set an item belongs to, naming the other pieces it needs.
+function gearSetLines(item) {
+  return gearSetsFor(item?.roId).map(set => {
+    const others = set.items.filter(id => String(id) !== String(item.roId))
+      .map(id => GEAR_ITEMS[Object.keys(GEAR_ITEMS).find(key => GEAR_ITEMS[key].roId === Number(id))]?.name || `#${id}`);
+    return `<small class="set-line">Set: ${esc(set.name)} — needs ${esc(others.join(', '))} · ${esc(setBonusText(set))}${setGatesText(set) ? ` (${esc(setGatesText(set))})` : ''}</small>`;
+  }).join('');
+}
 // The stock is a curated cross-section of the whole game, from starter knives to
 // endgame armour, so it is grouped into the same level bands the curation used
 // instead of one long list where the cheap and the 70+ gear sit side by side.
@@ -258,7 +280,7 @@ function shop() {
       ${icon ? `<img class="shop-icon" src="${esc(icon)}" alt="" width="32" height="32" loading="lazy">` : '<span class="shop-icon"></span>'}
       <div class="shop-body"><strong>${esc(item.name)}</strong>
       <small>${esc(item.kind)} · ${item.slot === 'weapon' ? `ATK ${item.atk || 0}${item.matk ? ` · MATK ${item.matk}` : ''}` : `DEF ${item.def || 0}`}${item.slots ? ` · ${item.slots} slot${item.slots === 1 ? '' : 's'}` : ''}${item.equipLevel ? ` · Base Lv. ${item.equipLevel}` : ''}</small>
-      <small>${fits.length ? 'Fit: ' + esc(fits.slice(0, 3).map(c => c.name).join(', ')) + (fits.length > 3 ? '…' : '') : 'No adventurer at camp can equip this yet.'}</small></div>
+      <small>${fits.length ? 'Fit: ' + esc(fits.slice(0, 3).map(c => c.name).join(', ')) + (fits.length > 3 ? '…' : '') : 'No adventurer at camp can equip this yet.'}</small>${gearSetLines(item)}</div>
       <button data-shop-buy="${esc(key)}" ${fits.length && state.inventory.zeny >= shopPrice(key) ? '' : 'disabled'}>${shopPriceLabel(key)}</button>
     </article>`;
   };
@@ -558,7 +580,26 @@ function gearLoadout(c) {
     const bag=(state.inventory.gearItems||[]).filter(instance=>gearFitsSlot(GEAR_ITEMS[instance.itemId],slot)&&canEquipGear(c.job,instance.itemId,c.level));
     const rows=bag.map(instance=>{const base=GEAR_ITEMS[instance.itemId],worn=equipped?.uid===instance.uid;return `<div class="gear-choice">${gearIconPath(base)?`<img class="gear-icon" src="${esc(gearIconPath(base))}" alt="" width="24" height="24" loading="lazy">`:''}<div><strong>${esc(gearInstanceTitle(instance))}</strong><small>${esc(gearBaseDetails(base))}${gearAffixText(instance)?` · ${esc(gearAffixText(instance))}`:''}</small>${refineAction(instance,c.mapId||worn)}</div><button data-gear-equip="${instance.itemId}" data-gear-uid="${esc(instance.uid)}" data-slot="${slot}" ${c.mapId||worn?'disabled':''}>${worn?'Worn':'Equip'}</button></div>`;}).join('');
     return `<section class="gear-slot"><div class="gear-slot-heading"><span class="eyebrow">${esc(label)}</span>${item&&gearIconPath(item)?`<img class="gear-icon" src="${esc(gearIconPath(item))}" alt="" width="24" height="24" loading="lazy">`:''}<strong>${equipped?esc(gearInstanceTitle(equipped)):'Empty'}</strong>${item?`<span class="gear-stat-line">${esc(gearBaseDetails(item))}${gearAffixText(equipped)?` · ${esc(gearAffixText(equipped))}`:''}</span>${refineAction(equipped,c.mapId)}<button class="text-button" data-gear-unequip="${slot}" ${c.mapId?'disabled':''}>Unequip</button>`:''}</div><div class="gear-choices">${rows||'<p class="muted">No eligible item instances in the bag.</p>'}</div></section>`;
-  }).join('')}</div>`;
+  }).join('')}${gearSetSummary(c)}</div>`;
+}
+// The sets a character is wearing right now, and what each still needs. Sets are the only
+// place this game grants a bonus for wearing a *combination*, so it must be visible.
+function gearSetSummary(c) {
+  const active = activeGearSets(c);
+  const partial = GEAR_SETS.filter(set => !active.includes(set)
+    && Object.keys(c.gear || {}).some(slot => set.slots.includes(slot)
+      && set.items.includes(String(GEAR_ITEMS[c.gear[slot]?.itemId]?.roId))));
+  if (!active.length && !partial.length) return '';
+  const row = (set, done) => {
+    const missing = set.items.filter(id => String(id) !== String(0)).map(id => {
+      const key = Object.keys(GEAR_ITEMS).find(k => GEAR_ITEMS[k].roId === Number(id));
+      return GEAR_ITEMS[key]?.name || `#${id}`;
+    });
+    return `<div class="gear-set ${done ? 'is-active' : ''}"><strong>${esc(set.name)}</strong>
+      <small>${done ? 'Active' : 'Incomplete'} · ${esc(setBonusText(set))}${setGatesText(set) ? ` · ${esc(setGatesText(set))}` : ''}</small>
+      <small>${missing.map(name => `<span>${esc(name)}</span>`).join(' + ')}</small></div>`;
+  };
+  return `<section class="gear-sets"><h4>Gear sets</h4>${active.map(set => row(set, true)).join('')}${partial.map(set => row(set, false)).join('')}</section>`;
 }
 function cardRows(character) {
   return Object.entries(CARDS).map(([id, card]) => {

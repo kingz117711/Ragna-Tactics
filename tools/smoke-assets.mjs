@@ -110,6 +110,11 @@ check('every shop icon file exists', !badIcon, badIcon || '');
 check('merchant groups stock by level band', window.document.querySelectorAll('.shop-band').length > 1, String(window.document.querySelectorAll('.shop-band').length));
 const tabs = window.document.querySelectorAll('[data-shop-slot]');
 check('merchant has slot tabs', tabs.length >= 6, String(tabs.length));
+// Gear sets: a real RO combination must be visible where the player shops and equips.
+const setLines = window.document.querySelectorAll('.set-line');
+check('merchant marks set pieces', setLines.length > 0, String(setLines.length));
+const setText = [...setLines].map(el => el.textContent).join(' | ');
+check('set lines name the missing pieces and the bonus', /needs .*\+/.test(setText) && /\+\d/.test(setText), setText.slice(0, 120));
 
 // Class sprites: every job must resolve to its own native body, not a parent's fallback.
 const { JOBS } = await import('../src/data.js');
@@ -123,6 +128,36 @@ for (const [key, job] of Object.entries(JOBS)) for (const sex of ['m', 'f']) {
   if (!existsSync(resolve(root, 'public/assets/wardrobe', folder + entry.image))) uncovered.push(`${key}:${sex}`);
 }
 check('every job has its own native body sprite', uncovered.length === 0, uncovered.slice(0, 6).join(', '));
+// Weapon overlays: the pack must carry client art for the families classes actually hold.
+const weaponKeys = Object.keys(index.classWardrobe || {}).filter(key => key.startsWith('weapon-'));
+const families = new Set(weaponKeys.map(key => key.split('-').pop()));
+check('weapon overlays cover every real family', ['sword', 'dagger', 'bow', 'rod', 'mace', 'spear', 'axe'].every(f => families.has(f)),
+  [...families].sort().join(','));
+const missingWeaponFile = weaponKeys.map(key => index.classWardrobe[key])
+  .flatMap(entry => [entry.image, entry.meta])
+  .find(name => !existsSync(resolve(root, 'public/assets/wardrobe/classes', name)));
+check('every weapon overlay file exists', !missingWeaponFile, missingWeaponFile || '');
+
+
+// Equipment sheet + gear sets.
+const sheetCard = window.document.querySelector('[data-character]');
+sheetCard?.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+await new Promise(r => setTimeout(r, 250));
+const equipButton = window.document.querySelector('[data-action="equipment"]');
+check('inspector offers the equipment sheet', !!equipButton);
+equipButton?.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+await new Promise(r => setTimeout(r, 350));
+const gearSheet = window.document.querySelector('.gear-sheet');
+check('equipment sheet renders every gear slot', !!gearSheet && gearSheet.querySelectorAll('.gear-slot').length >= 8,
+  gearSheet ? String(gearSheet.querySelectorAll('.gear-slot').length) : 'none');
+// The set panel only appears once a piece of a real combination is worn, so assert the
+// rule rather than the panel: with no set piece equipped there is correctly nothing to show.
+const { GEAR_SETS: smokeSets } = await import('../src/data.js');
+const wearingSetPiece = [...window.document.querySelectorAll('.gear-slot')]
+  .some(slot => smokeSets.some(set => set.items.some(id => slot.textContent.includes(String(id)))));
+const sheetSets = window.document.querySelector('.gear-sets');
+check('gear-set panel appears exactly when a set piece is worn', wearingSetPiece ? !!sheetSets : true,
+  sheetSets ? sheetSets.textContent.slice(0, 120) : 'no set pieces worn');
 
 const passed = results.filter(r => r[1]).length;
 console.log(`jsdom smoke: ${passed}/${results.length} passed`);

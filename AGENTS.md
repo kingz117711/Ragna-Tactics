@@ -60,9 +60,16 @@ then brings them together for tactical boss encounters.
   outfit to fill a gap; `tests/assets.test.js` fails if one is missing.
 - Skill and item icons are genuine client art. Do not reintroduce drawn placeholders,
   and do not add shop stock without a real `equipment-icons/<roId>.png`.
-- `db/item_db_equip.yml` is fetched by `scripts/build_gear_catalog.py` and is not
-  committed; `src/gear-catalog.json` and `src/gear-shop.json` are generated, never
-  hand-edited, and `npm run assets:verify` fails if they drift from the pinned source.
+- Weapon art is the client's own per-class weapon sprite, shipped as attack-only overlays
+  (`weapon-<job>-<sex>-<family>`) because that is the only motion the client animates a
+  held weapon on. `scripts/class-weapon-pins.json` is the pinned manifest; never draw a
+  weapon by hand or bake one class's weapon into another class's body.
+- `db/item_db_equip.yml` and `db/item_combos.yml` are fetched on demand and are not
+  committed; `src/gear-catalog.json`, `src/gear-shop.json` and `src/gear-sets.json` are
+  generated, never hand-edited, and `npm run assets:verify` fails if they drift from the
+  pinned source. Gear sets must come from rAthena's own combinations: never invent a set
+  or a house-rule bonus, and drop a bonus the stat model cannot honour rather than
+  approximating it (`tests/sets.test.js`).
 - Terrain is decorative scenery with no collision. Imported tiles and props
   (`public/assets/terrain/`, listed in `index.json` terrain) are drawn at native
   scale and anchors. Do not add invisible obstacles. Add a tested navigation model

@@ -4,6 +4,8 @@ import { RENEWAL_JOBS, BUILD_FAMILIES, STATUS_EFFECTS } from './renewal.js';
 // Generated from rAthena's renewal item database by scripts/build_gear_catalog.py.
 import GEAR_CATALOG from './gear-catalog.json' with { type: 'json' };
 import GEAR_SHOP_KEYS from './gear-shop.json' with { type: 'json' };
+// Generated from rAthena's item combination database by scripts/build_gear_sets.py.
+import GEAR_SET_DATA from './gear-sets.json' with { type: 'json' };
 
 export const HUNT_RADII = [3, 6, 10];
 export const DEFAULT_HUNT_RADIUS = 6;
@@ -292,6 +294,24 @@ for (const [roId, item] of Object.entries(CATALOG)) {
   delete entry.key;
   GEAR_ITEMS[key] = entry;
 }
+// Gear sets: real Ragnarok Online item combinations (rAthena `item_combos.yml`), kept only
+// when every piece is in this game's catalog and no two pieces share a slot. The bonus
+// numbers are translated from the upstream `bonus` script by scripts/build_gear_sets.py.
+export const GEAR_SETS = Array.isArray(GEAR_SET_DATA?.sets) ? GEAR_SET_DATA.sets : [];
+const SET_BY_ID = new Map(GEAR_SETS.map(set => [set.id, set]));
+const SET_BY_PIECE = new Map();
+for (const set of GEAR_SETS) {
+  for (const item of set.items) {
+    if (!SET_BY_PIECE.has(item)) SET_BY_PIECE.set(item, []);
+    SET_BY_PIECE.get(item).push(set);
+  }
+}
+export function gearSetOf(pieces) {
+  const worn = new Set(pieces.map(String));
+  return GEAR_SETS.filter(set => set.items.every(item => worn.has(item)));
+}
+export function gearSetsFor(itemId) { return SET_BY_PIECE.get(String(itemId)) || []; }
+export function gearSet(id) { return SET_BY_ID.get(id) || null; }
 export function gearIconPath(item) {
   if (!item?.roId) return null;
   return '/assets/equipment-icons/' + item.roId + '.png';

@@ -1,0 +1,85 @@
+{
+ "source": {
+  "repo": "rathena/rathena",
+  "commit": "6b917c1808cc93c65f27f47079b2c58a11df7c6c",
+  "path": "db/re/item_combos.yml",
+  "sha256": "e244b481bf3c4185e9c088d80d8b391de1d62a53ce7a8af36fb01ccf743c09d4"
+ },
+ "sets": [
+  {
+   "id": "15128+20773",
+   "name": "Excelion Suit + Excelion Wing",
+   "items": [
+    "15128",
+    "20773"
+   ],
+   "slots": [
+    "armor",
+    "garment"
+   ],
+   "bonus": {
+    "fleePct": 6
+   }
+  },
+  {
+   "id": "1628+2535",
+   "name": "Refined Survivor's Rod + Cloak Of Survival",
+   "items": [
+    "1628",
+    "2535"
+   ],
+   "slots": [
+    "weapon",
+    "garment"
+   ],
+   "bonus": {
+    "matkPct": 5
+   }
+  },
+  {
+   "id": "1618+2535",
+   "name": "Survivor's Rod (Dex) + Cloak Of Survival",
+   "items": [
+    "1618",
+    "2535"
+   ],
+   "slots": [
+    "weapon",
+    "garment"
+   ],
+   "bonus": {
+    "matkPct": 5
+   }
+  },
+  {
+   "id": "1620+2535",
+   "name": "Survivor's Rod (Int) + Cloak Of Survival",
+   "items": [
+    "1620",
+    "2535"
+   ],
+   "slots": [
+    "weapon",
+    "garment"
+   ],
+   "bonus": {
+    "matkPct": 5
+   }
+  },
+  {
+   "id": "2424+2528",
+   "name": "Tidal Shoes + Wool Scarf",
+   "items": [
+    "2424",
+    "2528"
+   ],
+   "slots": [
+    "footwear",
+    "garment"
+   ],
+   "bonus": {
+    "hpRegen": 5
+   }
+  }
+ ]
+}

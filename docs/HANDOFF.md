@@ -25,8 +25,17 @@ motion from the equipped item's real `kind`, so a Crusader swings a sword, a Sag
 a Gunslinger a revolver, and a Monk punches. Classes without art for the exact type fall
 back the way the client does (two-hander → sword, katar → dagger, …).
 
-Next: gear sets and refine UX around the new catalog, and the merchant's
-restock/inflation curve.
+Gear sets work the same way: the five sets in `src/gear-sets.json` are real RO item
+combinations lifted from rAthena's `item_combos.yml` by `scripts/build_gear_sets.py`
+(pinned commit + SHA-256, fetched into `db/` on demand). A set activates only while every
+piece is worn and any refinement gate in the upstream script is met; `sim.activeGearSets()`
+decides, `stats()` applies the bonus, the merchant marks the pieces and the equipment sheet
+lists active and partial sets. The merchant now stocks every set piece, so each set is
+completable. Only bonuses the stat model can honour are kept — the generator drops the rest
+rather than approximating them, which is why the Fallen Angel and Rider combinations (their
+only effects are resistances and recovery this game does not model) are absent.
+
+Next: refine UX around the new catalog, and the merchant's restock/inflation curve.
 
 ## Character skills and skill FX
 

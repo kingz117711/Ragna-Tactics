@@ -31,6 +31,10 @@ SOURCE_SHA256 = 'a2b53925ad2b6138d5c563ec94f1b3f449e8d33435b00687b2f661ecb5322e0
 ICONS = ROOT / 'public' / 'assets' / 'equipment-icons'
 OUT = ROOT / 'src' / 'gear-catalog.json'
 SHOP = ROOT / 'src' / 'gear-shop.json'
+# Set pieces the merchant must always be able to supply, so a real combo can be completed
+# from the shop. scripts/build_gear_sets.py writes the same membership it derives from
+# rAthena's item_combos.yml; keeping the list here means curation cannot strand a set.
+SET_PIECES = ROOT / 'src' / 'gear-sets.json'
 
 # rAthena job names -> this game's job ids. Jobs not listed here mean the item
 # is limited to classes this game does not model, so it is skipped.
@@ -322,6 +326,31 @@ def sellable(entry):
     return True
 
 
+def set_pieces(catalog):
+    """Catalog ids that belong to a real item combination, so a set can be completed."""
+    if not SET_PIECES.exists():
+        return []
+    data = json.loads(SET_PIECES.read_text(encoding='utf-8'))
+    return [item_id for entry in data.get('sets') or []
+            for item_id in entry.get('items') or [] if str(item_id) in catalog]
+
+
+def shop_piece(entry):
+    """A set piece the merchant may stock even when the DB lists only a token price.
+
+    The upstream combination is the reason to sell it, so the ordinary `sellable()` filters
+    (which assume a real shop value) are relaxed — but only for ordinary gear: an item with
+    no price at all, or with admin-scale stats, still never reaches the merchant.
+    """
+    if sellable(entry):
+        return True
+    if entry.get('buy', 0) <= 0 or entry.get('equipLevel', 1) > 100:
+        return False
+    if entry.get('atk', 0) > 400 or entry.get('def', 0) > 120 or entry.get('matk', 0) > 400:
+        return False
+    return True
+
+
 def shop_order(catalog):
     """Merchant stock: the starter kit plus a strong pick per slot and level band."""
     tiers = [(1, 15), (16, 40), (41, 70), (71, 100)]
@@ -334,15 +363,27 @@ def shop_order(catalog):
         # for one of those ids, and a priceless row would sell for the floor price.
         if entry and sellable(entry) and entry['key'] not in picks:
             picks.append(entry['key'])
+    # Order the gear-set pieces first: they are the cheap end of the stock and are the
+    # rows a player looks for when chasing a combination.
+    pieces = set_pieces(catalog)
+    for item_id in pieces:
+        entry = catalog.get(str(item_id))
+        if entry and shop_piece(entry) and entry['key'] not in picks:
+            picks.append(entry['key'])
+    # Each family earns its own slots: the strongest pick per slot per level band, then the
+    # band's cheapest sensible piece, so the merchant has an affordable entry point too.
     for slot in SHOP_ORDER:
         pool = [entry for entry in catalog.values() if entry['slot'] == slot and sellable(entry)]
         for low, high in tiers:
             band = [entry for entry in pool if low <= entry.get('equipLevel', 1) <= high]
             if not band:
                 continue
-            for entry in sorted(band, key=lambda e: (power(e), -e['roId']), reverse=True)[:4]:
+            for entry in sorted(band, key=lambda e: (power(e), -e['roId']), reverse=True)[:3]:
                 if entry['key'] not in picks:
                     picks.append(entry['key'])
+            cheap = min(band, key=lambda e: (e.get('buy', 0), -power(e)))
+            if cheap['key'] not in picks:
+                picks.append(cheap['key'])
     return picks
 
 

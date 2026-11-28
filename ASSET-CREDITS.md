@@ -132,4 +132,17 @@ the client's `texture/유저인터페이스/item/` set via
 
 Item statistics in `src/gear-catalog.json` come from rAthena's
 `db/re/item_db_equip.yml` (GPL-3.0, see `licenses/`). Only icon-backed, sellable gear is
-curated into the catalog and the merchant's 157-key stock.
+curated into the catalog and the merchant's 116-key stock.
+
+### Gear sets
+
+The item combinations in `src/gear-sets.json` are the game's real set bonuses, not
+invented ones. `scripts/build_gear_sets.py` reads rAthena's
+`db/re/item_combos.yml` at the same commit
+([`6b917c1808cc93c65f27f47079b2c58a11df7c6c`](https://github.com/rathena/rathena/blob/6b917c1808cc93c65f27f47079b2c58a11df7c6c/db/re/item_combos.yml),
+SHA-256 `e244b481bf3c4185e9c088d80d8b391de1d62a53ce7a8af36fb01ccf743c09d4`,
+1,879,053 bytes), verifies the hash, and keeps only combinations whose every piece is in
+this game's catalog, occupy distinct slots, and carry a bonus the stat model can express.
+Combinations whose only effects are resistances, status immunities or other mechanics this
+game does not simulate are omitted rather than reduced. Same GPL-3.0 data license as the
+item database above; Ragnarok Online artwork is not covered by it.

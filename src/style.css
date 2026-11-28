@@ -1314,6 +1314,14 @@ select{
   gap:10px;
   margin:14px 0 22px
 }
+/* Gear sets: a real RO item combination grants its bonus only while every piece is worn. */
+.gear-sets{grid-column:1/-1;display:grid;gap:6px;border:1px solid var(--line);border-radius:8px;padding:11px;background:rgba(255,255,255,.014)}
+.gear-sets h4{margin:0 0 2px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.gear-set{display:grid;gap:2px;padding:7px 9px;border-radius:6px;border:1px solid rgba(255,255,255,.05);border-left:2px solid rgba(255,255,255,.14)}
+.gear-set.is-active{border-left-color:var(--accent,#c9a45c);background:rgba(201,164,92,.07)}
+.gear-set strong{font-size:11px}
+.gear-set small{font-size:10px;color:var(--muted)}
+.set-line{display:block;margin-top:2px;font-size:10px;color:var(--muted)}
 .gear-slot{
   min-width:0;
   border:1px solid var(--line);

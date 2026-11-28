@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026-11-28 — Gear sets from rAthena's item combinations
+
+- **Five real Ragnarok Online gear sets**, derived from rAthena's
+  `db/re/item_combos.yml` at the pinned commit by the new
+  `scripts/build_gear_sets.py`: Excelion Suit + Excelion Wing (+6 Flee rate),
+  the three Survivor's Rod + Cloak Of Survival pairings (+5% MATK), and
+  Tidal Shoes + Wool Scarf (+5 HP recovery). The generator keeps only combinations
+  whose *every* piece is in this game's catalog, drops any where two pieces share a
+  slot, and translates only the `bonus` clauses the stat model can honour — a bonus it
+  could not express is dropped, never approximated, and the set records which clauses
+  were skipped.
+- **`src/sim.js` applies them.** `activeGearSets(c)` completes a set only while every
+  piece is worn and any refinement/base-level gate the upstream script carried is met
+  (a `Refine ≥ 9` clause is not a bonus at +8); `stats()` folds the flat stats in and
+  scales the `*Pct` values, so ATK/DEF/MATK/Max HP/SP/Flee/ASPD all respond.
+- **Sets are visible where they matter.** The merchant marks each set piece with the
+  pieces it still needs and the bonus it unlocks, and the equipment sheet lists the
+  sets an adventurer has active or is partway through.
+- **The merchant stocks every set piece**, so a set is always completable: curation in
+  `scripts/build_gear_catalog.py` now orders them into `gear-shop.json` (116 keys) and
+  relaxes the shop-value filter for a token-priced piece while still refusing unpriced
+  or admin-scale gear.
+- Guards: `tests/sets.test.js` (6 tests — catalog/shop membership, slot uniqueness,
+  lookup by piece and by combination, the bonus reaching `stats()` only when complete,
+  a refinement gate, and a buy → equip → unequip run through the real command boundary)
+  and three more jsdom smoke checks (18/18). `npm run assets:verify` now also checks
+  `gear-sets.json` is current. `npm test` 112/0.
+
 ## 2026-11-28 — Per-class weapon visuals
 
 - **Every class now shows the weapon it actually holds.** The client stores one weapon
