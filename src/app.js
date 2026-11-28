@@ -1,4 +1,4 @@
-import { jobLineage, combatJob, REFINEMENT, ORE_INFO, gearVariant, AFFINITIES, ELEMENTS, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, promotionRequirement, classBuilds, selectedBuild, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, refineCost, refineSuccessPercent, refineSafeLimit, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
+import { FIELD_SKILLS, fieldSkillAvailable, jobLineage, combatJob, REFINEMENT, ORE_INFO, gearVariant, AFFINITIES, ELEMENTS, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, promotionRequirement, classBuilds, selectedBuild, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, refineCost, refineSuccessPercent, refineSafeLimit, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
 import { availablePoints, forgePrice, command, tick, stats, rosterLimit, engaged, effectiveTactics, isLeader, canEquipGear } from './sim.js';
 import { SAVE_KEY, loadGame, saveGame, encodeSave, decodeSave } from './persistence.js';
 import { Sprites } from './sprites.js';
@@ -15,6 +15,8 @@ let previewPointer = null;
 const radiusControl = $('hunt-radius');
 for (const radius of HUNT_RADII) radiusControl.add(new Option(String(radius), String(radius)));
 radiusControl.value = String(DEFAULT_HUNT_RADIUS);
+let pendingJob = null, statDraft = {};
+let workspacePage = 'gear', workspaceSlot = 'weapon', workspaceOpen = false, inspectedId;
 let multiSelect = false, tacticsExpanded = false;
 let toastTimer, accumulator = 0, lastTime = performance.now(), lastUI = 0, lastMinimap = 0, lastSave = performance.now(), inspectorKey = '';
 const modal = $('modal');
@@ -30,14 +32,15 @@ function closeModal() { modal.close(); }
 const modalError = '<div id="modal-error" class="modal-error" role="alert"></div>';
 function issue(cmd, { close = false, quiet = false } = {}) {
   if (!writable || settling) return false;
-  const message = command(state, { ids: [...selected], ...cmd });
+  const ids = cmd.ids || [...selected];
+  const message = command(state, { individual:ids.length === 1, ...cmd, ids });
   if (message) { error(message); return false; }
   // Accepted movement/hunt orders pulse at their actual world destination —
   // deliberately distinct from the button press animation.
   if (cmd.point && ['move', 'rally'].includes(cmd.type)) renderer.pulseOrder(cmd.mapId || renderer.mapId, cmd.point, cmd.type);
   if (close) closeModal();
-  if (!quiet) toast({ party: 'Party formed. Orders now apply to the whole party.', split: 'Selected adventurers are now independent.', resume: 'Farming assignments resumed.', hold: 'Holding position. Nearby enemies will be engaged.', retreat: 'Retreating to the camp exit.', recover: 'Rested and ready for the next expedition.', resupply: 'Potion supplies replenished.', promote: 'Job advancement complete. Your adventurer is ready for a new path.', recruit: 'A new Novice joined the guild.' }[cmd.type] || 'Orders received.');
-  persist(); renderUI(); return true;
+  if (!quiet) toast({ party: 'Party formed. Select several members for group orders.', split: 'Selected adventurers are now independent.', resume: 'Farming assignments resumed.', hold: 'Holding position. Nearby enemies will be engaged.', retreat: 'Retreating to the camp exit.', recover: 'Rested and ready for the next expedition.', resupply: 'Potion supplies replenished.', promote: 'Job advancement complete. Your adventurer is ready for a new path.', recruit: 'A new Novice joined the guild.' }[cmd.type] || 'Orders received.');
+  persist(); renderUI(); renderWorkspace(); return true;
 }
 function persist() {
   if (!writable || !state || settling) return;
@@ -52,7 +55,7 @@ function switchMap(id) {
 function selectedCharacters() { return state.characters.filter(c => selected.has(c.id)); }
 function setSelection(id, multiple = false) {
   if (!multiple) selected = new Set([id]); else if (selected.has(id)) selected.delete(id); else selected.add(id);
-  inspectorKey = ''; renderUI();
+  inspectorKey = ''; renderUI(); renderWorkspace();
 }
 function renderUI() {
   if (!state || !renderer) return;
@@ -63,6 +66,7 @@ function renderUI() {
     $('active-bounty-progress').textContent = state.bounty.kills + ' / ' + bounty.count;
     $('claim-bounty').disabled = state.bounty.kills < bounty.count;
   }
+  renderFieldConsole(units.length === 1 ? units[0] : null);
   const characterButton = $('character-sheet');
   characterButton.hidden = units.length !== 1;
   if (units.length === 1) characterButton.textContent = 'Manage ' + units[0].name + ' ↗';
@@ -84,7 +88,7 @@ function renderUI() {
   $('minimap').setAttribute('aria-label', `Minimap of ${map.name}. Camera centred at ${Math.round(cam.x)}, ${Math.round(cam.y)}. ${here || 'No adventurers on this field.'} Click to move the view.`);
   $('first-expedition').hidden = coachDismissed || state.characters.some(c => c.kills || c.mapId) || state.time > 180;
   $('selection-title').textContent = units.length === 1 ? units[0].name : `${units.length} adventurers selected`;
-  $('selection-description').textContent = units.some(c => c.partyId) ? 'Party commands include linked members' : units.length ? 'Independent adventurers · your orders' : 'Select an adventurer in your roster';
+  $('selection-description').textContent = units.length === 1 ? 'Individual field orders' : units.length ? 'Group field orders' : 'Select an adventurer in your roster';
   $('order-hint').hidden = !orderMode;
   const activeOrders = units.map(c => c.order);
   const pressed = { move: orderMode === 'move', rally: orderMode === 'rally', hold: !!units.length && activeOrders.every(v => v === 'hold'),
@@ -213,6 +217,139 @@ function openCharacterPage(page, id) {
   else if (page === 'job') advanceJob(c.id);
   else characterOverview(c);
   modal.querySelector('[aria-current="page"]')?.focus({preventScroll:true});
+}
+const workspacePages = [['gear','Gear'],['skills','Skills'],['stats','Stats'],['jobs','Job']];
+function setWorkspace(open) {
+  workspaceOpen = open;
+  $('adventurer-panel').hidden = !open;
+  $('adventurer-workspace').setAttribute('aria-expanded',String(open));
+  if (open) {
+    const c = selectedCharacters()[0];
+    if (selected.size !== 1) setSelection(c?.id || state.characters[0].id);
+    renderWorkspace();
+    $('workspace-tabs').querySelector('[aria-current]')?.focus({preventScroll:true});
+  }
+}
+function workshopStats(before,after) {
+  return [['atk','ATK'],['matk','MATK'],['def','DEF'],['hp','HP'],['sp','SP'],['range','Range']].map(([id,label])=>{
+    const delta = Math.round((after[id] - before[id])*100)/100;
+    return delta ? `<span class="${delta > 0 ? 'gain' : 'loss'}">${label} ${delta > 0 ? '+' : ''}${delta}</span>` : '';
+  }).join('') || '<span>No change in these stats</span>';
+}
+function workspaceGear(c) {
+  const current = c.gear?.[workspaceSlot], before = stats(c);
+  const slotButton = ([id,label]) => {
+    const instance = c.gear?.[id];
+    return `<button data-workspace-slot="${id}" aria-pressed="${workspaceSlot === id}"><small>${label}</small><strong>${instance ? esc(gearInstanceTitle(instance)) : 'Empty'}</strong></button>`;
+  };
+  const slots = Object.entries(GEAR_SLOTS);
+  const paperDoll = `<div class="workspace-gear"><div>${slots.slice(0,4).map(slotButton).join('')}</div>
+    <figure class="workspace-doll"><img alt="" src="${sprites.portrait(c)}"><figcaption>${JOBS[c.job].name}</figcaption></figure>
+    <div>${slots.slice(4).map(slotButton).join('')}</div></div>`;
+  const candidates = state.inventory.gearItems.filter(instance=>gearFitsSlot(GEAR_ITEMS[instance.itemId],workspaceSlot) && canEquipGear(c.job,instance.itemId,c.level));
+  const capacity = current ? GEAR_ITEMS[current.itemId].slots : 0;
+  const cards = current?.cards || [];
+  const socketControls = capacity ? `<h3>Cards · ${cards.length}/${capacity}</h3>
+    ${cards.map((id,index)=>`<article class="workspace-item"><span>${CARDS[id].name} · ${CARDS[id].description}</span><button data-workspace-unsocket="${index}" ${c.mapId ? 'disabled' : ''}>Remove</button></article>`).join('')}
+    ${cards.length < capacity ? Object.entries(CARDS).filter(([id])=>state.inventory.cards[id]>0).map(([id,card])=>`<article class="workspace-item"><span>${card.name} · ${card.description}</span><button data-workspace-socket="${id}" ${c.mapId ? 'disabled' : ''}>Socket</button></article>`).join('') || '<p>No loose cards in shared storage.</p>' : ''}` : '';
+  return `${paperDoll}<div class="workspace-section"><h3>${GEAR_SLOTS[workspaceSlot]}</h3>
+    <p>Equipped · ${current ? esc(gearInstanceTitle(current)) : 'Empty'}${current ? ` <button data-workspace-unequip ${c.mapId ? 'disabled' : ''}>Unequip</button>` : ''}</p>
+    ${c.mapId ? '<p>Return to camp to change equipment.</p>' : ''}
+    ${candidates.length ? candidates.map(instance=>`<article class="workspace-item"><div><strong>${esc(gearInstanceTitle(instance))}</strong><div class="gear-delta">${workshopStats(before,stats({...c,gear:{...c.gear,[workspaceSlot]:instance}}))}</div></div><button data-workspace-equip="${esc(instance.uid)}" ${c.mapId ? 'disabled' : ''}>Equip</button></article>`).join('') : '<p>No eligible replacements in your bag.</p>'}
+    ${socketControls}<button data-workspace-detail="equipment">Refining and relics ↗</button></div>`;
+}
+function workspaceSkills(c) {
+  const st = stats(c), atCamp = !c.mapId && c.status !== 'down';
+  const available = Object.entries(FIELD_SKILLS).filter(([id])=>fieldSkillAvailable(c.job,id));
+  const slots = [0,1].map(index=>{
+    const slot = c.techniques?.slots[index];
+    const options = available.filter(([id])=>c.techniques?.ranks[id]).map(([id,skill])=>`<option value="${id}" ${slot?.id===id ? 'selected' : ''}>${skill.name}</option>`).join('');
+    return `<div class="workspace-slot"><label>Key ${index+2}<select data-workspace-skill-slot="${index}" ${!atCamp ? 'disabled' : ''}><option value="">Empty</option>${options}</select></label>
+      <label><input type="checkbox" data-workspace-skill-auto="${index}" ${slot?.auto ? 'checked' : ''} ${atCamp && slot ? '' : 'disabled'}> Auto-cast</label></div>`;
+  }).join('');
+  const rows = available.map(([id,skill])=>{
+    const rank = c.techniques?.ranks[id] || 0, level = skill.levels[rank];
+    return `<article class="workspace-item"><div><strong>${skill.name} · Rank ${rank}/3</strong><p>${skill.text}</p><small>${skill.sp} SP · ${skill.time}s cooldown</small></div><button data-workspace-train="${id}" ${atCamp && level && c.jobLevel>=level ? '' : 'disabled'}>${!level ? 'Max rank' : c.jobLevel < level ? 'Job Lv. '+level : 'Learn rank '+(rank+1)}</button></article>`;
+  }).join('');
+  return `<div class="workspace-section"><h3>Skill bar</h3><p><kbd>1</kbd> ${esc(st.skill)} · Signature</p>${slots}
+    <label class="workspace-auto"><input type="checkbox" id="workspace-auto" ${effectiveTactics(c).autoSkill ? 'checked' : ''}> Allow automatic skills</label>
+    <p>Learn ranks and assign hotbar slots at camp.</p>${rows || '<p>Choose your first job to unlock class techniques.</p>'}
+    <button data-workspace-detail="skills">Combat builds and spells ↗</button></div>`;
+}
+function workspaceStats(c) {
+  const before = stats(c), planned = {...c.attributes}, atCamp = !c.mapId && c.status !== 'down';
+  for (const [key,value] of Object.entries(statDraft)) planned[key] = (planned[key] || 0) + value;
+  const remaining = availablePoints({...c,attributes:planned});
+  const after = stats({...c,attributes:planned});
+  return `<div class="workspace-section"><div class="workspace-meter-list">${[['Max HP',after.hp],['Max SP',after.sp],['ATK',after.atk],['MATK',after.matk],['DEF',after.def],['Hit',Math.round(after.hit*100)+'%']].map(([label,value])=>`<div><small>${label}</small><strong>${value}</strong></div>`).join('')}</div>
+    <h3>${remaining} stat points available</h3>${atCamp ? '' : '<p>Return to camp to train attributes.</p>'}
+    ${Object.entries(ATTRIBUTES).map(([id,attr])=>`<div class="workspace-item"><div><strong>${id.toUpperCase()} · ${planned[id] || 0}</strong><p>${esc(attr.effect)}</p></div><div class="workspace-stepper">
+      <button data-workspace-stat="${id}" data-delta="-1" aria-label="Remove pending ${id.toUpperCase()}" ${atCamp && statDraft[id] ? '' : 'disabled'}>−</button>
+      <button data-workspace-stat="${id}" data-delta="1" aria-label="Add ${id.toUpperCase()}" ${atCamp && remaining && (planned[id] || 0) < ATTRIBUTE_CAP ? '' : 'disabled'}>+</button></div></div>`).join('')}
+    <div class="gear-delta">${workshopStats(before,after)}</div><button data-workspace-apply-stats ${atCamp && Object.keys(statDraft).length ? '' : 'disabled'}>Apply stat points</button></div>`;
+}
+function workspaceJobs(c) {
+  const gate = promotionRequirement(c.job);
+  const choices = jobChoices(c.job);
+  const eligible = !c.mapId && c.status !== 'down' && c.jobLevel >= gate.jobLevel && c.level >= gate.baseLevel;
+  return `<div class="workspace-section"><p>${jobLineage(c.job).join(' → ')}</p>${choices.length ? `<p>Next advancement at Job Lv. ${gate.jobLevel}${gate.baseLevel > 1 ? ' and Base Lv. '+gate.baseLevel : ''}. Return to camp to advance.</p>
+    <div class="workspace-paths">${choices.map(([id,job])=>`<button data-workspace-job="${id}" aria-pressed="${pendingJob === id}" ${eligible ? '' : 'disabled'}><img alt="" src="${sprites.portrait({...c,job:id})}"><strong>${job.name}</strong></button>`).join('')}</div><p>${pendingJob && eligible ? esc(JOBS[pendingJob].description) : 'Select a path to preview its role.'}</p><button data-workspace-promote ${pendingJob && eligible ? '' : 'disabled'}>Confirm job change</button>` : '<p>This adventurer has reached the end of this job path.</p>'}</div>`;
+}
+function renderWorkspace() {
+  if (!workspaceOpen) return;
+  const c = selectedCharacters()[0];
+  if (!c || selected.size !== 1) { setWorkspace(false); return; }
+  if (inspectedId !== c.id) { statDraft = {}; pendingJob = null; inspectedId = c.id; $('workspace-content').scrollTop = 0; }
+  $('workspace-name').textContent = c.name;
+  $('workspace-job').textContent = JOBS[c.job].name + ' · Base ' + c.level + ' · Job ' + c.jobLevel;
+  if ($('workspace-portrait').getAttribute('src') !== sprites.portrait(c)) $('workspace-portrait').src = sprites.portrait(c);
+  html('workspace-tabs',workspacePages.map(([id,label])=>`<button data-workspace-page="${id}" ${id===workspacePage ? 'aria-current="page"' : ''}>${label}</button>`).join(''));
+  html('workspace-content',({gear:workspaceGear,skills:workspaceSkills,stats:workspaceStats,jobs:workspaceJobs})[workspacePage](c));
+}
+function renderFieldConsole(c) {
+  const deployed = c?.mapId && c.hp > 0;
+  $('field-console').hidden = !deployed;
+  if (!deployed) return;
+  const onField = c.mapId === renderer.mapId;
+  $('field-hotbar').hidden = !onField;
+  if (!onField) {
+    html('individual-orders',`<span><strong>${esc(c.name)}</strong><small>${worldActivity(c)}</small></span><button data-world-character="${c.id}">Locate in ${MAPS[c.mapId].name} ↗</button>`);
+    return;
+  }
+  const st = stats(c), map = MAPS[c.mapId];
+  const allies = state.characters.filter(a=>c.partyId && a.partyId===c.partyId && a.id!==c.id && a.mapId===c.mapId && a.hp>0 && a.order!=='retreat');
+  if (!$('individual-orders').contains(document.activeElement)) {
+    html('individual-orders',`<span><strong>${esc(c.name)}</strong><small>${worldActivity(c)} · ${effectiveTactics(c).autoSkill ? 'Auto skills' : 'Manual skills'}</small></span>
+      ${allies.length ? `<label><select id="field-support" aria-label="Support party member"><option value="">Support ally</option>${allies.map(a=>`<option value="${a.id}" ${c.supportId===a.id ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</select></label>` : ''}
+      ${map.boss ? '<button data-individual-order="boss">Attack boss</button>' : '<button data-individual-order="solo">Farm solo</button>'}`);
+  }
+  const hotbar = $('field-hotbar');
+  const signature = {name:st.skill,sp:st.cost,timer:c.cooldown};
+  const skills = [signature,...[0,1].map(index=>{
+    const entry = c.techniques?.slots[index];
+    return entry ? {...FIELD_SKILLS[entry.id],timer:c.techniques.timers[entry.id] || 0,auto:entry.auto} : null;
+  })];
+  for (const [index,skill] of skills.entries()) {
+    let button = hotbar.children[index];
+    if (!button) {
+      button = document.createElement('button');
+      button.dataset.hotbar = index;
+      hotbar.append(button);
+    }
+    const label = skill ? `${skill.name} · ${skill.sp} SP${skill.auto ? ' · Auto' : ''}` : 'Empty slot';
+    const readout = skill?.timer > 0 ? `${Math.ceil(skill.timer)}s` : skill ? `${skill.sp} SP${skill.auto ? ' · Auto' : ''}` : 'Empty';
+    const markup = `<kbd>${index+1}</kbd><strong>${esc(skill?.name || 'Unassigned')}</strong><small>${readout}</small>`;
+    if (button.innerHTML !== markup) button.innerHTML = markup;
+    button.setAttribute('aria-label',label); button.title = label;
+    button.disabled = !skill || skill.timer > 0 || c.sp < skill.sp || !!c.cast || ['move','retreat'].includes(c.order);
+  }
+}
+function castHotbar(index) {
+  const c = selectedCharacters()[0];
+  const button = $('field-hotbar').children[index];
+  if (selected.size === 1 && c.mapId === renderer.mapId && button && !button.disabled) {
+    issue({type:'technique-cast',ids:[c.id],slot:index,mapId:renderer.mapId},{quiet:true});
+  }
 }
 function advanceJob(id = [...selected][0]) {
   const c = state.characters.find(v => v.id === id);
@@ -487,7 +624,7 @@ function download(text, filename) {
   const url = URL.createObjectURL(new Blob([text], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 function settings() {
-  showModal('Your adventure, at your pace.', `<p>Your guild saves automatically on this device. Export a copy to keep a backup or move to another browser. Single-player progress is local; multiplayer will arrive in a later phase.</p><div class="settings-actions"><button data-modal-action="export">Export guild</button><button data-modal-action="import">Import guild</button><button data-modal-action="save">Save now</button></div><h3>Field commands</h3><div class="help-grid"><span><b>Click portrait / character</b> · Select</span><span><b>Shift + click</b> · Select several</span><span><b>Double-click portrait</b> · Follow on map</span><span><b>Right-click ground / M</b> · Move</span><span><b>Click enemy</b> · Focus target</span><span><b>H / R</b> · Hold / Resume farming</span><span><b>Q / T</b> · Skill / Retreat</span><span><b>Scroll / + / −</b> · Zoom</span><span><b>Drag ground</b> · Pan camera</span><span><b>F / Esc</b> · Fit map / Cancel order</span></div><h3>While you’re away</h3><p>All deployed farming teams continue for up to four hours, using their actual combat rules, supplies, and tactics. Defeated characters stop earning. Boss expeditions return to camp without an offline boss reward. Keep just one game tab open.</p><p>Party members share one EXP pool with a 12% group bonus. Training assignments earn 15% more Base EXP; gathering assignments collect double materials. No permanent death.</p><div class="milestone-note">First milestone: grow two Novices into first jobs, assemble a party, and defeat Baphomet to unlock another adventurer.</div><h3>Start over</h3><button class="danger-button" data-modal-action="reset" style="padding:10px 15px">Start a new guild…</button>`, 'SETTINGS & FIELD GUIDE');
+  showModal('Your adventure, at your pace.', `<p>Your guild saves automatically on this device. Export a copy to keep a backup or move to another browser. Single-player progress is local; multiplayer will arrive in a later phase.</p><div class="settings-actions"><button data-modal-action="export">Export guild</button><button data-modal-action="import">Import guild</button><button data-modal-action="save">Save now</button></div><h3>Field commands</h3><div class="help-grid"><span><b>Click portrait / character</b> · Select</span><span><b>Shift + click</b> · Select several</span><span><b>Double-click portrait</b> · Follow on map</span><span><b>Right-click ground / M</b> · Move</span><span><b>Click enemy</b> · Focus target</span><span><b>H / R</b> · Hold / Resume farming</span><span><b>Q / T</b> · Skill / Retreat</span><span><b>1–3</b> · Selected adventurer’s hotbar</span><span><b>Scroll / + / −</b> · Zoom</span><span><b>Drag ground</b> · Pan camera</span><span><b>F / Esc</b> · Fit map / Cancel order</span></div><h3>While you’re away</h3><p>All deployed farming teams continue for up to four hours, using their actual combat rules, supplies, and tactics. Defeated characters stop earning. Boss expeditions return to camp without an offline boss reward. Keep just one game tab open.</p><p>Party members share one EXP pool with a 12% group bonus. Training assignments earn 15% more Base EXP; gathering assignments collect double materials. No permanent death.</p><div class="milestone-note">First milestone: grow two Novices into first jobs, assemble a party, and defeat Baphomet to unlock another adventurer.</div><h3>Start over</h3><button class="danger-button" data-modal-action="reset" style="padding:10px 15px">Start a new guild…</button>`, 'SETTINGS & FIELD GUIDE');
 }
 function offlineReport(report) {
   showModal('Welcome back, guild leader.', `<p>Your adventurers kept their assignments while you were away.${report.capped ? ' The four-hour limit was applied.' : ''} Boss expeditions require active play and returned to camp.</p><div class="report-stats"><div class="report-stat"><strong>${duration(report.seconds)}</strong><span>FARMING TIME</span></div><div class="report-stat"><strong>${number(report.kills)}</strong><span>ENEMIES DEFEATED</span></div><div class="report-stat"><strong>${number(report.zeny)}</strong><span>ZENY EARNED</span></div></div>${report.loot.length ? `<h3>Loot brought back</h3>${report.loot.map(drop => `<div class="inventory-row">${esc(drop.name)}<span>×${number(drop.count)}</span></div>`).join('')}` : ''}${report.characters.map(c => `<div class="inventory-row"><div>${esc(c.name)}<p>${c.levels ? `+${c.levels} Base levels · ` : ''}${c.jobLevels ? `+${c.jobLevels} Job levels · ` : ''}${c.potions} potions used</p></div><span>${c.status === 'down' ? 'Needs recovery' : c.status === 'camp' ? 'At camp' : 'On assignment'}</span></div>`).join('')}<div class="modal-footer"><button class="primary" id="continue-adventure">Continue adventure <span>↗</span></button></div>`, 'EXPEDITION REPORT');
@@ -512,6 +649,51 @@ async function settle(elapsed, { activeTab = false } = {}) {
 
 document.addEventListener('click', event => {
   if (!state || !ready) return;
+  const ws = event.target.closest('#adventurer-panel button');
+  if (ws && ws.id !== 'workspace-close') {
+    const c=selectedCharacters()[0], data=ws.dataset;
+    if (data.workspacePage) {
+      workspacePage=data.workspacePage; renderWorkspace(); $('workspace-content').scrollTop=0;
+      $('workspace-tabs').querySelector('[aria-current]')?.focus({preventScroll:true});
+    } else if (data.workspaceSlot) {
+      workspaceSlot=data.workspaceSlot; renderWorkspace();
+      $('workspace-content').querySelector(`[data-workspace-slot="${workspaceSlot}"]`)?.focus({preventScroll:true});
+    } else if ('workspaceUnequip' in data) issue({type:'gear-unequip',slot:workspaceSlot,ids:[c.id]},{quiet:true});
+    else if (data.workspaceEquip) {
+      const instance=state.inventory.gearItems.find(i=>i.uid===data.workspaceEquip);
+      if(instance) issue({type:'gear-equip',slot:workspaceSlot,item:instance.itemId,uid:instance.uid,ids:[c.id]},{quiet:true});
+    } else if (data.workspaceSocket || data.workspaceUnsocket !== undefined) {
+      const instance=c.gear?.[workspaceSlot];
+      if(instance) issue({type:'gear-card',uid:instance.uid,card:data.workspaceSocket || null,index:Number(data.workspaceUnsocket),ids:[c.id]},{quiet:true});
+    } else if (data.workspaceStat) {
+      const key=data.workspaceStat;
+      statDraft[key]=(statDraft[key] || 0) + Number(data.delta);
+      if (!statDraft[key]) delete statDraft[key];
+      renderWorkspace();
+      const control=$('workspace-content').querySelector(`[data-workspace-stat="${key}"][data-delta="${data.delta}"]`);
+      if (control && !control.disabled) control.focus({preventScroll:true});
+    } else if ('workspaceApplyStats' in data) {
+      const points=statDraft;
+      statDraft={};
+      if (!issue({type:'allocate',ids:[c.id],points},{quiet:true})) { statDraft=points; renderWorkspace(); }
+    } else if (data.workspaceJob) {
+      pendingJob=data.workspaceJob; renderWorkspace();
+    } else if ('workspacePromote' in data) {
+      const job=pendingJob;
+      pendingJob=null;
+      issue({type:'promote',ids:[c.id],job});
+    } else if (data.workspaceTrain) issue({type:'technique-train',skillId:data.workspaceTrain,ids:[c.id]},{quiet:true});
+    else if (data.workspaceDetail) ({equipment,skills:()=>characterSkills(c),attributes,advance:()=>advanceJob(c.id)})[data.workspaceDetail]();
+    return;
+  }
+  const fieldOrderButton = event.target.closest('[data-individual-order]');
+  if (fieldOrderButton) {
+    const order=fieldOrderButton.dataset.individualOrder;
+    if (issue({type:'field-order',mapId:renderer.mapId,order},{quiet:true})) toast(order === 'solo' ? 'Solo farming started.' : 'Focusing the boss.');
+    return;
+  }
+  const hotbarButton = event.target.closest('[data-hotbar]');
+  if (hotbarButton) { castHotbar(Number(hotbarButton.dataset.hotbar)); return; }
   const monitorView = event.target.closest('[data-monitor-view]');
   if (monitorView) { worldOverview(monitorView.dataset.monitorView); return; }
   const sheetPage = event.target.closest('[data-character-page]');
@@ -576,7 +758,18 @@ document.addEventListener('click', event => {
 });
 document.addEventListener('change', event => {
   const control = event.target;
-  if (control.id === 'tactic-select') { issue({ type: 'tactic', tactic: control.value }, { quiet: true }); control.blur(); renderUI(); }
+  const slot = control.dataset.workspaceSkillSlot ?? control.dataset.workspaceSkillAuto;
+  if (slot !== undefined) {
+    const c=selectedCharacters()[0], index=Number(slot), old=c.techniques?.slots[index];
+    const toggling=control.type==='checkbox';
+    issue({type:'technique-slot',ids:[c.id],slot:index,skillId:toggling ? old?.id || null : control.value || null,auto:toggling ? control.checked : old?.auto || false},{quiet:true});
+  } else if (control.id === 'workspace-auto') {
+    issue({type:'tactic-config',key:'autoSkill',value:control.checked},{quiet:true});
+  } else if (control.id === 'field-support' && control.value) {
+    const ally=control.value;
+    control.blur();
+    if (issue({type:'field-order',mapId:renderer.mapId,order:'support',allyId:ally},{quiet:true})) toast('Support order assigned.');
+  } else if (control.id === 'tactic-select') { issue({ type: 'tactic', tactic: control.value }, { quiet: true }); control.blur(); renderUI(); }
   else if (control.id === 'assignment-select') { issue({ type: 'assignment', assignment: control.value }, { quiet: true }); control.blur(); renderUI(); }
   else if (control.id === 'target-pref-select') { issue({ type: 'tactic-config', key: 'targetPref', value: control.value }, { quiet: true }); control.blur(); renderUI(); }
   else {
@@ -610,6 +803,8 @@ $('select-all').onclick = () => { selected = new Set(state.characters.map(c => c
 $('multi-select').onclick = () => { multiSelect = !multiSelect; $('multi-select').setAttribute('aria-pressed', multiSelect); $('multi-select').textContent = multiSelect ? 'Multi ✓' : 'Multi'; };
 $('first-deploy').onclick = () => { selected = new Set(state.characters.map(c => c.id)); deployment(); };
 $('dismiss-coach').onclick = () => { coachDismissed = true; renderUI(); };
+$('adventurer-workspace').onclick = () => setWorkspace(!workspaceOpen);
+$('workspace-close').onclick = () => { setWorkspace(false); $('adventurer-workspace').focus(); };
 $('character-sheet').onclick = () => openCharacterPage('overview', selectedCharacters()[0]?.id);
 $('recruit-button').onclick = recruit; $('settings-button').onclick = settings; $('bag-button').onclick = bag; $('guide-button').onclick = fieldGuide; $('bounty-button').onclick = bountyBoard; $('storage-button').onclick = storage; $('world-button').onclick = () => worldOverview();
 $('modal-close').onclick = closeModal;
@@ -718,7 +913,8 @@ canvas.addEventListener('wheel', event => { if (!ready) return; event.preventDef
 document.addEventListener('keydown', event => {
   if (!ready || modal.open || event.ctrlKey || event.metaKey || event.altKey || ['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
   const key = event.key.toLowerCase();
-  if (key === 'escape') orderMode = null;
+  if (['1','2','3'].includes(key)) { if (!event.repeat) castHotbar(Number(key)-1); }
+  else if (key === 'escape') { if (workspaceOpen) setWorkspace(false); else orderMode = null; }
   else if (key === 'm') orderMode = 'move';
   else if (key === 'f') renderer.fit();
   else if (key === 'g') $('find-unit').click();

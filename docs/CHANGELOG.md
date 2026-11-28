@@ -135,3 +135,7 @@ Added six camp promotions with native wardrobes, upgraded combat specialties and
 ## Character management and live monitoring
 
 Added a character sheet, field/roster/alert monitoring, expandable minimap with roster jumps, and the larger-map implementation brief.
+
+## Independent adventurer play
+
+Added a non-modal Character workspace, paper doll with gear deltas and card socketing, stat previews and job advancement. Added individual field orders and a three-slot hotbar with two rankable techniques for each core job family.

@@ -1,5 +1,10 @@
 # Milestone handoff — 2026-11-27
 
+## Independent adventurer controls
+
+See ADVENTURER-WORKFLOW.md for the main-bar workspace, individual field orders,
+per-character hotbar and cards on Renewal equipment instances.
+
 ## Character management and monitoring
 
 Select one adventurer to reveal Manage in the roster. The sheet groups live

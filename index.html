@@ -15,7 +15,7 @@
   <header class="topbar">
     <a class="brand" href="/" aria-label="Ragna Tactics home"><span class="brand-mark">✧</span><span>RAGNA<span class="brand-sub">TACTICS</span></span></a>
     <div class="breadcrumb"><span class="muted">YOUR GUILD</span><span class="slash">/</span> Expedition overview <span class="build-tag">0.2</span></div>
-    <div class="top-resources"><span class="live-indicator">LIVE WORLD</span><span class="currency"><span class="coin">Z</span><strong id="zeny">150</strong><span class="muted">Zeny</span></span><button class="icon-button" data-action="camp" title="Guild camp" aria-label="Manage guild camp">⌂</button><button class="bag-button" id="bag-button" title="Inventory · equipment, potions, and materials">Bag</button><button class="icon-button" id="settings-button" title="Saves, controls, and help" aria-label="Open settings">☰</button></div>
+    <div class="top-resources"><span class="live-indicator">LIVE WORLD</span><span class="currency"><span class="coin">Z</span><strong id="zeny">150</strong><span class="muted">Zeny</span></span><button class="icon-button" data-action="camp" title="Guild camp" aria-label="Manage guild camp">⌂</button><button class="bag-button" id="adventurer-workspace" aria-controls="adventurer-panel" aria-expanded="false">Character</button><button class="bag-button" id="bag-button" title="Inventory · equipment, potions, and materials">Bag</button><button class="icon-button" id="settings-button" title="Saves, controls, and help" aria-label="Open settings">☰</button></div>
   </header>
   <div class="app-layout">
     <aside class="sidebar">
@@ -36,6 +36,14 @@
         <div id="first-expedition" class="first-expedition"><span class="eyebrow">SOUTH PRONTERA · GUILD CAMP</span><h3>Your first expedition</h3><p>Hunt Porings in South Prontera. Reach Job Lv. 10<br>to choose a first job for each Novice.</p><button class="primary" id="first-deploy">Plan your first expedition <span>↗</span></button><button class="dismiss-coach" id="dismiss-coach" aria-label="Dismiss introduction">×</button></div>
         <div class="map-footer"><span id="map-population">No adventurers deployed</span><span class="map-control-hint">SCROLL TO ZOOM <i>·</i> DRAG TO PAN <i>·</i> RIGHT-CLICK TO MOVE</span><span class="compass" aria-label="North">N <span>↑</span></span></div>
         <div id="order-hint" class="order-hint" hidden><span id="order-instruction"></span><div id="hunt-tools" hidden><label>Radius <select id="hunt-radius"></select></label><button id="hunt-here">Centre on unit</button></div></div>
+      </section>
+      <section id="field-console" class="field-console" aria-label="Selected adventurer orders" hidden>
+        <div id="individual-orders" class="individual-orders"></div><div id="field-hotbar" class="field-hotbar" aria-label="Selected adventurer skills"></div>
+      </section>
+      <section id="adventurer-panel" class="adventurer-panel" aria-labelledby="workspace-name" hidden>
+        <header class="workspace-header"><img id="workspace-portrait" alt=""><div><h2 id="workspace-name"></h2><p id="workspace-job"></p></div><button id="workspace-close" aria-label="Close character panel">×</button></header>
+        <nav id="workspace-tabs" class="workspace-tabs" aria-label="Character customization"></nav>
+        <div id="workspace-content" class="workspace-content"></div>
       </section>
       <section class="command-deck" aria-label="Character commands">
         <div class="command-selection"><span class="eyebrow">COMMAND DECK</span><strong id="selection-title">2 adventurers selected</strong><span id="selection-description">Ready for their first adventure</span></div>
