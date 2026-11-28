@@ -1,5 +1,16 @@
 # Milestone handoff — 2026-11-27
 
+## Character management and monitoring
+
+Select one adventurer to reveal Manage in the roster. The sheet groups live
+vitals, equipment, skill/build controls, attributes and job advancement.
+The Skills page can toggle automatic skill use for this adventurer independently.
+World Overview now has live field, adventurer and alert views, with actions
+to locate or manage a unit. Expand the minimap for an overview and roster jumps.
+
+The next map milestone is described in MAP-RESEARCH.md and NEXT-AGENT.md.
+MMO-FEATURE-GAPS.md records the current comparison with Renewal and Origin.
+
 ## South Prontera expedition map and single-screen interface
 
 Deploy adventurers to South Prontera. Its camp exit leads to the Poring Meadow and

@@ -1,8 +1,9 @@
 # Next agent prompt
 
-Continue from the current gameplay PR. Read AGENTS.md and docs/HANDOFF.md.
-Build a three-floor Endless Tower expedition with distinct fixed waves, a visible
-floor objective, combat-only progression, a final reward and an explicit return
-to camp. Preserve old saves, concurrent maps and active-only boss rules. Use
-existing native art. Verify floor transitions, defeat, retreat, reconnect,
-rewards and normal UI entry before publishing.
+Continue Ragna Tactics from the latest Character management and monitoring PR on kingz117711/Ragna-Tactics. Read AGENTS.md, docs/HANDOFF.md, docs/MAP-RESEARCH.md and docs/MMO-FEATURE-GAPS.md. Keep the single-screen desktop view and compact phone layout.
+
+Build the first seamless terrain pilot in South Prontera with licensed or owner-provided assets. Author original grass, dirt and shoreline transitions, a branching road, readable landmarks, and two hunting districts at the existing angled camera and sprite scale. Import assets through the provenance manifest. Use a Tiled authoring file and a small deterministic build-time converter. Keep visual and gameplay data separate. Prove the existing camp, spawn, retreat and assignment paths survive migration.
+
+Render detail as the camera approaches using bounded chunk work, visible-set pinning and prefetch. Use a low-detail overview for wide zoom. Extend the compact and expanded minimap with readable roads, zones, recognizable landmarks and a direct jump to every roster member. Verify simultaneous farming through map switches and reload. Capture desktop and phone-width screenshots and report cold-load and pan metrics.
+
+Continue character UI by adding genuine learnable skill choices and manual/automatic loadout controls on the Skills page. Implement commands and save validation for new skill ranks and presets. Keep existing build choices and equipment instance IDs. Prioritize a complete vertical slice for one class line before expanding. Verify clicking, tapping, keyboard navigation, reduced motion, live updates and two characters with independent configurations. Run all repository checks, update this handoff, and publish a scoped PR.

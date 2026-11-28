@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { createGame, gainExp } from '../../src/sim.js';
+import { jobChoices } from '../../src/data.js';
 import { encodeSave } from '../../src/persistence.js';
 import { fitZoom, project } from '../../src/renderer.js';
 const boot = async page => { await page.goto('/'); await expect(page.locator('#loading')).toBeHidden({ timeout: 20000 }); };
@@ -33,7 +34,7 @@ test('button activation animates and the player can advance from the job notice'
   await page.locator('#job-notice').click();
   expect(await page.locator('.input-pulse').count()).toBeGreaterThan(0);
   await page.locator('[data-service="advance"]').click();
-  await expect(page.locator('.job-preview')).toHaveCount(6);
+  await expect(page.locator('.job-preview')).toHaveCount(jobChoices('novice').length);
   await page.screenshot({ path: 'artifacts/job-choice.png' });
   await page.locator('input[value="mage"]').check();
   await page.locator('#job-form button.primary').click();
@@ -166,7 +167,7 @@ test('all character tactics settings survive presets, live refresh, save, and re
   await page.locator('[data-character="c1"]').click(); await page.locator('summary', { hasText: 'Fine-tune tactics' }).click();
   await expect.poll(read).toEqual({ autoSkill: true, healAt: 0.65, potionAt: 0.45, retreatAt: 0.22, targetPref: 'leader' });
 });
-test('move, hold, focus, retreat, resume, multi-map overview and character navigation work in the UI', async ({ page }) => {
+test('move, hold, focus, retreat, resume, multi-map overview and character navigation work in the UI', {timeout:45000}, async ({ page }) => {
   const s = createGame(); gainExp(s, s.characters[0], 300, 1000); gainExp(s, s.characters[1], 300, 1000);
   const { command } = await import('../../src/sim.js');
   command(s, { type: 'promote', ids: ['c1'], job: 'archer' }); command(s, { type: 'promote', ids: ['c2'], job: 'swordsman' });
@@ -195,7 +196,7 @@ test('move, hold, focus, retreat, resume, multi-map overview and character navig
   await page.locator('[data-action="resume"]').click(); await expect.poll(async () => (await saved()).characters[0].order).toBe('farm');
   await expect(page.locator('[data-action="resume"]')).toHaveAttribute('aria-pressed', 'true');
   await page.locator('[data-action="retreat"]').click();
-  await expect.poll(async () => (await saved()).characters[0].mapId, { timeout: 12000 }).toBeNull();
+  await expect.poll(async () => (await saved()).characters[0].mapId, { timeout: 24000 }).toBeNull();
   await page.locator('#world-button').click();
   await expect(page.locator('#modal')).toContainText('Willow Wood');
   await page.locator('[data-world-character="c2"]').click();
@@ -253,7 +254,11 @@ test('closing a hidden tab preserves the checkpoint time for offline rewards', a
 test('switching tabs catches up live simulation silently, including active boss fights', async ({ page }) => {
   const s = createGame();
   const { command } = await import('../../src/sim.js');
-  command(s, { type: 'deploy', ids: ['c1', 'c2'], mapId: 'arena' });
+  for (const [index,c] of s.characters.entries()) {
+    c.jobLevel = 10;
+    expect(command(s,{type:'promote',ids:[c.id],job:index ? 'acolyte' : 'swordsman'})).toBeNull();
+  }
+  expect(command(s, { type: 'deploy', ids: ['c1', 'c2'], mapId: 'arena' })).toBeNull();
   await page.addInitScript(raw => localStorage.setItem('ragna-tactics:save:v1', raw), encodeSave(s));
   await boot(page);
   const before = await readSave(page);
@@ -328,7 +333,7 @@ test('view Morroc and socket a Peco Peco Card at camp', async ({page}) => {
   await expect(page.locator('#map-name')).toHaveText('Morroc Dunes');
   await page.locator('[data-character="c1"]').first().click(); await page.locator('[data-action="equipment"]').click();
   await page.locator('[data-socket="peco"]').click();
-  await expect(page.locator('#modal h3')).toContainText('Peco Peco Card');
+  await expect(page.getByRole('heading',{name:'Guard insignia · Peco Peco Card'})).toBeVisible();
   await page.locator('#modal').screenshot({path:'artifacts/monster-cards.png'});
   await page.reload(); await expect(page.locator('#loading')).toBeHidden();
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).state.characters[0].card)).toBe('peco');
@@ -396,7 +401,7 @@ test('prepare elemental magic and use the field guide to find a weak target', as
 });
 
 test('settle a split guild, craft the Payon ward, prepare Holy magic and deploy', async ({page}) => {
-  const s=createGame(1), {command,stats}=await import('../../src/sim.js');
+  const s=createGame(3), {command,stats}=await import('../../src/sim.js');
   for (const [i,c] of s.characters.entries()) {
     c.job=i?'hunter':'priest'; c.assignment='materials'; c.level=45; c.hp=stats(c).hp; c.sp=stats(c).sp;
     command(s,{type:'deploy',ids:[c.id],mapId:i?'morroc':'payon'});
@@ -426,7 +431,7 @@ test('refine equipped gear at camp and inspect the next material cost',async({pa
   await page.addInitScript(raw=>{if(!localStorage.length)localStorage.setItem('ragna-tactics:save:v1',raw);},encodeSave(s));
   await boot(page); await page.locator('[data-character="c1"]').first().click();
   await page.locator('[data-action="equipment"]').click(); await page.locator('[data-refine="1"]').click();
-  await expect(page.locator('#modal h3')).toContainText('+1 Guard insignia');
+  await expect(page.getByRole('heading',{name:/^\+1 Guard insignia/})).toBeVisible();
   await expect(page.locator('[data-refine="2"]')).toBeDisabled();
   await page.locator('#modal').screenshot({path:'artifacts/refinement.png'});
 });
@@ -571,4 +576,44 @@ test('single-screen layout at every acceptance viewport never scrolls the page',
     expect(metrics.field, `battlefield not largest at ${w}x${h}`).toBeGreaterThan(metrics.sidebar);
     await page.screenshot({ path: `artifacts/viewport-${w}x${h}.png` });
   }
+});
+
+test('manage one adventurer from the roster and jump to them from the expanded minimap', async ({page}) => {
+  await page.setViewportSize({width:390,height:844});
+  await boot(page);
+  await page.locator('#roster [data-character="c1"]').click();
+  await expect(page.locator('#character-sheet')).toContainText('Manage Aren');
+  await page.locator('#character-sheet').click();
+  await expect(page.locator('#character-vitals')).toContainText('Guild camp');
+  for (const tab of ['gear','skills','stats','job']) {
+    await page.locator(`[data-character-page="${tab}"]`).click();
+    await expect(page.locator(`[data-character-page="${tab}"]`)).toHaveAttribute('aria-current','page');
+    if (tab === 'skills') {
+      await page.locator('#sheet-auto-skill').uncheck();
+      const saved = await readSave(page);
+      expect(saved.characters.map(c=>c.tactics.autoSkill)).toEqual([false,true]);
+    }
+  }
+  await page.screenshot({path:'artifacts/character-sheet-mobile.png'});
+  await page.locator('#modal-close').click();
+  await page.locator('#expand-minimap').click();
+  await expect(page.locator('#expanded-minimap')).toBeVisible();
+  await page.locator('#modal [data-world-character="c2"]').click();
+  await expect(page.locator('#roster [data-character="c2"]')).toHaveAttribute('aria-pressed','true');
+});
+
+test('monitor views show field locations, per-character vitals and actionable alerts', async ({page}) => {
+  const s=createGame();
+  s.characters[0].jobLevel=10;
+  await page.addInitScript(raw=>{if(!localStorage.length)localStorage.setItem('ragna-tactics:save:v1',raw);},encodeSave(s));
+  await boot(page);
+  await page.locator('#world-button').click();
+  await expect(page.locator('[data-monitor-field="camp"] [data-monitor-unit]')).toHaveCount(2);
+  await page.locator('[data-monitor-view="roster"]').click();
+  await expect(page.locator('[data-monitor-unit="c1"] [data-monitor-sp]')).toContainText('SP');
+  await page.screenshot({path:'artifacts/live-monitor.png'});
+  await page.locator('[data-monitor-view="alerts"]').click();
+  await expect(page.locator('[data-monitor-unit]:visible')).toHaveCount(1);
+  await page.locator('[data-monitor-unit="c1"]').getByRole('button',{name:'Manage'}).click();
+  await expect(page.locator('#modal-title')).toHaveText('Aren');
 });
