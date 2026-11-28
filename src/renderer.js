@@ -1,4 +1,5 @@
 import { MAPS, MONSTERS, STEP, mapBounds } from './data.js';
+import { FX_COLORS, flourishHex, traceFlourish } from './fx.js';
 import { stats } from './sim.js';
 export const project = (x, y) => ({ x: (x - y) * 22, y: (x + y) * 11 });
 export const unproject = (x, y) => ({ x: (x / 22 + y / 11) / 2, y: (y / 11 - x / 22) / 2 });
@@ -69,7 +70,9 @@ export class Renderer {
     this.scenery = new Map(); this.overviews = new Map();
     this.combatText = 'all'; this.cameraShake = false; this.shake = 0;
     this.reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-    this.resizeObserver = new ResizeObserver(() => this.resize()); this.resizeObserver.observe(canvas);
+    // Optional so the drawing maths stays usable without a DOM (tests, workers).
+    this.resizeObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(() => this.resize()) : null;
+    this.resizeObserver?.observe(canvas);
   }
   resize() {
     const r = this.canvas.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
@@ -485,11 +488,20 @@ export class Renderer {
       ellipse(ctx, 0, 1, hero ? 18 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? 48 : 18, hero ? 8 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? 20 : 8, '#0c201e45');
       if (isSelected || hovered === c.id) { ctx.lineWidth = 2 / z; ellipse(ctx, 0, 0, hero ? 23 : 28, hero ? 10 : 12, isSelected ? '#e4cc8720' : '#e9866f18', hero ? '#edd79b' : '#e9866f'); }
       const last = this.animations.get(c.id);
-      const swungAgain = c.stance === 'attack' && c.attackFlash > (last?.flash ?? 0) + 1e-6;
+      // The simulation counts swings; a new count restarts the attack animation,
+      // which keeps every class's swing complete even at high attack speed.
+      const swungAgain = c.stance === 'attack' && ((c.attackSwing || 0) !== (last?.swing ?? (c.attackSwing || 0)) || c.attackFlash > (last?.flash ?? 0) + 1e-6);
       const started = last?.stance === c.stance && !swungAgain ? last.started : s.time;
-      this.animations.set(c.id, { stance: c.stance, flash: c.attackFlash, started });
-      const ms = Math.max(0, s.time + frameRemainder - started) * 1000;
-      if (hero) this.sprites.hero(ctx, c, ms); else this.sprites.monster(ctx, c, ms);
+      const swungAt = swungAgain ? s.time : (last?.swungAt ?? -Infinity);
+      this.animations.set(c.id, { stance: c.stance, flash: c.attackFlash, swing: c.attackSwing, started, swungAt });
+      // Once a unit swings, the whole attack action plays out — including the
+      // recovery frames after the simulation's 0.4 s attack flash ends.
+      const swingMs = hero ? this.sprites.attackMs(c) : 900;
+      const stillSwinging = (s.time + frameRemainder - swungAt) * 1000 < swingMs;
+      const stance = c.stance === 'attack' || stillSwinging ? 'attack' : c.stance;
+      const animationStart = c.stance === 'attack' ? started : (stillSwinging ? swungAt : started);
+      const ms = Math.max(0, s.time + frameRemainder - animationStart) * 1000;
+      if (hero) this.sprites.hero(ctx, c, ms, stance); else this.sprites.monster(ctx, c, ms);
       const barY = hero ? -80 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? -115 : c.kind === 'willow' ? -83 : -44;
       if (hero || hovered === c.id || c.hp < MONSTERS[c.kind].hp) {
         const width = hero ? 43 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? 82 : 36;
@@ -521,7 +533,11 @@ export class Renderer {
     ctx.textAlign = 'center'; ctx.lineJoin = 'round';
     for (const e of effects) {
       if (e.mapId !== this.mapId) continue;
-      const age = clamp(EFFECT_LIFETIME - e.life + frameRemainder, 0, EFFECT_LIFETIME);
+      // GM gallery effects carry their own lifetime and no text; they exist only
+      // to play a flourish, so they must not respect the combat-text filter.
+      const lifetime = e.life0 || EFFECT_LIFETIME;
+      const age = clamp(lifetime - e.life + frameRemainder, 0, lifetime);
+      if (e.kind === 'fx') { if (e.fx) this.drawSkillFx(this.screen(e), e.fx, age * (EFFECT_LIFETIME / lifetime), z); continue; }
       const emphasized = EMPHASIZED_HITS.has(e.kind);
       const point = this.screen(e);
       if (point.x < -70 || point.x > this.width + 70 || point.y < -25 || point.y > this.height + 190) continue;
@@ -532,6 +548,7 @@ export class Renderer {
       }
       if (e.kind !== 'loot' && (this.combatText === 'hidden' ||
         (this.combatText === 'highlights' && !emphasized && !['heal', 'skill', 'cast', 'danger'].includes(e.kind)))) continue;
+      if (e.fx) this.drawSkillFx(point, e.fx, age, z);
       const [size, color] = EFFECT_STYLES[e.kind] || EFFECT_STYLES.hit;
       const bounce = emphasized && !reduced ? 1 + 0.23 * Math.max(0, 1 - age * 6) : 1;
       const x = point.x + (e.id % 5 - 2) * (emphasized ? 8 : 12);
@@ -543,6 +560,28 @@ export class Renderer {
       ctx.strokeText(e.text, x, y); ctx.fillText(e.text, x, y);
     }
     ctx.restore();
+  }
+  // Ground-plane flourish beneath a skill hit. Pure presentation: it reads the
+  // effect record and never touches the simulation.
+  drawSkillFx(point, fx, age, z) {
+    const ctx = this.ctx, reduced = this.reducedMotion.matches;
+    const t = clamp(age / (reduced ? 0.9 : 0.62), 0, 1);
+    if (t >= 1) return;
+    const color = flourishHex(fx, '#f2e6c8');
+    const s = clamp(z, 0.5, 1.15), grow = reduced ? 0.8 : t;
+    ctx.save();
+    ctx.translate(point.x, point.y - 12 * z);
+    // Squash to match the angled overhead camera's ground plane, then emit the
+    // shape. Kept in one helper so tools/fx-preview.mjs can render the same paths.
+    ctx.scale(s, s * 0.55);
+    this.traceSkillFx(ctx, fx, t, grow, 16 + grow * 46, (1 - t) * 0.92, s, color);
+    ctx.restore();
+  }
+  // Shapes one flourish on an already-transformed context. `alpha` is the fade.
+  // Archetypes and colours live in fx.js so the preview tool draws the same art.
+  traceSkillFx(ctx, fx, t, grow, r, alpha, s, color) {
+    traceFlourish(ctx, fx, t, grow, r, alpha, s, color);
+    ctx.globalAlpha = 1;
   }
   drawZoneLabels(ctx, z) {
     const map = MAPS[this.mapId];
@@ -593,6 +632,19 @@ export class Renderer {
   minimapToWorld(canvas, mx, my) {
     const { scale, offX, offY } = this.minimapTransform(canvas);
     return unproject((mx - offX) / scale, (my - offY) / scale);
+  }
+  // Hit-test a minimap click against roster markers so any adventurer on the
+  // field can be jumped to directly. Returns the character or null.
+  minimapCharacterAt(canvas, mx, my, s) {
+    const { scale, offX, offY } = this.minimapTransform(canvas);
+    let nearest = null, best = 9;
+    for (const c of s.characters) {
+      if (c.mapId !== this.mapId) continue;
+      const q = project(c.x, c.y);
+      const d = Math.hypot(mx - (offX + q.x * scale), my - (offY + q.y * scale));
+      if (d < best) { best = d; nearest = c; }
+    }
+    return nearest;
   }
   drawMinimap(canvas, s, selected) {
     const ctx = canvas.getContext('2d');

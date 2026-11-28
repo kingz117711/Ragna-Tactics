@@ -11,11 +11,12 @@
     "dev": "node scripts/serve.mjs",
     "start": "node scripts/serve.mjs",
     "build": "node scripts/build.mjs",
-    "test": "node --test tests/sim.test.js tests/persistence.test.js tests/data.test.js tests/builds.test.js tests/renewal.test.js",
+    "test": "node --test tests/sim.test.js tests/persistence.test.js tests/data.test.js tests/builds.test.js tests/renewal.test.js tests/fx.test.js",
     "test:browser": "playwright test",
     "test:build": "node scripts/verify-build.mjs",
     "check": "node scripts/check.mjs",
-    "assets:verify": "python scripts/import_assets.py --verify"
+    "assets:verify": "python scripts/import_assets.py --verify",
+    "fx:preview": "node tools/fx-preview.mjs artifacts/skill-fx.png"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.1"

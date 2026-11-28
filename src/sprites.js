@@ -3,8 +3,17 @@ const image = src => new Promise((resolve, reject) => {
   const im = new Image(); im.onload = () => resolve(im); im.onerror = () => reject(new Error('Could not load sprite: ' + src)); im.src = src;
 });
 const json = async src => { const r = await fetch(src); if (!r.ok) throw new Error('Missing asset: ' + src); return r.json(); };
+// Frame index for one attack action playing at `ms`. Attack actions resolve and
+// then hold their final frame instead of looping, so the recovery poses are
+// actually seen; idle/walk pass loop = true.
+export function attackFrameIndex(count, delay, ms, loop = false) {
+  const step = Math.floor(ms / Math.max(1, delay));
+  return loop ? step % count : Math.min(count - 1, Math.max(0, step));
+}
+
 export class Sprites {
-  constructor() { this.assets = new Map(); this.portraits = new Map(); this.heroFrames = new Map(); this.index = null; }
+  constructor() { this.assets = new Map(); this.portraits = new Map(); this.heroFrames = new Map();
+    this.attackLengths = new Map(); this.index = null; }
   async init() {
     this.index = await json('/assets/index.json');
     await Promise.all(Object.entries(this.index.wardrobe).map(async ([key, rec]) => {
@@ -54,6 +63,26 @@ export class Sprites {
     if (this.heroFrames.size > 128) this.heroFrames.delete(this.heroFrames.keys().next().value);
     return frame;
   }
+  // Attack playback. RO sprites fire one swing per weapon delay and hold the
+  // recovery frames between swings; the renderer passes `swing` = elapsed ms since
+  // the attack started, so the frame maths mirrors that instead of looping the
+  // whole 9-frame action forever (which also restarted the wind-up mid-swing).
+  attackFrames(action) { return action.frames.length; }
+  // How long one attack action lasts for a class, in milliseconds. The renderer
+  // holds the pose for this long even after the simulation's short attack flash
+  // expires, so the recovery frames of the swing are never skipped.
+  attackMs(c) {
+    let visualClass = c.job;
+    while (visualClass && !this.assets.has(`base-${JOBS[visualClass]?.native}-${c.sex}`)) visualClass = JOBS[visualClass]?.parent;
+    const job = JOBS[visualClass || 'novice'].native;
+    // Cached per outfit and direction: this runs for every unit on screen.
+    const key = `${job}:${c.sex}:${c.direction || 0}`;
+    if (this.attackLengths.has(key)) return this.attackLengths.get(key);
+    const action = this.assets.get(`base-${job}-${c.sex}`)?.metadata.actions['attack' + (c.direction || 0)];
+    const ms = action ? action.frames.length * action.delay : 900;
+    this.attackLengths.set(key, ms);
+    return ms;
+  }
   hero(ctx, c, ms, stance = c.stance, direction = c.direction, scale = 0.7) {
     // Fall back to the nearest imported ancestor outfit; this is a placeholder, not a claim that the ancestor is the new job's authentic sprite.
     let visualClass = c.job;
@@ -65,8 +94,12 @@ export class Sprites {
     const action = body.metadata.actions[route];
     const head = hair.metadata.actions[job + ':' + route];
     if (!action || !head) return;
-    const at = Math.floor(ms / action.delay) % action.frames.length;
-    const headAt = Math.floor(ms / head.delay) % head.frames.length;
+    // Attack actions resolve once and then hold their last frame; idle and walk
+    // loop. This is what makes a Novice (and every other class) swing read as a
+    // complete, single animation rather than a stuttering restart.
+    const loop = stance !== 'attack';
+    const at = attackFrameIndex(action.frames.length, action.delay, ms, loop);
+    const headAt = attackFrameIndex(head.frames.length, head.delay, ms, loop);
     const frame = this.heroFrame(job, c.sex, route, body, hair, action.frames[at], head.frames[headAt]);
     ctx.save(); ctx.scale(scale, scale); ctx.imageSmoothingEnabled = false;
     ctx.drawImage(frame.canvas, frame.left, frame.top);

@@ -1,10 +1,12 @@
-import { FIELD_SKILLS, fieldSkillAvailable, jobLineage, combatJob, REFINEMENT, ORE_INFO, gearVariant, AFFINITIES, ELEMENTS, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, promotionRequirement, classBuilds, selectedBuild, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, refineCost, refineSuccessPercent, refineSafeLimit, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
+import { FIELD_SKILLS, fieldSkillAvailable, SKILLS, skillCatalog, learnedRank, learnedSkillPower, activeSkillId, skillPoints, activeSlots, ACTIVE_SLOTS, prereqMet, missingPrereqs, skillFamily, STATUS, jobLineage, combatJob, REFINEMENT, ORE_INFO, gearVariant, AFFINITIES, ELEMENTS, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, promotionRequirement, classBuilds, selectedBuild, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, refineCost, refineSuccessPercent, refineSafeLimit, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
 import { availablePoints, forgePrice, command, tick, stats, rosterLimit, engaged, effectiveTactics, isLeader, canEquipGear } from './sim.js';
+import { FX_LABELS, skillRow, learnedSkillRows, skillSummary, skillTree, buildCards, rotationStrip, skillIcon } from './skills-ui.js';
 import { SAVE_KEY, loadGame, saveGame, encodeSave, decodeSave } from './persistence.js';
 import { Sprites } from './sprites.js';
 import { Renderer } from './renderer.js';
 import { acknowledgePoint } from './feedback.js';
 import { ATLAS_LEVELS, ATLAS_SIZE, filterAtlas } from './atlas.js';
+import { readGmFlag, writeGmFlag, gmPanel, gmLink } from './gm.js';
 
 const $ = id => document.getElementById(id);
 const esc = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -20,6 +22,10 @@ let pendingJob = null, statDraft = {};
 let workspacePage = 'gear', workspaceSlot = 'weapon', workspaceOpen = false, inspectedId;
 let multiSelect = false, tacticsExpanded = false;
 let atlasLevel = '', atlasPlayable = false, atlasFromDeployment = false;
+// GM tools are opt-in: `?gm=1` in the URL enables the tab on this device and the
+// choice persists, so a reload does not lose it. Turning the tab off from inside
+// the panel clears the flag again.
+let gmEnabled = readGmFlag(location.search, localStorage);
 const DISPLAY_KEY = 'ragna-tactics-display';
 function readDisplaySettings() {
   try {
@@ -39,6 +45,7 @@ function toast(message) { $('toast').textContent = message; $('toast').hidden = 
 function showModal(title, content, eyebrow = 'GUILD MANAGEMENT') {
   modal.classList.remove('character-dialog', 'monitor-dialog', 'atlas-dialog');
   $('modal-title').textContent = title; $('modal-eyebrow').textContent = eyebrow; $('modal-body').innerHTML = content;
+  delete modal.dataset.page;
   if (!modal.open) modal.showModal();
 }
 function error(message) { const el = $('modal-error'); if (modal.open && el) el.textContent = message; else toast(message); }
@@ -212,7 +219,8 @@ function renderInspector(units) {
     content = `<div class="inspector-title">${units.length ? 'Better, together.' : 'Choose your adventurer.'}</div><p>${units.length ? 'Link your adventurers into a party to share targets, support each other, and earn shared EXP. Or deploy separately to cover more ground.' : 'Select a portrait to inspect equipment, tactics, and progression.'}</p>${units.length ? `<div class="detail-row"><span>Selected supplies</span><strong>${potions} potions</strong></div><label class="form-label">Tactics<select id="tactic-select"><option value="" disabled selected>Apply to selection…</option>${Object.entries(TACTICS).map(([key, t]) => `<option value="${key}">${t.name}</option>`).join('')}</select></label><p>Job changes become available at Novice Job Lv. 10. Every character chooses their own path.</p>` : ''}`;
   } else {
     const c = units[0], st = stats(c);
-    content = `<div class="inspector-title">${JOBS[c.job].name} <span class="tiny muted">${JOBS[c.job].role}</span></div><div class="detail-row"><span>Base Lv. ${c.level}</span><strong>${number(c.exp)} / ${baseNeed(c.level)} EXP</strong></div><div class="progress"><i style="width:${Math.min(100, c.exp / baseNeed(c.level) * 100)}%"></i></div><div class="detail-row"><span>Job Lv. ${c.jobLevel} / ${JOBS[c.job].jobLevelCap || (c.job === 'novice' ? 10 : 50)}</span><strong>${c.jobLevel >= promotionLevel(c.job) ? 'Job change ready' : `${number(c.jobExp)} / ${jobNeed(c.jobLevel)}`}</strong></div><div class="progress"><i style="width:${Math.min(100, c.jobExp / jobNeed(c.jobLevel) * 100)}%"></i></div><div class="detail-row"><span>HP / SP</span><strong>${Math.ceil(c.hp)}/${st.hp} · ${Math.floor(c.sp)}/${st.sp}</strong></div><div class="detail-row"><span>ATK / DEF · Potions</span><strong>${st.atk} / ${st.def} · ${c.potions}</strong></div><div class="detail-row"><span>Combat role</span><strong>${ROLE_LABELS[JOB_ROLES[c.job]]}${c.partyId ? ` · ${isLeader(state, c) ? 'Party leader' : 'Follower'}` : ''}</strong></div><label class="form-label">Starting preset<select id="tactic-select">${Object.entries(TACTICS).map(([key, t]) => `<option value="${key}" ${c.tactic === key ? 'selected' : ''}>${t.name}</option>`).join('')}</select></label>${tacticsMarkup(c)}<label class="form-label">Farming objective<select id="assignment-select">${[['balanced', 'Balanced farming'], ['experience', 'Training · +15% Base EXP'], ['materials', 'Gathering · double materials']].map(([key, label]) => `<option value="${key}" ${c.assignment === key ? 'selected' : ''}>${label}</option>`).join('')}</select></label><div class="detail-row"><span>Assignment · status</span><strong>${c.mapId ? `${MAPS[c.mapId].name} · ${c.status}` : c.status === 'down' ? 'Defeated · camp' : 'Guild camp'}</strong></div><div class="detail-actions">${(st.element || JOB_ROLES[c.job] === 'support') ? '<button data-action="spellbook">Spellbook</button>' : ''}<button data-action="attributes">Stats · ${availablePoints(c)} pts</button><button data-action="equipment">Equipment</button>${classBuilds(c.job).length > 1 ? '<button data-action="builds">Build</button>' : ''}<button data-action="advance">Job path</button><button data-action="rename">Rename</button>${c.partyId && !isLeader(state, c) ? '<button data-action="leader" title="Make this adventurer the party leader">Lead party</button>' : ''}</div><p><span style="color:var(--gold)">${st.skill}</span> · ${st.cost} SP · ${c.cast ? `Casting · ${c.cast.remaining.toFixed(1)}s` : c.cooldown > 0 ? c.cooldown.toFixed(1) + 's cooldown' : 'Ready'} · Hit ${Math.round(st.hit * 100)}% · Flee ${Math.round(st.flee * 100)}%<br>${st.element ? ELEMENTS[st.element].name + ' magic · strong against ' + (ELEMENTS[ELEMENTS[st.element].beats]?.name || 'Undead') : st.description || JOBS[c.job].description}</p>`;
+    const activeId = activeSkillId(c);
+    content = `<div class="inspector-title">${JOBS[c.job].name} <span class="tiny muted">${JOBS[c.job].role}</span></div><div class="detail-row"><span>Base Lv. ${c.level}</span><strong>${number(c.exp)} / ${baseNeed(c.level)} EXP</strong></div><div class="progress"><i style="width:${Math.min(100, c.exp / baseNeed(c.level) * 100)}%"></i></div><div class="detail-row"><span>Job Lv. ${c.jobLevel} / ${JOBS[c.job].jobLevelCap || (c.job === 'novice' ? 10 : 50)}</span><strong>${c.jobLevel >= promotionLevel(c.job) ? 'Job change ready' : `${number(c.jobExp)} / ${jobNeed(c.jobLevel)}`}</strong></div><div class="progress"><i style="width:${Math.min(100, c.jobExp / jobNeed(c.jobLevel) * 100)}%"></i></div><div class="detail-row"><span>HP / SP</span><strong>${Math.ceil(c.hp)}/${st.hp} · ${Math.floor(c.sp)}/${st.sp}</strong></div><div class="detail-row"><span>ATK / DEF · Potions</span><strong>${st.atk} / ${st.def} · ${c.potions}</strong></div><div class="detail-row"><span>Combat role</span><strong>${ROLE_LABELS[JOB_ROLES[c.job]]}${c.partyId ? ` · ${isLeader(state, c) ? 'Party leader' : 'Follower'}` : ''}</strong></div><label class="form-label">Starting preset<select id="tactic-select">${Object.entries(TACTICS).map(([key, t]) => `<option value="${key}" ${c.tactic === key ? 'selected' : ''}>${t.name}</option>`).join('')}</select></label>${tacticsMarkup(c)}<label class="form-label">Farming objective<select id="assignment-select">${[['balanced', 'Balanced farming'], ['experience', 'Training · +15% Base EXP'], ['materials', 'Gathering · double materials']].map(([key, label]) => `<option value="${key}" ${c.assignment === key ? 'selected' : ''}>${label}</option>`).join('')}</select></label><div class="detail-row"><span>Assignment · status</span><strong>${c.mapId ? `${MAPS[c.mapId].name} · ${c.status}` : c.status === 'down' ? 'Defeated · camp' : 'Guild camp'}</strong></div><div class="detail-actions">${(st.element || JOB_ROLES[c.job] === 'support') ? '<button data-action="spellbook">Spellbook</button>' : ''}<button data-action="attributes">Stats · ${availablePoints(c)} pts</button><button data-action="equipment">Equipment</button>${classBuilds(c.job).length > 1 ? '<button data-action="builds">Build</button>' : ''}<button data-action="advance">Job path</button><button data-action="rename">Rename</button>${c.partyId && !isLeader(state, c) ? '<button data-action="leader" title="Make this adventurer the party leader">Lead party</button>' : ''}</div><p><span style="color:var(--gold)">${st.skill}</span>${activeId ? ` <span class="tiny muted">R${learnedRank(c, activeId)} · ${FX_LABELS[SKILLS[activeId].fx] || SKILLS[activeId].fx}</span>` : ''} · ${st.cost} SP · ${c.cast ? `Casting · ${c.cast.remaining.toFixed(1)}s` : c.cooldown > 0 ? c.cooldown.toFixed(1) + 's cooldown' : 'Ready'} · Hit ${Math.round(st.hit * 100)}% · Flee ${Math.round(st.flee * 100)}%<br>${st.element ? ELEMENTS[st.element].name + ' magic · strong against ' + (ELEMENTS[ELEMENTS[st.element].beats]?.name || 'Undead') : st.description || JOBS[c.job].description}</p>`;
   }
   if (content !== inspectorKey) { html('inspector', content); inspectorKey = content; }
 }
@@ -233,6 +241,7 @@ function showCharacterModal(page, c, title, content) {
     `<button data-character-page="${id}" data-id="${c.id}" ${id === page ? 'aria-current="page"' : ''}>${label}</button>`
   ).join('');
   showModal(title, `<nav class="sheet-tabs" aria-label="Character pages">${nav}</nav><div class="sheet-page">${content}</div>`, c.name + ' · ' + JOBS[c.job].name);
+  modal.dataset.page = page;
   modal.classList.add('character-dialog');
   modal.scrollTop = 0;
 }
@@ -253,9 +262,17 @@ function characterOverview(c) {
 function characterSkills(c) {
   const st = stats(c), build = selectedBuild(c.job,c.buildId);
   const elemental = st.element || JOB_ROLES[c.job] === 'support';
-  showCharacterModal('skills',c,'Skills and builds',`<section class="sheet-profile"><div><span class="eyebrow">ACTIVE SKILL</span><h3>${esc(st.skill)}</h3><p>${st.cost} SP · ${st.cooldown}s cooldown</p></div></section>
-    <label class="tactics-toggle sheet-skill-toggle"><input type="checkbox" id="sheet-auto-skill" data-tactics-key="autoSkill" ${effectiveTactics(c).autoSkill ? 'checked' : ''}> Automatically use this adventurer’s skill</label>
-    <h3>Combat build</h3><p>${build ? esc(build.name) + ' · ' + esc(build.style) : 'This job uses its signature skill.'}</p>
+  const active = SKILLS[activeSkillId(c)];
+  const slots = activeSlots(c);
+  const points = skillPoints(c.jobLevel, c.skills);
+  const rows = learnedSkillRows(c);
+  showCharacterModal('skills',c,'Skills and builds',`<section class="sheet-profile">${active ? skillIcon(active.id, { size: 'lg' }) : ''}<div><span class="eyebrow">${slots.length ? 'CAST ROTATION' : 'ACTIVE SKILL'}</span><h3>${esc(st.skill)}</h3><p>${st.cost} SP · ${st.cooldown}s cooldown${active ? ' · rank ' + learnedRank(c, activeSkillId(c)) : ''} · ${points} point${points === 1 ? '' : 's'} free</p></div></section>
+    ${rotationStrip(c)}
+    ${active ? `<p>${esc(active.desc)}</p><p class="tiny muted">Flourish · ${esc(FX_LABELS[active.fx] || active.fx)}${active.element ? ' · ' + esc(ELEMENTS[active.element]?.name || active.element) : ''}${active.status ? ' · ' + esc(STATUS[active.status]?.label || active.status) : ''} · +${learnedSkillPower(c)} skill damage</p>` : ''}
+    <label class="tactics-toggle sheet-skill-toggle"><input type="checkbox" id="sheet-auto-skill" data-tactics-key="autoSkill" ${effectiveTactics(c).autoSkill ? 'checked' : ''}> Automatically use this adventurer’s rotation</label>
+    <h3>Skill tree</h3>${skillTree(c)}
+    <h3>Learned skills</h3>${rows || '<p>No skill ranks learned yet. Train at camp from the character panel’s Skills page.</p>'}
+    <h3>Builds</h3><p>${build ? esc(build.name) + ' · ' + esc(build.style) : 'This job uses its signature skill.'}</p>${buildCards(c.job)}
     <div class="detail-actions">${classBuilds(c.job).length > 1 ? '<button data-action="builds">Choose combat build</button>' : ''}${elemental ? '<button data-action="spellbook">Prepare spell</button>' : ''}</div>`);
 }
 function openCharacterPage(page, id) {
@@ -311,6 +328,7 @@ function workspaceGear(c) {
 }
 function workspaceSkills(c) {
   const st = stats(c), atCamp = !c.mapId && c.status !== 'down';
+  // Legacy hotbar (field techniques) still works alongside the catalog rotation.
   const available = Object.entries(FIELD_SKILLS).filter(([id])=>fieldSkillAvailable(c.job,id));
   const slots = [0,1].map(index=>{
     const slot = c.techniques?.slots[index];
@@ -318,13 +336,25 @@ function workspaceSkills(c) {
     return `<div class="workspace-slot"><label>Key ${index+2}<select data-workspace-skill-slot="${index}" ${!atCamp ? 'disabled' : ''}><option value="">Empty</option>${options}</select></label>
       <label><input type="checkbox" data-workspace-skill-auto="${index}" ${slot?.auto ? 'checked' : ''} ${atCamp && slot ? '' : 'disabled'}> Auto-cast</label></div>`;
   }).join('');
-  const rows = available.map(([id,skill])=>{
-    const rank = c.techniques?.ranks[id] || 0, level = skill.levels[rank];
-    return `<article class="workspace-item"><div><strong>${skill.name} · Rank ${rank}/3</strong><p>${skill.text}</p><small>${skill.sp} SP · ${skill.time}s cooldown</small></div><button data-workspace-train="${id}" ${atCamp && level && c.jobLevel>=level ? '' : 'disabled'}>${!level ? 'Max rank' : c.jobLevel < level ? 'Job Lv. '+level : 'Learn rank '+(rank+1)}</button></article>`;
-  }).join('');
-  return `<div class="workspace-section"><h3>Skill bar</h3><p><kbd>1</kbd> ${esc(st.skill)} · Signature</p>${slots}
+  const summary = skillSummary(c), line = skillFamily(c.job), active = SKILLS[activeSkillId(c)];
+  const points = skillPoints(c.jobLevel, c.skills);
+  const training = skillCatalog(c.job).map(([id]) => skillRow(c, id)).join('');
+  const builds = buildCards(c.job);
+  return `<div class="workspace-section">
+    <h3>Skill tree · ${esc(JOBS[c.job].name)}</h3>
+    <p><strong>${points}</strong> skill point${points === 1 ? '' : 's'} free · Job Lv. ${c.jobLevel} · one point per job level</p>
+    <p>Every class line shares its first-job tree: a ${esc(JOBS[c.job].name)} trains its ancestors' skills too, and prerequisites gate the deeper nodes.</p>
+    ${skillTree(c)}
+    <h3>Cast rotation</h3>
+    <p>${ACTIVE_SLOTS} slots fire in order. Press <kbd>1</kbd> for the trained rotation; hotbar keys 2–3 still cast legacy techniques.</p>
+    ${rotationStrip(c)}
     <label class="workspace-auto"><input type="checkbox" id="workspace-auto" ${effectiveTactics(c).autoSkill ? 'checked' : ''}> Allow automatic skills</label>
-    <p>Learn ranks and assign hotbar slots at camp.</p>${rows || '<p>Choose your first job to unlock class techniques.</p>'}
+    ${active ? `<p class="tiny muted">${esc(active.name)} · ${esc(FX_LABELS[active.fx] || active.fx)}${active.element ? ' · ' + esc(ELEMENTS[active.element].name) : ''} · +${learnedSkillPower(c)} skill damage from learned ranks</p>` : ''}
+    ${builds ? `<h3>Builds for this class</h3>${builds}` : ''}
+    <h3>Ranks</h3>
+    ${training || '<p>This line has no trainable skills yet.</p>'}
+    <h3>Field techniques</h3>
+    <p>Assign a learned technique to hotbar key 2 or 3. Techniques keep their own cooldowns.</p>${slots}
     <button data-workspace-detail="skills">Combat builds and spells ↗</button></div>`;
 }
 function workspaceStats(c) {
@@ -674,8 +704,62 @@ function rename() {
 function download(text, filename) {
   const url = URL.createObjectURL(new Blob([text], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+// ---------------------------------------------------------------------------
+// GM tools
+// ---------------------------------------------------------------------------
+function showGm() {
+  if (!gmEnabled) return;
+  const c = selectedCharacters()[0] || state.characters[0];
+  if (c && !selected.has(c.id)) selected = new Set([c.id]);
+  const mapId = renderer.mapId;
+  showModal('GM tools', gmPanel({
+    characters: state.characters,
+    selectedId: c?.id,
+    mapId,
+    mapName: MAPS[mapId]?.name,
+    zeny: state.inventory.zeny,
+    fxCount: 176,
+  }), 'DEVELOPER PLAYGROUND');
+  modal.classList.add('gm-dialog');
+  modal.dataset.page = 'gm';
+  gmRefresh();
+}
+// The panel is re-rendered after every action so the stats it reports stay live.
+function gmRefresh() {
+  if (!modal.open || modal.dataset.page !== 'gm') return;
+  const c = selectedCharacters()[0] || state.characters[0];
+  $('modal-body').innerHTML = gmPanel({
+    characters: state.characters, selectedId: c?.id, mapId: renderer.mapId,
+    mapName: MAPS[renderer.mapId]?.name, zeny: state.inventory.zeny, fxCount: 176,
+  });
+}
+// A GM action always runs through `command()`, so the save stays valid.
+function gmAction(action, extra = {}) {
+  const c = selectedCharacters()[0] || state.characters[0];
+  const ids = c ? [c.id] : [];
+  const message = command(state, { type: 'gm', action, ids, mapId: renderer.mapId, ...extra });
+  if (message) error(message);
+  else { persist(); }
+  renderUI(); gmRefresh();
+  return !message;
+}
+// Where to play gallery effects: the middle of the party on this field, or the
+// field's own centre when nobody is deployed.
+function gmOrigin() {
+  const here = state.characters.filter(c => c.mapId === renderer.mapId);
+  if (here.length) return { x: here.reduce((sum, c) => sum + c.x, 0) / here.length, y: here.reduce((sum, c) => sum + c.y, 0) / here.length };
+  return { x: 0, y: 0 };
+}
+function toggleGm(on) {
+  gmEnabled = on;
+  writeGmFlag(on, localStorage);
+  $('gm-button').hidden = !on;
+  if (!on) toast('GM tab hidden. Add ?gm=1 to the address bar to bring it back.');
+  else toast('GM tools enabled on this device.');
+}
 function settings() {
-  showModal('Your adventure, at your pace.', `<p>Your guild saves automatically on this device. Export a copy to keep a backup or move to another browser. Single-player progress is local; multiplayer will arrive in a later phase.</p><div class="settings-actions"><button data-modal-action="export">Export guild</button><button data-modal-action="import">Import guild</button><button data-modal-action="save">Save now</button></div><h3>Combat display</h3><div class="combat-settings"><label>Combat text <select id="combat-text"><option value="all">All hits</option><option value="highlights">Skill, critical, boss and healing</option><option value="hidden">Hide combat text</option></select></label><label><input type="checkbox" id="combat-shake"> Shake on critical hits and boss impacts</label></div><h3>Field commands</h3><div class="help-grid"><span><b>Click portrait / character</b> · Select</span><span><b>Shift + click</b> · Select several</span><span><b>Double-click portrait</b> · Follow on map</span><span><b>Right-click ground / M</b> · Move</span><span><b>Click enemy</b> · Focus target</span><span><b>H / R</b> · Hold / Resume farming</span><span><b>Q / T</b> · Skill / Retreat</span><span><b>1–3</b> · Selected adventurer’s hotbar</span><span><b>Scroll / + / −</b> · Zoom</span><span><b>Drag ground</b> · Pan camera</span><span><b>F / Esc</b> · Fit map / Cancel order</span></div><h3>While you’re away</h3><p>All deployed farming teams continue for up to four hours, using their actual combat rules, supplies, and tactics. Defeated characters stop earning. Boss expeditions return to camp without an offline boss reward. Keep just one game tab open.</p><p>Party members share one EXP pool with a 12% group bonus. Training assignments earn 15% more Base EXP; gathering assignments collect double materials. No permanent death.</p><div class="milestone-note">First milestone: grow two Novices into first jobs, assemble a party, and defeat Baphomet to unlock another adventurer.</div><h3>Start over</h3><button class="danger-button" data-modal-action="reset" style="padding:10px 15px">Start a new guild…</button>`, 'SETTINGS & FIELD GUIDE');
+  showModal('Your adventure, at your pace.', `<p>Your guild saves automatically on this device. Export a copy to keep a backup or move to another browser. Single-player progress is local; multiplayer will arrive in a later phase.</p><div class="settings-actions"><button data-modal-action="export">Export guild</button><button data-modal-action="import">Import guild</button><button data-modal-action="save">Save now</button></div><h3>Combat display</h3><div class="combat-settings"><label>Combat text <select id="combat-text"><option value="all">All hits</option><option value="highlights">Skill, critical, boss and healing</option><option value="hidden">Hide combat text</option></select></label><label><input type="checkbox" id="combat-shake"> Shake on critical hits and boss impacts</label></div><h3>Field commands</h3><div class="help-grid"><span><b>Click portrait / character</b> · Select</span><span><b>Shift + click</b> · Select several</span><span><b>Double-click portrait</b> · Follow on map</span><span><b>Right-click ground / M</b> · Move</span><span><b>Click enemy</b> · Focus target</span><span><b>H / R</b> · Hold / Resume farming</span><span><b>Q / T</b> · Skill / Retreat</span><span><b>1–3</b> · Selected adventurer’s hotbar</span><span><b>Scroll / + / −</b> · Zoom</span><span><b>Drag ground</b> · Pan camera</span><span><b>F / Esc</b> · Fit map / Cancel order</span></div><h3>While you’re away</h3><p>All deployed farming teams continue for up to four hours, using their actual combat rules, supplies, and tactics. Defeated characters stop earning. Boss expeditions return to camp without an offline boss reward. Keep just one game tab open.</p><p>Party members share one EXP pool with a 12% group bonus. Training assignments earn 15% more Base EXP; gathering assignments collect double materials. No permanent death.</p><div class="milestone-note">First milestone: grow two Novices into first jobs, assemble a party, and defeat Baphomet to unlock another adventurer.</div><h3>Developer tools</h3><p>GM tools are a testing playground: max level, class changes, every skill, gear, milestones, field controls and a full skill-FX gallery. They are hidden by default.${gmEnabled ? ' The GM tab is currently on.' : ''} Re-enable the tab any time by opening <code>${esc(gmLink(location.href))}</code>.</p><div class="settings-actions"><button data-modal-action="gm">${gmEnabled ? 'Open GM tools' : 'Enable GM tools'}</button></div>
+  <h3>Start over</h3><button class="danger-button" data-modal-action="reset" style="padding:10px 15px">Start a new guild…</button>`, 'SETTINGS & FIELD GUIDE');
   $('combat-text').value = displaySettings.combatText;
   $('combat-shake').checked = displaySettings.cameraShake;
   const saveDisplay = () => {
@@ -711,6 +795,50 @@ async function settle(elapsed, { activeTab = false } = {}) {
 
 document.addEventListener('click', event => {
   if (!state || !ready) return;
+  // Skill training is reachable from both the Character panel and the Skills
+  // modal, so it is handled before either surface claims the click.
+  const skillAction = event.target.closest('[data-workspace-learn], [data-workspace-active], [data-workspace-cast]');
+  if (skillAction) {
+    const c = selectedCharacters()[0];
+    if (!c) return;
+    const id = skillAction.dataset.workspaceLearn || skillAction.dataset.workspaceActive || skillAction.dataset.workspaceCast;
+    const type = skillAction.dataset.workspaceLearn ? 'skill-learn' : skillAction.dataset.workspaceCast ? 'skill-slot' : 'skill-active';
+    // The slot button toggles: a slotted skill is removed, an unslotted one joins
+    // the rotation (if a slot is free and the rank is learned).
+    const remove = type === 'skill-slot' && activeSlots(c).includes(id);
+    if (issue({ type, ids: [c.id], skillId: id, remove }, { quiet: true })) {
+      if (modal.open && modal.dataset.page === 'skills') characterSkills(c); else renderWorkspace();
+    }
+    return;
+  }
+  // GM panel controls. Levels are read from the inputs; every other action is a
+  // plain command. Kept ahead of the workspace handler so `data-gm` wins.
+  const gmControl = event.target.closest('[data-gm], [data-gm-level]');
+  if (gmControl) {
+    const action = gmControl.dataset.gm;
+    if (action === 'hide') { closeModal(); toggleGm(false); return; }
+    if (action === 'set-levels') {
+      const body = $('modal-body');
+      const level = Number(body.querySelector('[data-gm-level="base"]')?.value);
+      const jobLevel = Number(body.querySelector('[data-gm-level="job"]')?.value);
+      gmAction('set-levels', { level, jobLevel }); return;
+    }
+    if (action === 'change-job') {
+      const job = $('modal-body').querySelector('[data-gm-job]')?.value;
+      if (job && gmAction('change-job', { job })) toast('Class changed.');
+      return;
+    }
+    if (action === 'fx-one') {
+      const fx = $('modal-body').querySelector('[data-gm-fx]')?.value;
+      const point = gmOrigin();
+      if (gmAction('fx-one', { fx, point })) toast('Playing ' + fx + '.');
+      return;
+    }
+    if (action === 'fx-all') { if (gmAction('fx-all', { point: gmOrigin() })) toast('Playing every skill flourish.'); return; }
+    if (action === 'respawn' || action === 'kill-field' || action === 'boss') { gmAction(action); return; }
+    if (action === 'give-zeny') { gmAction(action, { amount: 1000000 }); return; }
+    if (action) { gmAction(action); return; }
+  }
   const ws = event.target.closest('#adventurer-panel button');
   if (ws && ws.id !== 'workspace-close') {
     const c=selectedCharacters()[0], data=ws.dataset;
@@ -826,6 +954,7 @@ document.addEventListener('click', event => {
   if (modalAction === 'export') { persist(); download(encodeSave(state), 'ragna-tactics-guild.json'); }
   if (modalAction === 'import') $('import-file').click();
   if (modalAction === 'save') { persist(); toast(saveError ? 'Save unavailable. Export a backup instead.' : 'Your guild is saved on this device.'); }
+  if (modalAction === 'gm') { closeModal(); toggleGm(true); showGm(); }
   if (modalAction === 'reset') showModal('Begin another story?', '<p>This replaces the guild saved on this device. Export your current guild first if you want to keep it.</p><div class="modal-footer"><button data-modal-action="export">Export current guild</button><button data-modal-action="reset-confirm" class="danger-button">Replace with a new guild</button></div>');
   if (modalAction === 'reset-confirm') { localStorage.removeItem(SAVE_KEY); location.reload(); }
 });
@@ -878,6 +1007,8 @@ $('first-deploy').onclick = () => { selected = new Set(state.characters.map(c =>
 $('dismiss-coach').onclick = () => { coachDismissed = true; renderUI(); };
 $('adventurer-workspace').onclick = () => setWorkspace(!workspaceOpen);
 $('workspace-close').onclick = () => { setWorkspace(false); $('adventurer-workspace').focus(); };
+$('gm-button').hidden = !gmEnabled;
+$('gm-button').onclick = showGm;
 $('recruit-button').onclick = recruit; $('settings-button').onclick = settings; $('bag-button').onclick = bag; $('guide-button').onclick = fieldGuide; $('bounty-button').onclick = bountyBoard; $('storage-button').onclick = storage; $('world-button').onclick = () => worldOverview();
 $('modal-close').onclick = closeModal;
 $('save-button').onclick = () => { persist(); toast(saveError ? 'Export your guild to preserve progress.' : 'Guild saved.'); };
@@ -953,10 +1084,13 @@ let minimapDragging = false;
 const navigateMinimap = (canvas,event) => {
   if (!ready) return;
   const r = canvas.getBoundingClientRect();
-  const world = renderer.minimapToWorld(canvas,
-    (event.clientX - r.left) * (canvas.width / r.width),
-    (event.clientY - r.top) * (canvas.height / r.height));
-  renderer.centerOn(world);
+  const mx = (event.clientX - r.left) * (canvas.width / r.width);
+  const my = (event.clientY - r.top) * (canvas.height / r.height);
+  // A click on a roster marker selects and follows that adventurer; empty ground
+  // still just moves the camera.
+  const unit = renderer.minimapCharacterAt(canvas, mx, my, state);
+  if (unit) { selected = new Set([unit.id]); inspectorKey = ''; renderer.centerOn(unit); renderer.followId = unit.id; renderUI(); return; }
+  renderer.centerOn(renderer.minimapToWorld(canvas, mx, my));
   renderUI();
 };
 minimap.addEventListener('pointerdown', event => { if (!ready) return; minimapDragging = true; minimap.setPointerCapture(event.pointerId); navigateMinimap(minimap,event); });

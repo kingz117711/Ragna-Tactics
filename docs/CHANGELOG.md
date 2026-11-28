@@ -1,5 +1,42 @@
 # Changelog
 
+## 2026-11-28 — GM tools
+
+- Added an opt-in GM playground (`src/gm.js`) with a `GM` tab in the top bar:
+  max level (Base 99 + 196 attribute points + full HP/SP), manual level entry, a
+  class-change dropdown covering all 59 jobs, learn-every-skill / reset, guild-wide
+  ops (max party, +Zeny, all materials, every gear piece, five of every card, 100
+  potions each, unlock milestones, fill the roster), field controls (repopulate,
+  clear, boss clear, party heal, retreat, respawn) and a full skill-FX gallery that
+  plays all 176 flourishes on the current field.
+- Every GM action runs through the normal `command()` boundary, so it is
+  journaled, persisted and still passes the save validator — no debug back door
+  into the state.
+- The tab is off by default: `?gm=1` enables it on that device and remembers the
+  choice, `?gm=0` (or the panel's Hide button) turns it off again. Settings also
+  offers an Enable GM tools button and the exact recovery link.
+
+## 2026-11-28 — Class skill trees, RO skill FX, and complete attack swings
+
+- Rebuilt the skill system around a 229-skill catalog covering all 59 jobs, each
+  with its own job-level-gated tree, prerequisites, icon family and SP/cooldown
+  economy (`src/skills-catalog.js`, `src/skillcore.js`, `src/skills.js`).
+- Added multiple named builds per class family (`SKILL_BUILDS`) — Sniper keeps its
+  three archetypes (Trap Master / Auto-Attack / Falcon) and every other family has
+  two or more presets that show up as cards in the Skills workspace.
+- Moved all skill flourishes into `src/fx.js`: 176 FX ids mapped onto 14
+  archetypes and 18 colour families, drawn with a glow underlay, hot-core flash
+  and radius-scaled line weights. `tools/fx-preview.mjs` renders every id to a
+  contact sheet (`--all`).
+- Finished the attack animation for every class: attack actions resolve to their
+  final pose instead of looping, the simulation stamps `attackSwing` on each
+  basic attack, monster attack and offensive cast, and the renderer holds the full
+  swing even after the 0.4 s attack flash expires.
+- Fixed the FX preview rasteriser, which drew at 1× into a 2× buffer (halving
+  every flourish and aliasing it into dashes).
+- Validation: 15-module check, 100 tests, static build, and FX contact sheets for
+  all 176 flourishes.
+
 ## 2026-11-27 — Playable foundation 0.1
 
 - Established the owner-confirmed direction and a root AGENTS.md for continuation.
@@ -153,3 +190,35 @@ Added a non-modal Character workspace, paper doll with gear deltas and card sock
   progress bar and impact accents. Automatic casts hold the unit in place and
   resolve before the next attack. Combat text and optional impact shake are
   display preferences, with reduced motion respected.
+
+## 2026-11-28 — Learnable skills and skill FX
+
+- Added `SKILLS`: a learnable catalog for every class family (Novice through
+  Rune Knight, Arch Bishop and the expanded lines). Each skill has multiple
+  ranks, a job-level unlock per rank, its own SP cost, cooldown, range, element,
+  status and an `fx` flourish id.
+- New commands: `skill-learn` (one rank at a time, camp only, job-level gated)
+  and `skill-active` (choose which learned skill is cast). Promotion resets
+  training and hands over the new line's rank-1 signature skill.
+- Learned skills now drive the cast: strikes hit one target, area skills sweep
+  at most three and stagger them, heals pick the most wounded allies, buffs
+  refresh instead of re-firing. Learned ranks add power to the trained skill
+  only, so existing build maths is unchanged.
+- Skill FX layer in the renderer: 13 flourishes (arc slash, thrust, blast ring,
+  bolt, holy sigil, mending motes, shockwave, wind spiral, venom, frost, spark,
+  ward and aura) drawn on the angled ground plane from `effect.fx`, with reduced
+  motion respected.
+- Skills are now a first-class Character panel page: rank grid with next-rank
+  gates, power preview, flourish label and a "cast this" control, shared by the
+  Skills modal. `tests/fx.test.js` covers the catalog, the flourish record and
+  the markup helpers with a headless canvas recorder.
+- Minimap roster jump (carried over from the terrain PR, map art excluded):
+  clicking a party marker on the minimap or the expanded overview now selects and
+  follows that adventurer; clicking empty ground still moves the camera.
+- Save validation: `skills`/`activeSkill` migrate for pre-skill v1 saves, rank
+  caps and unknown ids are rejected, and stale ranks from a previous job line are
+  dropped rather than failing the whole save.
+- Validation: `npm run check` ✅, `npm test` ✅ 95/95, `npm run assets:verify` ✅
+  103 files, `npm run build` ✅. Browser verification was added for the Skills
+  page flow but could not run here: Playwright's Chromium download is blocked in
+  this sandbox.

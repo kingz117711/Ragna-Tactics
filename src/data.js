@@ -1,3 +1,5 @@
+import { SKILLS } from './skills-catalog.js';
+import { canLearnSkill as canLearnSkillFor } from './skills.js';
 import { RENEWAL_JOBS, BUILD_FAMILIES, STATUS_EFFECTS } from './renewal.js';
 
 export const HUNT_RADII = [3, 6, 10];
@@ -188,9 +190,14 @@ export function spellElement(c) {
   if (job !== 'mage' && job !== 'wizard') return null;
   return c.element || (job === 'mage' ? 'fire' : 'water');
 }
+// Extra attack elements exist only as damage types (poison/ghost), so they get
+// their own beat table instead of a spellbook entry.
+const EXTRA_BEATS = { poison: 'earth', ghost: 'ghost' };
 export function affinityMultiplier(element, kind) {
   if (!element) return 1;
-  if (ELEMENTS[element].beats === AFFINITIES[kind]) return 1.5;
+  const beats = ELEMENTS[element]?.beats ?? EXTRA_BEATS[element];
+  if (!beats) return 1;
+  if (beats === AFFINITIES[kind]) return 1.5;
   return element === AFFINITIES[kind] ? 0.75 : 1;
 }
 export const BOUNTIES = {
@@ -285,27 +292,46 @@ export const ITEMS = { red_potion:{name:'Red Potion',type:'consumable',descripti
 export const FIRST_JOB_KIT = {
   swordsman:'sword', archer:'bow', mage:'rod', acolyte:'mace', merchant:'mace', thief:'knife',
 };
-export const FIELD_SKILLS = {
-  provoke: { job:'swordsman', name:'Provoke', type:'taunt', levels:[2,6,9], sp:5, time:8, range:6, text:'Draw a targeted enemy away from an ally.' },
-  magnum: { job:'swordsman', name:'Magnum Break', type:'area', levels:[4,7,10], sp:10, time:9, radius:2.8, power:1.25, element:'fire', text:'Sweep enemies around you with a burst of fire.' },
-  arrowShower: { job:'archer', name:'Arrow Shower', type:'area', levels:[2,6,9], sp:9, time:7, radius:2.5, power:1.2, text:'Hit enemies clustered around your target.' },
-  snare: { job:'archer', name:'Snaring Shot', type:'strike', levels:[4,7,10], sp:7, time:8, power:0.8, status:'slow', text:'Slow an enemy so your archer can keep distance.' },
-  frost: { job:'mage', name:'Frost Diver', type:'strike', levels:[2,6,9], sp:9, time:9, power:0.9, element:'water', status:'freeze', text:'Freeze a target to give the party room to move.' },
-  fireball: { job:'mage', name:'Fire Ball', type:'area', levels:[4,7,10], sp:12, time:8, radius:3, power:1.3, element:'fire', text:'Burst fire around the target.' },
-  bless: { job:'acolyte', name:'Blessing', type:'buff', levels:[2,6,9], sp:9, time:12, text:'Boost the attack of nearby party members.' },
-  mend: { job:'acolyte', name:'Emergency Heal', type:'heal', levels:[4,7,10], sp:11, time:10, text:'Heal the designated ally or the most injured party member.' },
-  cart: { job:'merchant', name:'Cart Sweep', type:'area', levels:[2,6,9], sp:9, time:8, radius:3, power:1.2, text:'Hit nearby enemies with the cart.' },
-  rallyCry: { job:'merchant', name:'Rallying Cry', type:'buff', levels:[4,7,10], sp:8, time:12, text:'Boost attack for nearby party members.' },
-  venom: { job:'thief', name:'Venom Strike', type:'strike', levels:[2,6,9], sp:6, time:8, power:1.1, status:'poison', text:'Wound a target and apply poison.' },
-  sand: { job:'thief', name:'Sand Attack', type:'strike', levels:[4,7,10], sp:5, time:8, power:0.8, status:'blind', text:'Blind a target to reduce its accuracy.' },
-};
-export function fieldSkillAvailable(job, id) {
-  if (!Object.hasOwn(FIELD_SKILLS,id)) return false;
-  for (let current = job; current; current = JOBS[current]?.parent) {
-    if (current === FIELD_SKILLS[id].job) return true;
+// Hotbar "field skills" are the classic first-job techniques, drawn from the
+// learnable catalog so there is one source of truth for costs and effects.
+// `levels` are the job levels at which each rank unlocks.
+// The hotbar predates the catalog and keeps its own (cheaper) costs so existing
+// saves and muscle memory still work; everything else comes from the catalog.
+const FIELD_COSTS = { provoke:[5,8], magnum_break:[10,9], endure:[8,12], arrow_shower:[9,7], double_strafe:[7,4], improve_concentration:[8,14], frost_diver:[9,9], fire_ball:[12,8], cold_bolt:[9,5], blessing:[9,12], heal:[11,10], holy_light:[10,5], cart_revolution:[9,8], mammonite:[8,5], pushcart:[8,12], envenom:[6,8], sand_attack:[5,8], hiding:[6,14] };
+function fieldBoard(ids) {
+  const board = {};
+  for (const id of ids) {
+    const [sp, time] = FIELD_COSTS[id] || [SKILLS[id].sp, SKILLS[id].cooldown];
+    board[id] = { ...SKILLS[id], sp, levels: SKILLS[id].unlock, time, text: SKILLS[id].desc };
   }
-  return false;
+  return board;
 }
+export const FIELD_SKILLS = {
+  ...fieldBoard(['provoke', 'magnum_break', 'endure']),
+  ...fieldBoard(['arrow_shower', 'double_strafe', 'improve_concentration']),
+  ...fieldBoard(['frost_diver', 'fire_ball', 'cold_bolt']),
+  ...fieldBoard(['blessing', 'heal', 'holy_light']),
+  ...fieldBoard(['cart_revolution', 'mammonite', 'pushcart']),
+  ...fieldBoard(['envenom', 'sand_attack', 'hiding']),
+};
+// Legacy alias map: the hotbar board kept its own ids for these techniques.
+export const FIELD_SKILL_ALIASES = { magnum: 'magnum_break', bless: 'blessing', mend: 'heal', cart: 'cart_revolution', rallyCry: 'volunteer', venom: 'envenom', snare: 'ankle_snare' };
+export function fieldSkillAvailable(job, id) {
+  const canonical = FIELD_SKILL_ALIASES[id] || id;
+  return Object.hasOwn(FIELD_SKILLS, canonical) && canLearnSkillFor(job, canonical);
+}
+// Skill catalog, flourishes and helpers live in their own modules; re-exported
+// here so the rest of the game keeps importing a single data surface.
+export { SKILLS, SKILL_BUILDS } from './skills-catalog.js';
+export {
+  FX_IDS, skillDef, skillMaxRank, skillUnlockLevel, skillFamily, skillCatalog,
+  activeSlots, activeSkillList, ACTIVE_SLOTS, learnedPassive,
+  jobSkills, canLearnSkill, learnedRank, skillMultiplier, learnedSkillPower,
+  activeSkillId, activeSkill, signatureSkillId, defaultSkills, skillSp,
+  skillCooldown, skillPower, rankValue, skillPoints, passiveBonus, prereqMet,
+  missingPrereqs, buildRotation, jobChain, jobTier,
+} from './skills.js';
+
 export const TACTICS = {
   safe: { name: 'Safe farming', retreat: 0.22, skill: true },
   aggressive: { name: 'Aggressive', retreat: 0.1, skill: true },
