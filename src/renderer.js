@@ -141,12 +141,11 @@ export class Renderer {
     const base = cave ? '#504859' : dunes ? '#be9967' : arena ? '#555b5a' : forest ? '#436352' : '#6b8959';
     ctx.fillStyle = base;
     ctx.fillRect(r.x0 - 2, r.y0 - 2, r.x1 - r.x0 + 4, r.y1 - r.y0 + 4);
-    // Feature paths remain beneath the original RO ground-texture cells. The
-    // world-sized path graph and deterministic cells meet cleanly at chunk seams.
+    // Global ground features are drawn whole inside every chunk clip so they
+    // continue seamlessly across chunk borders.
     this.paintGlobalGround(ctx, mapId, r);
-    this.paintTileCells(ctx, mapId, r);
-    // Authentic texture crops already contain surface detail; procedural grain
-    // would muddy the source pixels and add work to each chunk build.
+    if (meadow) this.paintTileCells(ctx, mapId, r);
+    this.paintGroundDetail(ctx, mapId, r, cave, arena, forest, dunes, meadow);
   }
   paintGlobalGround(ctx, mapId, r) {
     const cave = mapId === 'payon', arena = mapId === 'arena', forest = mapId === 'forest';
@@ -198,19 +197,25 @@ export class Renderer {
     }
   }
   paintTileCells(ctx, mapId, r) {
-    const map = MAPS[mapId], plan = map?.terrain;
-    if (!plan || !this.sprites.tile(plan.base)) return;
+    const map = MAPS[mapId];
+    const terrain = this.sprites.index?.terrain;
+    const tiles = terrain?.tiles;
+    if (!tiles) return;
     const cx0 = Math.floor(r.x0 / CELL), cx1 = Math.ceil(r.x1 / CELL);
     const cy0 = Math.floor(r.y0 / CELL), cy1 = Math.ceil(r.y1 / CELL);
-    const b = mapBounds(mapId);
     for (let gy = cy0; gy < cy1; gy++) for (let gx = cx0; gx < cx1; gx++) {
       const wx = gx * CELL + CELL / 2, wy = gy * CELL + CELL / 2;
-      const h = chunkSeed(mapId, gx, gy);
-      const edge = Math.min(b.x - Math.abs(wx), b.y - Math.abs(wy)) < 2.6;
-      let name = edge ? plan.edge : plan.base;
-      if (!edge && roadDistance(map, wx, wy) <= 2.7) name = plan.path;
-      else if (!edge && plan.accent && h % 100 < 13) name = plan.accent;
-      const img = this.sprites.tile(name || plan.base);
+      let name;
+      if (roadDistance(map, wx, wy) <= 2.1) name = 'dirt_path';
+      else {
+        const zone = (map.zones || []).find(z => Math.hypot(wx - z.x, wy - z.y) <= z.r * 0.9);
+        if (zone) name = zone.kind === 'poring' ? 'grass_blossom' : 'grass_olive';
+        else {
+          const h = chunkSeed(mapId, gx, gy);
+          name = (h % 100) < 68 ? 'grass_blossom' : 'grass_olive';
+        }
+      }
+      const img = this.sprites.tile(name);
       if (!img) continue;
       const O = project(gx * CELL, gy * CELL);
       const u = project(gx * CELL + CELL, gy * CELL), v = project(gx * CELL, gy * CELL + CELL);

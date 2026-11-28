@@ -47,13 +47,6 @@ def verify():
         data = path.read_bytes()
         assert len(data) == rec['bytes'] and digest(data) == rec['sha256'], path
     index = json.loads((DEST / 'index.json').read_text(encoding='utf-8'))
-    assert index.get('roTerrain') == {
-        'file': 'terrain/ro-tiles-hd.png', 'manifest': 'terrain/ro-tiles-hd.json'
-    }
-    ro_tiles = json.loads((DEST / 'terrain/ro-tiles-hd.json').read_text(encoding='utf-8'))
-    assert ro_tiles['meta']['size'] == {'w': 1536, 'h': 1024}
-    for key in ['grass_olive', 'grass_forest', 'dirt_path', 'dirt_payon', 'sand', 'ruin_cobble', 'cliff_rock', 'cliff_sand']:
-        assert key in ro_tiles['tiles'], key
     wardrobe = json.loads((DEST / 'wardrobe/source-catalog.json').read_text(encoding='utf-8'))
     mobs = json.loads((DEST / 'mobs/source-catalog.json').read_text(encoding='utf-8'))
     assert index['anchor'] == wardrobe['anchor'] and index['classes'] == wardrobe['classes']
@@ -107,11 +100,6 @@ def main():
             raise ValueError('Missing source anchor for prop: ' + name)
         sources[props_path + name + '.png'] = ('terrain/props/' + name + '.png', None)
     sources[props_path + '_anchors.json'] = ('terrain/props/source-anchors.json', None)
-    # Original RO Data.grf ground textures, mirrored from the owner's pinned kit.
-    sources['Updates/map-sprites-v2/ro-tiles-hd.png'] = (
-        'terrain/ro-tiles-hd.png', 'd179e5746065455f5698e40ae7724a4d4c0af15c3574dc529d7acb2da0e806a0')
-    sources['Updates/map-sprites-v2/ro-tiles-hd.json'] = (
-        'terrain/ro-tiles-hd.json', 'bdaa17695844845545964651f4a85febaaccc719325244b6999f23fb7c896f13')
 
     def download(item):
         source, (local, expected) = item
@@ -132,7 +120,6 @@ def main():
         records.append(download((source, (local, None))))
     index = {'anchor': catalog['anchor'], 'classes': catalog['classes'], 'wardrobe': selected,
              'monsters': monsters,
-             'roTerrain': {'file': 'terrain/ro-tiles-hd.png', 'manifest': 'terrain/ro-tiles-hd.json'},
              'terrain': {
                  'tiles': {name: {'file': 'terrain/tiles/' + name + '.png'} for name in TILES},
                  'props': {name: {'file': 'terrain/props/' + name + '.png',

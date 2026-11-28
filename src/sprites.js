@@ -4,7 +4,7 @@ const image = src => new Promise((resolve, reject) => {
 });
 const json = async src => { const r = await fetch(src); if (!r.ok) throw new Error('Missing asset: ' + src); return r.json(); };
 export class Sprites {
-  constructor() { this.assets = new Map(); this.portraits = new Map(); this.heroFrames = new Map(); this.index = null; this.roTerrain = null; }
+  constructor() { this.assets = new Map(); this.portraits = new Map(); this.heroFrames = new Map(); this.index = null; }
   async init() {
     this.index = await json('/assets/index.json');
     await Promise.all(Object.entries(this.index.wardrobe).map(async ([key, rec]) => {
@@ -29,28 +29,8 @@ export class Sprites {
         }),
       ]);
     }
-    if (this.index.roTerrain) {
-      const source = this.index.roTerrain;
-      const [manifest, atlas] = await Promise.all([
-        json('/assets/' + source.manifest), image('/assets/' + source.file)
-      ]);
-      this.roTerrain = { manifest, atlas, tiles: new Map() };
-    }
   }
-  tile(name) {
-    if (this.roTerrain) {
-      const cached = this.roTerrain.tiles.get(name);
-      if (cached) return cached;
-      const rec = this.roTerrain.manifest.tiles[name];
-      if (rec) {
-        const cv = document.createElement('canvas'); cv.width = rec.w; cv.height = rec.h;
-        cv.getContext('2d').drawImage(this.roTerrain.atlas, rec.x, rec.y, rec.w, rec.h, 0, 0, rec.w, rec.h);
-        this.roTerrain.tiles.set(name, cv);
-        return cv;
-      }
-    }
-    return this.assets.get('tile-' + name) || null;
-  }
+  tile(name) { return this.assets.get('tile-' + name) || null; }
   prop(name) { return this.assets.get('prop-' + name) || null; }
   heroFrame(job, sex, route, body, hair, bodyIndex, hairIndex) {
     const cacheKey = `${job}/${sex}/${route}/${bodyIndex}/${hairIndex}`;
