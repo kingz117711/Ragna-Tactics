@@ -118,3 +118,46 @@ test('high DEX improves hit and high AGI improves flee', () => {
   assert.ok(trained.hit > base.hit);
   assert.ok(trained.flee > base.flee);
 });
+
+test('an automatic cast holds position and resolves its skill damage without a simultaneous basic attack', () => {
+  const state = createGame(778);
+  const c = preparedCharacter(state, 'wizard');
+  const [target] = state.maps.meadow.monsters;
+  Object.assign(c, { mapId: 'meadow', order: 'focus', x: -4.8, y: 0, targetId: target.id, hp: stats(c).hp, sp: stats(c).sp });
+  Object.assign(target, { kind: 'skeleton', x: -0.2, y: 0, hp: 1000, timer: 5, targetId: c.id });
+  for (const other of state.maps.meadow.monsters.slice(1)) Object.assign(other, { x: 25, y: 25 });
+  tick(state);
+  assert.ok(c.cast);
+  assert.equal(target.hp, 1000);
+  while (c.cast) {
+    tick(state);
+    assert.equal(c.x, -4.8);
+  }
+  const hits = state.effects.filter(e => e.kind === 'skill-hit' || e.kind === 'hit');
+  assert.equal(hits.length, 1);
+  assert.equal(hits[0].kind, 'skill-hit');
+  assert.equal(Number(hits[0].text), 1000 - target.hp);
+  assert.equal(c.stance, 'attack');
+});
+
+test('critical feedback uses the landed damage and never labels a miss as a critical', () => {
+  const outcomes = new Set();
+  for (let seed = 1; seed <= 30; seed++) {
+    const state = createGame(seed);
+    const c = preparedCharacter(state, 'novice');
+    const [target] = state.maps.meadow.monsters;
+    Object.assign(c, { mapId: 'meadow', order: 'focus', x: 0, y: 0, targetId: target.id, attributes: { luk: 99 }, sp: 0 });
+    Object.assign(target, { x: 1.5, y: 0, hp: 1000, timer: 5 });
+    tick(state);
+    const effect = state.effects.find(e => e.kind === 'critical' || e.text === 'Miss');
+    if (effect?.kind === 'critical') {
+      outcomes.add('critical');
+      assert.equal(Number(effect.text), 1000 - target.hp);
+    } else if (effect?.text === 'Miss') {
+      outcomes.add('miss');
+      assert.equal(target.hp, 1000);
+      assert.ok(!state.effects.some(e => e.text === 'Critical!'));
+    }
+  }
+  assert.deepEqual(outcomes, new Set(['critical', 'miss']));
+});

@@ -8,6 +8,16 @@ const visual = mapId => { const b = mapBounds(mapId); return { x: b.x + 1, y: b.
 const CHUNK = 8;          // world units per cached terrain chunk
 const CHUNK_CACHE = 160;  // bounded LRU; covers a full South Prontera view plus margin, ≈40 MB worst case
 const CELL = 4;           // world units per ground tile cell
+const EFFECT_LIFETIME = 1.1;
+const groundColor = mapId => mapId === 'payon' ? '#504859' : ['morroc', 'lair'].includes(mapId)
+  ? '#be9967' : mapId === 'arena' ? '#555b5a' : mapId === 'forest' ? '#436352' : '#6b8959';
+const EMPHASIZED_HITS = new Set(['critical', 'skill-hit', 'boss-hit']);
+const EFFECT_STYLES = {
+  hit: [15, '#fff1cd'], critical: [26, '#ffd16b'], 'skill-hit': [22, '#a5efff'],
+  incoming: [14, '#ffaba0'], 'boss-hit': [23, '#ff9582'], heal: [17, '#c5f49b'],
+  skill: [13, '#bcdeff'], cast: [13, '#e3b8ff'], loot: [12, '#f2d38d'],
+  status: [12, '#c6daff'], danger: [14, '#ffc2a9'],
+};
 
 // Shared with tests so click→world math always matches the live camera fit.
 export function fitZoom(mapId, width, height) {
@@ -55,7 +65,9 @@ export class Renderer {
     this.canvas = canvas; this.ctx = canvas.getContext('2d'); this.sprites = sprites;
     this.camera = { x: 0, y: 0, zoom: 0.8 }; this.mapId = 'meadow'; this.terrain = new Map(); this.hits = []; this.animations = new Map();
     this.width = 1000; this.height = 650; this.followId = null; this.grid = false;
-    this.orderMarks = []; this.renderPositions = new Map(); this.positionTime = null; this.positionMap = null;
+    this.orderMarks = []; this.previousFrame = null;
+    this.scenery = new Map(); this.overviews = new Map();
+    this.combatText = 'all'; this.cameraShake = false; this.shake = 0;
     this.reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
     this.resizeObserver = new ResizeObserver(() => this.resize()); this.resizeObserver.observe(canvas);
   }
@@ -66,6 +78,9 @@ export class Renderer {
     if (!this.initialized && r.width > 0) { this.fit(); this.initialized = true; }
   }
   fit() {
+    this.previousFrame = null;
+    this.animations.clear();
+    this.shake = 0;
     this.camera = { x: 0, y: 0, zoom: fitZoom(this.mapId, this.width, this.height) };
     this.followId = null;
   }
@@ -81,8 +96,8 @@ export class Renderer {
     this.camera.x = p.x; this.camera.y = p.y; this.followId = null;
     this.clampCamera();
   }
-  screen(p) { const q = project(p.x, p.y); return { x: this.width / 2 + (q.x - this.camera.x) * this.camera.zoom, y: this.height / 2 + 20 + (q.y - this.camera.y) * this.camera.zoom }; }
-  world(x, y) { return unproject((x - this.width / 2) / this.camera.zoom + this.camera.x, (y - this.height / 2 - 20) / this.camera.zoom + this.camera.y); }
+  screen(p) { const q = project(p.x, p.y); return { x: this.width / 2 + (q.x - this.camera.x) * this.camera.zoom + this.shake, y: this.height / 2 + 20 + (q.y - this.camera.y) * this.camera.zoom }; }
+  world(x, y) { return unproject((x - this.width / 2 - this.shake) / this.camera.zoom + this.camera.x, (y - this.height / 2 - 20) / this.camera.zoom + this.camera.y); }
   zoom(delta, x = this.width / 2, y = this.height / 2) {
     const before = this.world(x, y); this.camera.zoom = clamp(this.camera.zoom * delta, 0.2, 1.8);
     const after = this.world(x, y), a = project(before.x, before.y), b = project(after.x, after.y);
@@ -128,7 +143,7 @@ export class Renderer {
     const ctx = cv.getContext('2d');
     ctx.translate(-minX, -minY);
     ctx.save();
-    polygon(ctx, corners);
+    polygon(ctx, corners, groundColor(mapId));
     ctx.clip();
     this.paintChunkGround(ctx, mapId, r);
     ctx.restore();
@@ -138,9 +153,6 @@ export class Renderer {
   paintChunkGround(ctx, mapId, r) {
     const cave = mapId === 'payon', arena = mapId === 'arena', forest = mapId === 'forest';
     const dunes = ['morroc', 'lair'].includes(mapId), meadow = mapId === 'meadow';
-    const base = cave ? '#504859' : dunes ? '#be9967' : arena ? '#555b5a' : forest ? '#436352' : '#6b8959';
-    ctx.fillStyle = base;
-    ctx.fillRect(r.x0 - 2, r.y0 - 2, r.x1 - r.x0 + 4, r.y1 - r.y0 + 4);
     // Global ground features are drawn whole inside every chunk clip so they
     // continue seamlessly across chunk borders.
     this.paintGlobalGround(ctx, mapId, r);
@@ -226,10 +238,10 @@ export class Renderer {
       ctx.restore();
     }
   }
-  paintGroundDetail(ctx, mapId, r, cave, arena, forest, dunes, meadow) {
+  paintGroundDetail(ctx, mapId, r, cave, arena, forest, dunes, meadow, density = 1) {
     const rng = rngFrom(chunkSeed(mapId, Math.round(r.x0 / CHUNK), Math.round(r.y0 / CHUNK)));
     const area = (r.x1 - r.x0) * (r.y1 - r.y0);
-    const count = Math.round(area * (meadow ? 2.2 : 7.3));
+    const count = Math.round(area * density * (meadow ? 2.2 : 7.3));
     for (let i = 0; i < count; i++) {
       const x = r.x0 + rng() * (r.x1 - r.x0), y = r.y0 + rng() * (r.y1 - r.y0), p = project(x, y), roll = rng();
       if (!meadow && Math.abs(x) < 3.5) continue;
@@ -258,6 +270,33 @@ export class Renderer {
     }
     ctx.globalAlpha = 1;
   }
+  overviewGround(boundary, bounds) {
+    const id = this.mapId;
+    if (this.overviews.has(id)) return this.overviews.get(id);
+    const scale = 0.57;
+    const left = boundary[3].x, top = boundary[0].y;
+    const width = -2 * left, height = -2 * top;
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.ceil(width * scale); canvas.height = Math.ceil(height * scale);
+    const ctx = canvas.getContext('2d');
+    ctx.scale(canvas.width / width, canvas.height / height);
+    ctx.translate(-left, -top);
+    polygon(ctx, boundary); ctx.clip();
+    const area = { x0: -bounds.x, y0: -bounds.y, x1: bounds.x, y1: bounds.y };
+    const cave = id === 'payon', arena = id === 'arena', forest = id === 'forest';
+    const dunes = id === 'morroc' || id === 'lair', meadow = id === 'meadow';
+    this.paintGlobalGround(ctx, id, area);
+    if (meadow) this.paintTileCells(ctx, id, area);
+    for (let y = Math.floor(area.y0 / CHUNK); y < area.y1 / CHUNK; y++) {
+      for (let x = Math.floor(area.x0 / CHUNK); x < area.x1 / CHUNK; x++) {
+        this.paintGroundDetail(ctx, id, this.chunkRect(id, x, y), cave, arena, forest, dunes, meadow, 0.28);
+      }
+    }
+    const overview = { canvas, left, top, width, height };
+    this.overviews.set(id, overview);
+    if (this.overviews.size > 3) this.overviews.delete(this.overviews.keys().next().value);
+    return overview;
+  }
   visibleChunks() {
     const corners = [this.world(0, 0), this.world(this.width, 0), this.world(this.width, this.height), this.world(0, this.height)];
     const minX = Math.min(...corners.map(p => p.x)) - CHUNK, maxX = Math.max(...corners.map(p => p.x)) + CHUNK;
@@ -274,6 +313,7 @@ export class Renderer {
 
   /* ---------- scenery props ---------- */
   sceneryList() {
+    if (this.scenery.has(this.mapId)) return this.scenery.get(this.mapId);
     const map = MAPS[this.mapId], terrain = this.sprites.index?.terrain;
     if (!terrain) return [];
     const authored = (map.scenery?.props || []).map(p => ({ ...p, id: p.id }));
@@ -299,16 +339,17 @@ export class Renderer {
       }
       authored.push(...slots);
     }
-    return authored.filter(p => terrain.props[p.id]);
+    const props = authored.filter(p => terrain.props[p.id]).sort((a, b) => a.x + a.y - b.x - b.y);
+    this.scenery.set(this.mapId, props);
+    return props;
   }
-  drawScenery(ctx, s) {
+  drawScenery(ctx) {
     const terrain = this.sprites.index?.terrain;
     if (!terrain) return;
     const corners = [this.world(0, 0), this.world(this.width, 0), this.world(this.width, this.height), this.world(0, this.height)];
     const minX = Math.min(...corners.map(p => p.x)) - 6, maxX = Math.max(...corners.map(p => p.x)) + 6;
     const minY = Math.min(...corners.map(p => p.y)) - 6, maxY = Math.max(...corners.map(p => p.y)) + 6;
     const props = this.sceneryList().filter(p => p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY);
-    props.sort((a, b) => a.x + a.y - b.x - b.y);
     for (const prop of props) {
       const rec = terrain.props[prop.id], img = this.sprites.prop(prop.id);
       if (!rec || !img) continue;
@@ -320,54 +361,78 @@ export class Renderer {
     }
   }
 
-  syncRenderPositions(s) {
+  fieldEntities(s) {
     const heroes = s.characters.filter(c => c.mapId === this.mapId && c.hp > 0);
-    const entities = [...heroes.map(unit => ({ unit, hero: true })),
-      ...s.maps[this.mapId].monsters.filter(unit => unit.hp > 0).map(unit => ({ unit, hero: false }))];
-    if (this.positionTime !== s.time || this.positionMap !== this.mapId) {
-      const next = new Map();
-      for (const { unit } of entities) {
-        const previous = this.renderPositions.get(unit.id);
-        next.set(unit.id, {
-          fromX: previous?.x ?? unit.x, fromY: previous?.y ?? unit.y,
-          x: unit.x, y: unit.y,
-        });
-      }
-      this.renderPositions = next; this.positionTime = s.time; this.positionMap = this.mapId;
-    }
-    return entities;
+    const monsters = s.maps[this.mapId].monsters.filter(m => m.hp > 0);
+    return [...heroes.map(unit => ({ unit, hero: true })), ...monsters.map(unit => ({ unit, hero: false }))];
   }
-  entityPosition(unit, alpha) {
-    const p = this.renderPositions.get(unit.id);
-    if (!p) return unit;
-    return { x: p.fromX + (p.x - p.fromX) * alpha, y: p.fromY + (p.y - p.fromY) * alpha };
+  capturePositions(s) {
+    const positions = new Map();
+    for (const { unit } of this.fieldEntities(s)) positions.set(unit.id, { x: unit.x, y: unit.y });
+    this.previousFrame = { state: s, map: this.mapId, time: s.time, positions };
+  }
+  entityPosition(unit, previous, alpha) {
+    const point = previous?.get(unit.id);
+    // Treat a redeployment or respawn as a jump rather than animating a sweep.
+    if (!point || Math.hypot(unit.x - point.x, unit.y - point.y) > 2) return unit;
+    return { x: point.x + (unit.x - point.x) * alpha, y: point.y + (unit.y - point.y) * alpha };
   }
 
   /* ---------- main draw ---------- */
-  draw(s, selected, hovered, frameRemainder = 0, huntPreview = null) {
+  draw(s, selected, hovered, frameRemainder = 0, huntPreview = null, elapsed = 0) {
     const ctx = this.ctx, z = this.camera.zoom, map = s.maps[this.mapId], now = performance.now();
-    const entities = this.syncRenderPositions(s);
+    const snapshot = this.previousFrame;
+    const previous = snapshot?.state === s && snapshot.map === this.mapId && Math.abs(s.time - snapshot.time - STEP) < 1e-6
+      ? snapshot.positions : null;
     const alpha = clamp(frameRemainder / STEP, 0, 1);
-    if (this.followId) { const c = s.characters.find(c => c.id === this.followId && c.mapId === this.mapId); if (c) { const p = project(c.x, c.y); this.camera.x += (p.x - this.camera.x) * 0.08; this.camera.y += (p.y - this.camera.y) * 0.08; } this.clampCamera(); }
+    const entities = this.fieldEntities(s).map(entry => ({ ...entry, position: this.entityPosition(entry.unit, previous, alpha) }));
+    this.shake = 0;
+    if (this.cameraShake && !this.reducedMotion.matches) {
+      const impact = s.effects.findLast(e => e.mapId === this.mapId && EMPHASIZED_HITS.has(e.kind) && e.kind !== 'skill-hit');
+      const age = impact ? EFFECT_LIFETIME - impact.life + frameRemainder : 1;
+      const strength = impact?.kind === 'boss-hit' ? 5 : 2.5;
+      if (age < 0.18) this.shake = Math.sin(age * 88) * strength * (1 - age / 0.18);
+    }
+    if (this.followId) {
+      const followed = entities.find(entry => entry.hero && entry.unit.id === this.followId);
+      if (followed) {
+        const p = project(followed.position.x, followed.position.y);
+        const blend = 1 - Math.exp(-5 * elapsed);
+        this.camera.x += (p.x - this.camera.x) * blend; this.camera.y += (p.y - this.camera.y) * blend;
+        this.clampCamera();
+      }
+    }
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     const bg = ctx.createRadialGradient(this.width / 2, this.height / 2, 30, this.width / 2, this.height / 2, this.width * 0.75);
     bg.addColorStop(0, this.mapId === 'arena' ? '#253039' : '#233b32'); bg.addColorStop(1, '#101f22');
     ctx.fillStyle = bg; ctx.fillRect(0, 0, this.width, this.height);
     ctx.save();
-    ctx.translate(this.width / 2 - this.camera.x * z, this.height / 2 + 20 - this.camera.y * z);
+    ctx.translate(this.width / 2 - this.camera.x * z + this.shake, this.height / 2 + 20 - this.camera.y * z);
     ctx.scale(z, z);
     const vb = visual(this.mapId);
     const boundary = [project(-vb.x, -vb.y), project(vb.x, -vb.y), project(vb.x, vb.y), project(-vb.x, vb.y)];
     // Floating slab: dark underside, base plate, then clipped chunk ground.
     polygon(ctx, boundary.map(p => ({ x: p.x, y: p.y + 18 })), '#182e28');
-    polygon(ctx, boundary, this.mapId === 'payon' ? '#504859' : ['morroc', 'lair'].includes(this.mapId) ? '#be9967' : this.mapId === 'arena' ? '#555b5a' : this.mapId === 'forest' ? '#436352' : '#6b8959', '#8aa47855');
+    polygon(ctx, boundary, groundColor(this.mapId), '#8aa47855');
     ctx.save();
     polygon(ctx, boundary);
     ctx.clip();
-    for (const [cx, cy] of this.visibleChunks()) {
-      const cv = this.chunkCanvas(this.mapId, cx, cy);
-      // 1px bleed hides antialiased seams between neighbouring chunk canvases.
-      ctx.drawImage(cv, cv._minX, cv._minY, cv.width + 1, cv.height + 1);
+    const ground = this.overviewGround(boundary, vb);
+    ctx.drawImage(ground.canvas, ground.left, ground.top, ground.width, ground.height);
+    if (z > 0.55) {
+      const cameraCenter = unproject(this.camera.x, this.camera.y);
+      const proximity = ([x, y]) => Math.hypot((x + 0.5) * CHUNK - cameraCenter.x, (y + 0.5) * CHUNK - cameraCenter.y);
+      const chunks = this.visibleChunks().sort((a, b) => proximity(a) - proximity(b));
+      let newChunks = 0;
+      for (const [cx, cy] of chunks) {
+        if (!this.terrain.has(`${this.mapId}:${cx}:${cy}`)) {
+          if (newChunks >= 4) continue;
+          newChunks++;
+        }
+        const cv = this.chunkCanvas(this.mapId, cx, cy);
+        // Slight bleed covers antialiasing between neighbours.
+        ctx.drawImage(cv, cv._minX, cv._minY, cv.width + 1, cv.height + 1);
+      }
     }
     ctx.restore();
     if (this.grid) {
@@ -378,7 +443,7 @@ export class Renderer {
       }
     }
     for (const c of s.characters.filter(c => c.mapId === this.mapId && selected.has(c.id))) {
-      const p = project(c.x, c.y);
+      const position = this.entityPosition(c, previous, alpha), p = project(position.x, position.y);
       if (c.farmRadius && c.order === 'farm') {
         const h = project(c.home.x, c.home.y);
         ellipse(ctx, h.x, h.y, c.farmRadius * Math.SQRT2 * 22, c.farmRadius * Math.SQRT2 * 11, '#bfdfa212', '#d3e6b394');
@@ -392,11 +457,11 @@ export class Renderer {
       ellipse(ctx, h.x, h.y, radius * 22, radius * 11, '#efd38c18', '#ffdf92');
       ctx.restore();
     }
-    this.drawScenery(ctx, s);
+    this.drawScenery(ctx);
     this.drawZoneLabels(ctx, z);
     const telegraph = map.telegraph;
     if (telegraph) {
-      const p = project(telegraph.x, telegraph.y), pulse = 0.24 + Math.sin(s.time * 10) * 0.08;
+      const p = project(telegraph.x, telegraph.y), pulse = 0.24 + Math.sin((s.time + frameRemainder) * 10) * 0.08;
       ctx.save();
       ctx.translate(p.x, p.y);
       ctx.scale(22 * Math.SQRT2, 11 * Math.SQRT2);
@@ -410,23 +475,33 @@ export class Renderer {
       ctx.stroke();
       ctx.restore();
     }
-    entities.sort((a, b) => a.unit.x + a.unit.y - b.unit.x - b.unit.y);
+    entities.sort((a, b) => a.position.x + a.position.y - b.position.x - b.position.y);
     this.hits = [];
-    for (const { unit: c, hero } of entities) {
-      const position = this.entityPosition(c, alpha);
+    const present = new Set();
+    for (const { unit: c, hero, position } of entities) {
+      present.add(c.id);
       const p = project(position.x, position.y), screen = this.screen(position), isSelected = hero && selected.has(c.id);
       ctx.save(); ctx.translate(p.x, p.y);
       ellipse(ctx, 0, 1, hero ? 18 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? 48 : 18, hero ? 8 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? 20 : 8, '#0c201e45');
       if (isSelected || hovered === c.id) { ctx.lineWidth = 2 / z; ellipse(ctx, 0, 0, hero ? 23 : 28, hero ? 10 : 12, isSelected ? '#e4cc8720' : '#e9866f18', hero ? '#edd79b' : '#e9866f'); }
-      const route = c.stance + c.direction, previous = this.animations.get(c.id);
-      if (!previous || previous.route !== route) this.animations.set(c.id, { route, started: s.time });
-      const ms = Math.max(0, s.time + frameRemainder - this.animations.get(c.id).started) * 1000;
+      const last = this.animations.get(c.id);
+      const swungAgain = c.stance === 'attack' && c.attackFlash > (last?.flash ?? 0) + 1e-6;
+      const started = last?.stance === c.stance && !swungAgain ? last.started : s.time;
+      this.animations.set(c.id, { stance: c.stance, flash: c.attackFlash, started });
+      const ms = Math.max(0, s.time + frameRemainder - started) * 1000;
       if (hero) this.sprites.hero(ctx, c, ms); else this.sprites.monster(ctx, c, ms);
       const barY = hero ? -80 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? -115 : c.kind === 'willow' ? -83 : -44;
       if (hero || hovered === c.id || c.hp < MONSTERS[c.kind].hp) {
         const width = hero ? 43 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? 82 : 36;
         ctx.fillStyle = '#132525'; ctx.fillRect(-width / 2 - 1, barY - 1, width + 2, 6);
         ctx.fillStyle = hero ? '#afc790' : '#d48b77'; ctx.fillRect(-width / 2, barY, width * Math.max(0, c.hp / (hero ? stats(c).hp : MONSTERS[c.kind].hp)), 4);
+      }
+      if (hero && c.cast) {
+        const progress = clamp((c.cast.total - c.cast.remaining + frameRemainder) / c.cast.total, 0, 1);
+        ctx.fillStyle = '#192936'; ctx.fillRect(-23, barY + 6, 46, 5);
+        ctx.fillStyle = '#b8e4ff'; ctx.fillRect(-22, barY + 7, 44 * progress, 3);
+        ctx.lineWidth = 1.5 / z;
+        ellipse(ctx, 0, 0, 24, 10, '#b9d6ff22', '#b8e4ffa0');
       }
       if (hero || hovered === c.id) {
         ctx.font = `${11 / Math.max(z, 0.65)}px 'Segoe UI', sans-serif`; ctx.textAlign = 'center'; ctx.fillStyle = hero ? '#fff4d7' : '#ead3bd'; ctx.shadowColor = '#102421'; ctx.shadowBlur = 5; ctx.fillText(hero ? c.name : MONSTERS[c.kind].name, 0, barY - 7); ctx.shadowBlur = 0;
@@ -435,12 +510,37 @@ export class Renderer {
       ctx.restore();
       this.hits.push({ id: c.id, hero, x: screen.x, y: screen.y - (hero ? 25 : 15) * z, radius: Math.max(14, (hero ? 28 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? 65 : 25) * z) });
     }
+    for (const id of this.animations.keys()) if (!present.has(id)) this.animations.delete(id);
     this.drawOrderMarks(ctx, now, z);
-    for (const e of s.effects) {
-      if (e.mapId && e.mapId !== this.mapId) continue;
-      const p = project(e.x, e.y); ctx.save(); ctx.globalAlpha = Math.min(1, e.life * 2); ctx.font = `600 ${e.kind === 'skill' ? 12 : 15}px 'Segoe UI', sans-serif`; ctx.textAlign = 'center';
-      ctx.fillStyle = e.kind === 'heal' ? '#c8e9a5' : e.kind === 'loot' ? '#f2d38d' : e.kind === 'danger' ? '#ff9b86' : e.kind === 'status' ? '#a9d8ff' : e.kind === 'cast' ? '#d5a9ff' : '#fff0c7';
-      ctx.shadowColor = '#102421'; ctx.shadowBlur = 4; ctx.fillText(e.text, p.x, p.y - 50 - (1.1 - e.life) * 28); ctx.restore();
+    ctx.restore();
+    this.drawCombatFeedback(s.effects, frameRemainder);
+  }
+  drawCombatFeedback(effects, frameRemainder) {
+    const ctx = this.ctx, z = this.camera.zoom, reduced = this.reducedMotion.matches;
+    ctx.save();
+    ctx.textAlign = 'center'; ctx.lineJoin = 'round';
+    for (const e of effects) {
+      if (e.mapId !== this.mapId) continue;
+      const age = clamp(EFFECT_LIFETIME - e.life + frameRemainder, 0, EFFECT_LIFETIME);
+      const emphasized = EMPHASIZED_HITS.has(e.kind);
+      const point = this.screen(e);
+      if (point.x < -70 || point.x > this.width + 70 || point.y < -25 || point.y > this.height + 190) continue;
+      if (emphasized && age < 0.24 && !reduced) {
+        const progress = age / 0.24, radius = (8 + progress * 20) * Math.max(z, 0.47);
+        ctx.globalAlpha = (1 - progress) * 0.65; ctx.lineWidth = 1.6;
+        ellipse(ctx, point.x, point.y - 11 * z, radius, radius * 0.5, null, EFFECT_STYLES[e.kind][1]);
+      }
+      if (e.kind !== 'loot' && (this.combatText === 'hidden' ||
+        (this.combatText === 'highlights' && !emphasized && !['heal', 'skill', 'cast', 'danger'].includes(e.kind)))) continue;
+      const [size, color] = EFFECT_STYLES[e.kind] || EFFECT_STYLES.hit;
+      const bounce = emphasized && !reduced ? 1 + 0.23 * Math.max(0, 1 - age * 6) : 1;
+      const x = point.x + (e.id % 5 - 2) * (emphasized ? 8 : 12);
+      const y = point.y - 27 - 25 * z - (e.id % 3) * 7 - (reduced ? 0 : Math.sqrt(age) * 40);
+      ctx.globalAlpha = clamp((EFFECT_LIFETIME - age) * 4, 0, 1);
+      ctx.font = `${emphasized ? 800 : 650} ${Math.round(size * bounce)}px system-ui, sans-serif`;
+      ctx.lineWidth = emphasized ? 4.5 : 3.5;
+      ctx.strokeStyle = '#162021'; ctx.fillStyle = color;
+      ctx.strokeText(e.text, x, y); ctx.fillText(e.text, x, y);
     }
     ctx.restore();
   }

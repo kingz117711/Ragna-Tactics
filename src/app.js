@@ -4,6 +4,7 @@ import { SAVE_KEY, loadGame, saveGame, encodeSave, decodeSave } from './persiste
 import { Sprites } from './sprites.js';
 import { Renderer } from './renderer.js';
 import { acknowledgePoint } from './feedback.js';
+import { ATLAS_LEVELS, ATLAS_SIZE, filterAtlas } from './atlas.js';
 
 const $ = id => document.getElementById(id);
 const esc = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -18,12 +19,25 @@ radiusControl.value = String(DEFAULT_HUNT_RADIUS);
 let pendingJob = null, statDraft = {};
 let workspacePage = 'gear', workspaceSlot = 'weapon', workspaceOpen = false, inspectedId;
 let multiSelect = false, tacticsExpanded = false;
+let atlasLevel = '', atlasPlayable = false, atlasFromDeployment = false;
+const DISPLAY_KEY = 'ragna-tactics-display';
+function readDisplaySettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(DISPLAY_KEY));
+    return {
+      combatText: ['all', 'highlights', 'hidden'].includes(saved?.combatText) ? saved.combatText : 'all',
+      cameraShake: saved?.cameraShake === true,
+    };
+  } catch { return { combatText: 'all', cameraShake: false }; }
+}
+const displaySettings = readDisplaySettings();
+$('atlas-count').textContent = ATLAS_SIZE + ' destinations';
 let toastTimer, accumulator = 0, lastTime = performance.now(), lastUI = 0, lastMinimap = 0, lastSave = performance.now(), inspectorKey = '';
 const modal = $('modal');
 function html(id, content) { if ($(id).innerHTML !== content) $(id).innerHTML = content; }
 function toast(message) { $('toast').textContent = message; $('toast').hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { $('toast').hidden = true; }, 4500); }
 function showModal(title, content, eyebrow = 'GUILD MANAGEMENT') {
-  modal.classList.remove('character-dialog', 'monitor-dialog');
+  modal.classList.remove('character-dialog', 'monitor-dialog', 'atlas-dialog');
   $('modal-title').textContent = title; $('modal-eyebrow').textContent = eyebrow; $('modal-body').innerHTML = content;
   if (!modal.open) modal.showModal();
 }
@@ -47,6 +61,46 @@ function persist() {
   // Closing a hidden tab must retain its last simulated checkpoint time.
   try { saveGame(localStorage, state, hiddenAt || Date.now()); saveError = false; $('save-status').textContent = 'Saved on this device'; $('save-dot').style.background = ''; }
   catch { if (!saveError) toast('Saving is unavailable. Export your guild from Settings to keep your progress.'); saveError = true; $('save-status').textContent = 'Save unavailable — export your guild'; $('save-dot').style.background = '#dfa18d'; }
+}
+function atlasResults() {
+  const range = atlasLevel === '' ? null : ATLAS_LEVELS[Number(atlasLevel)];
+  const regions = filterAtlas(range, atlasPlayable);
+  const count = regions.reduce((total, region) => total + region.destinations.length, 0);
+  $('atlas-results-count').textContent = count + (count === 1 ? ' destination' : ' destinations');
+  html('atlas-results', regions.map(region => `
+    <section class="atlas-region" style="--region-ink:${region.color}" aria-labelledby="atlas-${region.id}">
+      <header><h3 id="atlas-${region.id}">${region.name}</h3><p>${region.terrain}</p></header>
+      <div class="atlas-maps">${region.destinations.map(map => {
+        const live = MAPS[map.id];
+        const current = map.id === renderer.mapId;
+        const countHere = state.characters.filter(c => c.mapId === map.id).length;
+        return `<article class="atlas-map ${current ? 'atlas-current' : ''}" data-atlas-destination="${map.id}">
+          <div class="atlas-map-meta"><span>${map.type} · Lv. ${map.min}–${map.max}</span><span class="atlas-status ${live ? 'is-live' : ''}">${live ? 'Playable' : 'Planned'}</span></div>
+          ${live ? `<img src="${sprites.monsterPortrait(live.monster)}" alt="">` : ''}
+          <h4>${map.name}</h4><p>${map.note}</p>
+          ${live ? `<div class="atlas-map-footer"><span>${countHere ? countHere + (countHere === 1 ? ' adventurer' : ' adventurers') : ''}</span><button type="button" data-atlas-map="${map.id}" ${current ? 'aria-current="location"' : ''}>${atlasFromDeployment ? 'Choose destination' : current ? 'Return to field' : 'View field'} <span aria-hidden="true">↗</span></button></div>` : ''}
+        </article>`;
+      }).join('')}</div>
+    </section>`).join('') || '<p class="atlas-empty">No destinations match these filters. Choose another level range or show planned destinations.</p>');
+}
+function showAtlas(fromDeployment = false) {
+  atlasFromDeployment = fromDeployment;
+  const live = Object.keys(MAPS).length;
+  showModal('World atlas', `<div class="atlas-intro"><p>Explore ${ATLAS_SIZE} destinations across six regions. ${live} are playable today.</p><span>Lv. 1–150 roadmap</span></div>
+    <div class="atlas-controls">
+      <label>Recommended level <select id="atlas-level"><option value="">All levels</option>${ATLAS_LEVELS.map(([min, max], index) => `<option value="${index}">Lv. ${min}–${max}</option>`).join('')}</select></label>
+      <label class="atlas-available"><input type="checkbox" id="atlas-playable"> Playable only</label>
+      <span id="atlas-results-count" role="status"></span>
+    </div>
+    ${fromDeployment ? '<button type="button" class="atlas-back" data-atlas-back>← Back to deployment</button>' : ''}
+    <div id="atlas-results"></div>`, 'EXPEDITION PLANNER');
+  modal.classList.add('atlas-dialog');
+  modal.scrollTop = 0;
+  $('atlas-level').value = atlasLevel;
+  $('atlas-playable').checked = atlasPlayable;
+  $('atlas-level').onchange = event => { atlasLevel = event.target.value; atlasResults(); };
+  $('atlas-playable').onchange = event => { atlasPlayable = event.target.checked; atlasResults(); };
+  atlasResults();
 }
 function switchMap(id) {
   if (!MAPS[id]) return;
@@ -162,10 +216,10 @@ function renderInspector(units) {
   }
   if (content !== inspectorKey) { html('inspector', content); inspectorKey = content; }
 }
-function deployment() {
+function deployment(destinationId = renderer.mapId) {
   const units = selectedCharacters();
   if (!units.length) return toast('Select one or more adventurers first.');
-  showModal('Where will you venture?', `<p>Deploy ${units.map(c => esc(c.name)).join(', ')} instantly. Linked party members travel together. Viewing a map does not move your characters.</p><form id="deployment-form"><div class="modal-grid">${Object.values(MAPS).map(m => `<label class="choice-card"><input type="radio" name="destination" value="${m.id}" ${m.id === renderer.mapId ? 'checked' : ''}><span class="tiny"> ${m.tier}</span><strong>${m.name}</strong><p>${m.id === 'meadow' ? 'Poring and Fabre. A gentle start for Novices.' : m.id === 'forest' ? 'Willow. Tougher enemies, better EXP, and Resin.' : m.id === 'payon' ? 'Zombies close slowly while Archer Skeletons fire from range. Prepare Holy magic.' : m.id === 'morroc' ? 'Scorpions strike hard. Peco Pecos quickly close distance. Both drop socket cards.' : m.id === 'lair' ? 'Phreeoni. Gather for Sand Pact, scatter for Sinkhole. Guaranteed MVP card.' : 'Baphomet. Bring at least two first-job adventurers. Manual dodging recommended.'}</p></label>`).join('')}</div>${modalError}<div class="modal-footer"><span>In combat? Retreat to camp before redeploying.</span><button type="submit" class="primary">Begin expedition <span>↗</span></button></div></form>`, 'PLAN AN EXPEDITION');
+  showModal('Where will you venture?', `<p>Deploy ${units.map(c => esc(c.name)).join(', ')} instantly. Linked party members travel together. Viewing a map does not move your characters.</p><button type="button" class="atlas-back" data-open-atlas="deployment">Browse the world atlas ↗</button><form id="deployment-form"><div class="modal-grid">${Object.values(MAPS).map(m => `<label class="choice-card"><input type="radio" name="destination" value="${m.id}" ${m.id === destinationId ? 'checked' : ''}><span class="tiny"> ${m.tier}</span><strong>${m.name}</strong><p>${m.id === 'meadow' ? 'Poring and Fabre. A gentle start for Novices.' : m.id === 'forest' ? 'Willow. Tougher enemies, better EXP, and Resin.' : m.id === 'payon' ? 'Zombies close slowly while Archer Skeletons fire from range. Prepare Holy magic.' : m.id === 'morroc' ? 'Scorpions strike hard. Peco Pecos quickly close distance. Both drop socket cards.' : m.id === 'lair' ? 'Phreeoni. Gather for Sand Pact, scatter for Sinkhole. Guaranteed MVP card.' : 'Baphomet. Bring at least two first-job adventurers. Manual dodging recommended.'}</p></label>`).join('')}</div>${modalError}<div class="modal-footer"><span>In combat? Retreat to camp before redeploying.</span><button type="submit" class="primary">Begin expedition <span>↗</span></button></div></form>`, 'PLAN AN EXPEDITION');
   $('deployment-form').onsubmit = event => { event.preventDefault(); const mapId = new FormData(event.currentTarget).get('destination'); if (issue({ type: 'deploy', mapId }, { close: true, quiet: true })) { coachDismissed = true; switchMap(mapId); toast('Expedition started. Your adventurers will farm automatically.'); } };
 }
 function camp() {
@@ -621,7 +675,18 @@ function download(text, filename) {
   const url = URL.createObjectURL(new Blob([text], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 function settings() {
-  showModal('Your adventure, at your pace.', `<p>Your guild saves automatically on this device. Export a copy to keep a backup or move to another browser. Single-player progress is local; multiplayer will arrive in a later phase.</p><div class="settings-actions"><button data-modal-action="export">Export guild</button><button data-modal-action="import">Import guild</button><button data-modal-action="save">Save now</button></div><h3>Field commands</h3><div class="help-grid"><span><b>Click portrait / character</b> · Select</span><span><b>Shift + click</b> · Select several</span><span><b>Double-click portrait</b> · Follow on map</span><span><b>Right-click ground / M</b> · Move</span><span><b>Click enemy</b> · Focus target</span><span><b>H / R</b> · Hold / Resume farming</span><span><b>Q / T</b> · Skill / Retreat</span><span><b>1–3</b> · Selected adventurer’s hotbar</span><span><b>Scroll / + / −</b> · Zoom</span><span><b>Drag ground</b> · Pan camera</span><span><b>F / Esc</b> · Fit map / Cancel order</span></div><h3>While you’re away</h3><p>All deployed farming teams continue for up to four hours, using their actual combat rules, supplies, and tactics. Defeated characters stop earning. Boss expeditions return to camp without an offline boss reward. Keep just one game tab open.</p><p>Party members share one EXP pool with a 12% group bonus. Training assignments earn 15% more Base EXP; gathering assignments collect double materials. No permanent death.</p><div class="milestone-note">First milestone: grow two Novices into first jobs, assemble a party, and defeat Baphomet to unlock another adventurer.</div><h3>Start over</h3><button class="danger-button" data-modal-action="reset" style="padding:10px 15px">Start a new guild…</button>`, 'SETTINGS & FIELD GUIDE');
+  showModal('Your adventure, at your pace.', `<p>Your guild saves automatically on this device. Export a copy to keep a backup or move to another browser. Single-player progress is local; multiplayer will arrive in a later phase.</p><div class="settings-actions"><button data-modal-action="export">Export guild</button><button data-modal-action="import">Import guild</button><button data-modal-action="save">Save now</button></div><h3>Combat display</h3><div class="combat-settings"><label>Combat text <select id="combat-text"><option value="all">All hits</option><option value="highlights">Skill, critical, boss and healing</option><option value="hidden">Hide combat text</option></select></label><label><input type="checkbox" id="combat-shake"> Shake on critical hits and boss impacts</label></div><h3>Field commands</h3><div class="help-grid"><span><b>Click portrait / character</b> · Select</span><span><b>Shift + click</b> · Select several</span><span><b>Double-click portrait</b> · Follow on map</span><span><b>Right-click ground / M</b> · Move</span><span><b>Click enemy</b> · Focus target</span><span><b>H / R</b> · Hold / Resume farming</span><span><b>Q / T</b> · Skill / Retreat</span><span><b>1–3</b> · Selected adventurer’s hotbar</span><span><b>Scroll / + / −</b> · Zoom</span><span><b>Drag ground</b> · Pan camera</span><span><b>F / Esc</b> · Fit map / Cancel order</span></div><h3>While you’re away</h3><p>All deployed farming teams continue for up to four hours, using their actual combat rules, supplies, and tactics. Defeated characters stop earning. Boss expeditions return to camp without an offline boss reward. Keep just one game tab open.</p><p>Party members share one EXP pool with a 12% group bonus. Training assignments earn 15% more Base EXP; gathering assignments collect double materials. No permanent death.</p><div class="milestone-note">First milestone: grow two Novices into first jobs, assemble a party, and defeat Baphomet to unlock another adventurer.</div><h3>Start over</h3><button class="danger-button" data-modal-action="reset" style="padding:10px 15px">Start a new guild…</button>`, 'SETTINGS & FIELD GUIDE');
+  $('combat-text').value = displaySettings.combatText;
+  $('combat-shake').checked = displaySettings.cameraShake;
+  const saveDisplay = () => {
+    displaySettings.combatText = $('combat-text').value;
+    displaySettings.cameraShake = $('combat-shake').checked;
+    Object.assign(renderer, displaySettings);
+    try { localStorage.setItem(DISPLAY_KEY, JSON.stringify(displaySettings)); }
+    catch { toast('Display settings apply until you close this page.'); }
+  };
+  $('combat-text').onchange = saveDisplay;
+  $('combat-shake').onchange = saveDisplay;
 }
 function offlineReport(report) {
   showModal('Welcome back, guild leader.', `<p>Your adventurers kept their assignments while you were away.${report.capped ? ' The four-hour limit was applied.' : ''} Boss expeditions require active play and returned to camp.</p><div class="report-stats"><div class="report-stat"><strong>${duration(report.seconds)}</strong><span>FARMING TIME</span></div><div class="report-stat"><strong>${number(report.kills)}</strong><span>ENEMIES DEFEATED</span></div><div class="report-stat"><strong>${number(report.zeny)}</strong><span>ZENY EARNED</span></div></div>${report.loot.length ? `<h3>Loot brought back</h3>${report.loot.map(drop => `<div class="inventory-row">${esc(drop.name)}<span>×${number(drop.count)}</span></div>`).join('')}` : ''}${report.characters.map(c => `<div class="inventory-row"><div>${esc(c.name)}<p>${c.levels ? `+${c.levels} Base levels · ` : ''}${c.jobLevels ? `+${c.jobLevels} Job levels · ` : ''}${c.potions} potions used</p></div><span>${c.status === 'down' ? 'Needs recovery' : c.status === 'camp' ? 'At camp' : 'On assignment'}</span></div>`).join('')}<div class="modal-footer"><button class="primary" id="continue-adventure">Continue adventure <span>↗</span></button></div>`, 'EXPEDITION REPORT');
@@ -697,6 +762,15 @@ document.addEventListener('click', event => {
   if (monitorView) { worldOverview(monitorView.dataset.monitorView); return; }
   const sheetPage = event.target.closest('[data-character-page]');
   if (sheetPage) { openCharacterPage(sheetPage.dataset.characterPage,sheetPage.dataset.id); return; }
+  const atlas = event.target.closest('[data-open-atlas]');
+  if (atlas) { showAtlas(atlas.dataset.openAtlas === 'deployment'); return; }
+  if (event.target.closest('[data-atlas-back]')) { deployment(); return; }
+  const atlasMap = event.target.closest('[data-atlas-map]')?.dataset.atlasMap;
+  if (atlasMap && Object.hasOwn(MAPS, atlasMap)) {
+    if (atlasFromDeployment) deployment(atlasMap);
+    else { closeModal(); switchMap(atlasMap); }
+    return;
+  }
   const map = event.target.closest('[data-map]'); if (map) { switchMap(map.dataset.map); return; }
   const card = event.target.closest('[data-character]'); if (card) { setSelection(card.dataset.character, event.shiftKey || multiSelect); return; }
   if (event.target.closest('[data-goal-next]')) { takeGoalAction(); return; }
@@ -931,10 +1005,15 @@ window.addEventListener('pagehide', persist);
 function frame(now) {
   requestAnimationFrame(frame);
   if (!ready || !state || document.hidden || settling) { lastTime = now; return; }
-  accumulator += Math.min((now - lastTime) / 1000, 0.5); lastTime = now;
-  while (accumulator >= STEP) { tick(state); accumulator -= STEP; }
+  const elapsed = Math.min((now - lastTime) / 1000, 0.5);
+  accumulator += elapsed; lastTime = now;
+  while (accumulator >= STEP) {
+    renderer.capturePositions(state);
+    tick(state);
+    accumulator -= STEP;
+  }
   const preview = orderMode === 'rally' && previewPointer ? renderer.world(previewPointer.x, previewPointer.y) : null;
-  renderer.draw(state, selected, hovered, accumulator, preview && { ...preview, radius: Number(radiusControl.value) });
+  renderer.draw(state, selected, hovered, accumulator, preview && { ...preview, radius: Number(radiusControl.value) }, elapsed);
   if (now - lastMinimap >= 100) {
     renderer.drawMinimap($('minimap'), state, selected);
     if (modal.open && $('expanded-minimap')) renderer.drawMinimap($('expanded-minimap'),state,selected);
@@ -966,7 +1045,7 @@ async function start() {
   try {
     writable = await acquireWriter();
     if (!writable) { failure('Your guild is already open in another tab. Close that tab, then reload this one to continue.'); return; }
-    sprites = new Sprites(); await sprites.init(); renderer = new Renderer(canvas, sprites);
+    sprites = new Sprites(); await sprites.init(); renderer = new Renderer(canvas, sprites); Object.assign(renderer, displaySettings);
     let loaded;
     try { loaded = loadGame(localStorage); } catch (err) { failure(err.message, true); return; }
     state = loaded.state; await settle(loaded.elapsed);

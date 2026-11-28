@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { createGame, gainExp } from '../../src/sim.js';
+import { command, createGame, gainExp } from '../../src/sim.js';
 import { jobChoices } from '../../src/data.js';
 import { encodeSave } from '../../src/persistence.js';
 import { fitZoom, project } from '../../src/renderer.js';
@@ -675,4 +675,90 @@ test('field hotbar casts one adventurer’s trained skill while another team sta
   await page.setViewportSize({width:390,height:844});
   await expect(page.locator('#field-hotbar')).toBeInViewport();
   await page.screenshot({path:'artifacts/field-console-phone.png',animations:'disabled'});
+});
+
+test('atlas groups 27 destinations by region, filters through Lv. 150, and only routes to live maps', async ({ page }) => {
+  await boot(page);
+  await page.getByRole('button', { name: /World atlas/ }).click();
+  const atlas = page.locator('dialog.atlas-dialog');
+  await expect(atlas.locator('.atlas-region')).toHaveCount(6);
+  await expect(atlas.locator('.atlas-map')).toHaveCount(27);
+  await expect(atlas.locator('[data-atlas-map]')).toHaveCount(6);
+  await page.screenshot({ path: 'artifacts/world-atlas-desktop.png', animations: 'disabled' });
+  await atlas.getByLabel('Recommended level').selectOption({ label: 'Lv. 126–150' });
+  await expect(atlas.getByRole('heading', { name: 'Cinder Crown' })).toBeVisible();
+  await expect(atlas.getByRole('heading', { name: 'South Prontera' })).toHaveCount(0);
+  await expect(atlas.locator('[data-atlas-map]')).toHaveCount(0);
+  await atlas.getByLabel('Playable only').check();
+  await expect(atlas.getByText(/No destinations match/)).toBeVisible();
+  await atlas.getByLabel('Recommended level').selectOption('');
+  await expect(atlas.locator('.atlas-map')).toHaveCount(6);
+  await atlas.locator('[data-atlas-map=forest]').click();
+  await expect(page.locator('#map-name')).toHaveText('Willow Wood');
+  await expect(page.locator('#map-population')).toContainText('0 adventurers');
+  await page.locator('#first-deploy').click();
+  await page.getByRole('button', { name: /Browse the world atlas/ }).click();
+  await atlas.locator('[data-atlas-map=morroc]').click();
+  await expect(page.locator('input[name=destination][value=morroc]')).toBeChecked();
+  await expect(page.locator('input[name=destination]')).toHaveCount(6);
+});
+
+test('the world atlas fits a phone and combat display settings survive reload', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await boot(page);
+  await page.getByRole('button', { name: /World atlas/ }).click();
+  const atlas = page.locator('dialog.atlas-dialog');
+  await expect(atlas).toBeVisible();
+  expect(await atlas.evaluate(el => el.scrollWidth === el.clientWidth && el.scrollHeight > el.clientHeight)).toBe(true);
+  await page.screenshot({ path: 'artifacts/world-atlas-mobile.png', animations: 'disabled' });
+  await page.locator('#modal-close').click();
+  await page.locator('#settings-button').click();
+  const combatText = page.getByRole('combobox', { name: 'Combat text', exact: true });
+  const shake = page.getByLabel(/Shake on critical hits/);
+  await expect(combatText).toHaveValue('all');
+  await expect(shake).not.toBeChecked();
+  await combatText.selectOption('highlights');
+  await shake.check();
+  await page.reload();
+  await expect(page.locator('#loading')).toBeHidden();
+  await page.locator('#settings-button').click();
+  await expect(combatText).toHaveValue('highlights');
+  await expect(shake).toBeChecked();
+});
+
+test('walking renders intermediate positions and every playable field paints at fit zoom', async ({ page }) => {
+  const state = createGame(71);
+  const [c] = state.characters;
+  command(state, { type: 'deploy', ids: [c.id], mapId: 'meadow' });
+  command(state, { type: 'move', ids: [c.id], mapId: 'meadow', point: { x: 15, y: 7 } });
+  await page.addInitScript(({ raw, name }) => {
+    localStorage.setItem('ragna-tactics:save:v1', raw);
+    window.walkSamples = [];
+    const fill = CanvasRenderingContext2D.prototype.fillText;
+    CanvasRenderingContext2D.prototype.fillText = function (text, x, y, ...args) {
+      if (this.canvas.id === 'battlefield' && text === name && window.walkSamples.length < 150) {
+        const point = this.getTransform().transformPoint({ x, y });
+        window.walkSamples.push([performance.now(), point.x]);
+      }
+      return fill.call(this, text, x, y, ...args);
+    };
+  }, { raw: encodeSave(state), name: c.name });
+  await boot(page);
+  await expect.poll(() => page.evaluate(() => window.walkSamples.some(([time, x], index, samples) => {
+    const next = samples[index + 1], after = samples[index + 2];
+    return next && after && after[0] - time < 80 && x < next[1] && next[1] < after[1];
+  }))).toBe(true);
+  for (const id of ['meadow', 'forest', 'payon', 'morroc', 'arena', 'lair']) {
+    await page.locator(`[data-map="${id}"]`).click();
+    const painted = await page.locator('#battlefield').evaluate(async canvas => {
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const { width, height } = canvas;
+      const pixels = canvas.getContext('2d').getImageData(0, 0, width, height);
+      const rgb = (x, y) => [...pixels.data.slice((Math.round(y) * width + Math.round(x)) * 4, (Math.round(y) * width + Math.round(x)) * 4 + 3)];
+      const edge = rgb(20, 20);
+      const ground = rgb(width * 0.42, height * 0.54);
+      return Math.hypot(...ground.map((channel, i) => channel - edge[i])) > 20;
+    });
+    expect(painted, id).toBe(true);
+  }
 });

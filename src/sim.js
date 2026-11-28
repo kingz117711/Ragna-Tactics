@@ -702,7 +702,7 @@ function kill(s, m, killer) {
   }
   effect(s, m.mapId, m.x, m.y, '+' + def.zeny + 'z', 'loot');
 }
-function damage(s, c, m, value, attackRange = stats(c).range) {
+function damage(s, c, m, value, attackRange, kind = 'hit') {
   // All damaging paths re-check reach at the point of resolution. Target locks are
   // intentions, not permission to deal damage across a map or through an overshoot.
   if (!m || m.hp <= 0 || !c.mapId || c.mapId !== m.mapId || distance(c, m) > attackRange + 1e-6) return false;
@@ -712,7 +712,7 @@ function damage(s, c, m, value, attackRange = stats(c).range) {
   const hitChance = Math.max(0.62, Math.min(0.99, st.hit - mobFlee));
   if (random(s) > hitChance) { effect(s, m.mapId, m.x, m.y, 'Miss', 'status'); return false; }
   const dealt = Math.max(1, Math.round(value - mob.def));
-  m.hp -= dealt; effect(s, m.mapId, m.x, m.y, String(dealt));
+  m.hp -= dealt; effect(s, m.mapId, m.x, m.y, String(dealt), kind);
   if (m.hp <= 0) kill(s, m, c);
   return true;
 }
@@ -768,7 +768,7 @@ function useTechnique(s,c,target,id,manual = false) {
       for (const m of victims) {
         const power = skill.element && combatJob(c.job) === 'mage' ? st.matk : st.atk;
         if (damage(s,c,m,(power * (skill.power + rank * 0.18) + st.skillBonus) * affinityMultiplier(skill.element,m.kind),
-          centre === c ? skill.radius : range + (skill.radius || 0)) && skill.status && m.hp > 0) {
+          centre === c ? skill.radius : range + (skill.radius || 0), 'skill-hit') && skill.status && m.hp > 0) {
           applyStatus(s,c,m,skill.status,1.5 + rank * 0.5,2 + rank);
         }
       }
@@ -780,9 +780,9 @@ function useTechnique(s,c,target,id,manual = false) {
 }
 function useAutoSkill(s,c,target) {
   for (const slot of c.techniques?.slots || []) {
-    if (slot?.auto && useTechnique(s,c,target,slot.id)) return;
+    if (slot?.auto && useTechnique(s, c, target, slot.id)) return;
   }
-  useSkill(s,c,target);
+  useSkill(s, c, target);
 }
 function resolveSkill(s, c, target, manual = false) {
   const st = stats(c), job = combatJob(c.job);
@@ -814,7 +814,7 @@ function resolveSkill(s, c, target, manual = false) {
     const splash = rotationRadius[rotation] || st.splash || (job === 'mage' || (job === 'priest' && st.element === 'holy') ? 3 : 0);
     const centre = job === 'knight' || job === 'blacksmith' ? c : target;
     const secondary = splash ? s.maps[c.mapId].monsters.filter(m => m !== target && m.hp > 0 && distance(m, centre) < splash) : [];
-    if (!damage(s, c, target, (st.atk * multiplier + st.skillBonus) * affinityMultiplier(st.element,target.kind), st.range)) return false;
+    if (!damage(s, c, target, (st.atk * multiplier + st.skillBonus) * affinityMultiplier(st.element,target.kind), st.range, 'skill-hit')) return false;
     applyBuildStatus(s, c, target, rotation, st.element);
     if (affinityMultiplier(st.element,target.kind) > 1) effect(s,c.mapId,target.x,target.y,'Weakness!', 'skill');
     const staggerTime = c.job === 'whitesmith' ? 3 : 2;
@@ -823,7 +823,7 @@ function resolveSkill(s, c, target, manual = false) {
     const secondaryLimit = rotation === 'falcon-proc' ? 4 : rotation === 'warg-focus' ? 2 : job === 'hunter' ? (c.job === 'sniper' ? 4 : 2) : secondary.length;
     for (const m of secondary.slice(0, secondaryLimit)) {
       const bonus = rotation === 'trap-zone' ? 1.15 : rotation === 'elemental-aoe' || rotation === 'arrow-volley' ? 1.3 : 1.4;
-      if (damage(s, c, m, (st.atk * bonus + st.skillBonus) * affinityMultiplier(st.element,m.kind), st.range + splash)) {
+      if (damage(s, c, m, (st.atk * bonus + st.skillBonus) * affinityMultiplier(st.element,m.kind), st.range + splash, 'skill-hit')) {
         applyBuildStatus(s, c, m, rotation, st.element);
         if (m.hp > 0 && (stagger || st.build?.style === 'control')) m.timer = Math.max(m.timer, rotation === 'trap-zone' || rotation === 'freeze-control' ? 3 : staggerTime);
       }
@@ -834,12 +834,13 @@ function resolveSkill(s, c, target, manual = false) {
   effect(s, c.mapId, c.x, c.y, st.skill, 'skill'); return true;
 }
 function useSkill(s, c, target, manual = false) {
-  if (c.cast || c.cooldown > 0 || c.sp < stats(c).cost) return false;
   const st = stats(c);
+  if (c.cast || c.cooldown > 0 || c.sp < st.cost) return false;
   if (!manual && st.castTime > 0) {
     const supportCast = roleOf(c) === 'support' && !st.element;
-    if (!target && !supportCast) return false;
+    if (!supportCast && (!target || distance(c, target) > st.range)) return false;
     c.cast = { remaining: st.castTime, total: st.castTime, targetId: target?.id || null, skill: st.skill };
+    c.status = 'fighting'; c.stance = 'idle';
     effect(s, c.mapId, c.x, c.y, 'Casting ' + st.skill, 'cast');
     return true;
   }
@@ -854,17 +855,9 @@ function tickCharacter(s, c, dt) {
   c.attackFlash = Math.max(0, c.attackFlash - dt); c.cooldown = Math.max(0, c.cooldown - dt); c.attackTimer = Math.max(0, c.attackTimer - dt);
   if (c.techniques) for (const id of Object.keys(c.techniques.timers)) c.techniques.timers[id] = Math.max(0,c.techniques.timers[id] - dt);
   c.buffTimer = Math.max(0, (c.buffTimer || 0) - dt); if (c.buffTimer <= 0) c.buffAtk = 0;
-  if (c.cast) {
-    c.cast.remaining = Math.max(0, c.cast.remaining - dt);
-    if (c.cast.remaining <= 0) {
-      const pending = c.cast; c.cast = null;
-      const target = pending.targetId ? s.maps[c.mapId]?.monsters.find(m => m.id === pending.targetId && m.hp > 0) : null;
-      resolveSkill(s, c, target);
-    }
-  }
   const st = stats(c), tactics = effectiveTactics(c);
   if (!c.mapId) { c.stance = 'idle'; if (c.status !== 'down') { c.hp = Math.min(st.hp, c.hp + 12 * dt); c.sp = Math.min(st.sp, c.sp + 8 * dt); } return; }
-  if (c.hp <= 0) { log(s, c.name + ' fell and returned to camp. Recover before redeploying.'); c.hp = 0; c.mapId = null; c.status = 'down'; c.targetId = null; c.destination = null; return; }
+  if (c.hp <= 0) { log(s, c.name + ' fell and returned to camp. Recover before redeploying.'); c.hp = 0; c.mapId = null; c.status = 'down'; c.targetId = null; c.destination = null; c.cast = null; return; }
   c.sp = Math.min(st.sp, c.sp + st.regen * dt);
   if (c.hp < st.hp * tactics.potionAt && c.potions > 0) { c.hp = Math.min(st.hp, c.hp + 65); c.potions--; effect(s, c.mapId, c.x, c.y, '+Potion', 'heal'); }
   // Priority: an explicit Retreat is honored; an explicit Move finishes before
@@ -874,6 +867,7 @@ function tickCharacter(s, c, dt) {
     log(s, c.name + ' is retreating: HP below their threshold.');
   }
   if (c.order === 'retreat') {
+    interruptCast(s, c);
     c.status = 'retreating';
     if (move(c, c.destination || campPoint(c), st.speed * 1.3, dt)) { c.mapId = null; c.status = 'camp'; c.order = 'farm'; c.targetId = null; c.destination = null; log(s, c.name + ' returned safely to camp.'); }
     return;
@@ -885,9 +879,17 @@ function tickCharacter(s, c, dt) {
     return;
   }
   const map = s.maps[c.mapId], role = roleOf(c), supported = supportedAlly(s,c);
+  if (c.cast) {
+    c.cast.remaining = Math.max(0, c.cast.remaining - dt);
+    if (c.cast.remaining > 1e-6) return;
+    const { targetId } = c.cast;
+    c.cast = null;
+    const target = map.monsters.find(m => m.id === targetId && m.hp > 0);
+    if (resolveSkill(s, c, target)) return;
+  }
   if (c.supportId && !supported) delete c.supportId;
   const leader = supported || leaderAvailable(s,c);
-  if (tactics.autoSkill) useAutoSkill(s,c,null);
+  if (tactics.autoSkill) useAutoSkill(s, c, null);
   if (supported && distance(c,supported) > (role === 'frontline' ? 4.5 : 6)) {
     c.status = 'moving'; move(c,supported,st.speed,dt); return;
   }
@@ -911,7 +913,7 @@ function tickCharacter(s, c, dt) {
   }
   // Supports keep formation when there's no useful enemy nearby; they don't orbit or chase a retreating leader.
   if (!target) {
-    c.targetId = null; c.status = c.order === 'hold' ? 'holding' : 'searching'; c.stance = 'idle';
+    c.targetId = null; c.status = c.order === 'hold' ? 'holding' : 'searching'; c.stance = c.attackFlash > 0 ? 'attack' : 'idle';
     if (c.order === 'farm' && c.farmRadius && distance(c, c.home) > 1.2) { c.status = 'moving'; move(c, c.home, st.speed, dt); }
     else if (c.order === 'farm' && role !== 'frontline' && leader && distance(c, leader) > 5.5) { c.status = 'moving'; move(c, leader, st.speed, dt); }
     return;
@@ -939,13 +941,13 @@ function tickCharacter(s, c, dt) {
     if (distance(before, c) > 0.01) return;
   }
   c.status = 'fighting'; c.stance = c.attackFlash > 0 ? 'attack' : 'idle'; face(c, target);
-  if (tactics.autoSkill) useAutoSkill(s,c,target);
+  if (tactics.autoSkill) useAutoSkill(s, c, target);
+  if (c.cast) return;
   if (target.hp > 0 && c.attackTimer <= 0 && target.mapId === c.mapId && distance(c, target) <= st.range) {
-    c.attackTimer = st.interval; c.attackFlash = 0.4; c.stance = 'attack';
+    c.attackTimer = st.interval; c.attackFlash = Math.max(c.attackFlash, 0.4); c.stance = 'attack';
     const critical = st.crit > 0 && random(s) < st.crit;
     const autoMultiplier = st.build?.rotation === 'rapid-crit' ? 1.3 : st.build?.rotation === 'trap-zone' || st.build?.rotation === 'debuff-control' ? 0.9 : 1;
-    damage(s, c, target, st.atk * autoMultiplier * (0.9 + random(s) * 0.2) * (critical ? 1.5 : 1), st.range);
-    if (critical) effect(s, c.mapId, target.x, target.y, 'Critical!', 'skill');
+    damage(s, c, target, st.atk * autoMultiplier * (0.9 + random(s) * 0.2) * (critical ? 1.5 : 1), st.range, critical ? 'critical' : 'hit');
   }
 }
 function tickMonster(s, map, m, dt) {
@@ -994,7 +996,9 @@ function tickMonster(s, map, m, dt) {
     const hitChance = Math.max(0.55, Math.min(0.99, 0.95 + def.atk * 0.001 - stats(target).flee)) * accuracy;
     if (random(s) <= hitChance) {
       const hit = Math.max(1, Math.round((def.atk - stats(target).def) * guard * curse));
-      target.hp = Math.max(0, target.hp - hit); interruptCast(s, target);
+      target.hp = Math.max(0, target.hp - hit);
+      effect(s, target.mapId, target.x, target.y, String(hit), 'incoming');
+      interruptCast(s, target);
     } else effect(s, target.mapId, target.x, target.y, 'Dodge!', 'status');
     m.stance = 'attack'; m.attackFlash = 0.4;
   }
@@ -1014,7 +1018,7 @@ function tickPhreeoni(s, dt) {
       const inside = fighters.filter(c => distance(c, cast) < cast.radius);
       const amount = marked ? Math.ceil(180 / Math.max(1, inside.length)) : 110;
       for (const c of inside) {
-        c.hp = Math.max(0, c.hp - amount); interruptCast(s, c); effect(s, map.id, c.x, c.y, String(amount), 'danger');
+        c.hp = Math.max(0, c.hp - amount); interruptCast(s, c); effect(s, map.id, c.x, c.y, String(amount), 'boss-hit');
       }
       map.telegraph = null;
     }
@@ -1041,7 +1045,7 @@ function tickBoss(s, dt) {
         const d = distance(c, t);
         if (d < (t.innerRadius || 0) || d >= t.radius) continue;
         c.hp = Math.max(0, c.hp - hitDamage); interruptCast(s, c);
-        effect(s, 'arena', c.x, c.y, String(hitDamage), 'danger');
+        effect(s, 'arena', c.x, c.y, String(hitDamage), 'boss-hit');
       }
       effect(s, 'arena', t.x, t.y, t.innerRadius ? 'Sanctuary Ring' : 'Dark Cross', 'danger');
       map.telegraph = null;
@@ -1064,9 +1068,9 @@ function tickBoss(s, dt) {
 function spacePartyMembers(characters, dt) {
   for (let i = 0; i < characters.length; i++) {
     const a = characters[i];
-    if (!active(a) || !a.partyId || a.order !== 'farm') continue;
+    if (!active(a) || !a.partyId || a.order !== 'farm' || a.cast) continue;
     for (const b of characters.slice(i + 1)) {
-      if (!active(b) || b.partyId !== a.partyId || b.mapId !== a.mapId || b.order !== 'farm') continue;
+      if (!active(b) || b.partyId !== a.partyId || b.mapId !== a.mapId || b.order !== 'farm' || b.cast) continue;
       const d = distance(a, b);
       if (d >= 1.35) continue;
       const push = Math.min((1.35 - d) / 2, dt);

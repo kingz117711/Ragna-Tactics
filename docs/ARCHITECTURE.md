@@ -8,7 +8,8 @@ only development package. All original art is served locally.
 
 | File | Responsibility |
 | --- | --- |
-| `src/data.js` | Stable IDs, jobs, maps, monster stats, equipment, tuning, save version |
+| `src/data.js` | Stable IDs, jobs, playable maps, monster stats, equipment, tuning, save version |
+| `src/atlas.js` | Planned destinations, regional groupings and level filters |
 | `src/sim.js` | Serializable world, seeded RNG, commands, combat, progression, parties, rewards, offline settlement |
 | `src/persistence.js` | Save envelope, schema validation, previous-checkpoint recovery, import/export codec |
 | `src/offline-worker.js` | Run capped offline simulation off the UI thread |
@@ -68,8 +69,13 @@ Baphomet marks an area 2.5 seconds before Dark Cross resolves and summons adds.
 Below half health, Sanctuary Ring marks a band with inner radius 3 and outer
 radius 8 for three seconds. Hit checks and projected ring geometry use world units.
 The optional farmCenter and farmRadius fields preserve a player's marked hunting
-ground through orders and saves. The camera interpolates sprite animation time
-between simulation ticks. Gold input pulses live entirely in the UI layer.
+ground through orders and saves. Before each tick the app captures positions of living units on the viewed field.
+The renderer interpolates between that snapshot and the current position for draw
+order, click targets and camera follow. Movement remains on the fixed-step clock.
+The renderer caches a wide-zoom terrain overview and generates up to four missing
+detailed chunks per frame at closer zoom. Combat feedback uses screen-space text
+and display settings stored separately from the guild save. Gold input pulses
+live entirely in the UI layer.
 
 Party kills create one shared EXP pool, not a full reward per unit. Inventory gets
 one loot event. Boss rewards have a once-per-encounter guard. Redeploying a new

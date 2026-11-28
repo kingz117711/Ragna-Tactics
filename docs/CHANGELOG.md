@@ -139,3 +139,16 @@ Added a character sheet, field/roster/alert monitoring, expandable minimap with 
 ## Independent adventurer play
 
 Added a non-modal Character workspace, paper doll with gear deltas and card socketing, stat previews and job advancement. Added individual field orders and a three-slot hotbar with two rankable techniques for each core job family.
+
+## 2026-11-28 — World atlas and combat motion
+
+- Added 27 destinations across six regional groups, with recommended level
+  filters through Lv. 150 and a playable-only filter. Six live destinations
+  link to the field viewer and the deployment picker.
+- Interpolated unit positions and camera tracking across simulation steps.
+  Walking animation keeps its phase through directional changes. The map overview
+  renders from first view and detailed terrain chunks load in bounded batches.
+- Added attack, skill, critical, incoming and boss damage treatments, a cast
+  progress bar and impact accents. Automatic casts hold the unit in place and
+  resolve before the next attack. Combat text and optional impact shake are
+  display preferences, with reduced motion respected.

@@ -1,4 +1,23 @@
-# Milestone handoff — 2026-11-27
+# Milestone handoff — 2026-11-28
+
+## World atlas and combat presentation
+
+Open **World atlas** above the playable quick links or from the deployment picker.
+The atlas groups 27 destinations across six regions. Recommended level filtering
+includes any destination whose range overlaps the chosen band. A playable map
+opens the field view or preselects a deployment destination. Planned cards show
+the biome, encounter type and design hook. The expedition still needs confirmation
+to deploy. The implemented base-level cap is 99.
+
+Use the stable destination IDs and [map pipeline](MAP-RESEARCH.md) for future
+maps. Start with the existing South Prontera terrain pilot, then use Kingfisher
+Reach to exercise a new field and verify the transition from planning to play.
+
+Combat settings remember all hits, highlights, or hidden text in this browser.
+Camera shake is optional, defaults off and observes reduced motion. Automatic
+casts hold position until resolution or interruption. The renderer interpolates
+positions between simulation ticks, caches a ground overview for wide zoom and
+prepares nearby detailed terrain chunks as the camera moves in.
 
 ## Independent adventurer controls
 
@@ -33,8 +52,8 @@ order animation.
 
 Rules to keep: redeploying starts a fresh expedition and clears the old hunting area.
 Redeploying or switching maps while in a fight is refused; retreat to camp first.
-Terrain is decorative and has no collision yet. The chunk cache is bounded at 96 and
-must stay at least as large as the largest map's full-view chunk count (meadow ≈63).
+Terrain is decorative and has no collision yet. Detailed chunks use a 160-entry
+cache. The wide view uses a separate three-map overview cache.
 
 Open gaps: no authored South Prontera layout exists upstream, so the layout is
 procedural. Other terrain families (sand, water, cliff, bridge) are unimported. There
