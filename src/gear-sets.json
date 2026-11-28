@@ -67,28 +67,6 @@
    }
   },
   {
-   "id": "15128+20773",
-   "name": "Excelion Suit + Excelion Wing",
-   "items": [
-    "15128",
-    "20773"
-   ],
-   "slots": [
-    "armor",
-    "garment"
-   ],
-   "bonus": {
-    "fleePct": 6
-   },
-   "requires": [
-    {
-     "on": "BaseLevel",
-     "op": ">",
-     "value": 129
-    }
-   ]
-  },
-  {
    "id": "1628+2535",
    "name": "Refined Survivor's Rod + Cloak Of Survival",
    "items": [

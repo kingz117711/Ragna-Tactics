@@ -52,10 +52,13 @@ STAT_MAP = {
     'bHit': 'hit', 'bFlee': 'flee', 'bCritical': 'crit', 'bAspd': 'speed',
     'bHPrecovRate': 'hpRegen', 'bSPrecovRate': 'spRegen',
 }
+# `bFlee2` is rAthena's *perfect dodge* chance, a different stat from the `bFlee` flat
+# flee it sits beside; mapping it onto a "flee rate" would invent a bonus. Perfect dodge
+# has no model here, so it belongs in UNSUPPORTED with the other unmodellable effects.
 RATE_MAP = {
     'bAtkRate': 'atkPct',
     'bMatkRate': 'matkPct', 'bDefRate': 'defPct', 'bMdefRate': 'mdefPct',
-    'bSpeedRate': 'speedPct', 'bCriticalRate': 'critPct', 'bFlee2': 'fleePct',
+    'bSpeedRate': 'speedPct', 'bCriticalRate': 'critPct',
     'bAspdRate': 'aspdPct', 'bHitRate': 'hitPct',
 }
 # Effects this game has no analogue for. Recognising them lets the set say so instead of
@@ -67,9 +70,12 @@ UNSUPPORTED = (
     'bNoWeaponDmg', 'bNoMagicDamage', 'bHPDrainValue', 'bSPDrainValue', 'bMagicHPGainValue',
     'bMagicSPGainValue', 'bSPGainValue', 'bHPDrainRate', 'bLongAtkRate', 'bShortAtkRate',
     'bAtkRange', 'bSplashRange', 'bIgnoreDefRace', 'bCritDef', 'bNearAtkDef',
+    'bFlee2', 'bPerfectHide', 'bIgnoreDefClass', 'bIgnoreDefEle',
 )
+# Only gates that are *required* for the bonus to exist are conditions here.
+# `BaseLevel > N ? A : B` is not one: it is a value that changes with level, and keeping
+# only branch A would overstate the bonus below N and understate it above.
 CONDITIONS = (
-    ('BaseLevel', re.compile(r'BaseLevel\s*(>=|<=|==|>|<)\s*(\d+)\s*\?\s*(-?\d+)\s*:\s*(-?\d+)')),
     ('Refine', re.compile(r'getequiprefinerycnt\(EQI_(\w+)\)\s*(>=|<=|==|>|<)\s*(\d+)')),
 )
 
@@ -138,15 +144,9 @@ def translate(script):
         label, matched = classify(clause)
         if label is not None:
             condition = {'on': label[0], 'op': label[1], 'value': label[2]}
-            if label[0] == 'Refine':
-                # EQI_ARMOR / EQI_GARMENT / EQI_SHOES -> the catalog slot of the same name.
-                condition['slot'] = label[3].lower()
+            # EQI_ARMOR / EQI_GARMENT / EQI_SHOES -> the catalog slot of the same name.
+            condition['slot'] = label[3].lower()
             conditions.append(condition)
-            if label[0] == 'BaseLevel':
-                # `BaseLevel > N ? A : B` collapses to the unconditional floor A only when
-                # the character is above N; record the gate and keep the base value.
-                add(flat, label[3], label[4])
-                continue
         if matched:
             for key, key_value in matched:
                 add(flat, key, key_value)
@@ -156,12 +156,10 @@ def translate(script):
 
 
 def classify(clause):
-    """Recognise a refinement or level gate; return (label, stats it grants)."""
+    """Recognise a required refinement gate; return (label, stats it grants)."""
     for name, pattern in CONDITIONS:
         hit = pattern.search(clause)
         if hit:
-            if name == 'BaseLevel':
-                return (name, hit.group(1), int(hit.group(2)), None, None, None), None
             return (name, hit.group(2), int(hit.group(3)), hit.group(1)), None
     return None, parse_bonus(clause)
 

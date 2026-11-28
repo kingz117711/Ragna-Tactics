@@ -2,13 +2,12 @@
 
 ## 2026-11-28 — Gear sets from rAthena's item combinations
 
-- **Nine real Ragnarok Online gear sets**, derived from rAthena's
+- **Eight real Ragnarok Online gear sets**, derived from rAthena's
   `db/re/item_combos.yml` at the pinned commit by the new
   `scripts/build_gear_sets.py`: four Black Leather Boots + Rider Insignia pairings
-  (+10 Flee), Excelion Suit + Excelion Wing (+6% Flee rate), the three Survivor's Rod +
-  Cloak Of Survival pairings (+5% MATK, plus a Neutral resistance this game does not model
-  and which the set therefore records as skipped), and Tidal Shoes + Wool Scarf
-  (+10% Max HP, +5 HP recovery). The generator keeps only combinations
+  (+10 Flee), the three Survivor's Rod + Cloak Of Survival pairings (+5% MATK, plus a
+  Neutral resistance this game does not model and which the set therefore records as
+  skipped), and Tidal Shoes + Wool Scarf (+10% Max HP, +5 HP recovery). The generator keeps only combinations
   whose *every* piece is in this game's catalog, drops any where two pieces share a
   slot, and translates only the `bonus` clauses the stat model can honour — a bonus it
   could not express is dropped, never approximated, and the set records which clauses
@@ -17,6 +16,12 @@
   `.*\n`, and an entry's final line has no trailing newline), which silently halved the
   Tidal Shoes bonus to `+5 HP recovery` and hid four Rider combinations entirely. It now
   reads the indented block to its end, so a set's bonus is the whole upstream script.
+- Two more things were wrong in the same reader and are now right: `bFlee2` had been
+  mapped to a "flee rate", but it is *perfect dodge*, a different stat — that is why
+  Excelion Suit + Excelion Wing is not shipped (its only other clause is a cast-delay
+  penalty, which this game has no model for); and a `BaseLevel > N ? A : B` clause had
+  been collapsed to branch A plus a gate, which would have understated the bonus at
+  level 99. Level-dependent *values* are not gates, so the set is now dropped instead.
 - **`src/sim.js` applies them.** `activeGearSets(c)` completes a set only while every
   piece is worn and any refinement/base-level gate the upstream script carried is met
   (a `Refine ≥ 9` clause is not a bonus at +8); `stats()` folds the flat stats in and

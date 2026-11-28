@@ -7,6 +7,13 @@ import assert from 'node:assert/strict';
 import { GEAR_SETS, GEAR_ITEMS, GEAR_SHOP, GEAR_SLOTS, gearSetsFor, gearSetOf } from '../src/data.js';
 import { character, stats, activeGearSets, createGame, command } from '../src/sim.js';
 
+// The stats `stats()` reads. A bonus outside this list would be a number nothing consumes,
+// which is how a set ends up advertising an effect the game does not have.
+const MODELLED = new Set([
+  'atk', 'atkPct', 'matk', 'matkPct', 'def', 'defPct', 'mdef', 'hp', 'hpPct', 'sp', 'spPct',
+  'flee', 'fleePct', 'crit', 'speed', 'hpRegen', 'spRegen',
+]);
+
 const byRo = new Map(Object.entries(GEAR_ITEMS).map(([key, item]) => [item.roId, { key, item }]));
 const pieceKey = roId => byRo.get(Number(roId))?.key;
 
@@ -85,6 +92,7 @@ test('set slots are real equipment slots and bonuses only use modelled stats', (
   for (const set of GEAR_SETS) {
     for (const slot of set.slots) assert.ok(Object.hasOwn(GEAR_SLOTS, slot), `${set.id} uses a real slot`);
     for (const [stat, value] of Object.entries(set.bonus)) {
+      assert.ok(MODELLED.has(stat), `${set.id} only claims a stat the game models (${stat})`);
       assert.equal(typeof value, 'number', `${set.id} ${stat} is numeric`);
       assert.ok(Number.isFinite(value) && value !== 0, `${set.id} ${stat} is a real amount`);
     }
