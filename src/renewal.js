@@ -178,4 +178,6 @@ export const STATUS_EFFECTS = {
   fear: { label: 'Fear', family: 'accuracy-down', refresh: 'longest', control: true },
   curse: { label: 'Curse', family: 'stat-down', refresh: 'longest', control: true },
   burning: { label: 'Burning', family: 'damage-over-time', refresh: 'strongest', control: false },
+  immobilize: { label: 'Snared', family: 'hard-control', refresh: 'longest', control: true },
+  provoke: { label: 'Provoked', family: 'stat-down', refresh: 'longest', control: false },
 };

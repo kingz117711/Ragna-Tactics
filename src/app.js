@@ -1,6 +1,6 @@
-import { FIELD_SKILLS, fieldSkillAvailable, SKILLS, skillCatalog, learnedRank, learnedSkillPower, activeSkillId, jobLineage, combatJob, REFINEMENT, ORE_INFO, gearVariant, AFFINITIES, ELEMENTS, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, promotionRequirement, classBuilds, selectedBuild, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, refineCost, refineSuccessPercent, refineSafeLimit, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
+import { FIELD_SKILLS, fieldSkillAvailable, SKILLS, skillCatalog, learnedRank, learnedSkillPower, activeSkillId, skillPoints, activeSlots, ACTIVE_SLOTS, prereqMet, missingPrereqs, skillFamily, STATUS, jobLineage, combatJob, REFINEMENT, ORE_INFO, gearVariant, AFFINITIES, ELEMENTS, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, promotionRequirement, classBuilds, selectedBuild, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, refineCost, refineSuccessPercent, refineSafeLimit, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
 import { availablePoints, forgePrice, command, tick, stats, rosterLimit, engaged, effectiveTactics, isLeader, canEquipGear } from './sim.js';
-import { FX_LABELS, skillRow, learnedSkillRows, skillSummary } from './skills-ui.js';
+import { FX_LABELS, skillRow, learnedSkillRows, skillSummary, skillTree, buildCards, rotationStrip, skillIcon } from './skills-ui.js';
 import { SAVE_KEY, loadGame, saveGame, encodeSave, decodeSave } from './persistence.js';
 import { Sprites } from './sprites.js';
 import { Renderer } from './renderer.js';
@@ -258,12 +258,16 @@ function characterSkills(c) {
   const st = stats(c), build = selectedBuild(c.job,c.buildId);
   const elemental = st.element || JOB_ROLES[c.job] === 'support';
   const active = SKILLS[activeSkillId(c)];
+  const slots = activeSlots(c);
+  const points = skillPoints(c.jobLevel, c.skills);
   const rows = learnedSkillRows(c);
-  showCharacterModal('skills',c,'Skills and builds',`<section class="sheet-profile"><div><span class="eyebrow">${active ? 'TRAINED SKILL' : 'ACTIVE SKILL'}</span><h3>${esc(st.skill)}</h3><p>${st.cost} SP · ${st.cooldown}s cooldown${active ? ' · rank ' + learnedRank(c, activeSkillId(c)) : ''}</p></div></section>
-    ${active ? `<p>${esc(active.text)}</p><p class="tiny muted">Flourish · ${esc(FX_LABELS[active.fx] || active.fx)}${active.element ? ' · ' + esc(ELEMENTS[active.element].name) : ''}${active.status ? ' · ' + esc(active.status) : ''} · +${learnedSkillPower(c)} skill damage</p>` : ''}
-    <label class="tactics-toggle sheet-skill-toggle"><input type="checkbox" id="sheet-auto-skill" data-tactics-key="autoSkill" ${effectiveTactics(c).autoSkill ? 'checked' : ''}> Automatically use this adventurer’s skill</label>
-    <h3>Learned skills</h3>${rows || '<p>No skill ranks learned yet. Train at camp from the Character panel’s Skills page.</p>'}
-    <h3>Combat build</h3><p>${build ? esc(build.name) + ' · ' + esc(build.style) : 'This job uses its signature skill.'}</p>
+  showCharacterModal('skills',c,'Skills and builds',`<section class="sheet-profile">${active ? skillIcon(active.id, { size: 'lg' }) : ''}<div><span class="eyebrow">${slots.length ? 'CAST ROTATION' : 'ACTIVE SKILL'}</span><h3>${esc(st.skill)}</h3><p>${st.cost} SP · ${st.cooldown}s cooldown${active ? ' · rank ' + learnedRank(c, activeSkillId(c)) : ''} · ${points} point${points === 1 ? '' : 's'} free</p></div></section>
+    ${rotationStrip(c)}
+    ${active ? `<p>${esc(active.desc)}</p><p class="tiny muted">Flourish · ${esc(FX_LABELS[active.fx] || active.fx)}${active.element ? ' · ' + esc(ELEMENTS[active.element]?.name || active.element) : ''}${active.status ? ' · ' + esc(STATUS[active.status]?.label || active.status) : ''} · +${learnedSkillPower(c)} skill damage</p>` : ''}
+    <label class="tactics-toggle sheet-skill-toggle"><input type="checkbox" id="sheet-auto-skill" data-tactics-key="autoSkill" ${effectiveTactics(c).autoSkill ? 'checked' : ''}> Automatically use this adventurer’s rotation</label>
+    <h3>Skill tree</h3>${skillTree(c)}
+    <h3>Learned skills</h3>${rows || '<p>No skill ranks learned yet. Train at camp from the character panel’s Skills page.</p>'}
+    <h3>Builds</h3><p>${build ? esc(build.name) + ' · ' + esc(build.style) : 'This job uses its signature skill.'}</p>${buildCards(c.job)}
     <div class="detail-actions">${classBuilds(c.job).length > 1 ? '<button data-action="builds">Choose combat build</button>' : ''}${elemental ? '<button data-action="spellbook">Prepare spell</button>' : ''}</div>`);
 }
 function openCharacterPage(page, id) {
@@ -319,6 +323,7 @@ function workspaceGear(c) {
 }
 function workspaceSkills(c) {
   const st = stats(c), atCamp = !c.mapId && c.status !== 'down';
+  // Legacy hotbar (field techniques) still works alongside the catalog rotation.
   const available = Object.entries(FIELD_SKILLS).filter(([id])=>fieldSkillAvailable(c.job,id));
   const slots = [0,1].map(index=>{
     const slot = c.techniques?.slots[index];
@@ -326,20 +331,25 @@ function workspaceSkills(c) {
     return `<div class="workspace-slot"><label>Key ${index+2}<select data-workspace-skill-slot="${index}" ${!atCamp ? 'disabled' : ''}><option value="">Empty</option>${options}</select></label>
       <label><input type="checkbox" data-workspace-skill-auto="${index}" ${slot?.auto ? 'checked' : ''} ${atCamp && slot ? '' : 'disabled'}> Auto-cast</label></div>`;
   }).join('');
-  const rows = available.map(([id,skill])=>{
-    const rank = c.techniques?.ranks[id] || 0, level = skill.levels[rank];
-    return `<article class="workspace-item"><div><strong>${skill.name} · Rank ${rank}/3</strong><p>${skill.text}</p><small>${skill.sp} SP · ${skill.time}s cooldown</small></div><button data-workspace-train="${id}" ${atCamp && level && c.jobLevel>=level ? '' : 'disabled'}>${!level ? 'Max rank' : c.jobLevel < level ? 'Job Lv. '+level : 'Learn rank '+(rank+1)}</button></article>`;
-  }).join('');
-  const summary = skillSummary(c), line = summary.line;
-  const active = SKILLS[activeSkillId(c)];
+  const summary = skillSummary(c), line = skillFamily(c.job), active = SKILLS[activeSkillId(c)];
+  const points = skillPoints(c.jobLevel, c.skills);
   const training = skillCatalog(c.job).map(([id]) => skillRow(c, id)).join('');
-  return `<div class="workspace-section"><h3>Skill bar</h3><p><kbd>1</kbd> ${esc(st.skill)} · ${active ? 'Trained skill' : 'Signature'}</p>${slots}
+  const builds = buildCards(c.job);
+  return `<div class="workspace-section">
+    <h3>Skill tree · ${esc(JOBS[c.job].name)}</h3>
+    <p><strong>${points}</strong> skill point${points === 1 ? '' : 's'} free · Job Lv. ${c.jobLevel} · one point per job level</p>
+    <p>Every class line shares its first-job tree: a ${esc(JOBS[c.job].name)} trains its ancestors' skills too, and prerequisites gate the deeper nodes.</p>
+    ${skillTree(c)}
+    <h3>Cast rotation</h3>
+    <p>${ACTIVE_SLOTS} slots fire in order. Press <kbd>1</kbd> for the trained rotation; hotbar keys 2–3 still cast legacy techniques.</p>
+    ${rotationStrip(c)}
     <label class="workspace-auto"><input type="checkbox" id="workspace-auto" ${effectiveTactics(c).autoSkill ? 'checked' : ''}> Allow automatic skills</label>
-    <h3>Skill training · ${line}</h3>
-    <p>Learn ranks with Job levels. ${active ? `Casting <strong>${esc(active.name)}</strong> — ${esc(FX_LABELS[active.fx] || active.fx)}${active.element ? ' · ' + esc(ELEMENTS[active.element].name) : ''} · +${learnedSkillPower(c)} skill damage from learned ranks.` : 'Learn a skill to give this adventurer a trained cast.'}</p>
+    ${active ? `<p class="tiny muted">${esc(active.name)} · ${esc(FX_LABELS[active.fx] || active.fx)}${active.element ? ' · ' + esc(ELEMENTS[active.element].name) : ''} · +${learnedSkillPower(c)} skill damage from learned ranks</p>` : ''}
+    ${builds ? `<h3>Builds for this class</h3>${builds}` : ''}
+    <h3>Ranks</h3>
     ${training || '<p>This line has no trainable skills yet.</p>'}
-    <h3>Techniques</h3>
-    <p>Assign a learned technique to hotbar key 2 or 3. Techniques keep their own cooldowns.</p>${rows || '<p>Choose your first job to unlock class techniques.</p>'}
+    <h3>Field techniques</h3>
+    <p>Assign a learned technique to hotbar key 2 or 3. Techniques keep their own cooldowns.</p>${slots}
     <button data-workspace-detail="skills">Combat builds and spells ↗</button></div>`;
 }
 function workspaceStats(c) {
@@ -728,13 +738,16 @@ document.addEventListener('click', event => {
   if (!state || !ready) return;
   // Skill training is reachable from both the Character panel and the Skills
   // modal, so it is handled before either surface claims the click.
-  const skillAction = event.target.closest('[data-workspace-learn], [data-workspace-active]');
+  const skillAction = event.target.closest('[data-workspace-learn], [data-workspace-active], [data-workspace-cast]');
   if (skillAction) {
     const c = selectedCharacters()[0];
     if (!c) return;
-    const id = skillAction.dataset.workspaceLearn || skillAction.dataset.workspaceActive;
-    const type = skillAction.dataset.workspaceLearn ? 'skill-learn' : 'skill-active';
-    if (issue({ type, ids: [c.id], skillId: id }, { quiet: true })) {
+    const id = skillAction.dataset.workspaceLearn || skillAction.dataset.workspaceActive || skillAction.dataset.workspaceCast;
+    const type = skillAction.dataset.workspaceLearn ? 'skill-learn' : skillAction.dataset.workspaceCast ? 'skill-slot' : 'skill-active';
+    // The slot button toggles: a slotted skill is removed, an unslotted one joins
+    // the rotation (if a slot is free and the rank is learned).
+    const remove = type === 'skill-slot' && activeSlots(c).includes(id);
+    if (issue({ type, ids: [c.id], skillId: id, remove }, { quiet: true })) {
       if (modal.open && modal.dataset.page === 'skills') characterSkills(c); else renderWorkspace();
     }
     return;

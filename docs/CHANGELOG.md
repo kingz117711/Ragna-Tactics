@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-11-28 — Class skill trees, RO skill FX, and complete attack swings
+
+- Rebuilt the skill system around a 229-skill catalog covering all 59 jobs, each
+  with its own job-level-gated tree, prerequisites, icon family and SP/cooldown
+  economy (`src/skills-catalog.js`, `src/skillcore.js`, `src/skills.js`).
+- Added multiple named builds per class family (`SKILL_BUILDS`) — Sniper keeps its
+  three archetypes (Trap Master / Auto-Attack / Falcon) and every other family has
+  two or more presets that show up as cards in the Skills workspace.
+- Moved all skill flourishes into `src/fx.js`: 176 FX ids mapped onto 14
+  archetypes and 18 colour families, drawn with a glow underlay, hot-core flash
+  and radius-scaled line weights. `tools/fx-preview.mjs` renders every id to a
+  contact sheet (`--all`).
+- Finished the attack animation for every class: attack actions resolve to their
+  final pose instead of looping, the simulation stamps `attackSwing` on each
+  basic attack, monster attack and offensive cast, and the renderer holds the full
+  swing even after the 0.4 s attack flash expires.
+- Fixed the FX preview rasteriser, which drew at 1× into a 2× buffer (halving
+  every flourish and aliasing it into dashes).
+- Validation: 15-module check, 100 tests, static build, and FX contact sheets for
+  all 176 flourishes.
+
 ## 2026-11-27 — Playable foundation 0.1
 
 - Established the owner-confirmed direction and a root AGENTS.md for continuation.

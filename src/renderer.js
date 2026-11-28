@@ -1,4 +1,5 @@
 import { MAPS, MONSTERS, STEP, mapBounds } from './data.js';
+import { FX_COLORS, flourishHex, traceFlourish } from './fx.js';
 import { stats } from './sim.js';
 export const project = (x, y) => ({ x: (x - y) * 22, y: (x + y) * 11 });
 export const unproject = (x, y) => ({ x: (x / 22 + y / 11) / 2, y: (y / 11 - x / 22) / 2 });
@@ -12,15 +13,6 @@ const EFFECT_LIFETIME = 1.1;
 const groundColor = mapId => mapId === 'payon' ? '#504859' : ['morroc', 'lair'].includes(mapId)
   ? '#be9967' : mapId === 'arena' ? '#555b5a' : mapId === 'forest' ? '#436352' : '#6b8959';
 const EMPHASIZED_HITS = new Set(['critical', 'skill-hit', 'boss-hit']);
-// Skill flourishes. Each trained skill carries an `fx` id from the catalog and
-// the simulation echoes it on the effect it raises, so the picture always matches
-// the skill that actually fired. Colours stay inside the palette.
-const FX_COLORS = {
-  slash: '#ffe7b4', pierce: '#d9f4ff', burst: '#ffb27a', bolt: '#ffd08a',
-  holy: '#fff4c2', heal: '#c8f7a8', quake: '#e8c79a', gale: '#c9f0ff',
-  venom: '#b7e58a', frost: '#bfe9ff', spark: '#e7d7ff', guard: '#d8e9c0',
-  aura: '#e4d5ff',
-};
 const EFFECT_STYLES = {
   hit: [15, '#fff1cd'], critical: [26, '#ffd16b'], 'skill-hit': [22, '#a5efff'],
   incoming: [14, '#ffaba0'], 'boss-hit': [23, '#ff9582'], heal: [17, '#c5f49b'],
@@ -496,11 +488,20 @@ export class Renderer {
       ellipse(ctx, 0, 1, hero ? 18 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? 48 : 18, hero ? 8 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? 20 : 8, '#0c201e45');
       if (isSelected || hovered === c.id) { ctx.lineWidth = 2 / z; ellipse(ctx, 0, 0, hero ? 23 : 28, hero ? 10 : 12, isSelected ? '#e4cc8720' : '#e9866f18', hero ? '#edd79b' : '#e9866f'); }
       const last = this.animations.get(c.id);
-      const swungAgain = c.stance === 'attack' && c.attackFlash > (last?.flash ?? 0) + 1e-6;
+      // The simulation counts swings; a new count restarts the attack animation,
+      // which keeps every class's swing complete even at high attack speed.
+      const swungAgain = c.stance === 'attack' && ((c.attackSwing || 0) !== (last?.swing ?? (c.attackSwing || 0)) || c.attackFlash > (last?.flash ?? 0) + 1e-6);
       const started = last?.stance === c.stance && !swungAgain ? last.started : s.time;
-      this.animations.set(c.id, { stance: c.stance, flash: c.attackFlash, started });
-      const ms = Math.max(0, s.time + frameRemainder - started) * 1000;
-      if (hero) this.sprites.hero(ctx, c, ms); else this.sprites.monster(ctx, c, ms);
+      const swungAt = swungAgain ? s.time : (last?.swungAt ?? -Infinity);
+      this.animations.set(c.id, { stance: c.stance, flash: c.attackFlash, swing: c.attackSwing, started, swungAt });
+      // Once a unit swings, the whole attack action plays out — including the
+      // recovery frames after the simulation's 0.4 s attack flash ends.
+      const swingMs = hero ? this.sprites.attackMs(c) : 900;
+      const stillSwinging = (s.time + frameRemainder - swungAt) * 1000 < swingMs;
+      const stance = c.stance === 'attack' || stillSwinging ? 'attack' : c.stance;
+      const animationStart = c.stance === 'attack' ? started : (stillSwinging ? swungAt : started);
+      const ms = Math.max(0, s.time + frameRemainder - animationStart) * 1000;
+      if (hero) this.sprites.hero(ctx, c, ms, stance); else this.sprites.monster(ctx, c, ms);
       const barY = hero ? -80 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? -115 : c.kind === 'willow' ? -83 : -44;
       if (hero || hovered === c.id || c.hp < MONSTERS[c.kind].hp) {
         const width = hero ? 43 : (!hero && MAPS[this.mapId].boss && c.kind === MAPS[this.mapId].monster) ? 82 : 36;
@@ -562,125 +563,21 @@ export class Renderer {
     const ctx = this.ctx, reduced = this.reducedMotion.matches;
     const t = clamp(age / (reduced ? 0.9 : 0.62), 0, 1);
     if (t >= 1) return;
-    const color = FX_COLORS[fx] || '#f2e6c8';
+    const color = flourishHex(fx, '#f2e6c8');
     const s = clamp(z, 0.5, 1.15), grow = reduced ? 0.8 : t;
     ctx.save();
     ctx.translate(point.x, point.y - 12 * z);
     // Squash to match the angled overhead camera's ground plane, then emit the
     // shape. Kept in one helper so tools/fx-preview.mjs can render the same paths.
     ctx.scale(s, s * 0.55);
-    this.traceSkillFx(ctx, fx, t, grow, 14 + grow * 40, (1 - t) * 0.92, s, color);
+    this.traceSkillFx(ctx, fx, t, grow, 16 + grow * 46, (1 - t) * 0.92, s, color);
     ctx.restore();
   }
   // Shapes one flourish on an already-transformed context. `alpha` is the fade.
+  // Archetypes and colours live in fx.js so the preview tool draws the same art.
   traceSkillFx(ctx, fx, t, grow, r, alpha, s, color) {
-    ctx.globalAlpha = alpha;
-    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    ctx.lineWidth = 2 / s;
-    if (fx === 'burst') {
-      ctx.lineWidth = 3 / s;
-      ctx.beginPath(); ctx.ellipse(0, 0, r, r, 0, 0, Math.PI * 2); ctx.stroke();
-      for (let i = 0; i < 8; i++) {
-        const a = i / 8 * Math.PI * 2;
-        ctx.beginPath(); ctx.moveTo(Math.cos(a) * r * 0.5, Math.sin(a) * r * 0.5); ctx.lineTo(Math.cos(a) * r * 1.1, Math.sin(a) * r * 1.1); ctx.stroke();
-      }
-    } else if (fx === 'slash') {
-      // Two crossed arcs read as a weapon arc even at the smallest zoom.
-      ctx.lineWidth = 3 / s;
-      ctx.beginPath(); ctx.arc(0, 0, r * 0.92, -1.1, 1.1); ctx.stroke();
-      ctx.beginPath(); ctx.arc(0, 0, r * 0.92, Math.PI - 1.1, Math.PI + 1.1); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-r * 0.95, -r * 0.2); ctx.lineTo(r * 0.95, r * 0.2); ctx.stroke();
-    } else if (fx === 'pierce') {
-      ctx.beginPath(); ctx.moveTo(-r, 0); ctx.lineTo(r, 0); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(r * 0.8, -4); ctx.lineTo(r, 0); ctx.lineTo(r * 0.8, 4); ctx.stroke();
-    } else if (fx === 'bolt') {
-      // A single forked bolt dropping onto the target.
-      ctx.lineWidth = 3 / s;
-      ctx.beginPath(); ctx.moveTo(-r * 0.2, -r * 1.7);
-      for (let i = 0; i < 4; i++) ctx.lineTo((i % 2 ? 1 : -1) * r * 0.45, -r * 1.7 + (i + 1) * r * 0.4);
-      ctx.lineTo(0, 0); ctx.stroke();
-      ctx.beginPath(); ctx.ellipse(0, 0, r * 0.5, r * 0.5, 0, 0, Math.PI * 2); ctx.stroke();
-    } else if (fx === 'spark') {
-      // An arc ring crackling around the caster.
-      for (let i = 0; i < 5; i++) {
-        const a = i / 5 * Math.PI * 2 + 0.3;
-        ctx.beginPath(); ctx.arc(0, 0, r * 0.95, a, a + 0.7); ctx.stroke();
-      }
-      for (let i = 0; i < 5; i++) {
-        const a = i / 5 * Math.PI * 2 + 0.9, x = Math.cos(a) * r * 0.95, y = Math.sin(a) * r * 0.95;
-        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a + 1.57) * r * 0.28, y + Math.sin(a + 1.57) * r * 0.28); ctx.stroke();
-      }
-    } else if (fx === 'holy') {
-      ctx.beginPath(); ctx.ellipse(0, 0, r * 0.55, r * 0.55, 0, 0, Math.PI * 2); ctx.stroke();
-      ctx.globalAlpha *= 0.55;
-      ctx.beginPath(); ctx.moveTo(0, -r * 2.2); ctx.lineTo(0, r * 0.4); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-r * 0.7, -r * 1.1); ctx.lineTo(r * 0.7, -r * 1.1); ctx.stroke();
-    } else if (fx === 'heal') {
-      // A rising cross of motes above a steady ring.
-      ctx.lineWidth = 3 / s;
-      ctx.beginPath(); ctx.moveTo(0, -r * 1.5); ctx.lineTo(0, -r * 0.6); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-r * 0.45, -r * 1.05); ctx.lineTo(r * 0.45, -r * 1.05); ctx.stroke();
-      for (let i = 0; i < 6; i++) {
-        const a = i / 6 * Math.PI * 2 + 0.4;
-        ctx.beginPath(); ctx.arc(Math.cos(a) * r * 0.62, Math.sin(a) * r * 0.62 - grow * 10, 3.4, 0, Math.PI * 2); ctx.fill();
-      }
-      ctx.beginPath(); ctx.ellipse(0, 0, r * 0.62, r * 0.62, 0, 0, Math.PI * 2); ctx.stroke();
-    } else if (fx === 'gale') {
-      // A widening vortex: three long arcs that never share a radius.
-      ctx.lineWidth = 3 / s;
-      for (let i = 0; i < 3; i++) {
-        const rad = r * (0.5 + i * 0.4);
-        ctx.beginPath(); ctx.arc(0, 0, rad, i * 1.9, i * 1.9 + 2.6); ctx.stroke();
-      }
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(r * 0.28, -r * 1.1); ctx.stroke();
-    } else if (fx === 'venom') {
-      // Splattered droplets with a drip trail.
-      for (let i = 0; i < 7; i++) {
-        const a = i / 7 * Math.PI * 2 + t * 1.4, d = r * (0.42 + (i % 3) * 0.22);
-        ctx.beginPath(); ctx.arc(Math.cos(a) * d, Math.sin(a) * d, 8 - (i % 3) * 1.6, 0, Math.PI * 2); ctx.fill();
-      }
-      ctx.lineWidth = 3 / s;
-      ctx.beginPath(); ctx.moveTo(-r * 0.1, 0); ctx.lineTo(-r * 0.1, r * 0.75); ctx.lineTo(r * 0.06, r * 0.55); ctx.stroke();
-    } else if (fx === 'frost') {
-      // A crystal hexagon with short inner spokes.
-      ctx.lineWidth = 3 / s;
-      ctx.beginPath();
-      for (let i = 0; i < 6; i++) {
-        const a = i / 6 * Math.PI * 2 - Math.PI / 2;
-        const x = Math.cos(a) * r * 0.9, y = Math.sin(a) * r * 0.9;
-        i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
-      }
-      ctx.closePath(); ctx.stroke();
-      for (let i = 0; i < 6; i++) {
-        const a = i / 6 * Math.PI * 2 - Math.PI / 2;
-        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(a) * r * 0.5, Math.sin(a) * r * 0.5); ctx.stroke();
-      }
-    } else if (fx === 'guard') {
-      // Shield outline: flat top, tapered point.
-      ctx.lineWidth = 3 / s;
-      ctx.beginPath();
-      ctx.moveTo(-r * 0.62, -r * 0.7); ctx.lineTo(r * 0.62, -r * 0.7); ctx.lineTo(r * 0.62, r * 0.1);
-      ctx.lineTo(0, r * 0.95); ctx.lineTo(-r * 0.62, r * 0.1); ctx.closePath(); ctx.stroke();
-    } else if (fx === 'quake') {
-      ctx.beginPath(); ctx.ellipse(0, 0, r, r, 0, 0, Math.PI * 2); ctx.stroke();
-      ctx.beginPath(); ctx.ellipse(0, 0, r * 0.6, r * 0.6, 0, 0, Math.PI * 2); ctx.stroke();
-      for (let i = 0; i < 5; i++) {
-        const a = i / 5 * Math.PI * 2 + 0.5;
-        ctx.beginPath(); ctx.moveTo(Math.cos(a) * r * 0.62, Math.sin(a) * r * 0.62); ctx.lineTo(Math.cos(a) * r * 1.18, Math.sin(a) * r * 1.18); ctx.stroke();
-      }
-    } else if (fx === 'aura') {
-      // Pulsing rings so a buff is legible without a target.
-      for (let i = 0; i < 3; i++) {
-        ctx.globalAlpha = alpha * (1 - i * 0.24);
-        ctx.beginPath(); ctx.ellipse(0, 0, r * (0.3 + i * 0.34), r * (0.3 + i * 0.34), 0, 0, Math.PI * 2); ctx.stroke();
-      }
-      ctx.globalAlpha = alpha;
-      ctx.beginPath(); ctx.ellipse(0, 0, r * 1.05, r * 1.05, 0, -0.5, 0.5); ctx.stroke();
-    } else {
-      ctx.beginPath(); ctx.ellipse(0, 0, r * 0.7, r * 0.7, 0, 0, Math.PI * 2); ctx.stroke();
-      ctx.globalAlpha *= 0.5;
-      ctx.beginPath(); ctx.ellipse(0, 0, r * 0.4, r * 0.4, 0, 0, Math.PI * 2); ctx.stroke();
-    }
+    traceFlourish(ctx, fx, t, grow, r, alpha, s, color);
+    ctx.globalAlpha = 1;
   }
   drawZoneLabels(ctx, z) {
     const map = MAPS[this.mapId];

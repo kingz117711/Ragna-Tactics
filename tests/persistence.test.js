@@ -84,44 +84,57 @@ test('pre-skill saves receive the class line\'s signature skill and a usable act
   // Simulate a v1 character saved before learnable skills existed.
   for (const c of s.characters) { delete c.skills; delete c.activeSkill; }
   const loaded = decodeSave(encodeSave(s)).state;
-  assert.equal(loaded.characters[0].activeSkill, 'brandish_spear');
-  assert.deepEqual(loaded.characters[0].skills, { brandish_spear: 1 });
-  assert.equal(loaded.characters[1].activeSkill, 'storm_gust');
+  // A Knight trains the Swordsman tree too, so its signature is the first skill
+  // the line opens (Pierce), with Swordsman ranks still available.
+  assert.equal(loaded.characters[0].activeSkill, 'pierce');
+  assert.deepEqual(loaded.characters[0].skills, { pierce: 1 });
+  assert.ok(loaded.characters[0].activeSkills.includes('pierce'));
+  assert.equal(loaded.characters[1].activeSkill, 'jupitel_thunder');
   assert.equal(stats(loaded.characters[1]).hp > 0, true);
 });
 
-test('learned skill ranks and the active choice are validated on load', () => {
+test('learned skill ranks, cast slots and the cast order are validated on load', () => {
   const s = createGame();
   s.characters[0].job = 'swordsman';
   s.characters[0].skills = { bash: 2, magnum_break: 1 };
   s.characters[0].activeSkill = 'bash';
+  s.characters[0].activeSkills = ['bash', 'magnum_break'];
   const loaded = decodeSave(encodeSave(s)).state.characters[0];
   assert.deepEqual(loaded.skills, { bash: 2, magnum_break: 1 });
   assert.equal(loaded.activeSkill, 'bash');
+  assert.deepEqual(loaded.activeSkills, ['bash', 'magnum_break']);
 
   // An unknown skill id or an impossible rank is corruption, not a migration.
   s.characters[0].skills = { bash: 2, not_a_skill: 1 };
   assert.throws(() => decodeSave(encodeSave(s)), /unsupported format/);
-  s.characters[0].skills = { bash: 9 };
+  // Bash now trains to rank 10, so an impossible rank is the corruption case.
+  s.characters[0].skills = { bash: 99 };
   assert.throws(() => decodeSave(encodeSave(s)), /unsupported format/);
   s.characters[0].skills = { bash: 2 };
   s.characters[0].activeSkill = 'not_a_skill';
   assert.throws(() => decodeSave(encodeSave(s)), /unsupported format/);
-  // A real-but-foreign active skill is treated like a stale job artifact and
-  // repaired to the strongest learned skill instead of binning the save.
+  // A real-but-foreign cast is treated like a stale job artifact and repaired
+  // to the strongest learned skill instead of binning the save.
   s.characters[0].activeSkill = 'storm_gust';
+  s.characters[0].activeSkills = ['storm_gust'];
   assert.equal(decodeSave(encodeSave(s)).state.characters[0].activeSkill, 'bash');
+  // Schema-v2 saves only stored a single cast: it seeds the first slot.
+  delete s.characters[0].activeSkills;
+  s.characters[0].activeSkill = 'bash';
+  assert.deepEqual(decodeSave(encodeSave(s)).state.characters[0].activeSkills, ['bash']);
 });
 
 test('ranks left behind by an earlier job line are dropped, not fatal', () => {
   const s = createGame();
   s.characters[0].job = 'swordsman';
-  s.characters[0].skills = { bash: 3 };
+  s.characters[0].skills = { bash: 3, first_aid: 2 };
   s.characters[0].activeSkill = 'bash';
-  // A save written mid-promotion can carry the previous line's training.
+  s.characters[0].activeSkills = ['bash'];
+  // A save written mid-promotion can carry training from another line. A Knight
+  // keeps the Swordsman tree (Bash) but never keeps Novice-only ranks.
   s.characters[0].job = 'knight';
   const loaded = decodeSave(encodeSave(s)).state.characters[0];
   assert.equal(loaded.job, 'knight');
-  assert.deepEqual(loaded.skills, {});
-  assert.equal(loaded.activeSkill, null);
+  assert.deepEqual(loaded.skills, { bash: 3 });
+  assert.equal(loaded.activeSkill, 'bash');
 });

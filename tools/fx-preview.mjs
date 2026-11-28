@@ -6,11 +6,20 @@ import { deflateSync } from 'node:zlib';
 import { writeFileSync } from 'node:fs';
 import { FX_IDS } from '../src/data.js';
 import { Renderer } from '../src/renderer.js';
+import { flourishHex } from '../src/fx.js';
 
-const W = 1040, H = 660, CELL = 200, COLS = 5, ROWS = 3;
+// `--all` renders every catalog flourish; the default sheet keeps the 13 classic
+// archetypes on one page. Either way each tile is coloured like the live skill.
+const ALL = process.argv.includes('--all');
+const SHEET = ALL ? FX_IDS : FX_IDS.slice(0, 13);
+// The full sheet packs more, smaller tiles so it stays a readable single page.
+const COLS = ALL ? 12 : 5, CELL = ALL ? 140 : 200;
+const ROWS = Math.ceil(SHEET.length / COLS);
+const W = COLS * CELL, H = ROWS * CELL;
 
 // ---- minimal 2D context ----------------------------------------------------
-const WIDTH = W * 2, HEIGHT = H * 2;                       // supersample ×2
+const SS_UP = 2;
+const WIDTH = W * SS_UP, HEIGHT = H * SS_UP;               // supersample ×2
 const px = new Float32Array(WIDTH * HEIGHT * 3).fill(0.06);
 const bg = [0.11, 0.16, 0.15];
 for (let i = 0; i < WIDTH * HEIGHT; i++) px.set(bg, i * 3);
@@ -66,6 +75,26 @@ const ctx = {
   set lineCap(v) {}, set lineJoin(v) {},
   beginPath() { state.path = []; }, closePath() {},
   moveTo(x, y) { state.last = [x, y]; }, lineTo(x, y) { state.path.push(linePath(...state.last, x, y)); state.last = [x, y]; },
+  // Curves are flattened into short segments: precise enough for a preview and
+  // it keeps the rasteriser's distance maths exact.
+  quadraticCurveTo(cx, cy, x, y) {
+    const [sx, sy] = state.last, steps = 8;
+    for (let i = 1; i <= steps; i++) {
+      const t = i / steps, u = 1 - t;
+      const px = u * u * sx + 2 * u * t * cx + t * t * x;
+      const py = u * u * sy + 2 * u * t * cy + t * t * y;
+      state.path.push(linePath(...state.last, px, py)); state.last = [px, py];
+    }
+  },
+  bezierCurveTo(c1x, c1y, c2x, c2y, x, y) {
+    const [sx, sy] = state.last, steps = 10;
+    for (let i = 1; i <= steps; i++) {
+      const t = i / steps, u = 1 - t;
+      const px = u*u*u*sx + 3*u*u*t*c1x + 3*u*t*t*c2x + t*t*t*x;
+      const py = u*u*u*sy + 3*u*u*t*c1y + 3*u*t*t*c2y + t*t*t*y;
+      state.path.push(linePath(...state.last, px, py)); state.last = [px, py];
+    }
+  },
   arc(cx, cy, r, from, to) { state.path.push(ellipsePath(cx, cy, r, r, from, to)); },
   ellipse(cx, cy, rx, ry, _rot, from, to) { state.path.push(ellipsePath(cx, cy, rx, ry, from, to)); },
   stroke() { const rgb = hexRgb(state.stroke); for (const p of state.path) drawShape(p, 'stroke', rgb); },
@@ -75,19 +104,52 @@ globalThis.matchMedia = () => ({ matches: false, addEventListener() {}, removeEv
 
 // ---- sheet -----------------------------------------------------------------
 const renderer = new Renderer({ width: W, height: H, getContext: () => ctx }, {});
-FX_IDS.forEach((fx, i) => {
+// The buffer is supersampled ×2, so the whole sheet draws at ×2 and the box
+// filter below brings it back to the sheet's real size with clean edges.
+ctx.save(); ctx.scale(SS_UP, SS_UP);
+SHEET.forEach((fx, i) => {
   const ox = (i % COLS) * CELL + CELL / 2, oy = Math.floor(i / COLS) * CELL + CELL / 2 + 10;
   ctx.save(); ctx.translate(ox, oy);
   // A faint ground marker shows where the unit stands.
   ctx.strokeStyle = '#39544b'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.ellipse(0, 0, 26, 13, 0, 0, Math.PI * 2); ctx.stroke();
-  renderer.traceSkillFx(ctx, fx, 0.45, 0.45, 10 + 0.45 * 34, 1, 1, '#ffe9bd');
+  renderer.traceSkillFx(ctx, fx, 0.42, 0.42, 16 + 0.42 * 46, 1, 1, flourishHex(fx, '#ffe9bd'));
   ctx.restore();
 });
+ctx.restore();
+
+// Per-tile ink census: a tile with almost no lit pixels reads as a blank skill.
+if (process.env.FX_STATS) {
+  const stats = SHEET.map((fx, i) => {
+    const cx = (i % COLS) * CELL, cy = Math.floor(i / COLS) * CELL;
+    let ink = 0, peak = 0;
+    for (let y = cy; y < cy + CELL; y++) for (let x = cx; x < cx + CELL; x++) {
+      const o = ((y * 2) * WIDTH + x * 2) * 3;
+      const d = Math.abs(px[o] - bg[0]) + Math.abs(px[o + 1] - bg[1]) + Math.abs(px[o + 2] - bg[2]);
+      if (d > 0.05) ink++;
+      if (d > peak) peak = d;
+    }
+    return { fx, ink, peak: +peak.toFixed(2) };
+  });
+  // A tile with no ink means an archetype silently drew nothing.
+  const blank = stats.filter(s => s.ink === 0);
+  const median = stats.map(s => s.ink).sort((a, b) => a - b)[Math.floor(stats.length / 2)];
+  console.log(`tiles ${stats.length}, blank ${blank.length}, median ink ${median}${blank.length ? ': ' + blank.map(s => s.fx).join(', ') : ''}`);
+  const byIndex = SHEET.map((fx, i) => {
+    const cx = (i % COLS) * CELL, cy = Math.floor(i / COLS) * CELL;
+    let ink = 0;
+    for (let y = cy; y < cy + CELL; y++) for (let x = cx; x < cx + CELL; x++) {
+      const o = ((y * 2) * WIDTH + x * 2) * 3;
+      if (Math.abs(px[o] - bg[0]) + Math.abs(px[o + 1] - bg[1]) + Math.abs(px[o + 2] - bg[2]) > 0.05) ink++;
+    }
+    return `${i}:${fx}=${ink}`;
+  });
+  console.log(byIndex.join(' '));
+}
 
 // ---- PNG -------------------------------------------------------------------
 // Box-filter the supersampled buffer down to the sheet's real size.
-const OUT_W = W, OUT_H = H, SS = 2;
+const OUT_W = W, OUT_H = H, SS = SS_UP;
 const out = Buffer.alloc(OUT_W * OUT_H * 4);
 for (let y = 0; y < OUT_H; y++) for (let x = 0; x < OUT_W; x++) {
   let r = 0, g = 0, b = 0;
@@ -119,6 +181,7 @@ function crc32(buf) {
 const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(OUT_W, 0); ihdr.writeUInt32BE(OUT_H, 4); ihdr[8] = 8; ihdr[9] = 6;
 const png = Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
   chunk('IHDR', ihdr), chunk('IDAT', deflateSync(raw, { level: 9 })), chunk('IEND', Buffer.alloc(0))]);
-const target = process.argv[2] || 'artifacts/skill-fx.png';
+const argPath = process.argv.slice(2).find(a => !a.startsWith('--'));
+const target = argPath || (ALL ? 'artifacts/skill-fx-all.png' : 'artifacts/skill-fx.png');
 writeFileSync(target, png);
-console.log(`Wrote ${target} with ${FX_IDS.length} flourishes: ${FX_IDS.join(', ')}`);
+console.log(`Wrote ${target} with ${SHEET.length} of ${FX_IDS.length} flourishes${ALL ? '' : ' (pass --all for every id)'}: ${SHEET.join(', ')}`);

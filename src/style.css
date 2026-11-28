@@ -2383,3 +2383,112 @@ select{
   .skill-row { grid-template-columns: 1fr; }
   .skill-row-actions { grid-auto-flow: column; justify-content: start; }
 }
+
+/* ===========================================================================
+   Skill tree, icons, builds and the cast rotation.
+   Icons are drawn in CSS from the flourish family, so they stay sharp at any
+   zoom and need no extra network requests.
+   =========================================================================== */
+.skill-icon {
+  --fx: #ffe7b4;
+  position: relative; display: inline-grid; place-items: center; flex: 0 0 auto;
+  width: 26px; height: 26px; border-radius: 6px;
+  background: radial-gradient(circle at 34% 28%, color-mix(in srgb, var(--fx) 46%, #101c1b), #131f1e 74%);
+  border: 1px solid color-mix(in srgb, var(--fx) 52%, #2a3b36);
+  box-shadow: inset 0 0 8px color-mix(in srgb, var(--fx) 22%, transparent);
+}
+.skill-icon::before, .skill-icon::after {
+  content: ''; position: absolute; background: var(--fx); opacity: .92;
+}
+/* Glyph per flourish family: set from data-fx in the markup. */
+.skill-icon[data-fx^="fire"], .skill-icon[data-fx^="ignition"], .skill-icon[data-fx^="meteor"],
+.skill-icon[data-fx^="comet"], .skill-icon[data-fx^="melt"], .skill-icon[data-fx^="dragon"],
+.skill-icon[data-fx^="blossom"], .skill-icon[data-fx^="solar"], .skill-icon[data-fx="endow"] { --fx: #ff9d5c; }
+.skill-icon[data-fx^="ice"], .skill-icon[data-fx^="frost"], .skill-icon[data-fx^="cold"],
+.skill-icon[data-fx="stormGust"], .skill-icon[data-fx="diamondDust"], .skill-icon[data-fx="blizzard"] { --fx: #bfe9ff; }
+.skill-icon[data-fx^="lightning"], .skill-icon[data-fx^="jupitel"], .skill-icon[data-fx^="chain"],
+.skill-icon[data-fx^="vermilion"], .skill-icon[data-fx="gale"], .skill-icon[data-fx="windWalk"],
+.skill-icon[data-fx="trueSight"] { --fx: #cdeeff; }
+.skill-icon[data-fx^="holy"], .skill-icon[data-fx="grandCross"], .skill-icon[data-fx="magnus"],
+.skill-icon[data-fx^="sanctuary"], .skill-icon[data-fx^="judex"], .skill-icon[data-fx^="blessing"],
+.skill-icon[data-fx^="kyrie"], .skill-icon[data-fx^="gloria"], .skill-icon[data-fx^="gospel"],
+.skill-icon[data-fx="assumptio"], .skill-icon[data-fx="basilica"], .skill-icon[data-fx="coluceo"],
+.skill-icon[data-fx="devotion"], .skill-icon[data-fx="aspersio"], .skill-icon[data-fx="smite"] { --fx: #fff6cf; }
+.skill-icon[data-fx^="heal"], .skill-icon[data-fx^="potion"], .skill-icon[data-fx^="purring"],
+.skill-icon[data-fx="idunApple"], .skill-icon[data-fx="coluceo"] { --fx: #c8f7a8; }
+.skill-icon[data-fx^="venom"], .skill-icon[data-fx^="acid"], .skill-icon[data-fx^="enchant"],
+.skill-icon[data-fx="grimtooth"], .skill-icon[data-fx="deadlyPoison"] { --fx: #b8e88a; }
+.skill-icon[data-fx^="soul"], .skill-icon[data-fx^="ghost"], .skill-icon[data-fx^="psychic"],
+.skill-icon[data-fx^="gate"], .skill-icon[data-fx^="rune"], .skill-icon[data-fx="arcaneCircle"],
+.skill-icon[data-fx="tarot"], .skill-icon[data-fx="deathMark"] { --fx: #d6c6ff; }
+.skill-icon[data-fx^="frostNova"] { --fx: #bfe9ff; }
+/* Shapes: a ring for bursts, a slash for arcs, a bar for thrusts, a drop for bolts. */
+.skill-icon::before { width: 12px; height: 12px; border-radius: 50%; }
+.skill-icon::after { width: 4px; height: 4px; border-radius: 50%; box-shadow: 0 0 0 1px #0d1716; }
+.skill-icon[data-fx^="slash"]::before, .skill-icon[data-fx^="blade"]::before,
+.skill-icon[data-fx^="sonic"]::before, .skill-icon[data-fx^="cross"]::before,
+.skill-icon[data-fx^="rolling"]::before, .skill-icon[data-fx^="meteor"]::before {
+  width: 15px; height: 15px; border-radius: 50%; background: transparent;
+  border: 2px solid var(--fx); clip-path: polygon(0 0, 100% 0, 100% 46%, 0 58%);
+}
+.skill-icon[data-fx^="pierce"]::before, .skill-icon[data-fx^="spear"]::before,
+.skill-icon[data-fx^="spiral"]::before, .skill-icon[data-fx^="arrow"]::before,
+.skill-icon[data-fx^="focused"]::before, .skill-icon[data-fx^="shuriken"]::before,
+.skill-icon[data-fx^="kunai"]::before, .skill-icon[data-fx^="pistol"]::before {
+  width: 15px; height: 3px; border-radius: 2px; transform: rotate(-32deg);
+}
+.skill-icon[data-fx^="bolt"]::before, .skill-icon[data-fx="jupitel"]::before {
+  width: 6px; height: 14px; clip-path: polygon(50% 0, 100% 0, 62% 44%, 100% 44%, 38% 100%, 46% 56%, 10% 56%);
+  border-radius: 0;
+}
+.skill-icon[data-fx^="shield"]::before, .skill-icon[data-fx="guard"]::before, .skill-icon[data-fx="aura"]::before {
+  width: 13px; height: 14px; border-radius: 5px 5px 8px 8px; clip-path: polygon(0 0, 100% 0, 100% 58%, 50% 100%, 0 58%);
+}
+.skill-icon[data-fx^="field"], .skill-icon[data-fx^="trap"], .skill-icon[data-fx^="ankle"],
+.skill-icon[data-fx^="landMine"], .skill-icon[data-fx^="claymore"] { --fx: #e0c79c; }
+/* Size variants. */
+.skill-icon-md { width: 34px; height: 34px; border-radius: 8px; }
+.skill-icon-md::before { transform: scale(1.18); }
+.skill-icon-lg { width: 44px; height: 44px; border-radius: 10px; }
+.skill-icon-lg::before { transform: scale(1.5); }
+
+.skill-row { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 10px; }
+.skill-row-body { min-width: 0; }
+.skill-row.is-slotted { border-color: #9fc4a866; }
+.skill-pips { display: inline-flex; gap: 2px; align-items: center; margin-top: 3px; }
+.skill-pips i { width: 7px; height: 3px; border-radius: 2px; background: #2c3f39; }
+.skill-pips i.on { background: #e9c282; box-shadow: 0 0 4px #e9c28266; }
+.skill-pips b { font-size: 9px; color: #cfe0d2; margin-left: 3px; }
+.skill-reason { color: #8fa79a !important; }
+.skill-row-actions button.is-on { border-color: #8fbf8f; color: #cfe9c6; }
+
+.skill-tree { display: grid; gap: 14px; margin: 8px 0 4px; }
+.skill-tier { border: 1px solid #263a34; border-radius: 10px; padding: 8px 10px 10px; background: #0f1a19; }
+.skill-tier > header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.skill-tier h3 { margin: 0; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #e6d7b1; }
+.skill-nodes { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 7px; }
+.skill-node { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 8px; align-items: start;
+  padding: 7px; border-radius: 8px; border: 1px solid #223530; background: #101c1b; }
+.skill-node.learned { border-color: #6d8f6b; background: #16241f; }
+.skill-node-body strong { display: block; font-size: 12px; color: #f0e5c9; }
+.skill-node-body small { display: block; font-size: 10px; color: #9db3a5; }
+.skill-prereqs { display: flex; flex-wrap: wrap; gap: 4px; margin: 3px 0; }
+.skill-prereqs span { font-size: 9px; padding: 1px 5px; border-radius: 999px; border: 1px solid #2d423b; color: #90a89a; }
+.skill-prereqs span.met { border-color: #57775a; color: #b8d9ae; }
+.skill-prereqs span.unmet { border-color: #6b4038; color: #d7a597; }
+
+.rotation-strip { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; }
+.rotation-slot { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px 4px 4px; border-radius: 8px;
+  border: 1px solid #33483f; background: #121f1d; font-size: 11px; color: #e3d7bb; }
+.rotation-slot b { display: inline-grid; place-items: center; width: 15px; height: 15px; border-radius: 50%;
+  background: #22332e; font-size: 9px; color: #cfe0d2; }
+.rotation-slot.empty { opacity: .5; font-style: italic; }
+
+.build-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; margin: 6px 0 10px; }
+.build-card { border: 1px solid #2a3f38; border-radius: 10px; padding: 9px 10px; background: #101d1b; }
+.build-card header { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.build-card p { margin: 4px 0 6px; font-size: 11px; color: #b9cbbd; }
+.build-skills { display: flex; flex-wrap: wrap; gap: 6px; font-size: 10px; color: #d8e5d5; }
+.build-skills span { display: inline-flex; align-items: center; gap: 4px; }
+.build-skills .skill-icon { width: 18px; height: 18px; border-radius: 4px; }
+.build-skills .skill-icon::before { transform: scale(.72); }

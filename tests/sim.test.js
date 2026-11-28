@@ -361,9 +361,11 @@ test('each second job follows its own first job and casts its signature skill', 
     assert.equal(command(s, { type: 'skill', ids: [c.id] }), null);
     if (job === 'priest') { assert.ok(ally.hp > 20 && c.hp > 20); continue; }
     const hits = mobs.filter(m => m.hp < 300);
-    const expectedTargets = job === 'hunter' ? 3 : job === 'assassin' ? 1 : mobs.length;
+    const expectedTargets = { hunter: 3, assassin: 1, swordsman: 1, merchant: 1, thief: 1 }[job] ?? mobs.length;
     assert.ok(hits.length > 0 && hits.length <= expectedTargets, `${job} should land at least one hit and respect its target cap`);
-    if (['blacksmith', 'wizard'].includes(job)) assert.ok(hits.every(m => m.timer >= 2));
+    if (job === 'wizard') assert.ok(hits.every(m => m.timer >= 2), 'Storm Gust freezes its cluster');
+    // Every second job now casts a catalog skill with its own flourish.
+    assert.ok(stats(c).skillFx, `${job} signature skill carries a flourish`);
   }
 });
 
@@ -606,14 +608,14 @@ test('skills are trained by job level, one rank at a time, and never outside cam
   const s = createGame(), c = s.characters[0];
   Object.assign(c, { job: 'swordsman', jobLevel: 1, skills: {}, activeSkill: null });
   const learn = id => command(s, { type: 'skill-learn', ids: ['c1'], skillId: id });
-  // Rank 2 of Bash unlocks at Job Lv. 5; the first rank is immediate.
+  // Rank 2 of Bash unlocks at Job Lv. 2; the first rank is immediate.
   assert.equal(learn('bash'), null);
   assert.equal(c.skills.bash, 1);
   assert.equal(c.activeSkill, 'bash', 'the first trained skill becomes the active cast');
-  assert.match(learn('bash'), /Job Lv\. 5/);
+  assert.match(learn('bash'), /Job Lv\. 2/);
   // Another line's skill is refused outright.
   assert.match(learn('fire_bolt'), /class line/);
-  c.jobLevel = 5;
+  c.jobLevel = 6;
   assert.equal(learn('bash'), null);
   assert.equal(c.skills.bash, 2);
   // A learned skill can take over the cast without losing the earlier rank.
@@ -656,8 +658,8 @@ test('trained ranks raise skill damage, add flourish data, and respect the area 
   assert.ok(high.damage > low.damage, `${high.damage} should exceed ${low.damage}`);
   assert.ok(high.st.skillPower > low.st.skillPower);
   // Burning is applied by Magnum Break and reported as an effect with its flourish.
-  const fx = low.state.effects.filter(e => e.kind === 'skill' && e.fx === 'burst');
-  assert.ok(fx.length > 0, 'the burst flourish travels with the effect record');
+  const fx = low.state.effects.filter(e => e.kind === 'skill' && e.fx === 'firePillar');
+  assert.ok(fx.length > 0, 'the Magnum Break flourish travels with the effect record');
   assert.ok(low.hit.some(m => m.statuses.burning));
 });
 
@@ -680,9 +682,12 @@ test('a job change starts the new line\'s training from its signature skill', ()
   const s = createGame(), c = s.characters[0];
   Object.assign(c, { job: 'swordsman', jobLevel: 50, skills: { bash: 3, magnum_break: 2 }, activeSkill: 'magnum_break' });
   assert.equal(command(s, { type: 'promote', ids: ['c1'], job: 'knight' }), null);
-  assert.deepEqual(c.skills, { brandish_spear: 1 });
-  assert.equal(c.activeSkill, 'brandish_spear');
-  assert.equal(stats(c).skill, 'Brandish Spear');
+  // Knights still train Swordsman skills, so the ranks survive the promotion and
+  // the new line's signature skill joins them.
+  assert.deepEqual(c.skills, { bash: 3, magnum_break: 2, pierce: 1 });
+  assert.equal(c.activeSkill, 'bash');
+  assert.equal(stats(c).skill, 'Bash');
+  assert.ok(c.activeSkills.includes('pierce'));
   assert.ok(Object.hasOwn(SKILLS, c.activeSkill));
   // The trained cast carries a flourish the renderer can draw.
   assert.ok(stats(c).skillFx);

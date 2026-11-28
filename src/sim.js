@@ -1,6 +1,12 @@
 // Pure, serializable simulation. No DOM, storage, wall clock, or camera dependencies.
-import { FIRST_JOB_KIT, FIELD_SKILLS, fieldSkillAvailable, SKILLS, canLearnSkill, skillUnlockLevel, learnedRank, learnedSkillPower, activeSkill, activeSkillId, defaultSkills, skillMultiplier, combatJob, REFINEMENT, gearKey, defaultBuild, selectedBuild, ELEMENTS, affinityMultiplier, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, promotionRequirement, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, mapBounds, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, refineSuccessPercent, refineCost, refineSafeLimit, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STATUS, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
+import { FIRST_JOB_KIT, FIELD_SKILLS, FIELD_SKILL_ALIASES, fieldSkillAvailable, SKILLS, canLearnSkill, skillUnlockLevel, learnedRank, learnedSkillPower, activeSkill, activeSkillId, activeSkillList, activeSlots, ACTIVE_SLOTS, defaultSkills, skillMultiplier, skillPoints, prereqMet, missingPrereqs, learnedPassive, passiveBonus, combatJob, REFINEMENT, gearKey, defaultBuild, selectedBuild, ELEMENTS, affinityMultiplier, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, promotionRequirement, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, mapBounds, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, refineSuccessPercent, refineCost, refineSafeLimit, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STATUS, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
 
+// The elemental spellbook's flourish per element.
+const ELEMENT_FX = { fire: 'fireBall', water: 'frostNova', wind: 'jupitel', earth: 'quake', holy: 'holyLight', ghost: 'soulBlast', poison: 'venom' };
+// A swing counter: the renderer restarts the attack animation whenever this
+// changes. attackFlash alone cannot do it, because a fast attacker refreshes the
+// flash before it decays and the sprite would never restart.
+export const swing = unit => { unit.attackSwing = (unit.attackSwing || 0) + 1; return unit.attackSwing; };
 // Skill flourishes that also stagger their victims.
 const STUNNING_SKILL_FX = new Set(['quake', 'spark', 'gale']);
 
@@ -49,6 +55,8 @@ export function stats(c) {
   const build = selectedBuild(c.job, c.buildId);
   const learned = element ? null : activeSkill(c);
   const learnedRankNow = learned ? learnedRank(c, c.activeSkill) : 0;
+  // Passive skill ranks feed every derived stat below.
+  const passive = learnedPassive(c.skills);
   // A learned active skill replaces the signature name, SP cost and cooldown.
   // Elemental casters keep their prepared spell: their spellbook owns that path.
   const spell = element ? ELEMENTS[element][combatJob(c.job)] : learned ? learned.name : build?.style === 'support' ? job.skill : build?.skills?.at(-1) || job.skill;
@@ -65,19 +73,24 @@ export function stats(c) {
   const extraHp = gear.reduce((sum,{item}) => sum + (item.hp || 0),0) + affix('hp');
   const extraSp = gear.reduce((sum,{item}) => sum + (item.sp || 0),0) + affix('sp');
   const gearRange = Math.max(1,...gear.map(({item}) => item.range || 1)) - 1;
+  const hitFinal = Math.max(0.65, Math.min(0.99, hit + passive.hit));
+  const fleeFinal = Math.max(0.02, Math.min(0.45, flee + passive.flee));
   return { ...job, element, build, skill:spell,
     cost:learned ? learned.sp : job.cost, cooldown:learned ? learned.cooldown : job.cooldown,
-    skillRank:learnedRankNow, skillFx:learned ? learned.fx : null,
-    castTime:build?.castTime ?? job.castTime ?? 0, hit, flee,
-    interval:job.interval / (1 + totalAgi / 100 + affix('speed') / 100), skillBonus:totalDex * 2 + affix('skill'), crit:totalLuk / 100 + affix('crit') / 100, regen:0.9 + totalInt * 0.025,
+    skillRank:learnedRankNow,
+    // The elemental spellbook has no catalog row; report the flourish that matches
+    // the element so the inspector and effects stay consistent.
+    skillFx:learned ? learned.fx : element ? ELEMENT_FX[element] || 'bolt' : null,
+    castTime:build?.castTime ?? job.castTime ?? 0, hit:hitFinal, flee:fleeFinal,
+    interval:job.interval / (1 + totalAgi / 100 + affix('speed') / 100 + passive.speed), skillBonus:totalDex * 2 + affix('skill') + passive.skill, crit:totalLuk / 100 + affix('crit') / 100 + passive.crit, regen:0.9 + totalInt * 0.025 + passive.regen,
     // Learned ranks add damage to the trained skill only, never to the class's
     // built-in rotation, so existing build maths stay stable.
     skillPower:learnedSkillPower(c),
-    hp:job.hp + (c.level - 1) * 14 + totalVit * 10 + extraHp,
-    atk:Math.round((job.atk + (c.level - 1) * 2 + item.atk + 2 * (c.refine || 0) + gearAtk + totalStr * 2 + (CARDS[c.card]?.atk || 0)) * (1 + (c.buffAtk || 0))),
-    def:job.def + Math.floor((c.level - 1) / 3) + item.def + (c.refine || 0) + gearDef + Math.floor(totalVit / 3) + (CARDS[c.card]?.def || 0),
-    matk:job.atk + (c.level - 1) * 2 + totalInt * 2 + gearMatk, mdef:gear.reduce((sum,{item}) => sum + (item.mdef || 0),0),
-    blindRes:gear.reduce((sum,{item}) => sum + (item.blindRes || 0),0), sp:45 + c.level * 4 + totalInt * 4 + extraSp, range:job.range + gearRange };
+    hp:job.hp + (c.level - 1) * 14 + totalVit * 10 + extraHp + passive.hp,
+    atk:Math.round((job.atk + (c.level - 1) * 2 + item.atk + 2 * (c.refine || 0) + gearAtk + totalStr * 2 + (CARDS[c.card]?.atk || 0) + passive.atk) * (1 + (c.buffAtk || 0))),
+    def:job.def + Math.floor((c.level - 1) / 3) + item.def + (c.refine || 0) + gearDef + Math.floor(totalVit / 3) + (CARDS[c.card]?.def || 0) + passive.def,
+    matk:job.atk + (c.level - 1) * 2 + totalInt * 2 + gearMatk + passive.matk, mdef:gear.reduce((sum,{item}) => sum + (item.mdef || 0),0),
+    blindRes:gear.reduce((sum,{item}) => sum + (item.blindRes || 0),0), sp:45 + c.level * 4 + totalInt * 4 + extraSp + passive.sp, range:job.range + gearRange + passive.range };
 }
 export function character(id, name, sex = 'm') {
   return { id, ownerId: 'local-player', name, sex, job: 'novice', level: 1, exp: 0, jobLevel: 1, jobExp: 0,
@@ -85,7 +98,7 @@ export function character(id, name, sex = 'm') {
     direction: 0, stance: 'idle', status: 'camp', order: 'farm', destination: null, targetId: null,
     cooldown: 0, attackTimer: 0, attackFlash: 0, cast: null, potions: 10, tactic: 'safe', tactics: { ...TACTIC_PRESETS.safe }, equipment: 'training', gear:{},
     assignment: 'balanced', buildId: null, buffTimer: 0, buffAtk: 0, kills: 0, earned: 0,
-    skills: { first_aid: 1 }, activeSkill: 'first_aid' };
+    skills: { first_aid: 1 }, activeSkill: 'first_aid', activeSkills: ['first_aid'] };
 }
 function refreshGearCounts(s) {
   const counts = {};
@@ -324,10 +337,24 @@ function applyCommand(s, cmd) {
     if (c.jobLevel < requirement.jobLevel) return 'Reach Job Lv. ' + requirement.jobLevel + ' first.';
     if (c.level < requirement.baseLevel) return 'Reach Base Lv. ' + requirement.baseLevel + ' first.';
     const starter = c.job === 'novice' && FIRST_JOB_KIT[cmd.job];
-    c.job = cmd.job; c.jobLevel = 1; c.jobExp = 0; c.buildId = defaultBuild(cmd.job); c.hp = stats(c).hp; c.sp = stats(c).sp;
-    // Skills belong to the class family, so a job change starts the new line's
-    // training from scratch and hands over its rank-1 signature skill.
-    Object.assign(c, defaultSkills(cmd.job));
+    const previous = c.job;
+    c.job = cmd.job; c.jobLevel = 1; c.jobExp = 0; c.buildId = defaultBuild(cmd.job);
+    // Skills keep their ranks across a promotion as long as the job line still
+    // teaches them (Swordsman → Knight keeps Bash), exactly like RO. Ranks the new
+    // line cannot teach are dropped, and the new job's signature skill is added.
+    const keepsTraining = JOBS[cmd.job]?.tier === 'transcendent' || JOBS[cmd.job]?.tier === 'third';
+    const kept = keepsTraining
+      ? Object.fromEntries(Object.entries(c.skills || {}).filter(([, rank]) => rank > 0))
+      : Object.fromEntries(Object.entries(c.skills || {}).filter(([id, rank]) => canLearnSkill(cmd.job, id) && rank > 0));
+    const promoted = defaultSkills(cmd.job);
+    for (const [id, rank] of Object.entries(promoted.skills)) kept[id] = Math.max(kept[id] || 0, rank);
+    c.skills = kept;
+    const slots = (Array.isArray(c.activeSkills) ? c.activeSkills : []).filter(id => kept[id]);
+    c.activeSkills = (slots.length ? slots : Object.keys(kept)).slice(0, ACTIVE_SLOTS);
+    if (!c.activeSkills.length) c.activeSkills = Object.keys(promoted.skills).slice(0, ACTIVE_SLOTS);
+    c.activeSkill = c.activeSkills[0] || null;
+    c.skillTimers = {}; c.summon = null;
+    c.hp = stats(c).hp; c.sp = stats(c).sp;
     log(s, c.name + ' became a ' + JOBS[c.job].name + '!');
     if (starter) {
       addGearToBag(s,starter);
@@ -462,20 +489,48 @@ function applyCommand(s, cmd) {
     const rank = learnedRank(c, cmd.skillId);
     if (rank >= def.maxRank) return def.name + ' is already at its highest rank.';
     const next = rank + 1;
+    // Prerequisites are per skill (RO behaviour): each rank of a prerequisite
+    // counts, and the unlock uses whichever rank the prerequisite asks for.
+    if (!prereqMet(c.skills, def)) return def.name + ' needs ' + missingPrereqs(c.skills, def).join(', ') + ' first.';
     const need = skillUnlockLevel(cmd.skillId, next);
-    if (c.jobLevel < need) return def.name + ' rank ' + next + ' unlocks at Job Lv. ' + need + '.';
+    if (c.jobLevel < need) return def.name + ' rank ' + (next === 2 ? '2' : next) + ' unlocks at Job Lv. ' + need + '.';
+    // One skill point per job level; each rank costs one point.
+    if (skillPoints(c.jobLevel ?? 1, c.skills) < 1) return 'No skill points left: earn more job levels at camp.';
     c.skills = { ...(c.skills || {}), [cmd.skillId]: next };
     // The first rank of a skill makes it the active cast, so training is visible
-    // immediately; later picks stay where the player put them.
+    // immediately; further skills fill the remaining rotation slots at camp.
+    const slots = Array.isArray(c.activeSkills) ? [...c.activeSkills] : (c.activeSkill ? [c.activeSkill] : []);
+    if (!slots.length) slots.push(cmd.skillId);
+    else if (rank === 0 && slots.length < ACTIVE_SLOTS && !slots.includes(cmd.skillId)) slots.push(cmd.skillId);
+    c.activeSkills = slots.slice(0, ACTIVE_SLOTS);
     if (!activeSkillId(c) || activeSkillId(c) === cmd.skillId) c.activeSkill = cmd.skillId;
-    log(s, c.name + ' trained ' + def.name + ' to rank ' + next + '.'); return null;
+    log(s, c.name + ' trained ' + def.name + ' to rank ' + next + ' (Job Lv. ' + c.jobLevel + ').'); return null;
   }
   if (cmd.type === 'skill-active') {
     const c = selected[0];
     if (selected.length !== 1 || c.mapId) return 'Choose one adventurer at camp to set their skill.';
     if (!canLearnSkill(c.job, cmd.skillId) || learnedRank(c, cmd.skillId) <= 0) return 'Learn that skill before setting it active.';
     c.activeSkill = cmd.skillId;
-    log(s, c.name + ' will cast ' + SKILLS[cmd.skillId].name + '.'); return null;
+    // Selecting an already-slotted skill makes it the first cast of the rotation.
+    const slots = (Array.isArray(c.activeSkills) ? c.activeSkills : []).filter(id => id !== cmd.skillId);
+    c.activeSkills = [cmd.skillId, ...slots].slice(0, ACTIVE_SLOTS);
+    log(s, c.name + ' will cast ' + SKILLS[cmd.skillId].name + ' first.'); return null;
+  }
+  if (cmd.type === 'skill-slot') {
+    const c = selected[0];
+    if (selected.length !== 1 || c.mapId) return 'Slots are arranged at camp.';
+    const slots = (Array.isArray(c.activeSkills) ? c.activeSkills : []);
+    if (cmd.remove) {
+      c.activeSkills = slots.filter(id => id !== cmd.skillId);
+    } else {
+      if (!canLearnSkill(c.job, cmd.skillId) || learnedRank(c, cmd.skillId) <= 0) return 'Learn that skill before slotting it.';
+      if (slots.includes(cmd.skillId)) return SKILLS[cmd.skillId].name + ' is already slotted.';
+      if (slots.length >= ACTIVE_SLOTS) return 'All ' + ACTIVE_SLOTS + ' cast slots are full.';
+      c.activeSkills = [...slots, cmd.skillId];
+    }
+    if (!c.activeSkills.includes(c.activeSkill)) c.activeSkill = c.activeSkills[0] || null;
+    log(s, c.name + ' arranged ' + c.activeSkills.map(id => SKILLS[id].name).join(' → ') + '.');
+    return null;
   }
   if (cmd.type === 'attune') {
     const c = selected[0];
@@ -535,6 +590,9 @@ function applyCommand(s, cmd) {
   if (['field-order', 'technique-train', 'technique-slot', 'technique-cast'].includes(cmd.type)) {
     if (selected.length !== 1) return 'Select one adventurer.';
     const [c] = selected;
+    // Older saves and hotbars used the field-skill aliases; fold them onto the
+    // catalog ids the whole game now shares.
+    if (cmd.skillId && FIELD_SKILL_ALIASES[cmd.skillId]) cmd.skillId = FIELD_SKILL_ALIASES[cmd.skillId];
     if (cmd.type === 'field-order') return fieldOrder(s,c,cmd);
     if (cmd.type === 'technique-cast') {
       if (!active(c) || c.mapId !== cmd.mapId || ['move','retreat'].includes(c.order)) return 'Watch this adventurer on their field to cast.';
@@ -546,11 +604,12 @@ function applyCommand(s, cmd) {
       return entry && useTechnique(s,c,livingTarget(s,c),entry.id,true) ? null : 'Skill needs SP, a ready cooldown and a valid target.';
     }
     if (c.mapId || c.status === 'down') return 'Manage skill training at camp.';
-    if (!fieldSkillAvailable(c.job,cmd.skillId) && cmd.skillId !== null) return 'This class cannot use that skill.';
+    if (!fieldSkillAvailable(c.job,cmd.skillId) && !canLearnSkill(c.job, cmd.skillId) && cmd.skillId !== null) return 'This class cannot use that skill.';
     const setup = c.techniques || { ranks:{}, slots:[null,null], timers:{} };
     if (cmd.type === 'technique-train') {
       const rank = setup.ranks[cmd.skillId] || 0;
-      const level = FIELD_SKILLS[cmd.skillId]?.levels[rank];
+      const levels = FIELD_SKILLS[cmd.skillId]?.levels || SKILLS[cmd.skillId]?.unlock;
+      const level = levels?.[rank];
       if (level === undefined || c.jobLevel < level) return 'This skill rank is locked.';
       setup.ranks[cmd.skillId] = rank + 1;
     } else {
@@ -785,7 +844,24 @@ function applyBuildStatus(s, c, target, rotation, element) {
 function useTechnique(s,c,target,id,manual = false) {
   const skill = FIELD_SKILLS[id], rank = c.techniques?.ranks[id];
   if (!skill || !rank || c.cast || (c.techniques.timers[id] || 0) > 0 || c.sp < skill.sp) return false;
+  // Every technique now fires through the catalog cast so a hotbar skill and a
+  // trained skill share cooldowns, statuses, variance and flourish reporting.
+  const def = SKILLS[id];
+  if (def) {
+    if (!manual && !target && !['buff', 'heal', 'summon'].includes(def.shape)) return false;
+    const st = stats(c);
+    if (castSkillDef(s, c, st, def, Math.max(rank, c.techniques?.ranks[id] || 1), target, manual, skill.sp)) {
+      c.techniques.timers[id] = Math.max(c.techniques.timers[id] || 0, skill.time);
+      return true;
+    }
+    return false;
+  }
   const st = stats(c), range = skill.range || st.range;
+  // Safety skills (Provoke, Endure...) must never fire at nothing: an automatic
+  // cast needs something to use them on.
+  if (!manual && !target && !['buff', 'heal'].includes(skill.type)) return false;
+  if (!manual && skill.type === 'taunt' && !(target?.targetId && target.targetId !== c.id)) return false;
+  if (skill.type === 'taunt') target.threatLock = rank + 1;
   const map = s.maps[c.mapId], ally = supportedAlly(s,c);
   if (skill.type === 'buff' || skill.type === 'heal') {
     const allies = partyMembers(s,c).filter(a=>active(a) && a.mapId === c.mapId && distance(c,a) <= 8);
@@ -831,81 +907,186 @@ function useAutoSkill(s,c,target) {
 // Kept separate from the build rotation so a trained skill reads the same whether
 // it is auto-cast, hotbar-cast or pressed mid-fight.
 const AREA_TARGETS = 3;
-function skillBurst(s, c, st, def, rank, centre) {
-  const elemental = def.element || null;
-  const power = def.element === 'fire' || def.element === 'water' || def.element === 'wind' ? st.matk : st.atk;
-  const limits = def.kind === 'area' ? AREA_TARGETS : 1;
-  const victims = def.kind === 'area'
-    ? s.maps[c.mapId].monsters.filter(m => m.hp > 0 && distance(m, centre) < def.radius)
-    : s.maps[c.mapId].monsters.filter(m => m === centre);
+// Casts per character are tracked by skill id so a rotation can hold several.
+// `SUMMON_LIFETIME` mirrors RO's timed falcon/warg/homunculus companions.
+const SUMMON_LIFETIME = 40;
+const skillCost = (def, rank) => Math.round(def.sp + (def.spPer || 0) * (Math.max(1, rank) - 1));
+const skillCooldownOf = (def, rank) => Math.round((def.cooldown + (def.cdPer || 0) * (Math.max(1, rank) - 1)) * 10) / 10;
+const skillValue = (def, rank) => def.power + (def.powerPer || 0) * (Math.max(1, rank) - 1);
+const skillHits = (def, rank, maxRank) => {
+  if (!def.hits || def.hits < 2) return 1;
+  return Math.min(def.hits, 1 + Math.floor((rank - 1) * (def.hits - 1) / Math.max(1, maxRank - 1)));
+};
+const onCooldown = (c, id) => !LEGACY_TIMER_IDS.has(id) && (c.skillTimers?.[id] || 0) > 0;
+// Legacy field techniques track their own timers, so they never touch the
+// catalog cooldowns (their hotbar cooldown is separate, as it always was).
+const LEGACY_TIMER_IDS = new Set(Object.keys(FIELD_SKILLS));
+export function startCooldown(c, id, seconds) {
+  if (LEGACY_TIMER_IDS.has(id)) return;
+  c.skillTimers ||= {};
+  c.skillTimers[id] = Math.max(c.skillTimers[id] || 0, seconds);
+}
+// Which power the skill rolls with: magic skills scale with MATK.
+function skillPowerBase(st, def, c) {
+  // Only spellcasters roll magic power; a Knight's elemental skill still uses ATK.
+  const caster = c ? ['mage','wizard','highWizard','warlock','sage','professor','sorcerer','priest','highPriest','archBishop'].includes(combatJob(c.job)) : false;
+  if (!caster) return st.atk;
+  const magical = def.element && def.element !== 'holy' && def.shape !== 'heal' && st.matk > st.atk * 0.9;
+  return magical ? st.matk : st.atk;
+}
+function skillVictims(s, c, def, centre, reach) {
+  const map = s.maps[c.mapId];
+  const alive = map.monsters.filter(m => m.hp > 0);
+  if (def.shape === 'strike') return alive.filter(m => m === centre).slice(0, 1);
+  const radius = def.radius || 2.6;
+  const origin = def.range === 0 || def.shape === 'area' && def.radius >= 3.4 ? c : centre;
+  const pool = alive.filter(m => distance(m, origin) <= radius + (origin === c ? 0 : 0.4));
+  // Damage the intended target first, then everything close to it.
+  pool.sort((a, b) => Number(b === centre) - Number(a === centre) || distance(a, centre) - distance(b, centre));
+  return pool.slice(0, def.job === 'novice' ? 1 : AREA_TARGETS);
+}
+function applySkillStatus(s, c, def, m, rank) {
+  if (!def.status || m.hp <= 0) return;
+  const time = (def.statusTime || 2) * (1 + (rank - 1) * 0.06);
+  const power = def.statusPower ? def.statusPower * rank : 0;
+  applyStatus(s, c, m, def.status, time, power);
+}
+// One cast of one skill, whatever its shape. Returns true when something landed.
+function castSkillDef(s, c, st, def, rank, target, manual = false, costOverride = null) {
+  const map = s.maps[c.mapId];
+  const cost = costOverride ?? skillCost(def, rank);
+  if (c.sp < cost || onCooldown(c, def.id) || (def.shape === 'buff' || def.shape === 'heal' || def.shape === 'summon' ? false : c.cast)) return false;
+  const centre = target || { x: c.x, y: c.y, mapId: c.mapId };
+  if (def.shape === 'heal') {
+    const allies = (combatJob(c.job) === 'novice' ? [c] : partyMembers(s, c))
+      .filter(v => active(v) && v.mapId === c.mapId && distance(v, c) <= (def.radius || 6));
+    const wounded = allies.filter(v => v.hp < stats(v).hp).sort((a, b) => a.hp / stats(a).hp - b.hp / stats(b).hp);
+    // Acolyte-tier healing is single-target; promoted healers mend the party.
+    const tier = JOBS[c.job]?.tier || 'novice';
+    const wholeParty = ['sanctuary', 'high_sanctuary', 'coluceo_heal', 'apple_of_idun'].includes(def.id) || (['second', 'transcendent', 'third', 'expandedSecond', 'expandedThird'].includes(tier));
+    const recipients = wholeParty ? wounded : wounded.slice(0, 1);
+    if (!recipients.length) return false;
+    for (const ally of recipients) {
+      const amount = Math.min(stats(ally).hp - ally.hp, skillValue(def, rank) + c.level * 4 + st.skillBonus + st.skillPower);
+      ally.hp += amount;
+      effect(s, c.mapId, ally.x, ally.y, '+' + Math.round(amount), 'heal', def.fx);
+    }
+    finishCast(s, c, def, rank, cost, 'attack');
+    return true;
+  }
+  if (def.shape === 'buff' || def.shape === 'summon') {
+    const allies = (combatJob(c.job) === 'novice' ? [c] : partyMembers(s, c))
+      .filter(v => active(v) && v.mapId === c.mapId && distance(v, c) <= (def.radius || 4));
+    if (!allies.length) return false;
+    // Automatic casts refresh instead of spamming every cooldown.
+    if (!manual && allies.every(v => (v.buffTimer || 0) > 0)) return false;
+    const bonus = skillValue(def, rank);
+    for (const ally of allies) {
+      ally.buffTimer = Math.max(ally.buffTimer || 0, 8 + rank * 2);
+      ally.buffAtk = Math.max(ally.buffAtk || 0, bonus);
+      effect(s, c.mapId, ally.x, ally.y, '+ATK', 'skill', def.fx);
+    }
+    if (def.shape === 'summon' && def.summon) {
+      c.summon = { kind: def.summon, remaining: SUMMON_LIFETIME, power: 0.3 + rank * 0.06 };
+      effect(s, c.mapId, c.x, c.y, 'Summoned!', 'skill', def.fx);
+    }
+    finishCast(s, c, def, rank, cost, 'idle');
+    return true;
+  }
+  if (!target || target.mapId !== c.mapId || target.hp <= 0) return false;
+  if (distance(c, target) > st.range + (def.range || 0) + (def.shape === 'area' ? (def.radius || 0) * 0.5 : 0)) return false;
+  const victims = skillVictims(s, c, def, centre, st.range);
+  if (!victims.length) return false;
+  const power = skillPowerBase(st, def, c);
+  const hits = skillHits(def, rank, def.maxRank);
+  // A taunt drags attention onto the caster, like Provoke in RO.
+  if (def.shape === 'taunt') {
+    for (const m of victims) { m.targetId = c.id; m.threatLock = rank + 1; }
+    applySkillStatus(s, c, def, victims[0], rank);
+    finishCast(s, c, def, rank, cost, 'attack');
+    return true;
+  }
   let landed = 0;
-  for (const m of victims.slice(0, limits)) {
-    const value = (power * skillMultiplier(def, rank) + st.skillBonus + st.skillPower) * affinityMultiplier(elemental, m.kind);
-    if (!damage(s, c, m, value, def.kind === 'area' ? st.range + def.radius : st.range, 'skill-hit')) continue;
-    landed++;
-    if (def.status && m.hp > 0) applyStatus(s, c, m, def.status, 2 + rank * 0.6, 2 + rank);
-    // Area skills delay the next attack; quake/spark/gale also stagger outright.
-    if (m.hp > 0) m.timer = Math.max(m.timer, def.kind === 'area' || STUNNING_SKILL_FX.has(def.fx) ? 2 : 0);
+  for (const m of victims) {
+    for (let hit = 0; hit < hits; hit++) {
+      if (m.hp <= 0) break;
+      const value = (power * skillValue(def, rank) * (hits > 1 ? 1 / Math.sqrt(hits) : 1) + st.skillBonus + st.skillPower) * affinityMultiplier(def.element, m.kind);
+      if (!damage(s, c, m, value, st.range + (def.radius || 0), 'skill-hit')) break;
+      landed++;
+    }
+    if (m.hp <= 0) continue;
+    applySkillStatus(s, c, def, m, rank);
+    // Area and control skills hold the pack back; hard control buys real time.
+    const hold = STUNNING_SKILL_FX.has(def.fx) || def.shape === 'area' || def.shape === 'ground' ? 2 : 0;
+    if (hold) m.timer = Math.max(m.timer, hold);
+    // Hard control (stun / freeze / snare / sleep) pins the victim for its duration.
+    if (def.status && STATUS[def.status]?.control) {
+      m.timer = Math.max(m.timer, Math.min(3, Math.max(2, (def.statusTime || 2) * (1 + (rank - 1) * 0.06))));
+    }
   }
-  return { landed };
-}
-function skillHeal(s, c, st, def, rank) {
-  const allies = (combatJob(c.job) === 'novice' ? [c] : partyMembers(s, c))
-    .filter(v => active(v) && v.mapId === c.mapId && distance(v, c) <= (def.radius || 6));
-  const wounded = allies.filter(v => v.hp < stats(v).hp).sort((a, b) => a.hp / stats(a).hp - b.hp / stats(b).hp);
-  const recipients = def.job === 'acolyte' ? wounded.slice(0, 1) : wounded;
-  if (!recipients.length) return false;
-  for (const ally of recipients) {
-    const amount = Math.min(stats(ally).hp - ally.hp, (def.power + (rank - 1) * 9) + c.level * 4 + st.skillBonus + st.skillPower);
-    if (['highPriest', 'archBishop'].includes(c.job)) ally.sp = Math.min(stats(ally).sp, ally.sp + 5);
-    ally.hp += amount;
-    effect(s, c.mapId, ally.x, ally.y, '+' + Math.round(amount), 'heal', def.fx);
+  if (!landed) return false;
+  // Party-wide threat tools (Provoke / Endure / tank builds) pull the pack in.
+  if (def.id === 'provoke' || def.shape === 'taunt' || st.build?.style === 'tank') {
+    for (const m of map.monsters) if (m.hp > 0 && distance(m, c) < 5) m.targetId = c.id;
   }
+  finishCast(s, c, def, rank, cost, 'attack');
   return true;
 }
-function skillBuff(s, c, st, def, rank, manual = false) {
-  const allies = (combatJob(c.job) === 'novice' ? [c] : partyMembers(s, c))
-    .filter(v => active(v) && v.mapId === c.mapId && distance(v, c) <= (def.radius || 4));
-  if (!allies.length) return false;
-  // Automatic casts refresh the buff instead of spamming it every cooldown.
-  if (!manual && allies.every(v => (v.buffTimer || 0) > 0)) return false;
-  const bonus = def.power + (rank - 1) * 0.02;
-  for (const ally of allies) {
-    ally.buffTimer = Math.max(ally.buffTimer || 0, 10 + rank * 2);
-    ally.buffAtk = Math.max(ally.buffAtk || 0, bonus);
-    effect(s, c.mapId, ally.x, ally.y, '+ATK', 'skill', def.fx);
+function finishCast(s, c, def, rank, cost, stance) {
+  c.sp -= cost;
+  startCooldown(c, def.id, skillCooldownOf(def, rank));
+  // Global cast delay: one cast per ~0.8s even when several skills are ready.
+  c.cooldown = Math.max(c.cooldown, 0.8);
+  if (def.shape !== 'buff' && def.shape !== 'heal') { c.attackFlash = 0.5; swing(c); }
+  c.stance = stance;
+  effect(s, c.mapId, c.x, c.y, def.name, 'skill', def.fx);
+}
+// The cast the AI should try next. Learned skills in the active slots come first,
+// then the build rotation's own family skills, then the legacy class rotation.
+function rotationSkills(c) {
+  const out = activeSlots(c);
+  if (!out.length) {
+    // No cast slotted: fall back to the build's suggested skills that are learned.
+    const build = selectedBuild(c.job, c.buildId);
+    for (const id of build?.skills || []) if (canLearnSkill(c.job, id) && learnedRank(c, id) > 0) out.push(id);
   }
-  return true;
+  return out;
+}
+function tryRotation(s, c, target, manual = false) {
+  const st = stats(c);
+  for (const id of rotationSkills(c)) {
+    const def = SKILLS[id], rank = learnedRank(c, id);
+    if (!def || rank <= 0) continue;
+    if (def.shape === 'buff' || def.shape === 'heal' || def.shape === 'summon') {
+      if (castSkillDef(s, c, st, def, rank, target, manual)) return true;
+      continue;
+    }
+    if (!target && def.shape !== 'area') continue;
+    if (castSkillDef(s, c, st, def, rank, target, manual)) return true;
+  }
+  return false;
 }
 function resolveSkill(s, c, target, manual = false) {
   const st = stats(c), job = combatJob(c.job);
-  if (c.cooldown > 0 || c.sp < st.cost) return false;
-  // A trained skill takes over the cast once learned; it keeps the class line's
-  // flavour (heal, buff, area, strike) and scales with its rank.
+  if (!manual && st.castTime > 0 && c.sp < st.cost) return false;
+  if (c.sp < st.cost) return false;
+  // 1. Learned skills with real trees take priority, unless the class is an
+  //    elemental caster: their spellbook owns the rotation.
+  if (!st.element && rotationSkills(c).length && tryRotation(s, c, target, manual)) {
+    if (c.sp < 0) c.sp = 0;
+    return true;
+  }
+  if (c.cooldown > 0 && !manual) return false;
+  // 2. Class-level rotation (the pre-catalog behaviour, still used for the
+  //    elemental spellbook and builds that have no trained casts).
   const def = activeSkill(c), rank = st.skillRank || 1;
-  if (def && def.kind === 'heal' && !st.element) {
-    if (!skillHeal(s, c, st, def, rank)) return false;
-    c.sp -= st.cost; c.cooldown = st.cooldown; c.attackFlash = 0.5; c.stance = 'attack';
-    effect(s, c.mapId, c.x, c.y, def.name, 'skill', def.fx); return true;
-  }
-  if (def && def.kind === 'buff' && !st.element) {
-    if (!skillBuff(s, c, st, def, rank, manual)) return false;
-    c.sp -= st.cost; c.cooldown = st.cooldown; c.attackFlash = 0.5; c.stance = 'idle';
-    effect(s, c.mapId, c.x, c.y, def.name, 'skill', def.fx); return true;
-  }
-  if (def && (def.kind === 'strike' || def.kind === 'area') && !st.element) {
-    const reach = def.radius ? st.range + def.radius : st.range;
-    if (!target || target.mapId !== c.mapId || distance(c, target) > reach) return false;
-    const centre = def.kind === 'area' && ['knight', 'blacksmith', 'crusader', 'monk', 'swordsman'].includes(combatJob(c.job)) ? c : target;
-    if (!skillBurst(s, c, st, def, rank, centre).landed) return false;
-    if (combatJob(c.job) === 'swordsman') for (const m of s.maps[c.mapId].monsters) if (m.hp > 0 && distance(m, c) < 5) m.targetId = c.id;
-    c.sp -= st.cost; c.cooldown = st.cooldown; c.attackFlash = 0.5; c.stance = 'attack';
-    effect(s, c.mapId, c.x, c.y, def.name, 'skill', def.fx); return true;
+  if (!st.element && def && rotationSkills(c).length === 0 && castSkillDef(s, c, st, def, rank, target, manual)) {
+    return true;
   }
   if (job === 'novice' || (roleOf(c) === 'support' && !st.element)) {
     const allies = job === 'novice' ? [c] : partyMembers(s, c).filter(v => active(v) && v.mapId === c.mapId && distance(v, c) <= 8);
     const healAt = effectiveTactics(c).healAt;
-    const preferred = supportedAlly(s,c);
+    const preferred = supportedAlly(s, c);
     const injured = allies.filter(v => v.hp < stats(v).hp * (manual ? 1 : healAt)).sort((a, b) => Number(b === preferred) - Number(a === preferred) || a.hp / stats(a).hp - b.hp / stats(b).hp)[0];
     if (!injured) {
       if (st.build?.style !== 'support') return false;
@@ -914,7 +1095,7 @@ function resolveSkill(s, c, target, manual = false) {
       const recipients = job === 'priest' || st.build?.style === 'support' ? allies.filter(a => a.hp < stats(a).hp) : [injured];
       for (const ally of recipients) {
         const amount = Math.min(stats(ally).hp - ally.hp, (job === 'novice' ? 28 : 45 + c.level * 5) + st.skillBonus);
-        if (['highPriest', 'archBishop'].includes(c.job)) ally.sp = Math.min(stats(ally).sp,ally.sp + 5);
+        if (['highPriest', 'archBishop'].includes(c.job)) ally.sp = Math.min(stats(ally).sp, allysSpCap(ally));
         ally.hp += amount; effect(s, c.mapId, ally.x, ally.y, '+' + Math.round(amount), 'heal');
       }
     }
@@ -948,6 +1129,17 @@ function resolveSkill(s, c, target, manual = false) {
   c.sp -= st.cost; c.cooldown = st.cooldown; c.attackFlash = 0.5; c.stance = 'attack';
   effect(s, c.mapId, c.x, c.y, st.skill, 'skill', def?.fx || null); return true;
 }
+const allysSpCap = ally => stats(ally).sp;
+// Summons tick: the falcon/warg/homunculus adds chip damage while it is out.
+function tickSummon(s, c, target) {
+  if (!c.summon) return;
+  c.summon.remaining -= 1;
+  if (c.summon.remaining <= 0) { c.summon = null; return; }
+  if (!target || target.hp <= 0) return;
+  if (!damage(s, c, target, stats(c).atk * c.summon.power, stats(c).range + 1, 'skill-hit')) return;
+  effect(s, c.mapId, target.x, target.y, 'Summon', 'skill', 'falconAssault');
+}
+
 function useSkill(s, c, target, manual = false) {
   const st = stats(c);
   if (c.cast || c.cooldown > 0 || c.sp < st.cost) return false;
@@ -1059,7 +1251,7 @@ function tickCharacter(s, c, dt) {
   if (tactics.autoSkill) useAutoSkill(s, c, target);
   if (c.cast) return;
   if (target.hp > 0 && c.attackTimer <= 0 && target.mapId === c.mapId && distance(c, target) <= st.range) {
-    c.attackTimer = st.interval; c.attackFlash = Math.max(c.attackFlash, 0.4); c.stance = 'attack';
+    c.attackTimer = st.interval; c.attackFlash = Math.max(c.attackFlash, 0.4); c.stance = 'attack'; swing(c);
     const critical = st.crit > 0 && random(s) < st.crit;
     const autoMultiplier = st.build?.rotation === 'rapid-crit' ? 1.3 : st.build?.rotation === 'trap-zone' || st.build?.rotation === 'debuff-control' ? 0.9 : 1;
     damage(s, c, target, st.atk * autoMultiplier * (0.9 + random(s) * 0.2) * (critical ? 1.5 : 1), st.range, critical ? 'critical' : 'hit');
@@ -1115,7 +1307,7 @@ function tickMonster(s, map, m, dt) {
       effect(s, target.mapId, target.x, target.y, String(hit), 'incoming');
       interruptCast(s, target);
     } else effect(s, target.mapId, target.x, target.y, 'Dodge!', 'status');
-    m.stance = 'attack'; m.attackFlash = 0.4;
+    m.stance = 'attack'; m.attackFlash = 0.4; swing(m);
   }
 }
 function tickPhreeoni(s, dt) {
