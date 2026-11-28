@@ -25,7 +25,7 @@ motion from the equipped item's real `kind`, so a Crusader swings a sword, a Sag
 a Gunslinger a revolver, and a Monk punches. Classes without art for the exact type fall
 back the way the client does (two-hander → sword, katar → dagger, …).
 
-Gear sets work the same way: the five sets in `src/gear-sets.json` are real RO item
+Gear sets work the same way: the nine sets in `src/gear-sets.json` are real RO item
 combinations lifted from rAthena's `item_combos.yml` by `scripts/build_gear_sets.py`
 (pinned commit + SHA-256, fetched into `db/` on demand). A set activates only while every
 piece is worn and any refinement gate in the upstream script is met; `sim.activeGearSets()`

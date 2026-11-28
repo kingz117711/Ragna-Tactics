@@ -7,6 +7,66 @@
  },
  "sets": [
   {
+   "id": "2425+2529",
+   "name": "Black Leather Boots + Rider Insignia",
+   "items": [
+    "2425",
+    "2529"
+   ],
+   "slots": [
+    "footwear",
+    "garment"
+   ],
+   "bonus": {
+    "flee": 10
+   }
+  },
+  {
+   "id": "2425+2530",
+   "name": "Black Leather Boots + Rider Insignia",
+   "items": [
+    "2425",
+    "2530"
+   ],
+   "slots": [
+    "footwear",
+    "garment"
+   ],
+   "bonus": {
+    "flee": 10
+   }
+  },
+  {
+   "id": "2434+2529",
+   "name": "Black Leather Boots + Rider Insignia",
+   "items": [
+    "2434",
+    "2529"
+   ],
+   "slots": [
+    "footwear",
+    "garment"
+   ],
+   "bonus": {
+    "flee": 10
+   }
+  },
+  {
+   "id": "2434+2530",
+   "name": "Black Leather Boots + Rider Insignia",
+   "items": [
+    "2434",
+    "2530"
+   ],
+   "slots": [
+    "footwear",
+    "garment"
+   ],
+   "bonus": {
+    "flee": 10
+   }
+  },
+  {
    "id": "15128+20773",
    "name": "Excelion Suit + Excelion Wing",
    "items": [
@@ -19,7 +79,14 @@
    ],
    "bonus": {
     "fleePct": 6
-   }
+   },
+   "requires": [
+    {
+     "on": "BaseLevel",
+     "op": ">",
+     "value": 129
+    }
+   ]
   },
   {
    "id": "1628+2535",
@@ -34,7 +101,10 @@
    ],
    "bonus": {
     "matkPct": 5
-   }
+   },
+   "unmodelled": [
+    "bonus2 bSubEle,Ele_Neutral,25"
+   ]
   },
   {
    "id": "1618+2535",
@@ -49,7 +119,10 @@
    ],
    "bonus": {
     "matkPct": 5
-   }
+   },
+   "unmodelled": [
+    "bonus2 bSubEle,Ele_Neutral,25"
+   ]
   },
   {
    "id": "1620+2535",
@@ -64,7 +137,10 @@
    ],
    "bonus": {
     "matkPct": 5
-   }
+   },
+   "unmodelled": [
+    "bonus2 bSubEle,Ele_Neutral,25"
+   ]
   },
   {
    "id": "2424+2528",
@@ -78,6 +154,7 @@
     "garment"
    ],
    "bonus": {
+    "hpPct": 10,
     "hpRegen": 5
    }
   }

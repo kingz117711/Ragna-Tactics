@@ -132,7 +132,7 @@ the client's `texture/유저인터페이스/item/` set via
 
 Item statistics in `src/gear-catalog.json` come from rAthena's
 `db/re/item_db_equip.yml` (GPL-3.0, see `licenses/`). Only icon-backed, sellable gear is
-curated into the catalog and the merchant's 116-key stock.
+curated into the catalog and the merchant's 117-key stock.
 
 ### Gear sets
 

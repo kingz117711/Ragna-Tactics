@@ -2,15 +2,21 @@
 
 ## 2026-11-28 — Gear sets from rAthena's item combinations
 
-- **Five real Ragnarok Online gear sets**, derived from rAthena's
+- **Nine real Ragnarok Online gear sets**, derived from rAthena's
   `db/re/item_combos.yml` at the pinned commit by the new
-  `scripts/build_gear_sets.py`: Excelion Suit + Excelion Wing (+6 Flee rate),
-  the three Survivor's Rod + Cloak Of Survival pairings (+5% MATK), and
-  Tidal Shoes + Wool Scarf (+5 HP recovery). The generator keeps only combinations
+  `scripts/build_gear_sets.py`: four Black Leather Boots + Rider Insignia pairings
+  (+10 Flee), Excelion Suit + Excelion Wing (+6% Flee rate), the three Survivor's Rod +
+  Cloak Of Survival pairings (+5% MATK, plus a Neutral resistance this game does not model
+  and which the set therefore records as skipped), and Tidal Shoes + Wool Scarf
+  (+10% Max HP, +5 HP recovery). The generator keeps only combinations
   whose *every* piece is in this game's catalog, drops any where two pieces share a
   slot, and translates only the `bonus` clauses the stat model can honour — a bonus it
   could not express is dropped, never approximated, and the set records which clauses
   were skipped.
+- The combo reader had been dropping the last line of every upstream script (it matched
+  `.*\n`, and an entry's final line has no trailing newline), which silently halved the
+  Tidal Shoes bonus to `+5 HP recovery` and hid four Rider combinations entirely. It now
+  reads the indented block to its end, so a set's bonus is the whole upstream script.
 - **`src/sim.js` applies them.** `activeGearSets(c)` completes a set only while every
   piece is worn and any refinement/base-level gate the upstream script carried is met
   (a `Refine ≥ 9` clause is not a bonus at +8); `stats()` folds the flat stats in and
@@ -19,7 +25,7 @@
   pieces it still needs and the bonus it unlocks, and the equipment sheet lists the
   sets an adventurer has active or is partway through.
 - **The merchant stocks every set piece**, so a set is always completable: curation in
-  `scripts/build_gear_catalog.py` now orders them into `gear-shop.json` (116 keys) and
+  `scripts/build_gear_catalog.py` now orders them into `gear-shop.json` (117 keys) and
   relaxes the shop-value filter for a token-priced piece while still refusing unpriced
   or admin-scale gear.
 - Guards: `tests/sets.test.js` (6 tests — catalog/shop membership, slot uniqueness,

@@ -115,8 +115,17 @@ def combo_blocks(text):
                 variants.append(tuple(names))
         if not variants:
             continue
-        script = re.search(r'\n    Script: \|\n((?:      .*\n)+)', entry)
-        yield variants, (script.group(1) if script else '')
+        # The entry text ends at the *next* `- Combos:`, so the final script line often has
+        # no trailing newline. Read indented lines until the block runs out instead of
+        # matching `.*\n`, which would silently drop that last clause of the bonus.
+        marker = entry.find('\n    Script: |\n')
+        lines = []
+        if marker != -1:
+            for line in entry[marker + len('\n    Script: |\n'):].split('\n'):
+                if not line.startswith('      '):
+                    break
+                lines.append(line)
+        yield variants, '\n'.join(lines)
 
 
 def translate(script):

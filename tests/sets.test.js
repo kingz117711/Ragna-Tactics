@@ -26,7 +26,11 @@ test('every gear set is a real catalogue combination that the merchant can suppl
     assert.equal(new Set(slots).size, slots.length, `${set.id} pieces occupy distinct slots`);
     assert.deepEqual(slots.sort(), [...set.slots].sort(), `${set.id} records the real slots`);
     assert.ok(Object.keys(set.bonus).length, `${set.id} carries a bonus this game can apply`);
-    assert.ok(!Object.hasOwn(set, 'unmodelled'), `${set.id} is not a partially modelled bonus`);
+    // Where upstream also grants an effect this game has no model for, the set must say so
+    // instead of silently claiming a full bonus.
+    for (const clause of set.unmodelled ?? []) {
+      assert.equal(typeof clause, 'string', `${set.id} names the clause it cannot model`);
+    }
   }
 });
 
