@@ -1029,8 +1029,12 @@ const canvas = $('battlefield');
 canvas.addEventListener('contextmenu', event => event.preventDefault());
 canvas.addEventListener('pointerdown', event => {
   if (!ready) return;
+  // One deliberate gesture at a time, bound to the pointer that started it: a
+  // second finger or stray hover must never hijack or restart an active drag.
+  if (pointer) return;
   pointer = { down: true, id: event.pointerId, x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY, button: event.button, moved: false, shift: event.shiftKey };
-  canvas.setPointerCapture(event.pointerId); canvas.focus({ preventScroll: true });
+  try { canvas.setPointerCapture(event.pointerId); } catch { /* best-effort: the window handlers below still end the gesture */ }
+  canvas.focus({ preventScroll: true });
 });
 canvas.addEventListener('pointermove', event => {
   if (!ready) return;
@@ -1044,7 +1048,7 @@ canvas.addEventListener('pointermove', event => {
   }
 });
 canvas.addEventListener('pointerup', event => {
-  if (!pointer || !ready) return;
+  if (!pointer || pointer.id !== event.pointerId || !ready) return;
   const press = pointer; pointer = null;
   if (press.moved) return;
   const r = canvas.getBoundingClientRect(), x = event.clientX - r.left, y = event.clientY - r.top, hit = renderer.hit(x, y);
@@ -1059,6 +1063,12 @@ canvas.addEventListener('pointerup', event => {
   renderUI();
 });
 canvas.addEventListener('pointerleave', () => { previewPointer = null; });
+// The gesture must end no matter how the pointer goes away: an explicit cancel,
+// capture being lost (element replaced, capture stolen), or a release that
+// happens outside either canvas. Clearing is idempotent and never issues a
+// click order — the pointerup handler above is the only path to orders.
+canvas.addEventListener('pointercancel', () => { pointer = null; });
+canvas.addEventListener('lostpointercapture', () => { pointer = null; });
 $('hunt-here').onclick = () => {
   const unit = selectedCharacters().find(c => c.mapId === renderer.mapId);
   if (!unit) return toast('Select an adventurer on this field.');
@@ -1080,7 +1090,7 @@ $('expand-minimap').onclick = () => {
   };
 };
 const minimap = $('minimap');
-let minimapDragging = false;
+let minimapGesture = null;
 const navigateMinimap = (canvas,event) => {
   if (!ready) return;
   const r = canvas.getBoundingClientRect();
@@ -1093,10 +1103,43 @@ const navigateMinimap = (canvas,event) => {
   renderer.centerOn(renderer.minimapToWorld(canvas, mx, my));
   renderUI();
 };
-minimap.addEventListener('pointerdown', event => { if (!ready) return; minimapDragging = true; minimap.setPointerCapture(event.pointerId); navigateMinimap(minimap,event); });
-minimap.addEventListener('pointermove', event => { if (minimapDragging) navigateMinimap(minimap,event); });
-minimap.addEventListener('pointerup', () => { minimapDragging = false; });
-minimap.addEventListener('pointercancel', () => { minimapDragging = false; });
+minimap.addEventListener('pointerdown', event => {
+  if (!ready || minimapGesture) return;
+  minimapGesture = { id: event.pointerId, x: event.clientX, y: event.clientY, moved: false };
+  try { minimap.setPointerCapture(event.pointerId); } catch { /* best-effort */ }
+});
+minimap.addEventListener('pointermove', event => {
+  if (!minimapGesture || minimapGesture.id !== event.pointerId) return;
+  // A click recentres exactly once — on release. Movement past a small slop
+  // turns the gesture into a drag, which then navigates continuously. Hover
+  // or pointer re-entry without a held gesture never moves the camera.
+  if (!minimapGesture.moved) {
+    if (Math.hypot(event.clientX - minimapGesture.x, event.clientY - minimapGesture.y) < 4) return;
+    minimapGesture.moved = true;
+  }
+  navigateMinimap(minimap, event);
+});
+minimap.addEventListener('pointerup', event => {
+  if (!minimapGesture || minimapGesture.id !== event.pointerId) return;
+  const click = !minimapGesture.moved;
+  minimapGesture = null;
+  if (click) navigateMinimap(minimap, event);
+});
+minimap.addEventListener('pointercancel', () => { minimapGesture = null; });
+minimap.addEventListener('lostpointercapture', () => { minimapGesture = null; });
+// Releases and cancels outside either canvas, plus a window losing focus, all
+// end any active gesture. With pointer capture the canvases still receive the
+// pointerup themselves; these window-level handlers only tidy state, so they
+// can never issue orders or recenter on a release that was not meant for them.
+window.addEventListener('pointerup', event => {
+  if (pointer && pointer.id === event.pointerId) pointer = null;
+  if (minimapGesture && minimapGesture.id === event.pointerId) minimapGesture = null;
+});
+window.addEventListener('pointercancel', event => {
+  if (pointer && pointer.id === event.pointerId) pointer = null;
+  if (minimapGesture && minimapGesture.id === event.pointerId) minimapGesture = null;
+});
+window.addEventListener('blur', () => { pointer = null; minimapGesture = null; });
 $('find-unit').onclick = () => {
   const onMap = state.characters.filter(c => c.mapId === renderer.mapId);
   if (!onMap.length) return toast('No adventurers are on this field.');
@@ -1114,8 +1157,11 @@ $('stack-close').onclick = () => {
   document.body.classList.remove('detail-open');
   $('detail-toggle').setAttribute('aria-expanded', 'false');
 };
-canvas.addEventListener('pointercancel', () => { pointer = null; });
-canvas.addEventListener('wheel', event => { if (!ready) return; event.preventDefault(); const r = canvas.getBoundingClientRect(); renderer.zoom(Math.exp(-event.deltaY * 0.001), event.clientX - r.left, event.clientY - r.top); renderUI(); }, { passive: false });
+// Wheel zoom keeps the viewport centre anchored: zooming must not steer the
+// camera toward the cursor (the old cursor-anchored zoom read as camera drift
+// whenever the mouse was off-centre). The buttons and keyboard use the same
+// centre-anchored renderer.zoom with the same shared zoom limits.
+canvas.addEventListener('wheel', event => { if (!ready) return; event.preventDefault(); renderer.zoom(Math.exp(-event.deltaY * 0.001)); renderUI(); }, { passive: false });
 document.addEventListener('keydown', event => {
   if (!ready || modal.open || event.ctrlKey || event.metaKey || event.altKey || ['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
   const key = event.key.toLowerCase();
@@ -1180,6 +1226,9 @@ async function start() {
     writable = await acquireWriter();
     if (!writable) { failure('Your guild is already open in another tab. Close that tab, then reload this one to continue.'); return; }
     sprites = new Sprites(); await sprites.init(); renderer = new Renderer(canvas, sprites); Object.assign(renderer, displaySettings);
+    // Debug/observability handle for the browser test suite and the profiling
+    // harness: scheduling counters and the live camera without touching UI state.
+    window.__ragnaDebug = { renderer };
     let loaded;
     try { loaded = loadGame(localStorage); } catch (err) { failure(err.message, true); return; }
     state = loaded.state; await settle(loaded.elapsed);

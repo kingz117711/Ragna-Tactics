@@ -43,8 +43,9 @@ npm run test:build
 ```
 
 Linux CI may need `npx playwright install --with-deps chromium` instead. The runner
-starts this checkout on its own port (5183 by default, configurable with TEST_PORT). Use `PLAYWRIGHT_CHROMIUM_PATH`
-only if you intentionally need a specific installed executable.
+starts this checkout on its own port (5183 by default, configurable with TEST_PORT). When the
+download is unavailable (offline or blocked), point `PLAYWRIGHT_CHROMIUM_PATH` at any installed
+Chromium executable — `test:browser` and `test:build` both honour it.
 
 Scenarios cover fresh deployment/parties/camera switching/orders/reload, job changes
 and boss deployment, per-character tactics and party leadership, the world overview,

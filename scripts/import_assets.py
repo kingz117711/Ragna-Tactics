@@ -15,10 +15,22 @@ ROOT = Path(__file__).resolve().parents[1]
 DEST = ROOT / 'public' / 'assets'
 MANIFEST = DEST / 'provenance.json'
 REPO = 'KzeR7/Prontera-Grind'
-# Decorative terrain subset: seamless ground tiles and anchored scenery props.
-TILES = ['grass_blossom', 'grass_olive', 'dirt_path']
-PROPS = ['tree_tall_cluster', 'tree_sapling', 'tree_bush_bright', 'rock_boulder_mossy',
-         'rock_cliff_crag', 'standing_stone', 'lantern_stone', 'house_prontera']
+# Decorative terrain kit: the complete v2 seamless tile set and every anchored billboard.
+# Each family exists so one painted technique can dress ten map moods; see
+# docs/MAP-RESEARCH.md and ASSET-CREDITS.md. Nothing here is used for collision.
+TILES = ['grass_blossom', 'grass_olive', 'grass_forest', 'grass_geffen', 'grass_jade',
+         'dirt_path', 'dirt_payon', 'sand', 'sand_dark', 'sand_gold', 'limestone_pale',
+         'waste_nifl', 'cliff_rock', 'cliff_sand', 'rock_abyss', 'ruin_cobble',
+         'paddy_water', 'riverbank_wall', 'bridge_planks', 'bridge_red',
+         'water_frame_0', 'water_frame_1', 'water_dark_0', 'water_dark_1']
+PROPS = ['tree_tall_cluster', 'tree_ancient_large', 'tree_ancient_variant', 'tree_dark_gnarled',
+         'tree_dead', 'tree_cherry', 'tree_sapling', 'tree_bush_bright', 'bamboo_grove',
+         'palm_giant', 'palm_tall', 'palm_double', 'cactus_flower', 'cactus_small',
+         'rock_boulder_mossy', 'rock_cliff_crag', 'standing_stone', 'lantern_stone',
+         'river_stone_post', 'stalagmite', 'crystal_cluster', 'desert_bone',
+         'ruin_pillar', 'ruin_column_fallen', 'ruin_stump', 'ruin_curb', 'tombstone',
+         'house_prontera', 'house_ruin', 'tower_geffen', 'shrine_stone', 'torii_gate',
+         'bridge_red_arch', 'pier_post']
 
 
 def fetch(url):

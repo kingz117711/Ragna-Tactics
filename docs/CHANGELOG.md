@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026-11-28 — Camera fit, chunk-budgeted terrain, and apron culling
+
+- Ported the terrain visual pass onto this branch (`src/terrain.js`, 24 tiles,
+  34 props, `docs/MAP-VISUAL-PASS.md`) and rebuilt the renderer's ground
+  pipeline around chunk canvases with a two-tier overview: a cheap tier-0 sheet
+  covers wide zoom on the first frame, and the belt alone is upgraded to a
+  tier-1 sheet in ≤6 ms slices.
+- Camera: shared zoom clamps (0.08–1.8), fit-zoom ×1.24 with panel-aware
+  margins, resize keeps the player's camera, zooming clears unit follow, and
+  pointer gestures are hardened (setPointerCapture with cancel handling, minimap
+  slop so a click still recentres, centre-anchored wheel zoom).
+- Chunk budgeting: visible chunks build proximity-first under per-frame budgets
+  with eviction protection; `window.__ragnaDebug.renderer.probe` exposes
+  chunksBuilt/Evicted, overview tiles/upgrades and longestBuildMs.
+- Terrain painters are rect-culled (streams, pools and bridges by flow bounding
+  box, edge-band apron cells one at a time, rim dashes, road clods, scatter
+  points), and `paintRim`'s early-return was unsatisfiable before (sign error)
+  so every chunk paid for rim dashes. Apron chunks went from ~87–110 ms to
+  ~10–25 ms; belt chunks stay ~3 ms. Output is pixel-faithful to the unculled
+  painter across 11 probe chunks (identical diff counts before/after culling).
+- New `tools/profile-terrain.mjs` before/after profiler
+  (`artifacts/profile-before.json` / `profile-after.json`): fit-pan p95 went
+  400–620 ms → 17 ms, longest idle task 1.2 s → 175–210 ms (first ring), and
+  panning after idle builds with no long tasks; zero chunk evictions.
+- 8 new Playwright regression specs cover fit clamps, zoom limits, resize
+  keeping the camera, chunk budgeting, idle rebuild quiescence, the two-tier
+  overview upgrade, phone camera controls and the minimap outline.
+
 ## 2026-11-28 — GM tools
 
 - Added an opt-in GM playground (`src/gm.js`) with a `GM` tab in the top bar:

@@ -788,3 +788,293 @@ test('walking renders intermediate positions and every playable field paints at 
     expect(painted, id).toBe(true);
   }
 });
+
+// ------------------------------------------------------------------ camera: centre-anchored zoom, shared limits, stable resize
+
+const cameraState = page => page.evaluate(() => {
+  const c = window.__ragnaDebug.renderer.camera;
+  return { x: +c.x.toFixed(2), y: +c.y.toFixed(2), zoom: +c.zoom.toFixed(5) };
+});
+const centreWorld = page => page.evaluate(() => {
+  const rd = window.__ragnaDebug.renderer;
+  const w = rd.world(rd.width / 2, rd.height / 2);
+  return { x: +w.x.toFixed(3), y: +w.y.toFixed(3) };
+});
+const wheelAt = (page, box, fx, fy, deltaY) => page.locator('#battlefield').dispatchEvent('wheel', {
+  deltaY, clientX: box.x + box.width * fx, clientY: box.y + box.height * fy, bubbles: true, cancelable: true,
+});
+
+test('wheel and button zoom keep the viewport centre anchored and share the fit limits', async ({ page }) => {
+  await boot(page);
+  await page.getByRole('button', { name: 'Plan your first expedition' }).click();
+  await page.locator('#deployment-form button.primary').click();
+  await expect(page.locator('#map-population')).toContainText('2 adventurers');
+  const box = await page.locator('#battlefield').boundingBox();
+  const centre0 = await centreWorld(page);
+  // Off-centre wheel zoom must not steer the camera toward the cursor: the
+  // world under the viewport centre (and only that) is the invariant, so the
+  // camera may shift a little to compensate for the HUD's 20 px screen offset.
+  await wheelAt(page, box, 0.15, 0.2, -240);
+  expect((await centreWorld(page)).x).toBeCloseTo(centre0.x, 2);
+  expect((await centreWorld(page)).y).toBeCloseTo(centre0.y, 2);
+  const zoomed = (await cameraState(page)).zoom;
+  expect(zoomed).toBeGreaterThan(0.4);
+  // Buttons and keyboard zoom about the centre as well.
+  await page.locator('#zoom-in').click();
+  await page.locator('#zoom-out').click();
+  await page.keyboard.press('=');
+  await page.keyboard.press('-');
+  expect((await cameraState(page)).zoom).toBeCloseTo(zoomed, 4);
+  expect((await centreWorld(page)).x).toBeCloseTo(centre0.x, 2);
+  // Zooming out past the fit must keep zooming out (never bounce back in):
+  // the manual minimum sits below the fit on every viewport.
+  let last = (await cameraState(page)).zoom;
+  for (let i = 0; i < 14; i++) {
+    await wheelAt(page, box, 0.5, 0.5, 240);
+    const next = (await cameraState(page)).zoom;
+    expect(next).toBeLessThanOrEqual(last + 1e-9);
+    last = next;
+  }
+  expect(last).toBeCloseTo(0.08, 2); // ZOOM_MIN
+});
+
+test('phone fit then zoom out never zooms in and manual zoom cannot exceed the fit range', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await boot(page);
+  await page.locator('#first-deploy').click();
+  await page.locator('#deployment-form button.primary').click();
+  // On phones the Fit button is hidden by design; the boot camera is the fit,
+  // and the keyboard shortcut still refits deliberately.
+  const box = await page.locator('#battlefield').boundingBox();
+  await page.keyboard.press('f');
+  const fit = fitZoom('meadow', box.width, box.height);
+  expect((await cameraState(page)).zoom).toBeCloseTo(fit, 3);
+  expect(fit).toBeGreaterThan(0.08); // the fit sits inside the shared manual range
+  let last = (await cameraState(page)).zoom;
+  for (let i = 0; i < 16; i++) {
+    await wheelAt(page, box, 0.3, 0.25, 240);
+    const next = (await cameraState(page)).zoom;
+    expect(next, 'zooming out from Fit must never zoom in').toBeLessThanOrEqual(last + 1e-9);
+    last = next;
+  }
+  expect(last).toBeCloseTo(0.08, 2);
+  // And zooming back in stops at the shared maximum.
+  for (let i = 0; i < 40; i++) await wheelAt(page, box, 0.5, 0.5, -240);
+  expect((await cameraState(page)).zoom).toBeCloseTo(1.8, 2);
+});
+
+test('resize keeps a manually positioned camera and Fit still recentres deliberately', async ({ page }) => {
+  await boot(page);
+  await page.getByRole('button', { name: 'Plan your first expedition' }).click();
+  await page.locator('#deployment-form button.primary').click();
+  const box = await page.locator('#battlefield').boundingBox();
+  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5);
+  await page.mouse.down();
+  for (const step of [1, 2, 3, 4, 5, 6]) await page.mouse.move(box.x + box.width * 0.5 + step * 18, box.y + box.height * 0.5, { steps: 3 });
+  await page.mouse.up();
+  const panned = await cameraState(page);
+  expect(panned.x).not.toBe(0);
+  const zoomBefore = panned.zoom;
+  await page.setViewportSize({ width: 1250, height: 860 });
+  await page.waitForTimeout(400);
+  expect(await cameraState(page)).toEqual(panned); // resize must not re-fit
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.waitForTimeout(400);
+  expect(await cameraState(page)).toEqual(panned);
+  await page.locator('#fit-camera').click();
+  const fitted = await cameraState(page);
+  expect(fitted.x).toBe(0);
+  expect(fitted.zoom).toBeGreaterThan(zoomBefore * 0.5); // fit re-frames the map
+  await page.keyboard.press('f');
+  expect(await cameraState(page)).toEqual(fitted);
+});
+
+// ------------------------------------------------------------------ gestures: one deliberate pointer, cleared everywhere
+
+test('battlefield drag stops on release outside, cancel, lost capture, and blur; hover never pans', async ({ page }) => {
+  await boot(page);
+  await page.getByRole('button', { name: 'Plan your first expedition' }).click();
+  await page.locator('#deployment-form button.primary').click();
+  const box = await page.locator('#battlefield').boundingBox();
+  const drag = async (release = true) => {
+    await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5);
+    await page.mouse.down();
+    for (const step of [1, 2, 3]) await page.mouse.move(box.x + box.width * 0.5 + step * 20, box.y + box.height * 0.5, { steps: 3 });
+    if (release) await page.mouse.up();
+  };
+  const panDelta = async () => {
+    const before = (await cameraState(page)).x;
+    await page.mouse.move(box.x + box.width * 0.4, box.y + box.height * 0.5, { steps: 3 });
+    await page.mouse.move(box.x + box.width * 0.55, box.y + box.height * 0.5, { steps: 3 });
+    return (await cameraState(page)).x - before;
+  };
+  // Release outside the battlefield (and outside the minimap): the drag must end.
+  await drag();
+  const afterRelease = await cameraState(page);
+  await page.mouse.move(8, 8, { steps: 3 }); // still held? no — already released; hover only
+  await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.3, { steps: 6 });
+  await page.waitForTimeout(250);
+  expect(await cameraState(page)).toEqual(afterRelease);
+  expect(await panDelta()).toBe(0); // hover and re-entry after release leave the camera still
+  // pointercancel mid-drag clears the gesture.
+  await drag(false);
+  await page.evaluate(() => document.getElementById('battlefield').dispatchEvent(new PointerEvent('pointercancel', { bubbles: true })));
+  const afterCancel = await cameraState(page);
+  expect(await panDelta()).toBe(0);
+  expect(await cameraState(page)).toEqual(afterCancel);
+  await page.mouse.up();
+  // lostpointercapture mid-drag clears the gesture.
+  await drag(false);
+  await page.evaluate(() => document.getElementById('battlefield').dispatchEvent(new PointerEvent('lostpointercapture')));
+  const afterLost = await cameraState(page);
+  expect(await panDelta()).toBe(0);
+  expect(await cameraState(page)).toEqual(afterLost);
+  await page.mouse.up();
+  // Window blur mid-drag clears the gesture.
+  await drag(false);
+  await page.evaluate(() => window.dispatchEvent(new Event('blur')));
+  const afterBlur = await cameraState(page);
+  expect(await panDelta()).toBe(0);
+  expect(await cameraState(page)).toEqual(afterBlur);
+  await page.mouse.up();
+  // Deliberate drags still pan (release outside this time — capture delivers the up).
+  await drag();
+  const afterDrag = await cameraState(page);
+  expect(Math.abs(afterDrag.x - afterBlur.x)).toBeGreaterThan(0.5);
+});
+
+test('right-click still issues Move and left drags never issue orders', async ({ page }) => {
+  const s = createGame();
+  command(s, { type: 'deploy', ids: s.characters.map(c => c.id), mapId: 'meadow' });
+  await page.addInitScript(raw => localStorage.setItem('ragna-tactics:save:v1', raw), encodeSave(s));
+  await boot(page);
+  const box = await page.locator('#battlefield').boundingBox();
+  // A held left drag that ends over open ground must not move anyone.
+  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.5 + 90, box.y + box.height * 0.5, { steps: 6 });
+  await page.mouse.up();
+  expect((await readSave(page)).characters.every(c => !c.destination)).toBe(true);
+  // Right-click Move still works.
+  await page.mouse.click(box.x + box.width * 0.45, box.y + box.height * 0.4, { button: 'right' });
+  await expect.poll(async () => (await readSave(page)).characters.filter(c => c.destination).length).toBeGreaterThan(0);
+});
+
+test('minimap click recentres exactly once, hover and re-entry stay still, and release outside clears', async ({ page }) => {
+  await boot(page);
+  await page.getByRole('button', { name: 'Plan your first expedition' }).click();
+  await page.locator('#deployment-form button.primary').click();
+  const box = await page.locator('#minimap').boundingBox();
+  await page.locator('#minimap').click({ position: { x: box.width * 0.72, y: box.height * 0.3 } });
+  await expect.poll(async () => (await cameraState(page)).x).not.toBe(0);
+  const afterClick = await cameraState(page);
+  await page.waitForTimeout(400);
+  expect(await cameraState(page)).toEqual(afterClick); // exactly once — no drift after the click
+  // Hover across the minimap and re-enter: the camera must not move.
+  await page.mouse.move(box.x + box.width * 0.2, box.y + box.height * 0.2);
+  await page.mouse.move(box.x + box.width * 0.85, box.y + box.height * 0.75, { steps: 6 });
+  await page.mouse.move(box.x + 2, box.y + 2);
+  await page.waitForTimeout(200);
+  expect(await cameraState(page)).toEqual(afterClick);
+  // A drag released outside the minimap ends there; later hover stays still.
+  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.4, box.y + box.height * 0.4, { steps: 3 });
+  await page.mouse.move(box.x - 100, box.y - 80, { steps: 4 });
+  await page.mouse.up();
+  const afterDrag = await cameraState(page);
+  await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.7, { steps: 5 });
+  await page.waitForTimeout(250);
+  expect(await cameraState(page)).toEqual(afterDrag);
+  // A plain click still jumps the camera exactly once.
+  await page.locator('#minimap').click({ position: { x: box.width * 0.3, y: box.height * 0.7 } });
+  const afterSecond = await cameraState(page);
+  expect(afterSecond).not.toEqual(afterDrag);
+  await page.waitForTimeout(300);
+  expect(await cameraState(page)).toEqual(afterSecond);
+});
+
+test('the minimap viewport outline tracks the camera without a feedback loop', async ({ page }) => {
+  await boot(page);
+  await page.getByRole('button', { name: 'Plan your first expedition' }).click();
+  await page.locator('#deployment-form button.primary').click();
+  await page.locator('#zoom-in').click();
+  await page.locator('#zoom-in').click();
+  await page.locator('#zoom-in').click();
+  const box = await page.locator('#minimap').boundingBox();
+  await page.locator('#minimap').click({ position: { x: box.width * 0.7, y: box.height * 0.3 } });
+  await expect.poll(async () => (await cameraState(page)).x).not.toBe(0);
+  await page.waitForTimeout(300); // minimap redraws at most 100 ms behind the camera
+  // The outline tint (#ffe9a314, α .08) lightens exactly the region the camera
+  // says is visible; markers, roads and the camp stay below the red threshold.
+  const outline = await page.evaluate(() => {
+    const rd = window.__ragnaDebug.renderer;
+    const canvas = document.getElementById('minimap');
+    const { scale, offX, offY } = rd.minimapTransform(canvas);
+    const poly = [[0, 0], [rd.width, 0], [rd.width, rd.height], [0, rd.height]]
+      .map(([x, y]) => { const w = rd.world(x, y); return { x: offX + (w.x - w.y) * 22 * scale, y: offY + (w.x + w.y) * 11 * scale }; });
+    const inside = (x, y) => {
+      let hit = false;
+      for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+        if ((poly[i].y > y) !== (poly[j].y > y) && x < ((poly[j].x - poly[i].x) * (y - poly[i].y)) / (poly[j].y - poly[i].y) + poly[i].x) hit = !hit;
+      }
+      return hit;
+    };
+    const { data } = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
+    let inR = 0, inN = 0, outR = 0, outN = 0;
+    for (let y = 0; y < canvas.height; y++) for (let x = 0; x < canvas.width; x++) {
+      const i = (y * canvas.width + x) * 4;
+      const [r, g, b, a] = [data[i], data[i + 1], data[i + 2], data[i + 3]];
+      if (a < 150 || r > 175 || g < r || b > g) continue; // keep only the dark field, not markers/camp/roads
+      if (inside(x, y)) { inR += r; inN++; } else { outR += r; outN++; }
+    }
+    return { delta: inR / Math.max(1, inN) - outR / Math.max(1, outN), inN, outN };
+  });
+  expect(outline.inN).toBeGreaterThan(200);
+  expect(outline.outN).toBeGreaterThan(200);
+  expect(outline.delta, 'the outlined region should sit where the camera says it is').toBeGreaterThan(8);
+  const after = await cameraState(page);
+  await page.waitForTimeout(500);
+  expect(await cameraState(page)).toEqual(after); // the outline follows the camera; the camera never follows back
+});
+
+// ------------------------------------------------------------------ terrain scheduling
+
+test('fit zoom paints the overview without chunk builds; zooming in builds visible chunks with no idle rebuilds', async ({ page }) => {
+  const errors = []; page.on('pageerror', e => errors.push(e.message));
+  await boot(page);
+  await page.getByRole('button', { name: 'Plan your first expedition' }).click();
+  await page.locator('#deployment-form button.primary').click();
+  const probe = () => page.evaluate(() => {
+    const rd = window.__ragnaDebug.renderer;
+    return { built: rd.probe.chunksBuilt, evicted: rd.probe.chunksEvicted, tiles: rd.probe.overviewTiles, upgrades: rd.probe.overviewUpgrades };
+  });
+  const box = await page.locator('#battlefield').boundingBox();
+  // Pan across the field at fit zoom: the cached overview is drawn, no chunk is built.
+  const atFit = await probe();
+  for (const [fx, fy] of [[0.3, 0.5], [0.7, 0.5], [0.5, 0.3], [0.5, 0.7], [0.3, 0.5]]) {
+    await page.mouse.move(box.x + box.width * (1 - fx), box.y + box.height * fy);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width * fx, box.y + box.height * fy, { steps: 8 });
+    await page.mouse.up();
+  }
+  expect((await probe()).built).toBe(atFit.built);
+  // Zoom in: visible chunks are built (budgeted), the overview stays underneath.
+  await page.locator('#zoom-in').click();
+  await page.locator('#zoom-in').click();
+  await expect.poll(async () => (await probe()).built).toBeGreaterThan(atFit.built);
+  // Let the visible set finish filling and the overview upgrade complete.
+  await expect.poll(async () => (await probe()).upgrades).toBeGreaterThanOrEqual(1, { timeout: 20000 });
+  await page.evaluate(async () => {
+    const rd = window.__ragnaDebug.renderer;
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    let last = -1;
+    for (let i = 0; i < 300; i++) { await sleep(100); const built = rd.probe.chunksBuilt; if (built === last) return; last = built; }
+  });
+  // Hold the camera still: nothing may rebuild.
+  const idleA = await probe();
+  await page.waitForTimeout(1800);
+  const idleB = await probe();
+  expect(idleB.built, 'no chunk rebuilds while the camera is still').toBe(idleA.built);
+  expect(errors).toEqual([]);
+});

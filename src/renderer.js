@@ -1,17 +1,20 @@
 import { MAPS, MONSTERS, STEP, mapBounds } from './data.js';
 import { FX_COLORS, flourishHex, traceFlourish } from './fx.js';
+import { beltExtent, biomeFor, groundExtent, paintGround, propScale, sceneryFor } from './terrain.js';
 import { stats } from './sim.js';
 export const project = (x, y) => ({ x: (x - y) * 22, y: (x + y) * 11 });
 export const unproject = (x, y) => ({ x: (x / 22 + y / 11) / 2, y: (y / 11 - x / 22) / 2 });
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
-// Scenery reaches one world unit past the playable bounds, as before.
-const visual = mapId => { const b = mapBounds(mapId); return { x: b.x + 1, y: b.y + 1 }; };
+// The painted field runs past the playable bounds so it never ends in a slab
+// edge; the camera and chunk grid use the same padded extent.
+const visual = mapId => groundExtent(mapId);
 const CHUNK = 8;          // world units per cached terrain chunk
-const CHUNK_CACHE = 160;  // bounded LRU; covers a full South Prontera view plus margin, ≈40 MB worst case
-const CELL = 4;           // world units per ground tile cell
+const CHUNK_CACHE = 160;  // bounded cache; covers a full South Prontera view plus margin, ≈40 MB worst case
+const CHUNK_BUILD_BUDGET = 2;   // new chunks per frame at most; the overview underneath already looks like the map
+const CHUNK_TIME_BUDGET_MS = 6; // ...and at most this many ms of terrain work per frame, so panning never stalls
+const OVERVIEW_SLICE_MS = 6;    // ms per animation frame spent upgrading the overview, off the draw path
 const EFFECT_LIFETIME = 1.1;
-const groundColor = mapId => mapId === 'payon' ? '#504859' : ['morroc', 'lair'].includes(mapId)
-  ? '#be9967' : mapId === 'arena' ? '#555b5a' : mapId === 'forest' ? '#436352' : '#6b8959';
+const groundColor = mapId => biomeFor(mapId).ground;
 const EMPHASIZED_HITS = new Set(['critical', 'skill-hit', 'boss-hit']);
 const EFFECT_STYLES = {
   hit: [15, '#fff1cd'], critical: [26, '#ffd16b'], 'skill-hit': [22, '#a5efff'],
@@ -21,10 +24,20 @@ const EFFECT_STYLES = {
 };
 
 // Shared with tests so click→world math always matches the live camera fit.
+// The fit frames the *playable* ground: the painted apron intentionally runs off
+// screen so the field fills the viewport like a real map instead of a diorama.
+// Fit and manual zoom share ONE range: on a phone (390×844) the fit sits near
+// the bottom of it, so with a separate higher manual minimum, zooming out from
+// Fit pushed the zoom back up — the reported camera drift. The 1.24 crop step
+// keeps taps inside the playable bounds on narrow viewports, where the map's
+// top tip would otherwise sit just outside the rectangle the sim accepts.
+export const ZOOM_MIN = 0.08, ZOOM_MAX = 1.8;
 export function fitZoom(mapId, width, height) {
-  const b = visual(mapId);
+  const m = mapBounds(mapId);
+  const b = { x: m.x + 2.5, y: m.y + 2.5 };
   const halfW = (b.x + b.y) * 22, halfH = (b.x + b.y) * 11;
-  return clamp(Math.min(width / (halfW * 2 + 102), (height - 100) / (halfH * 2 + 96)), 0.2, 1.15);
+  const fit = Math.min((width - 24) / (halfW * 2 + 40), (height - 96) / (halfH * 2 + 52));
+  return clamp(fit * 1.24, ZOOM_MIN, ZOOM_MAX);
 }
 function polygon(ctx, points, fill, stroke) {
   ctx.beginPath(); points.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath();
@@ -69,7 +82,16 @@ export class Renderer {
     this.orderMarks = []; this.previousFrame = null;
     this.scenery = new Map(); this.overviews = new Map();
     this.combatText = 'all'; this.cameraShake = false; this.shake = 0;
+    // Scheduling state: the zoom gate below which the overview is drawn without
+    // building chunks, the chunks that must never be evicted (everything visible
+    // this frame), and the incremental overview upgrade job.
+    this.fitZoomNow = 0; this.protectedChunks = new Set();
+    this.overviewJob = null; this._pumpScheduled = false;
+    // Lightweight counters for tests and profiling: chunk builds/evictions and
+    // overview tiles assembled by the background upgrade.
+    this.probe = { chunksBuilt: 0, chunksEvicted: 0, overviewTiles: 0, overviewUpgrades: 0 };
     this.reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    this._bgGradient = null; this._bgKey = '';
     // Optional so the drawing maths stays usable without a DOM (tests, workers).
     this.resizeObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(() => this.resize()) : null;
     this.resizeObserver?.observe(canvas);
@@ -78,6 +100,14 @@ export class Renderer {
     const r = this.canvas.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
     this.width = r.width; this.height = r.height; this.canvas.width = Math.round(r.width * dpr); this.canvas.height = Math.round(r.height * dpr);
     this.dpr = dpr;
+    this._bgGradient = null;
+    // Track the fit zoom for the current viewport so the chunk gate follows it,
+    // but do NOT move the camera here. Re-fitting on resize (PR #11's auto-fit)
+    // yanked a manually positioned camera back to the map centre whenever the
+    // layout shifted — a panel opening or the mouse brushing a hover panel.
+    if (r.width > 0) this.fitZoomNow = fitZoom(this.mapId, r.width, r.height);
+    // Fit exactly once, on the first non-zero measurement. Every later resize
+    // preserves whatever camera the player positioned themselves.
     if (!this.initialized && r.width > 0) { this.fit(); this.initialized = true; }
   }
   fit() {
@@ -85,7 +115,10 @@ export class Renderer {
     this.animations.clear();
     this.shake = 0;
     this.camera = { x: 0, y: 0, zoom: fitZoom(this.mapId, this.width, this.height) };
+    this.fitZoomNow = this.camera.zoom;
     this.followId = null;
+    // The overview is a property of the map, not the camera, so a fit never
+    // rebuilds it; it is already cached and the upgrade continues in background.
   }
   // Camera stays inside the visual diamond of the current map.
   clampCamera() {
@@ -101,8 +134,16 @@ export class Renderer {
   }
   screen(p) { const q = project(p.x, p.y); return { x: this.width / 2 + (q.x - this.camera.x) * this.camera.zoom + this.shake, y: this.height / 2 + 20 + (q.y - this.camera.y) * this.camera.zoom }; }
   world(x, y) { return unproject((x - this.width / 2 - this.shake) / this.camera.zoom + this.camera.x, (y - this.height / 2 - 20) / this.camera.zoom + this.camera.y); }
+  // Zoom around the given screen point (default: the viewport centre, so wheel
+  // and button zooms keep the centre of the view fixed on the same ground).
+  // The clamp uses the same ZOOM_MIN/ZOOM_MAX range as fitZoom, so a manual
+  // zoom can never push the camera back in after a Fit near the minimum.
   zoom(delta, x = this.width / 2, y = this.height / 2) {
-    const before = this.world(x, y); this.camera.zoom = clamp(this.camera.zoom * delta, 0.2, 1.8);
+    // Zooming is an explicit camera move: stop following a unit, otherwise the
+    // camera keeps blending toward it on the next frame and the map appears
+    // to follow the last clicked point instead of staying where zoom put it.
+    this.followId = null;
+    const before = this.world(x, y); this.camera.zoom = clamp(this.camera.zoom * delta, ZOOM_MIN, ZOOM_MAX);
     const after = this.world(x, y), a = project(before.x, before.y), b = project(after.x, after.y);
     this.camera.x += a.x - b.x; this.camera.y += a.y - b.y;
     this.clampCamera();
@@ -130,181 +171,155 @@ export class Renderer {
   chunkCanvas(mapId, cx, cy) {
     const key = `${mapId}:${cx}:${cy}`;
     const cached = this.terrain.get(key);
-    if (cached) { this.terrain.delete(key); this.terrain.set(key, cached); return cached; }
+    if (cached) return cached;
+    const start = performance.now();
     const cv = this.renderChunk(mapId, cx, cy);
     this.terrain.set(key, cv);
-    while (this.terrain.size > CHUNK_CACHE) this.terrain.delete(this.terrain.keys().next().value);
+    this.probe.chunksBuilt++;
+    const buildMs = performance.now() - start;
+    if (buildMs > (this.probe.longestBuildMs || 0)) this.probe.longestBuildMs = buildMs;
+    // Eviction is handled once per frame in draw(), where the visible set is
+    // known and can be protected — evicting here (FIFO on insert order)
+    // regularly dropped chunks that were about to be drawn again.
     return cv;
   }
-  renderChunk(mapId, cx, cy) {
+  // `scale` lets the overview upgrade reuse this exact painter at reduced
+  // resolution; `quality` trims the finest detail passes for those tiles.
+  renderChunk(mapId, cx, cy, scale = 1, quality = 1) {
     const r = this.chunkRect(mapId, cx, cy);
     const corners = [project(r.x0, r.y0), project(r.x1, r.y0), project(r.x1, r.y1), project(r.x0, r.y1)];
     const minX = Math.floor(Math.min(...corners.map(p => p.x))), maxX = Math.ceil(Math.max(...corners.map(p => p.x)));
     const minY = Math.floor(Math.min(...corners.map(p => p.y))), maxY = Math.ceil(Math.max(...corners.map(p => p.y)));
     const cv = document.createElement('canvas');
-    cv.width = Math.max(1, maxX - minX); cv.height = Math.max(1, maxY - minY);
+    cv.width = Math.max(1, Math.ceil((maxX - minX) * scale)); cv.height = Math.max(1, Math.ceil((maxY - minY) * scale));
     const ctx = cv.getContext('2d');
+    ctx.scale(scale, scale);
     ctx.translate(-minX, -minY);
+    // Paint only this chunk's world rect (plus a small margin for features
+    // that straddle the border). PR #11 painted the whole projected bounding
+    // box — roughly 9x the chunk's world area — on every chunk, which is
+    // the main source of the reported lag while panning / zooming. The
+    // painter is a pure function of world position, so neighbouring chunks
+    // still meet with no seam.
+    const area = { x0: r.x0 - 0.5, y0: r.y0 - 0.5, x1: r.x1 + 0.5, y1: r.y1 + 0.5 };
     ctx.save();
     polygon(ctx, corners, groundColor(mapId));
     ctx.clip();
-    this.paintChunkGround(ctx, mapId, r);
+    paintGround(ctx, mapId, this.sprites, area, quality);
     ctx.restore();
-    cv._minX = minX; cv._minY = minY;
+    cv._minX = minX; cv._minY = minY; cv._scale = scale;
     return cv;
   }
-  paintChunkGround(ctx, mapId, r) {
-    const cave = mapId === 'payon', arena = mapId === 'arena', forest = mapId === 'forest';
-    const dunes = ['morroc', 'lair'].includes(mapId), meadow = mapId === 'meadow';
-    // Global ground features are drawn whole inside every chunk clip so they
-    // continue seamlessly across chunk borders.
-    this.paintGlobalGround(ctx, mapId, r);
-    if (meadow) this.paintTileCells(ctx, mapId, r);
-    this.paintGroundDetail(ctx, mapId, r, cave, arena, forest, dunes, meadow);
-  }
-  paintGlobalGround(ctx, mapId, r) {
-    const cave = mapId === 'payon', arena = mapId === 'arena', forest = mapId === 'forest';
-    const dunes = ['morroc', 'lair'].includes(mapId), meadow = mapId === 'meadow';
-    if (meadow) {
-      const map = MAPS.meadow;
-      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      for (const line of map.road) {
-        const pts = line.map(([x, y]) => project(x, y));
-        for (const [width, color] of [[54, '#263e2830'], [38, '#b7b18a'], [26, '#c9c29c']]) {
-          ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
-          ctx.strokeStyle = color; ctx.lineWidth = width; ctx.stroke();
-        }
-      }
-      for (const zone of map.zones || []) {
-        const p = project(zone.x, zone.y);
-        ellipse(ctx, p.x, p.y, zone.r * Math.SQRT2 * 22, zone.r * Math.SQRT2 * 11, zone.kind === 'poring' ? '#d8e9b80a' : '#c9d98f0a');
-      }
-      return;
-    }
-    const road = legacyRoadPoints();
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    for (const [width, color] of [[102, '#263e2830'], [74, cave ? '#655d71' : arena ? '#707272' : forest ? '#8d9271' : '#b7b18a'], [55, cave ? '#797180' : arena ? '#7d7e77' : forest ? '#9da07d' : '#c4bd96']]) {
-      ctx.beginPath(); road.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
-      ctx.strokeStyle = color; ctx.lineWidth = width; ctx.stroke();
-    }
-    if (cave) {
-      const mouth = project(-3, -13);
-      ellipse(ctx, mouth.x, mouth.y, 50, 26, '#61566b'); ellipse(ctx, mouth.x, mouth.y + 2, 32, 17, '#262531');
-      for (const [x, y] of [[-4, -11], [5, -4], [-4, 4], [5, 12]]) {
-        const p = project(x, y), glow = ctx.createRadialGradient(p.x, p.y, 1, p.x, p.y, 65);
-        glow.addColorStop(0, '#ffc87380'); glow.addColorStop(1, '#ffc87300');
-        ellipse(ctx, p.x, p.y, 65, 34, glow); ellipse(ctx, p.x, p.y - 4, 4, 6, '#f7c56c');
-      }
-    }
-    if (mapId === 'lair') {
-      for (let i = 6; i > 0; i--) {
-        const radius = 34 + i * 32;
-        ellipse(ctx, 0, 6, radius, radius / 2, i % 2 ? '#956e49' : '#a57d54', '#c49464');
-      }
-      ellipse(ctx, 0, 6, 54, 27, '#78573c');
-    }
-    if (arena) {
-      ellipse(ctx, 0, 0, 210, 105, '#5e6268', '#a1a0a066'); ellipse(ctx, 0, 0, 184, 92, null, '#b4a57c77');
-      for (let i = 0; i < 12; i++) {
-        const angle = i / 12 * Math.PI * 2, x = Math.cos(angle) * 188, y = Math.sin(angle) * 94;
-        ctx.fillStyle = '#b1aa8955'; ctx.fillRect(x - 4, y - 2, 8, 4);
-      }
-    }
-  }
-  paintTileCells(ctx, mapId, r) {
-    const map = MAPS[mapId];
-    const terrain = this.sprites.index?.terrain;
-    const tiles = terrain?.tiles;
-    if (!tiles) return;
-    const cx0 = Math.floor(r.x0 / CELL), cx1 = Math.ceil(r.x1 / CELL);
-    const cy0 = Math.floor(r.y0 / CELL), cy1 = Math.ceil(r.y1 / CELL);
-    for (let gy = cy0; gy < cy1; gy++) for (let gx = cx0; gx < cx1; gx++) {
-      const wx = gx * CELL + CELL / 2, wy = gy * CELL + CELL / 2;
-      let name;
-      if (roadDistance(map, wx, wy) <= 2.1) name = 'dirt_path';
-      else {
-        const zone = (map.zones || []).find(z => Math.hypot(wx - z.x, wy - z.y) <= z.r * 0.9);
-        if (zone) name = zone.kind === 'poring' ? 'grass_blossom' : 'grass_olive';
-        else {
-          const h = chunkSeed(mapId, gx, gy);
-          name = (h % 100) < 68 ? 'grass_blossom' : 'grass_olive';
-        }
-      }
-      const img = this.sprites.tile(name);
-      if (!img) continue;
-      const O = project(gx * CELL, gy * CELL);
-      const u = project(gx * CELL + CELL, gy * CELL), v = project(gx * CELL, gy * CELL + CELL);
-      const ux = u.x - O.x, uy = u.y - O.y, vx = v.x - O.x, vy = v.y - O.y;
-      ctx.save();
-      ctx.transform(ux / img.width, uy / img.width, vx / img.height, vy / img.height, O.x, O.y);
-      ctx.drawImage(img, 0, 0);
-      ctx.restore();
-    }
-  }
-  paintGroundDetail(ctx, mapId, r, cave, arena, forest, dunes, meadow, density = 1) {
-    const rng = rngFrom(chunkSeed(mapId, Math.round(r.x0 / CHUNK), Math.round(r.y0 / CHUNK)));
-    const area = (r.x1 - r.x0) * (r.y1 - r.y0);
-    const count = Math.round(area * density * (meadow ? 2.2 : 7.3));
-    for (let i = 0; i < count; i++) {
-      const x = r.x0 + rng() * (r.x1 - r.x0), y = r.y0 + rng() * (r.y1 - r.y0), p = project(x, y), roll = rng();
-      if (!meadow && Math.abs(x) < 3.5) continue;
-      if (meadow && roadDistance(MAPS.meadow, x, y) <= 2.4) continue;
-      ctx.globalAlpha = 0.06 + rng() * 0.12;
-      if (meadow) {
-        // Blossom/pebble accents; denser flower specks inside the Poring Meadow.
-        const zone = (MAPS.meadow.zones || []).find(z => Math.hypot(x - z.x, y - z.y) <= z.r);
-        ellipse(ctx, p.x, p.y, 3 + rng() * 9, 1.5 + rng() * 4, roll > 0.55 ? '#c3d58e' : '#203e32');
-        if (zone?.kind === 'poring' && rng() > 0.72) ellipse(ctx, p.x, p.y - 3, 2.5, 1.7, rng() > 0.5 ? '#ebdab0' : '#c8a7b3');
-        else if (rng() > 0.93) ellipse(ctx, p.x, p.y - 2, 2, 1.4, '#d9e6ae');
-        continue;
-      }
-      ellipse(ctx, p.x, p.y, 4 + rng() * 19, 2 + rng() * 9, cave ? (roll > 0.5 ? '#92809a' : '#25222e') : arena ? (roll > 0.5 ? '#bbc0ae' : '#1b2532') : (roll > 0.5 ? '#c3d58e' : '#203e32'));
-      ctx.globalAlpha = 1;
-      if (dunes || cave) {
-        ctx.lineWidth = cave ? 1.5 : 2; ctx.strokeStyle = cave ? '#aca5bb44' : '#e2bb8455';
-        ctx.beginPath(); ctx.moveTo(p.x - 6, p.y); ctx.quadraticCurveTo(p.x, p.y - 3, p.x + 9, p.y); ctx.stroke();
-      } else if (arena) {
-        ctx.fillStyle = '#a1a69a45'; ctx.fillRect(p.x, p.y, 3 + rng() * 7, 1 + rng() * 3);
-      } else {
-        ctx.strokeStyle = rng() > 0.4 ? '#b7ca8160' : '#254e3590'; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(p.x - 3, p.y); ctx.lineTo(p.x - 5, p.y - 5); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + 1, p.y - 7); ctx.moveTo(p.x + 3, p.y); ctx.lineTo(p.x + 6, p.y - 3); ctx.stroke();
-        if (forest && rng() > 0.9) ellipse(ctx, p.x, p.y - 3, 2.5, 1.7, rng() > 0.5 ? '#ebdab0' : '#c8a7b3');
-      }
-    }
-    ctx.globalAlpha = 1;
-  }
-  overviewGround(boundary, bounds) {
+  // The wide-zoom fallback: one painting of the whole field at a fraction of
+  // the detail, drawn over by detailed chunks as they arrive. Tier 0 is small
+  // enough to build inside the first frame; the sharper tier is assembled
+  // afterwards, a few tiles per animation frame inside a time budget, so the
+  // upgrade never runs inside the synchronous draw path (a whole-canvas
+  // rebuild blocked rendering for hundreds of ms — PR #11's cold-load stall).
+  // It is cached per map and never rebuilt on resize — rebuilding it on every
+  // resize (PR #11's auto-fit) was a major source of lag.
+  overviewGround() {
     const id = this.mapId;
-    if (this.overviews.has(id)) return this.overviews.get(id);
-    const scale = 0.57;
-    const left = boundary[3].x, top = boundary[0].y;
-    const width = -2 * left, height = -2 * top;
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.ceil(width * scale); canvas.height = Math.ceil(height * scale);
-    const ctx = canvas.getContext('2d');
-    ctx.scale(canvas.width / width, canvas.height / height);
-    ctx.translate(-left, -top);
-    polygon(ctx, boundary); ctx.clip();
-    const area = { x0: -bounds.x, y0: -bounds.y, x1: bounds.x, y1: bounds.y };
-    const cave = id === 'payon', arena = id === 'arena', forest = id === 'forest';
-    const dunes = id === 'morroc' || id === 'lair', meadow = id === 'meadow';
-    this.paintGlobalGround(ctx, id, area);
-    if (meadow) this.paintTileCells(ctx, id, area);
-    for (let y = Math.floor(area.y0 / CHUNK); y < area.y1 / CHUNK; y++) {
-      for (let x = Math.floor(area.x0 / CHUNK); x < area.x1 / CHUNK; x++) {
-        this.paintGroundDetail(ctx, id, this.chunkRect(id, x, y), cave, arena, forest, dunes, meadow, 0.28);
-      }
-    }
-    const overview = { canvas, left, top, width, height };
-    this.overviews.set(id, overview);
+    const cached = this.overviews.get(id);
+    if (cached) return cached;
+    const base = this.buildOverview(id, false);
+    this.overviews.set(id, base);
     if (this.overviews.size > 3) this.overviews.delete(this.overviews.keys().next().value);
-    return overview;
+    this.startOverviewUpgrade();
+    return base;
+  }
+  overviewGeometry(id, detailed) {
+    const ext = groundExtent(id);
+    const fog = biomeFor(id).fog;
+    const pad = 6;
+    const a = project(-ext.x - pad, -ext.y - pad), b = project(ext.x + pad, -ext.y - pad);
+    const c = project(ext.x + pad, ext.y + pad), d = project(-ext.x - pad, ext.y + pad);
+    const minX = Math.min(a.x, b.x, c.x, d.x), maxX = Math.max(a.x, b.x, c.x, d.x);
+    const minY = Math.min(a.y, b.y, c.y, d.y), maxY = Math.max(a.y, b.y, c.y, d.y);
+    const maxPx = detailed ? 900 : 480;
+    const scale = Math.min(detailed ? 0.16 : 0.08, maxPx / Math.max(maxX - minX, maxY - minY));
+    return { ext, fog, minX, minY, maxX, maxY, scale };
+  }
+  buildOverview(id, detailed) {
+    const g = this.overviewGeometry(id, detailed);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.ceil((g.maxX - g.minX) * g.scale));
+    canvas.height = Math.max(1, Math.ceil((g.maxY - g.minY) * g.scale));
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = g.fog;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.scale(g.scale, g.scale);
+    ctx.translate(-g.minX, -g.minY);
+    polygon(ctx, [project(-g.ext.x, -g.ext.y), project(g.ext.x, -g.ext.y), project(g.ext.x, g.ext.y), project(-g.ext.x, g.ext.y)]);
+    ctx.clip();
+    paintGround(ctx, id, this.sprites, { x0: -g.ext.x, y0: -g.ext.y, x1: g.ext.x, y1: g.ext.y }, detailed ? 0.9 : 0.5);
+    return { canvas, minX: g.minX, minY: g.minY, scale: g.scale, tier: detailed ? 1 : 0 };
+  }
+  // Upgrade to the sharper tier: the same chunk painter, sliced on the chunk
+  // grid — but only over the playable belt. The wide painted apron is dense
+  // with border decoration (rocks, cliffs, trees), which makes full-extent
+  // tiles cost ~50 ms each; the apron is fog-transition terrain that the soft
+  // tier already renders well, so it keeps that painting (upscaled once here)
+  // and the upgrade spends its budget where the player actually looks. Tiles
+  // are blitted through the map-diamond clip; adjacent tiles overlap (each
+  // paints its chunk rect plus margin), and since the painter is a pure
+  // function of world position the overlaps composite to exactly the
+  // seamless field.
+  startOverviewUpgrade() {
+    const id = this.mapId;
+    const cached = this.overviews.get(id);
+    if (!cached || cached.tier >= 1 || this.overviewJob) return;
+    const g = this.overviewGeometry(id, true);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.ceil((g.maxX - g.minX) * g.scale));
+    canvas.height = Math.max(1, Math.ceil((g.maxY - g.minY) * g.scale));
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = g.fog;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(cached.canvas, 0, 0, canvas.width, canvas.height);
+    ctx.save();
+    polygon(ctx, [project(-g.ext.x, -g.ext.y), project(g.ext.x, -g.ext.y), project(g.ext.x, g.ext.y), project(-g.ext.x, g.ext.y)]);
+    ctx.clip();
+    const belt = beltExtent(id);
+    const tiles = [];
+    for (let cy = Math.floor(-belt.y / CHUNK); cy < Math.ceil(belt.y / CHUNK); cy++)
+      for (let cx = Math.floor(-belt.x / CHUNK); cx < Math.ceil(belt.x / CHUNK); cx++) tiles.push([cx, cy]);
+    this.overviewJob = { mapId: id, canvas, ctx, minX: g.minX, minY: g.minY, scale: g.scale, tiles, index: 0 };
+    this.scheduleOverviewPump();
+  }
+  scheduleOverviewPump() {
+    if (this._pumpScheduled || !this.overviewJob) return;
+    this._pumpScheduled = true;
+    requestAnimationFrame(() => { this._pumpScheduled = false; this.pumpOverviewJob(); });
+  }
+  pumpOverviewJob() {
+    const job = this.overviewJob;
+    if (!job) return;
+    // Switching maps abandons the old map's upgrade; its tier-0 overview
+    // stays cached and a fresh upgrade is scheduled when it is viewed again.
+    if (job.mapId !== this.mapId) { this.overviewJob = null; return; }
+    const start = performance.now();
+    while (job.index < job.tiles.length && performance.now() - start < OVERVIEW_SLICE_MS) {
+      const [cx, cy] = job.tiles[job.index++];
+      const tile = this.renderChunk(job.mapId, cx, cy, job.scale, 0.9);
+      // 1:1 pixel blit at the tile's rounded overview position; neighbouring
+      // tiles' bounding boxes overlap, so rounding can never open a gap.
+      job.ctx.drawImage(tile, Math.round((tile._minX - job.minX) * job.scale), Math.round((tile._minY - job.minY) * job.scale));
+      this.probe.overviewTiles++;
+    }
+    if (job.index >= job.tiles.length) {
+      this.overviews.set(job.mapId, { canvas: job.canvas, minX: job.minX, minY: job.minY, scale: job.scale, tier: 1 });
+      this.overviewJob = null;
+      this.probe.overviewUpgrades++;
+    } else {
+      this.scheduleOverviewPump();
+    }
   }
   visibleChunks() {
     const corners = [this.world(0, 0), this.world(this.width, 0), this.world(this.width, this.height), this.world(0, this.height)];
     const minX = Math.min(...corners.map(p => p.x)) - CHUNK, maxX = Math.max(...corners.map(p => p.x)) + CHUNK;
     const minY = Math.min(...corners.map(p => p.y)) - CHUNK, maxY = Math.max(...corners.map(p => p.y)) + CHUNK;
-    const v = visual(this.mapId);
+    const v = beltExtent(this.mapId);
     const cx0 = Math.max(Math.floor(-v.x / CHUNK), Math.floor(minX / CHUNK));
     const cx1 = Math.min(Math.ceil(v.x / CHUNK), Math.ceil(maxX / CHUNK));
     const cy0 = Math.max(Math.floor(-v.y / CHUNK), Math.floor(minY / CHUNK));
@@ -315,34 +330,14 @@ export class Renderer {
   }
 
   /* ---------- scenery props ---------- */
+  // Placement is authored in terrain.js, not stitched together per frame: a prop
+  // is either part of the map's composition or it does not exist. That keeps the
+  // field stable while panning and keeps decorative growth out of the roads.
   sceneryList() {
     if (this.scenery.has(this.mapId)) return this.scenery.get(this.mapId);
-    const map = MAPS[this.mapId], terrain = this.sprites.index?.terrain;
+    const terrain = this.sprites.index?.terrain;
     if (!terrain) return [];
-    const authored = (map.scenery?.props || []).map(p => ({ ...p, id: p.id }));
-    // Deterministic border ring just outside the playable bounds.
-    const b = mapBounds(this.mapId), border = map.scenery?.border || [];
-    if (border.length) {
-      const slots = [];
-      const perSide = Math.ceil((b.x + b.y) / 3.2);
-      for (let i = 0; i < perSide; i++) {
-        const t = (i / perSide) * 4; // 0..4 around the rectangle
-        const side = Math.floor(t), f = t - side;
-        let x, y;
-        if (side === 0) { x = -b.x + f * 2 * b.x; y = -b.y - 0.7; }
-        else if (side === 1) { x = b.x + 0.7; y = -b.y + f * 2 * b.y; }
-        else if (side === 2) { x = b.x - f * 2 * b.x; y = b.y + 0.7; }
-        else { x = -b.x - 0.7; y = b.y - f * 2 * b.y; }
-        const h = chunkSeed(this.mapId, i, side * 31);
-        if (h % 100 < 34) continue;
-        const id = border[(h >>> 8) % border.length];
-        const jitter = ((h >>> 16) % 100) / 100 - 0.5;
-        if (side % 2 === 0) x += jitter * 2.4; else y += jitter * 2.4;
-        slots.push({ id, x, y, scale: 0.85 + ((h >>> 24) % 40) / 100 });
-      }
-      authored.push(...slots);
-    }
-    const props = authored.filter(p => terrain.props[p.id]).sort((a, b) => a.x + a.y - b.x - b.y);
+    const props = sceneryFor(this.mapId).filter(p => terrain.props[p.id]);
     this.scenery.set(this.mapId, props);
     return props;
   }
@@ -350,16 +345,21 @@ export class Renderer {
     const terrain = this.sprites.index?.terrain;
     if (!terrain) return;
     const corners = [this.world(0, 0), this.world(this.width, 0), this.world(this.width, this.height), this.world(0, this.height)];
-    const minX = Math.min(...corners.map(p => p.x)) - 6, maxX = Math.max(...corners.map(p => p.x)) + 6;
-    const minY = Math.min(...corners.map(p => p.y)) - 6, maxY = Math.max(...corners.map(p => p.y)) + 6;
+    const minX = Math.min(...corners.map(p => p.x)) - 8, maxX = Math.max(...corners.map(p => p.x)) + 8;
+    const minY = Math.min(...corners.map(p => p.y)) - 8, maxY = Math.max(...corners.map(p => p.y)) + 8;
     const props = this.sceneryList().filter(p => p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY);
     for (const prop of props) {
       const rec = terrain.props[prop.id], img = this.sprites.prop(prop.id);
       if (!rec || !img) continue;
-      const p = project(prop.x, prop.y), scale = 0.7 * (prop.scale || 1);
+      const p = project(prop.x, prop.y), scale = propScale(prop.id, prop.scale);
       ctx.save();
-      ellipse(ctx, p.x, p.y + 2, rec.w * scale * 0.24, rec.w * scale * 0.1, '#0c201e40');
-      ctx.drawImage(img, p.x - rec.anchorX * scale, p.y - rec.anchorY * scale, rec.w * scale, rec.h * scale);
+      if (prop.flip) {
+        ctx.translate(p.x, p.y);
+        ctx.scale(-1, 1);
+        ctx.drawImage(img, -rec.anchorX * scale, -rec.anchorY * scale, rec.w * scale, rec.h * scale);
+      } else {
+        ctx.drawImage(img, p.x - rec.anchorX * scale, p.y - rec.anchorY * scale, rec.w * scale, rec.h * scale);
+      }
       ctx.restore();
     }
   }
@@ -406,36 +406,50 @@ export class Renderer {
       }
     }
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-    const bg = ctx.createRadialGradient(this.width / 2, this.height / 2, 30, this.width / 2, this.height / 2, this.width * 0.75);
-    bg.addColorStop(0, this.mapId === 'arena' ? '#253039' : '#233b32'); bg.addColorStop(1, '#101f22');
-    ctx.fillStyle = bg; ctx.fillRect(0, 0, this.width, this.height);
+    // The surround is exactly the mist the painted ground dissolves into, so
+    // the field has no cut edge anywhere. A flat fill (not a per-frame radial
+    // gradient) keeps the background off the per-frame allocation path.
+    ctx.fillStyle = biomeFor(this.mapId).fog; ctx.fillRect(0, 0, this.width, this.height);
     ctx.save();
     ctx.translate(this.width / 2 - this.camera.x * z + this.shake, this.height / 2 + 20 - this.camera.y * z);
     ctx.scale(z, z);
-    const vb = visual(this.mapId);
-    const boundary = [project(-vb.x, -vb.y), project(vb.x, -vb.y), project(vb.x, vb.y), project(-vb.x, vb.y)];
-    // Floating slab: dark underside, base plate, then clipped chunk ground.
-    polygon(ctx, boundary.map(p => ({ x: p.x, y: p.y + 18 })), '#182e28');
-    polygon(ctx, boundary, groundColor(this.mapId), '#8aa47855');
-    ctx.save();
-    polygon(ctx, boundary);
-    ctx.clip();
-    const ground = this.overviewGround(boundary, vb);
-    ctx.drawImage(ground.canvas, ground.left, ground.top, ground.width, ground.height);
-    if (z > 0.55) {
-      const cameraCenter = unproject(this.camera.x, this.camera.y);
-      const proximity = ([x, y]) => Math.hypot((x + 0.5) * CHUNK - cameraCenter.x, (y + 0.5) * CHUNK - cameraCenter.y);
-      const chunks = this.visibleChunks().sort((a, b) => proximity(a) - proximity(b));
-      let newChunks = 0;
-      for (const [cx, cy] of chunks) {
-        if (!this.terrain.has(`${this.mapId}:${cx}:${cy}`)) {
-          if (newChunks >= 4) continue;
-          newChunks++;
-        }
-        const cv = this.chunkCanvas(this.mapId, cx, cy);
-        // Slight bleed covers antialiasing between neighbours.
-        ctx.drawImage(cv, cv._minX, cv._minY, cv.width + 1, cv.height + 1);
-      }
+    // The painted field, feathered at its far corners instead of cut square.
+    // The cheap tier draws immediately; the sharper tier is assembled a few
+    // tiles per frame in the background, so it never blocks input, panning
+    // or the first paint.
+    const ground = this.overviewGround();
+    ctx.drawImage(ground.canvas, ground.minX, ground.minY, ground.canvas.width / ground.scale, ground.canvas.height / ground.scale);
+    // Detailed chunks only once zoomed in enough for them to be visible: at
+    // fit zoom the cached overview already looks like the map, and building
+    // dozens of heavy chunks on every fit/pan was PR #11's main lag spike.
+    // Above the gate, visible chunks are prioritised (nearest the camera
+    // first) and built under two budgets — an elapsed-time budget per frame
+    // and a small count cap — while the overview stays underneath pending
+    // chunks. Already-built chunks keep drawing at any zoom, so zooming back
+    // out never pops the terrain away.
+    const gate = this.fitZoomNow || fitZoom(this.mapId, this.width, this.height);
+    const canBuild = z > gate + 1e-6;
+    const cameraCenter = unproject(this.camera.x, this.camera.y);
+    const proximity = ([x, y]) => Math.hypot((x + 0.5) * CHUNK - cameraCenter.x, (y + 0.5) * CHUNK - cameraCenter.y);
+    const chunks = this.visibleChunks().sort((a, b) => proximity(a) - proximity(b));
+    this.protectedChunks = new Set(chunks.map(([cx, cy]) => `${this.mapId}:${cx}:${cy}`));
+    const buildStart = performance.now();
+    let built = 0;
+    for (const [cx, cy] of chunks) {
+      const key = `${this.mapId}:${cx}:${cy}`;
+      let cv = this.terrain.get(key);
+      if (!cv && (!canBuild || built >= CHUNK_BUILD_BUDGET || performance.now() - buildStart >= CHUNK_TIME_BUDGET_MS)) continue;
+      if (!cv) { built++; cv = this.chunkCanvas(this.mapId, cx, cy); }
+      ctx.drawImage(cv, cv._minX, cv._minY, cv.width / (cv._scale || 1), cv.height / (cv._scale || 1));
+    }
+    // Evict only chunks outside the visible set: everything on screen (or in
+    // its margin) is protected, so panning cannot thrash the cache and the
+    // cache stays bounded without ever dropping a chunk that is on display.
+    while (this.terrain.size > CHUNK_CACHE) {
+      const victim = [...this.terrain.keys()].find(key => !this.protectedChunks.has(key));
+      if (!victim) break;
+      this.terrain.delete(victim);
+      this.probe.chunksEvicted++;
     }
     ctx.restore();
     if (this.grid) {
@@ -583,21 +597,39 @@ export class Renderer {
     traceFlourish(ctx, fx, t, grow, r, alpha, s, color);
     ctx.globalAlpha = 1;
   }
+  // Field labels are UI, not scenery: they are laid out in screen space so they
+  // keep a constant size and never blow up when the camera zooms in.
   drawZoneLabels(ctx, z) {
     const map = MAPS[this.mapId];
     if (!map) return;
     const entries = [];
-    if (map.camp) entries.push({ x: map.camp.x, y: map.camp.y - 2.4, text: 'Guild Camp' });
+    if (map.camp) entries.push({ x: map.camp.x, y: map.camp.y - 2.6, text: 'Guild Camp' });
     for (const zone of map.zones || []) if (zone.label) entries.push({ x: zone.x, y: zone.y - zone.r * 0.62, text: zone.label });
     if (!entries.length) return;
-    ctx.save();
-    ctx.textAlign = 'center';
-    // Constant ~14px screen size regardless of zoom.
-    ctx.font = `600 ${Math.round(14 / Math.max(z, 0.2))}px Georgia, serif`;
+    const screen = [];
     for (const e of entries) {
-      const p = project(e.x, e.y);
-      ctx.fillStyle = '#f2e7c9d8'; ctx.strokeStyle = '#142729cc'; ctx.lineWidth = 3 / Math.max(z, 0.2);
-      ctx.strokeText(e.text, p.x, p.y); ctx.fillText(e.text, p.x, p.y);
+      const p = this.screen(e);
+      if (p.x < -140 || p.x > this.width + 140 || p.y < -40 || p.y > this.height + 40) continue;
+      screen.push({ ...p, text: e.text });
+    }
+    if (!screen.length) return;
+    ctx.save();
+    ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (const label of screen) {
+      ctx.font = '600 13px Georgia, serif';
+      const w = ctx.measureText(label.text).width;
+      ctx.globalAlpha = 0.5;
+      ctx.fillStyle = '#0d1a17';
+      ctx.beginPath();
+      const rx = w / 2 + 9, ry = 10;
+      if (ctx.roundRect) ctx.roundRect(label.x - rx, label.y - ry, rx * 2, ry * 2, 9);
+      else ctx.rect(label.x - rx, label.y - ry, rx * 2, ry * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = 'rgba(244,235,206,.94)';
+      ctx.fillText(label.text, label.x, label.y + 0.5);
     }
     ctx.restore();
   }

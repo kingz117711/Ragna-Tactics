@@ -1,5 +1,24 @@
 # Milestone handoff — 2026-11-28
 
+## Camera and terrain chunk performance
+
+The field renders from cached chunk canvases with a two-tier overview: a cheap
+tier-0 ground sheet covers wide zoom on the first frame and the belt is upgraded
+to a tier-1 sheet in ≤6 ms slices; detailed chunks build proximity-first under
+per-frame budgets with eviction protection, and idle time finishes the ring
+(counters on `window.__ragnaDebug.renderer.probe`). Terrain painters are
+rect-culled (`docs/MAP-VISUAL-PASS.md`), cutting apron chunks from ~87–110 ms to
+~10–25 ms. Fit zoom uses shared clamps (0.08–1.8) with panel-aware margins; a
+window resize keeps the player's camera, and zooming clears unit follow.
+`tools/profile-terrain.mjs` snapshots frame p50/p95, long tasks and chunk
+builds for meadow+forest into `artifacts/profile-{before,after}.json`.
+
+Next: the cave, desert, lair and arena apron chunks still cost 40–62 ms each
+(dense decal passes) — apply the same per-cell culling to those painters if pan
+profiling ever flags them. Three pre-existing browser-test failures (tactics
+preset timeout, skill-rank row count, field-hotbar boot) reproduce on the base
+branch and are unrelated to terrain.
+
 ## Character skills and skill FX
 
 Skills are trained in the Character panel → **Skills** page. Each class family has
@@ -37,8 +56,9 @@ Culvert to exercise a new dungeon and verify the transition from planning to pla
 Combat settings remember all hits, highlights, or hidden text in this browser.
 Camera shake is optional, defaults off and observes reduced motion. Automatic
 casts hold position until resolution or interruption. The renderer interpolates
-positions between simulation ticks, caches a ground overview for wide zoom and
-prepares nearby detailed terrain chunks as the camera moves in.
+positions between simulation ticks, caches a two-tier ground overview for wide
+zoom and builds nearby detailed terrain chunks proximity-first under per-frame
+budgets as the camera moves in.
 
 ## Independent adventurer controls
 
