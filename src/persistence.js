@@ -1,4 +1,4 @@
-import { ELEMENTS, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, MONSTERS, HUNT_RADII, VERSION, MAPS, JOBS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS } from './data.js';
+import { ELEMENTS, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, GEAR_AFFIXES, gearFitsSlot, MONSTERS, HUNT_RADII, VERSION, MAPS, JOBS, EQUIPMENT, GEAR_ITEMS, GEAR_SLOTS, ITEMS, SKILL_TREES, SKILL_INDEX, JOB_BUILDS, jobCap, TACTICS, TACTIC_PRESETS, TARGET_PREFS } from './data.js';
 import { availablePoints, populateField, createGame, advanceExpeditionGoals } from './sim.js';
 export const SAVE_KEY = 'ragna-tactics:save:v1';
 export const BACKUP_KEY = 'ragna-tactics:backup:v1';
@@ -13,13 +13,43 @@ export function validateState(s) {
   valid(Number.isInteger(s.seed) && finite(s.seed, 0, 4294967295) && finite(s.time) && Number.isSafeInteger(s.nextId) && s.nextId > 0);
   valid(Array.isArray(s.characters) && s.characters.length >= 2 && s.characters.length <= 5);
   if (s.bounty != null) valid(own(BOUNTIES,s.bounty.id) && Number.isInteger(s.bounty.kills) && finite(s.bounty.kills,0,BOUNTIES[s.bounty.id].count));
-  const ids = new Set();
+  const ids = new Set(), gearInstanceIds = new Set();
   for (const c of s.characters) {
     valid(c && /^c[1-5]$/.test(c.id) && !ids.has(c.id)); ids.add(c.id);
     valid(c.ownerId === s.ownerId && text(c.name, 20) && c.name.trim().length && ['m', 'f'].includes(c.sex));
     valid(own(JOBS, c.job) && own(EQUIPMENT, c.equipment) && own(TACTICS, c.tactic));
     valid(c.element === undefined || (own(ELEMENTS,c.element) && own(ELEMENTS[c.element],c.job)));
     valid(c.card == null || (c.equipment !== 'training' && own(CARDS, c.card)));
+    if (c.buffs !== undefined) {
+      valid(c.buffs && typeof c.buffs === 'object' && !Array.isArray(c.buffs));
+      for (const [key, time] of Object.entries(c.buffs)) valid(['atk','def','tempo'].includes(key) && finite(time,0,60));
+    }
+    if (c.gear === undefined) c.gear = {};
+    valid(c.gear && typeof c.gear === 'object' && !Array.isArray(c.gear));
+    for (const [slot, saved] of Object.entries(c.gear)) {
+      valid(own(GEAR_SLOTS,slot));
+      if (typeof saved === 'string') c.gear[slot] = { uid:`legacy_${c.id}_${slot}`, itemId:saved, refine:0, affixes:[] };
+      const instance = c.gear[slot], item = GEAR_ITEMS[instance?.itemId];
+      valid(item && gearFitsSlot(item,slot) && typeof instance.uid === 'string' && /^[a-zA-Z0-9_-]{1,48}$/.test(instance.uid) && !gearInstanceIds.has(instance.uid));
+      gearInstanceIds.add(instance.uid);
+      instance.refine ??= 0; instance.affixes ??= [];
+      valid(Number.isInteger(instance.refine) && finite(instance.refine,0,20) && (instance.refine === 0 || item.refineable));
+      valid(Array.isArray(instance.affixes) && instance.affixes.length <= 3);
+      const seenAffixes = new Set();
+      for (const affix of instance.affixes) {
+        valid(affix && own(GEAR_AFFIXES,affix.id) && !seenAffixes.has(affix.id) && GEAR_AFFIXES[affix.id].slots.includes(slot)); seenAffixes.add(affix.id);
+        valid(Number.isInteger(affix.value) && finite(affix.value,GEAR_AFFIXES[affix.id].min,GEAR_AFFIXES[affix.id].max));
+      }
+    }
+    if (c.skills === undefined) c.skills = { [SKILL_TREES[c.job][0].id]: 1 };
+    valid(c.skills && typeof c.skills === 'object' && !Array.isArray(c.skills));
+    for (const [skillId, level] of Object.entries(c.skills)) valid(own(SKILL_INDEX, skillId) && Number.isInteger(level) && finite(level, 1, SKILL_INDEX[skillId].maxLevel));
+    if (c.skillPoints === undefined) c.skillPoints = Math.max(0, c.jobLevel - 1);
+    valid(Number.isInteger(c.skillPoints) && finite(c.skillPoints, 0, 100));
+    if (c.activeSkill === undefined) c.activeSkill = SKILL_TREES[c.job][0].id;
+    valid(own(SKILL_INDEX, c.activeSkill) && SKILL_INDEX[c.activeSkill].kind === 'active' && c.skills[c.activeSkill] > 0);
+    if (c.build === undefined) c.build = JOB_BUILDS[c.job]?.[0]?.id || 'balanced';
+    valid(c.build === 'balanced' || JOB_BUILDS[c.job]?.some(build => build.id === c.build));
     // Schema-v1 saves predate per-character tactics; derive their settings from the saved preset.
     c.tactics = { ...TACTIC_PRESETS[c.tactic], ...(c.tactics || {}) };
     valid(typeof c.tactics.autoSkill === 'boolean');
@@ -27,7 +57,7 @@ export function validateState(s) {
     valid(own(TARGET_PREFS, c.tactics.targetPref));
     valid(c.mapId === null || own(MAPS, c.mapId));
     valid(c.partyId === null || /^p\d+$/.test(c.partyId));
-    valid(Number.isInteger(c.level) && finite(c.level, 1, 99) && Number.isInteger(c.jobLevel) && finite(c.jobLevel, 1, c.job === 'novice' ? 10 : 50));
+    valid(Number.isInteger(c.level) && finite(c.level, 1, 99) && Number.isInteger(c.jobLevel) && finite(c.jobLevel, 1, c.job === 'novice' ? 10 : jobCap(c.job)));
     valid(coordinate(c) && coordinate(c.home) && (c.destination === null || coordinate(c.destination)));
     valid(c.farmRadius === undefined || HUNT_RADII.includes(c.farmRadius));
     valid(c.farmCenter === undefined || coordinate(c.farmCenter));
@@ -65,11 +95,54 @@ export function validateState(s) {
       valid(own(MONSTERS, enemy.kind) && enemy.mapId === key && coordinate(enemy));
       valid(finite(enemy.hp, -10000, 10000) && finite(enemy.timer, -10, 100) && finite(enemy.respawn, -1, 100));
       valid(enemy.targetId === null || ids.has(enemy.targetId));
+      if (enemy.statuses !== undefined) {
+        valid(enemy.statuses && typeof enemy.statuses === 'object' && !Array.isArray(enemy.statuses));
+        for (const key of Object.keys(enemy.statuses)) valid(['poison','vulnerable'].includes(key));
+        if (enemy.statuses.vulnerable !== undefined) valid(finite(enemy.statuses.vulnerable,0,20));
+        if (enemy.statuses.poison !== undefined) {
+          const poison = enemy.statuses.poison;
+          valid(poison && typeof poison === 'object' && finite(poison.time,0,10) && finite(poison.damage,1,10000) && finite(poison.pulse || 0,0,1) && (poison.source === null || ids.has(poison.source)));
+        }
+      }
       valid(['idle', 'walk', 'attack'].includes(enemy.stance) && Number.isInteger(enemy.direction) && finite(enemy.direction, 0, 7));
       valid(finite(enemy.attackFlash, 0, 2));
     }
   }
   valid(s.inventory && finite(s.inventory.zeny) && s.inventory.materials && typeof s.inventory.materials === 'object' && !Array.isArray(s.inventory.materials));
+  if (s.inventory.gear === undefined) s.inventory.gear = {};
+  if (s.inventory.items === undefined) s.inventory.items = { red_potion:0, blue_potion:0, phracon:0, emveretarcon:0, elunium:0, oridecon:0, bradium:0, carnium:0 };
+  valid(s.inventory.gear && typeof s.inventory.gear === 'object' && !Array.isArray(s.inventory.gear));
+  valid(s.inventory.items && typeof s.inventory.items === 'object' && !Array.isArray(s.inventory.items));
+  for (const [id, count] of Object.entries(s.inventory.gear)) valid(own(GEAR_ITEMS,id) && Number.isSafeInteger(count) && finite(count,0,10000));
+  const hadGearInstances = s.inventory.gearItems !== undefined;
+  if (hadGearInstances) valid(Array.isArray(s.inventory.gearItems));
+  if (!hadGearInstances) {
+    s.inventory.gearItems = [];
+    let legacyIndex = 0;
+    for (const [itemId,count] of Object.entries(s.inventory.gear)) for (let n=0; n<count; n++) {
+      s.inventory.gearItems.push({ uid:`legacy_bag_${++legacyIndex}`, itemId, refine:0, affixes:[] });
+    }
+  }
+  valid(Array.isArray(s.inventory.gearItems) && s.inventory.gearItems.length <= 10000);
+  const bagGearCounts = {};
+  for (const instance of s.inventory.gearItems) {
+    const item = GEAR_ITEMS[instance?.itemId];
+    valid(item && typeof instance.uid === 'string' && /^[a-zA-Z0-9_-]{1,48}$/.test(instance.uid) && !gearInstanceIds.has(instance.uid));
+    gearInstanceIds.add(instance.uid); instance.refine ??= 0; instance.affixes ??= [];
+    valid(Number.isInteger(instance.refine) && finite(instance.refine,0,20) && (instance.refine === 0 || item.refineable));
+    valid(Array.isArray(instance.affixes) && instance.affixes.length <= 3);
+    const seenAffixes = new Set();
+    for (const affix of instance.affixes) {
+      valid(affix && own(GEAR_AFFIXES,affix.id) && !seenAffixes.has(affix.id) && GEAR_AFFIXES[affix.id].slots.includes(item.slot)); seenAffixes.add(affix.id);
+      valid(Number.isInteger(affix.value) && finite(affix.value,GEAR_AFFIXES[affix.id].min,GEAR_AFFIXES[affix.id].max));
+    }
+    bagGearCounts[instance.itemId] = (bagGearCounts[instance.itemId] || 0) + 1;
+  }
+  if (hadGearInstances) for (const itemId of new Set([...Object.keys(s.inventory.gear),...Object.keys(bagGearCounts)])) valid((s.inventory.gear[itemId] || 0) === (bagGearCounts[itemId] || 0));
+  s.inventory.gear = bagGearCounts;
+  for (const id of Object.keys(ITEMS)) s.inventory.items[id] ??= 0;
+  valid(s.inventory.items && typeof s.inventory.items === 'object' && !Array.isArray(s.inventory.items));
+  for (const [id, count] of Object.entries(s.inventory.items)) valid(own(ITEMS,id) && Number.isSafeInteger(count) && finite(count,0,10000));
   for (const [key, value] of Object.entries(s.inventory.materials || {})) valid(Object.values(MONSTERS).some(monster => monster.material === key) && Number.isInteger(value) && finite(value));
   if (s.inventory.equipment && s.inventory.equipment.dune === undefined) s.inventory.equipment.dune = 0;
   if (s.inventory.equipment && s.inventory.equipment.reliquary === undefined) s.inventory.equipment.reliquary = 0;

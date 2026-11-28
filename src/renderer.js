@@ -11,6 +11,33 @@ function ellipse(ctx, x, y, rx, ry, color, stroke) {
   ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
   if (color) { ctx.fillStyle = color; ctx.fill(); } if (stroke) { ctx.strokeStyle = stroke; ctx.stroke(); }
 }
+function skillFx(ctx, x, y, effect, age) {
+  const palette = effect.element === 'fire' ? ['#ffb458','#f06248'] : effect.element === 'water' ? ['#a9eaff','#4ea4e7'] :
+    effect.element === 'wind' ? ['#d9f4a3','#77d3c0'] : effect.element === 'holy' ? ['#fff1b0','#f4d67d'] :
+    effect.fx.includes('heal') || effect.fx === 'partyHeal' ? ['#d6f5b2','#8edca7'] :
+    effect.fx.includes('poison') || effect.fx === 'venom' ? ['#b5ef79','#609d62'] : ['#f8dc9a','#dfa867'];
+  const pulse = 1 - Math.min(1, age);
+  const radius = 14 + age * 42;
+  ctx.save(); ctx.translate(x, y - 6); ctx.globalAlpha = pulse * 0.84; ctx.lineWidth = 1.6;
+  ctx.strokeStyle = palette[0]; ctx.fillStyle = palette[1];
+  if (['area','areaControl','areaHoly','partyHeal'].includes(effect.fx)) {
+    ctx.beginPath(); ctx.ellipse(0, 0, radius * 1.42, radius * 0.72, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(0, 0, radius * 0.86, radius * 0.44, 0, 0, Math.PI * 2); ctx.stroke();
+    for (let i = 0; i < 6; i++) { const a = Math.PI * 2 * i / 6 + age * 1.2; ellipse(ctx, Math.cos(a) * radius, Math.sin(a) * radius * 0.5, 2.2, 1.6, palette[i % 2]); }
+  } else if (['heal','guard','buffAtk','buffDef','buffTempo'].includes(effect.fx)) {
+    ellipse(ctx, 0, 0, 10 + age * 13, 5 + age * 7, null, palette[0]);
+    ctx.fillRect(-2, -10 - age * 4, 4, 18 + age * 8); ctx.fillRect(-8 - age * 4, -2, 16 + age * 8, 4);
+  } else if (['poison','venom'].includes(effect.fx)) {
+    for (let i = 0; i < 5; i++) { const a = age * 4 + i * Math.PI * 0.4; ellipse(ctx, Math.cos(a) * (5 + i * 2), -8 - i * 3 + Math.sin(a) * 4, 2 + i * 0.4, 2.8 + i * 0.4, palette[i % 2]); }
+  } else if (effect.fx === 'falcon' || effect.fx === 'summon') {
+    ctx.beginPath(); ctx.moveTo(-radius, -radius * .25); ctx.quadraticCurveTo(-radius * .25, -radius * .9, 0, 0); ctx.quadraticCurveTo(radius * .25, -radius * .9, radius, -radius * .25); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, radius * .36, Math.PI, Math.PI * 2); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.moveTo(-radius, -radius * .28); ctx.lineTo(radius, radius * .12); ctx.moveTo(-radius * .55, radius * .34); ctx.lineTo(radius * .65, -radius * .36); ctx.stroke();
+    for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + age * 4; ctx.beginPath(); ctx.moveTo(Math.cos(a) * 5, Math.sin(a) * 5); ctx.lineTo(Math.cos(a) * radius, Math.sin(a) * radius * .5); ctx.stroke(); }
+  }
+  ctx.restore();
+}
 export class Renderer {
   constructor(canvas, sprites) {
     this.canvas = canvas; this.ctx = canvas.getContext('2d'); this.sprites = sprites;
@@ -190,7 +217,9 @@ export class Renderer {
     }
     for (const e of s.effects) {
       if (e.mapId && e.mapId !== this.mapId) continue;
-      const p = project(e.x, e.y); ctx.save(); ctx.globalAlpha = Math.min(1, e.life * 2); ctx.font = `600 ${e.kind === 'skill' ? 12 : 15}px 'Segoe UI', sans-serif`; ctx.textAlign = 'center';
+      const p = project(e.x, e.y);
+      if (e.fx) skillFx(ctx, p.x, p.y, e, (1.1 - e.life) / 1.1);
+      ctx.save(); ctx.globalAlpha = Math.min(1, e.life * 2); ctx.font = `600 ${e.kind === 'skill' ? 12 : 15}px 'Segoe UI', sans-serif`; ctx.textAlign = 'center';
       ctx.fillStyle = e.kind === 'heal' ? '#c8e9a5' : e.kind === 'loot' ? '#f2d38d' : e.kind === 'danger' ? '#ff9b86' : '#fff0c7';
       ctx.shadowColor = '#102421'; ctx.shadowBlur = 4; ctx.fillText(e.text, p.x, p.y - 50 - (1.1 - e.life) * 28); ctx.restore();
     }

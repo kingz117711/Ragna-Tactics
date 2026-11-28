@@ -1,5 +1,5 @@
-import { AFFINITIES, ELEMENTS, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
-import { availablePoints, forgePrice, command, tick, stats, rosterLimit, engaged, effectiveTactics, isLeader } from './sim.js';
+import { AFFINITIES, ELEMENTS, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, jobChoices, jobRequirement, jobCap, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, SKILL_TREES, JOB_BUILDS, refineCost, refineSuccessPercent, refineSafeLimit, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
+import { availablePoints, forgePrice, command, tick, stats, rosterLimit, engaged, effectiveTactics, isLeader, canEquipGear } from './sim.js';
 import { SAVE_KEY, loadGame, saveGame, encodeSave, decodeSave } from './persistence.js';
 import { Sprites } from './sprites.js';
 import { Renderer } from './renderer.js';
@@ -27,12 +27,13 @@ function showModal(title, content, eyebrow = 'GUILD MANAGEMENT') {
 function error(message) { const el = $('modal-error'); if (modal.open && el) el.textContent = message; else toast(message); }
 function closeModal() { modal.close(); }
 const modalError = '<div id="modal-error" class="modal-error" role="alert"></div>';
+function canAdvance(c) { const req = jobRequirement(c.job); return jobChoices(c.job).length > 0 && c.jobLevel >= req.jobLevel && c.level >= req.baseLevel; }
 function issue(cmd, { close = false, quiet = false } = {}) {
   if (!writable || settling) return false;
   const message = command(state, { ids: [...selected], ...cmd });
   if (message) { error(message); return false; }
   if (close) closeModal();
-  if (!quiet) toast({ party: 'Party formed. Orders now apply to the whole party.', split: 'Selected adventurers are now independent.', resume: 'Farming assignments resumed.', hold: 'Holding position. Nearby enemies will be engaged.', retreat: 'Retreating to the camp exit.', recover: 'Rested and ready for the next expedition.', resupply: 'Potion supplies replenished.', promote: 'Job advancement complete. Your adventurer is ready for a new path.', recruit: 'A new Novice joined the guild.' }[cmd.type] || 'Orders received.');
+  if (!quiet) toast({ party: 'Party formed. Orders now apply to the whole party.', split: 'Selected adventurers are now independent.', resume: 'Farming assignments resumed.', hold: 'Holding position. Nearby enemies will be engaged.', retreat: 'Retreating to the camp exit.', recover: 'Rested and ready for the next expedition.', resupply: 'Potion supplies replenished.', promote: 'Job advancement complete. Your adventurer is ready for a new path.', recruit: 'A new Novice joined the guild.', 'refine-gear': 'Refinement result recorded.', 'refine-convert': 'Advanced refining ore exchanged.' }[cmd.type] || 'Orders received.');
   persist(); renderUI(); return true;
 }
 function persist() {
@@ -87,7 +88,7 @@ function renderUI() {
   }).join('') : '<div class="party-empty">No linked parties · select two or more adventurers to form one.</div>');
   if (focusedPartyMember) $('party-overview').querySelector(`[data-character="${focusedPartyMember}"]`)?.focus({ preventScroll: true });
   renderExpeditionGoals();
-  const eligible = state.characters.filter(c => c.jobLevel >= promotionLevel(c.job));
+  const eligible = state.characters.filter(canAdvance);
   $('job-notice').hidden = eligible.length === 0;
   $('job-names').textContent = eligible.map(c => c.name).join(', ');
   const cards = state.characters.map(c => {
@@ -143,7 +144,7 @@ function renderInspector(units) {
     content = `<div class="inspector-title">${units.length ? 'Better, together.' : 'Choose your adventurer.'}</div><p>${units.length ? 'Link your adventurers into a party to share targets, support each other, and earn shared EXP. Or deploy separately to cover more ground.' : 'Select a portrait to inspect equipment, tactics, and progression.'}</p>${units.length ? `<div class="detail-row"><span>Selected supplies</span><strong>${potions} potions</strong></div><label class="form-label">Tactics<select id="tactic-select"><option value="" disabled selected>Apply to selection…</option>${Object.entries(TACTICS).map(([key, t]) => `<option value="${key}">${t.name}</option>`).join('')}</select></label><p>Job changes become available at Novice Job Lv. 10. Every character chooses their own path.</p>` : ''}`;
   } else {
     const c = units[0], st = stats(c);
-    content = `<div class="inspector-title">${JOBS[c.job].name} <span class="tiny muted">${JOBS[c.job].role}</span></div><div class="detail-row"><span>Base Lv. ${c.level}</span><strong>${number(c.exp)} / ${baseNeed(c.level)} EXP</strong></div><div class="progress"><i style="width:${Math.min(100, c.exp / baseNeed(c.level) * 100)}%"></i></div><div class="detail-row"><span>Job Lv. ${c.jobLevel}${c.job === 'novice' ? ' / 10' : ' / 50'}</span><strong>${c.jobLevel >= promotionLevel(c.job) ? 'Job change ready' : `${number(c.jobExp)} / ${jobNeed(c.jobLevel)}`}</strong></div><div class="progress"><i style="width:${Math.min(100, c.jobExp / jobNeed(c.jobLevel) * 100)}%"></i></div><div class="detail-row"><span>HP / SP</span><strong>${Math.ceil(c.hp)}/${st.hp} · ${Math.floor(c.sp)}/${st.sp}</strong></div><div class="detail-row"><span>ATK / DEF · Potions</span><strong>${st.atk} / ${st.def} · ${c.potions}</strong></div><div class="detail-row"><span>Combat role</span><strong>${ROLE_LABELS[JOB_ROLES[c.job]]}${c.partyId ? ` · ${isLeader(state, c) ? 'Party leader' : 'Follower'}` : ''}</strong></div><label class="form-label">Starting preset<select id="tactic-select">${Object.entries(TACTICS).map(([key, t]) => `<option value="${key}" ${c.tactic === key ? 'selected' : ''}>${t.name}</option>`).join('')}</select></label>${tacticsMarkup(c)}<label class="form-label">Farming objective<select id="assignment-select">${[['balanced', 'Balanced farming'], ['experience', 'Training · +15% Base EXP'], ['materials', 'Gathering · double materials']].map(([key, label]) => `<option value="${key}" ${c.assignment === key ? 'selected' : ''}>${label}</option>`).join('')}</select></label><div class="detail-row"><span>Assignment · status</span><strong>${c.mapId ? `${MAPS[c.mapId].name} · ${c.status}` : c.status === 'down' ? 'Defeated · camp' : 'Guild camp'}</strong></div><div class="detail-actions">${(st.element || JOB_ROLES[c.job] === 'support') ? '<button data-action="spellbook">Spellbook</button>' : ''}<button data-action="attributes">Stats · ${availablePoints(c)} pts</button><button data-action="equipment">Equipment</button><button data-action="advance">Job path</button><button data-action="rename">Rename</button>${c.partyId && !isLeader(state, c) ? '<button data-action="leader" title="Make this adventurer the party leader">Lead party</button>' : ''}</div><p><span style="color:var(--gold)">${st.skill}</span> · ${st.cost} SP · ${c.cooldown > 0 ? c.cooldown.toFixed(1) + 's remaining' : 'Ready'}<br>${st.element ? ELEMENTS[st.element].name + ' magic · strong against ' + (ELEMENTS[ELEMENTS[st.element].beats]?.name || 'Undead') : st.description || JOBS[c.job].description}</p>`;
+    content = `<div class="inspector-title">${JOBS[c.job].name} <span class="tiny muted">${JOBS[c.job].role}</span></div><div class="detail-row"><span>Base Lv. ${c.level}</span><strong>${number(c.exp)} / ${baseNeed(c.level)} EXP</strong></div><div class="progress"><i style="width:${Math.min(100, c.exp / baseNeed(c.level) * 100)}%"></i></div><div class="detail-row"><span>Job Lv. ${c.jobLevel} / ${c.job === 'novice' ? 10 : jobCap(c.job)}</span><strong>${canAdvance(c) ? 'Job change ready' : `${number(c.jobExp)} / ${jobNeed(c.jobLevel)}`}</strong></div><div class="progress"><i style="width:${Math.min(100, c.jobExp / jobNeed(c.jobLevel) * 100)}%"></i></div><div class="detail-row"><span>HP / SP</span><strong>${Math.ceil(c.hp)}/${st.hp} · ${Math.floor(c.sp)}/${st.sp}</strong></div><div class="detail-row"><span>ATK / DEF · Potions</span><strong>${st.atk} / ${st.def} · ${c.potions}</strong></div><div class="detail-row"><span>Combat role</span><strong>${ROLE_LABELS[JOB_ROLES[c.job]]}${c.partyId ? ` · ${isLeader(state, c) ? 'Party leader' : 'Follower'}` : ''}</strong></div><label class="form-label">Starting preset<select id="tactic-select">${Object.entries(TACTICS).map(([key, t]) => `<option value="${key}" ${c.tactic === key ? 'selected' : ''}>${t.name}</option>`).join('')}</select></label>${tacticsMarkup(c)}<label class="form-label">Farming objective<select id="assignment-select">${[['balanced', 'Balanced farming'], ['experience', 'Training · +15% Base EXP'], ['materials', 'Gathering · double materials']].map(([key, label]) => `<option value="${key}" ${c.assignment === key ? 'selected' : ''}>${label}</option>`).join('')}</select></label><div class="detail-row"><span>Assignment · status</span><strong>${c.mapId ? `${MAPS[c.mapId].name} · ${c.status}` : c.status === 'down' ? 'Defeated · camp' : 'Guild camp'}</strong></div><div class="detail-actions">${(st.element || JOB_ROLES[c.job] === 'support') ? '<button data-action="spellbook">Spellbook</button>' : ''}<button data-action="attributes">Stats · ${availablePoints(c)} pts</button><button data-action="skills">Skills · ${c.skillPoints || 0} pts</button><button data-action="equipment">Equipment</button><button data-action="advance">Job path</button><button data-action="rename">Rename</button>${c.partyId && !isLeader(state, c) ? '<button data-action="leader" title="Make this adventurer the party leader">Lead party</button>' : ''}</div><p><span style="color:var(--gold)">${st.skill}</span> · ${st.cost} SP · ${c.cooldown > 0 ? c.cooldown.toFixed(1) + 's remaining' : 'Ready'}<br>${st.element ? ELEMENTS[st.element].name + ' magic · strong against ' + (ELEMENTS[ELEMENTS[st.element].beats]?.name || 'Undead') : st.description || JOBS[c.job].description}</p>`;
   }
   if (content !== inspectorKey) { html('inspector', content); inspectorKey = content; }
 }
@@ -154,18 +155,20 @@ function deployment() {
   $('deployment-form').onsubmit = event => { event.preventDefault(); const mapId = new FormData(event.currentTarget).get('destination'); if (issue({ type: 'deploy', mapId }, { close: true, quiet: true })) { coachDismissed = true; switchMap(mapId); toast('Expedition started. Your adventurers will farm automatically.'); } };
 }
 function camp() {
-  showModal('Back at the guild camp.', `<p>Recover and change jobs here. Deployed adventurers must retreat before they can use camp services.</p>${state.characters.map(c => `<div class="camp-unit"><img src="${sprites.portrait(c)}" alt=""><div><strong>${esc(c.name)} · ${JOBS[c.job].name}</strong><p>${c.mapId ? `At ${MAPS[c.mapId].name}${engaged(state, c) ? ' · In combat' : ''}` : c.status === 'down' ? 'Defeated · recovery needed' : `At camp · ${c.potions} potions`}</p></div><button data-camp-unit="${c.id}" data-service="${c.mapId ? 'retreat' : c.status !== 'down' && c.jobLevel >= promotionLevel(c.job) ? 'advance' : 'recover'}">${c.mapId ? 'Recall' : c.status !== 'down' && c.jobLevel >= promotionLevel(c.job) ? 'Choose job' : 'Recover'}</button></div>`).join('')}<div class="camp-actions"><button data-modal-action="recover-all">Recover at camp</button><button data-modal-action="supply-all">Refill camp potions · 2z each</button></div><p style="margin-top:15px">Recovery is free in this foundation. Refills bring each character to ten potions. Each potion restores 65 HP automatically below 45% HP.</p>${modalError}`);
+  showModal('Back at the guild camp.', `<p>Recover and change jobs here. Deployed adventurers must retreat before they can use camp services.</p>${state.characters.map(c => `<div class="camp-unit"><img src="${sprites.portrait(c)}" alt=""><div><strong>${esc(c.name)} · ${JOBS[c.job].name}</strong><p>${c.mapId ? `At ${MAPS[c.mapId].name}${engaged(state, c) ? ' · In combat' : ''}` : c.status === 'down' ? 'Defeated · recovery needed' : `At camp · ${c.potions} potions`}</p></div><button data-camp-unit="${c.id}" data-service="${c.mapId ? 'retreat' : c.status !== 'down' && canAdvance(c) ? 'advance' : 'recover'}">${c.mapId ? 'Recall' : c.status !== 'down' && canAdvance(c) ? 'Choose job' : 'Recover'}</button></div>`).join('')}<div class="camp-actions"><button data-modal-action="recover-all">Recover at camp</button><button data-modal-action="supply-all">Refill camp potions · 2z each</button></div><p style="margin-top:15px">Recovery is free in this foundation. Refills bring each character to ten potions. Each potion restores 65 HP automatically below 45% HP.</p>${modalError}`);
 }
 function advanceJob(id = [...selected][0]) {
   const c = state.characters.find(v => v.id === id);
   if (!c) return;
   selected = new Set([c.id]);
-  const choices = jobChoices(c.job), gate = promotionLevel(c.job), first = c.job === 'novice';
+  const choices = jobChoices(c.job), requirement = jobRequirement(c.job), gate = requirement.jobLevel, first = c.job === 'novice';
   if (!choices.length) {
-    showModal(JOBS[c.job].name, `<div class="milestone-note">Novice → ${JOBS[JOBS[c.job].parent].name} → ${JOBS[c.job].name}</div><h3>${JOBS[c.job].skill}</h3><p>${JOBS[c.job].description}</p>`, 'SECOND JOB');
+    showModal(JOBS[c.job].name, `<div class="milestone-note">${esc(JOBS[JOBS[c.job].parent]?.name || 'Novice')} → ${esc(JOBS[c.job].name)} · ${JOBS[c.job].tier >= 4 ? 'Renewal third job' : 'current job cap'}</div><h3>${esc(JOBS[c.job].skill)}</h3><p>${esc(JOBS[c.job].description)}</p>`, 'JOB PATH');
     return;
   }
-  showModal(first ? 'Choose a new beginning.' : 'Advance your calling.', `<p>${esc(c.name)} · ${JOBS[c.job].name} · Job Lv. ${c.jobLevel} / ${gate}</p><p>Return to camp at Job Lv. ${gate} to advance. Keep your Base level and equipment. Your new job begins at Job Lv. 1.</p><form id="job-form"><div class="modal-grid">${choices.map(([key, job]) => `<label class="choice-card"><input type="radio" name="job" value="${key}" required><img class="job-preview" src="${sprites.portrait({ ...c, job: key })}" alt=""><span class="tiny"> ${job.role}</span><strong>${job.name}</strong><p>${job.description}</p></label>`).join('')}</div>${modalError}<div class="modal-footer"><span>Each adventurer chooses independently.</span><button type="submit" class="primary" ${c.jobLevel < gate || c.mapId || c.status === 'down' ? 'disabled' : ''}>Choose job <span>✧</span></button></div></form>`, first ? 'NOVICE → FIRST JOB' : 'FIRST JOB → SECOND JOB');
+  const nextStage = first ? 'FIRST JOB' : JOBS[c.job].tier === 1 ? 'SECOND JOB' : JOBS[c.job].tier === 2 ? 'TRANSCENDENT' : JOBS[c.job].tier === 3 ? 'RENEWAL THIRD JOB' : 'ADVANCED JOB';
+  const gateText = `Job Lv. ${gate}${requirement.baseLevel > 1 ? ` and Base Lv. ${requirement.baseLevel}` : ''}`;
+  showModal(first ? 'Choose a new beginning.' : 'Advance your calling.', `<p>${esc(c.name)} · ${esc(JOBS[c.job].name)} · Job Lv. ${c.jobLevel} / ${c.job === 'novice' ? 10 : jobCap(c.job)} · Base Lv. ${c.level}</p><p>Return to camp at ${gateText} to advance. Keep your Base level and equipment. New skill points start with the new job.</p><form id="job-form"><div class="modal-grid">${choices.map(([key, job]) => `<label class="choice-card"><input type="radio" name="job" value="${key}" required><img class="job-preview" src="${sprites.portrait({ ...c, job: key })}" alt=""><span class="tiny"> ${esc(job.role)} · tier ${job.tier || 2}</span><strong>${esc(job.name)}</strong><p>${esc(job.description)}</p></label>`).join('')}</div>${modalError}<div class="modal-footer"><span>Each adventurer chooses independently.</span><button type="submit" class="primary" ${c.jobLevel < gate || c.level < requirement.baseLevel || c.mapId || c.status === 'down' ? 'disabled' : ''}>Choose job <span>✧</span></button></div></form>`, `JOB PATH · ${nextStage}`);
   $('job-form').onsubmit = event => { event.preventDefault(); const job = new FormData(event.currentTarget).get('job'); issue({ type: 'promote', job, ids: [c.id] }, { close: true }); };
 }
 function recruit() {
@@ -205,18 +208,67 @@ function attributes() {
   };
   refresh();
 }
+function skills() {
+  const c = selectedCharacters()[0];
+  if (!c || selected.size !== 1) return toast('Select one adventurer to manage skills.');
+  const tree = SKILL_TREES[c.job] || [];
+  const builds = JOB_BUILDS[c.job] || [];
+  const buildControl = builds.length ? `<label class="form-label">Combat build<select id="combat-build-select" ${c.mapId ? 'disabled' : ''}>${builds.map(build => `<option value="${build.id}" ${c.build === build.id ? 'selected' : ''}>${esc(build.name)}</option>`).join('')}</select></label><p class="build-description">${esc(builds.find(build => build.id === c.build)?.description || builds[0].description)}</p>` : '';
+  const rows = tree.map(skill => {
+    const rank = c.skills?.[skill.id] || 0;
+    const lockedByLevel = c.jobLevel < skill.jobLevel;
+    const missing = skill.requires.some(req => (c.skills?.[req.skill] || 0) < req.level);
+    const prepared = c.activeSkill === skill.id;
+    const detail = skill.kind === 'passive' ? `Passive · ${skill.passive} mastery` : `${skill.spCost} SP · ${skill.cooldown}s · ${skill.effect}`;
+    return `<article class="skill-tree-row ${rank ? 'learned' : ''} ${lockedByLevel || missing ? 'locked' : ''}"><div class="skill-rank"><span>${rank ? `Lv. ${rank}` : '—'}</span></div><div class="skill-copy"><div class="skill-title"><strong>${esc(skill.name)}</strong><span>${esc(skill.branch)} · ${rank}/${skill.maxLevel}</span></div><p>${esc(skill.description)}</p><small>${esc(detail)}${skill.requires.length ? ' · Requires ' + skill.requires.map(req => `${esc(SKILL_TREES[c.job].find(node => node.id === req.skill)?.name || req.skill)} Lv.${req.level}`).join(', ') : ''}</small></div><div class="skill-actions">${rank < skill.maxLevel ? `<button data-skill-learn="${skill.id}" ${c.mapId || lockedByLevel || missing || !(c.skillPoints > 0) ? 'disabled' : ''}>${rank ? 'Upgrade' : 'Learn'}</button>` : '<span class="tiny">MASTERED</span>'}${skill.kind === 'active' && rank ? `<button data-skill-prepare="${skill.id}" ${c.mapId || prepared ? 'disabled' : ''}>${prepared ? 'Prepared' : 'Prepare'}</button>` : ''}</div></article>`;
+  }).join('');
+  showModal(`${c.name}’s skill tree`, `<p>Earn one skill point per Job level. Learn and rank up skills at camp; prepare one active skill for your auto-battle rotation. Passive nodes apply automatically.</p><div class="skill-points-banner"><strong>${c.skillPoints || 0}</strong><span>unspent skill points</span><span>Prepared: <b>${esc(tree.find(skill => skill.id === c.activeSkill)?.name || tree[0]?.name || '—')}</b></span></div>${buildControl}<div class="skill-tree">${rows}</div>${modalError}`, 'JOB SKILL TREE');
+}
+function gearInstanceTitle(instance) {
+  const item = GEAR_ITEMS[instance.itemId];
+  return `${instance.refine ? `+${instance.refine} ` : ''}${(instance.affixes || []).map(a => GEAR_AFFIXES[a.id]?.name).filter(Boolean).join(' ')}${instance.affixes?.length ? ' ' : ''}${item.name}`;
+}
+function gearBaseDetails(item) {
+  const fields = item.slot === 'weapon'
+    ? [`ATK ${item.atk}`,item.matk ? `MATK ${item.matk}` : '',`Weapon Lv.${item.weaponLevel}`,`Range ${item.range}`,`${item.slots} slot${item.slots === 1 ? '' : 's'}`]
+    : [`DEF ${item.def}`,`Armor Lv.${item.armorLevel}`,`${item.slots} slot${item.slots === 1 ? '' : 's'}`];
+  for(const [key,label] of [['str','STR'],['agi','AGI'],['vit','VIT'],['int','INT'],['dex','DEX'],['luk','LUK'],['mdef','MDEF'],['sp','SP']]) if(item[key]) fields.push(`${label} +${item[key]}`);
+  if(item.blindRes) fields.push(`Blind Resist ${item.blindRes}%`);
+  fields.push(`Weight ${item.weight}`,`Buy ${number(item.buy)}z`);
+  if(item.equipLevel) fields.push(`Base Lv.${item.equipLevel}+`);
+  fields.push(item.refineable ? 'Refineable' : 'Not refineable');
+  return fields.filter(Boolean).join(' · ');
+}
+function gearAffixText(instance) {
+  return (instance.affixes || []).map(a => `${GEAR_AFFIXES[a.id]?.name} +${a.value} ${GEAR_AFFIXES[a.id]?.stat === 'speed' || GEAR_AFFIXES[a.id]?.stat === 'crit' ? '%' : GEAR_AFFIXES[a.id]?.stat?.toUpperCase()}`).join(' · ');
+}
+function refineAction(instance, disabled = false) {
+  const item = GEAR_ITEMS[instance.itemId];
+  if (!item?.refineable || instance.refine >= 20) return '<small class="gear-refine-cap">Not refineable</small>';
+  const cost = refineCost(item,instance.refine), chance = refineSuccessPercent(item,instance.refine);
+  return `<button class="refine-button" data-refine-gear="${esc(instance.uid)}" ${disabled ? 'disabled' : ''}>Refine +${instance.refine + 1} · ${chance}%</button><small class="gear-refine-cost">${cost.amount} ${esc(ITEMS[cost.material].name)} · ${number(cost.zeny)}z${instance.refine + 1 > refineSafeLimit(item) ? ' · failure can break item' : ''}</small>`;
+}
 function equipment() {
   const c = selectedCharacters()[0]; if (!c || selected.size !== 1) return toast('Select one adventurer to manage equipment.');
-  const items = Object.keys(EQUIPMENT).map(id => ({ id, card: null, count: state.inventory.equipment[id] || 0 }));
-  for (const [key, count] of Object.entries(state.inventory.socketed)) {
-    if (count > 0) { const [id, card] = key.split('/'); items.push({ id, card, count }); }
-  }
-  const equipped = c.card ? CARDS[c.card].name : 'Empty socket';
-  const stock = items.map(({ id, card, count }) => {
-    const worn = c.equipment === id && (c.card || null) === card;
-    return `<div class="inventory-row"><div>${EQUIPMENT[id].name}${card ? ' · ' + CARDS[card].name : ''}<p>${EQUIPMENT[id].description}</p></div><button data-equip="${id}" data-card="${card || ''}" ${c.mapId || worn || (id !== 'training' && !count) ? 'disabled' : ''}>${worn ? 'Equipped' : id === 'training' ? 'Equip' : 'Equip · ' + count}</button></div>`;
+  c.gear ||= {};
+  const slots = Object.entries(GEAR_SLOTS).map(([slot, label]) => {
+    const currentInstance = c.gear[slot], current = currentInstance ? GEAR_ITEMS[currentInstance.itemId] : null;
+    const bagInstances = (state.inventory.gearItems || []).filter(instance => gearFitsSlot(GEAR_ITEMS[instance.itemId],slot) && canEquipGear(c.job,instance.itemId,c.level));
+    const options = bagInstances.map(instance => {
+      const item = GEAR_ITEMS[instance.itemId], equipped = currentInstance?.uid === instance.uid;
+      return `<div class="gear-choice"><span class="gear-ro-id">${item.roId}</span><div><strong>${esc(gearInstanceTitle(instance))}</strong><small>${esc(gearBaseDetails(item))}${gearAffixText(instance) ? ` · ${esc(gearAffixText(instance))}` : ''}</small>${refineAction(instance,c.mapId || equipped)}</div><button data-gear-equip="${instance.itemId}" data-gear-uid="${esc(instance.uid)}" data-slot="${slot}" ${c.mapId || equipped ? 'disabled' : ''}>${equipped ? 'Worn' : 'Equip'}</button></div>`;
+    }).join('');
+    const equippedDetail = currentInstance ? `${gearBaseDetails(current)}${currentInstance.refine ? ` · Refine +${currentInstance.refine}` : ''}${gearAffixText(currentInstance) ? ` · ${gearAffixText(currentInstance)}` : ''}` : '';
+    return `<section class="gear-slot"><div class="gear-slot-heading"><span class="eyebrow">${esc(label)}</span><strong>${currentInstance ? esc(gearInstanceTitle(currentInstance)) : 'Empty'}</strong>${currentInstance ? `<span class="gear-stat-line">${esc(equippedDetail)}</span>${refineAction(currentInstance,c.mapId)}<button class="text-button" data-gear-unequip="${slot}" ${c.mapId ? 'disabled' : ''}>Unequip</button>` : ''}</div><div class="gear-choices">${options || '<p class="muted">No item instances for this slot yet.</p>'}</div></section>`;
   }).join('');
-  showModal(`${c.name}’s equipment`, `<p>Change equipment and sockets at camp. Stored gear keeps its card.</p>${stock}<h3>${EQUIPMENT[c.equipment].name} · ${c.equipment === 'training' ? 'No socket' : equipped}</h3>${cardRows(c)}${c.card ? `<button data-socket="" ${c.mapId ? 'disabled' : ''}>Remove card</button>` : ''}${modalError}`);
+  const legacyItems = Object.keys(EQUIPMENT).map(id => ({ id, card:null, count:state.inventory.equipment[id] || 0 }));
+  for (const [key,count] of Object.entries(state.inventory.socketed || {})) if (count > 0) { const [id,card] = key.split('/'); legacyItems.push({ id,card,count }); }
+  const legacy = legacyItems.map(({id,card,count}) => {
+    const worn = c.equipment === id && (c.card || null) === card;
+    return `<div class="inventory-row"><div><strong>${esc(EQUIPMENT[id].name)}${card ? ' · ' + esc(CARDS[card].name) : ''}</strong><p>${esc(EQUIPMENT[id].description)}</p></div><button data-equip="${id}" data-card="${card || ''}" ${c.mapId || worn || (id !== 'training' && !count) ? 'disabled' : ''}>${worn ? 'Equipped' : id === 'training' ? 'Equip' : 'Equip · ' + count}</button></div>`;
+  }).join('');
+  const equipped = c.card ? CARDS[c.card].name : 'Empty socket';
+  showModal(`${c.name}’s equipment`, `<p>RO Renewal database base stats are shown on each piece. Refine bonuses use iRO Renewal rules; affix rolls are an additional game-only drop property. A normal refine failure beyond the safe limit can destroy the item.</p><div class="gear-sheet">${slots}</div><h3>Legacy relics & cards</h3><p>The shared reliquary armaments remain compatible with the original save system.</p>${legacy}<h3>${esc(EQUIPMENT[c.equipment].name)} · ${c.equipment === 'training' ? 'No socket' : esc(equipped)}</h3>${cardRows(c)}${c.card ? `<button data-socket="" ${c.mapId ? 'disabled' : ''}>Remove card</button>` : ''}${modalError}`,'EQUIPMENT LOADOUT');
 }
 function cardRows(character) {
   return Object.entries(CARDS).map(([id, card]) => {
@@ -312,7 +364,17 @@ function storage() {
     const costs = ingredients.map(([key, qty]) => `${key} ${state.inventory.materials[key] || 0}/${qty}`).join(' · ');
     return `<div class="inventory-row"><div><strong>${EQUIPMENT[id].name}</strong><p>${costs} · ${price} Zeny</p></div><button data-forge="${id}" ${ready ? '' : 'disabled'}>Forge</button></div>`;
   }).join('');
-  showModal('The fruits of your adventures.', `<p>All expedition loot arrives in shared storage. Equipment is assigned individually at camp.</p><h3>Materials</h3>${Object.entries(state.inventory.materials).length ? Object.entries(state.inventory.materials).map(([name, count]) => `<div class="inventory-row">${esc(name)}<span>${number(count)}</span></div>`).join('') : '<p>No materials yet. Your first expedition is waiting.</p>'}<h3>Equipment</h3>${Object.entries(state.inventory.equipment).map(([id, count]) => `<div class="inventory-row"><div>${EQUIPMENT[id].name}<p>${EQUIPMENT[id].description}</p></div><span>${count} stored</span></div>`).join('')}<p style="margin-top:17px">Field enemies have a small chance to drop equipment. Baphomet always drops a Sanctuary relic. Crafted gear can be equipped at camp.</p><h3>Monster cards</h3>${cardRows()}<h3>Prontera forge</h3><p>A Blacksmith resting at camp halves the Zeny fee. Guild funds · ${number(state.inventory.zeny)} Zeny</p>${recipes}${modalError}`, 'SHARED STORAGE');
+  const canRefine = selected.size === 1 && !selectedCharacters()[0]?.mapId;
+  const gearRows = (state.inventory.gearItems || []).map(instance => {
+    const item = GEAR_ITEMS[instance.itemId];
+    return `<div class="inventory-row gear-inventory-row"><div><strong>${esc(gearInstanceTitle(instance))}</strong><p>${esc(GEAR_SLOTS[item.slot])} · RO #${item.roId} · ${esc(gearBaseDetails(item))}${gearAffixText(instance) ? ` · ${esc(gearAffixText(instance))}` : ''}</p></div>${refineAction(instance,!canRefine)}</div>`;
+  }).join('') || '<p>No slot gear in storage yet.</p>';
+  const conversions = [['oridecon','bradium'],['elunium','carnium']].map(([from,to]) => `<div class="inventory-row"><div><strong>${esc(ITEMS[to].name)} exchange</strong><p>3 ${esc(ITEMS[from].name)} + 50,000 Zeny · held ${state.inventory.items[from] || 0}</p></div><button data-refine-convert="${from}" data-refine-to="${to}" ${(state.inventory.items[from] || 0) < 3 || state.inventory.zeny < 50000 ? 'disabled' : ''}>Exchange</button></div>`).join('');
+  const itemRows = Object.entries(state.inventory.items || {}).map(([id,count]) => {
+    const item = ITEMS[id], use = item.type === 'consumable' && selected.size === 1;
+    return `<div class="inventory-row"><div><strong>${esc(item.name)}</strong><p>${esc(item.type)} · RO item ${item.roId} · ${esc(item.description)}</p></div><span>×${count}</span>${use ? `<button data-use-item="${id}" ${count ? '' : 'disabled'}>Use on selected</button>` : ''}</div>`;
+  }).join('');
+  showModal('The fruits of your adventures.', `<p>Monster drops, supplies, class equipment, and refining ores share this guild bag. Gear instances are counted separately from the older relic/card storage.</p><h3>Items & supplies</h3>${itemRows}<h3>Equipment bag</h3>${gearRows}<h3>Advanced refinement ores</h3>${conversions}<h3>Materials</h3>${Object.entries(state.inventory.materials).length ? Object.entries(state.inventory.materials).map(([name, count]) => `<div class="inventory-row">${esc(name)}<span>${number(count)}</span></div>`).join('') : '<p>No crafting materials yet.</p>'}<h3>Relic equipment</h3>${Object.entries(state.inventory.equipment).map(([id, count]) => `<div class="inventory-row"><div>${esc(EQUIPMENT[id].name)}<p>${EQUIPMENT[id].description}</p></div><span>${count} stored</span></div>`).join('')}<h3>Monster cards</h3>${cardRows()}<h3>Prontera forge</h3><p>A Blacksmith resting at camp halves the Zeny fee. Guild funds · ${number(state.inventory.zeny)} Zeny</p>${recipes}${modalError}`, 'SHARED STORAGE');
 }
 function rename() {
   const c = selectedCharacters()[0]; if (!c || selected.size !== 1) return toast('Choose one adventurer to rename.');
@@ -358,7 +420,7 @@ document.addEventListener('click', event => {
   const action = event.target.closest('[data-action]')?.dataset.action;
   if (action) {
     if (action === 'deploy') deployment(); else if (action === 'camp') camp(); else if (action === 'advance') advanceJob();
-    else if (action === 'spellbook') spellbook(); else if (action === 'attributes') attributes(); else if (action === 'equipment') equipment(); else if (action === 'rename') rename(); else if (action === 'leader') issue({ type: 'leader' });
+    else if (action === 'spellbook') spellbook(); else if (action === 'attributes') attributes(); else if (action === 'skills') skills(); else if (action === 'equipment') equipment(); else if (action === 'rename') rename(); else if (action === 'leader') issue({ type: 'leader' });
     else if (action === 'move' || action === 'rally') {
       if (action === 'rally' && MAPS[renderer.mapId].boss) return toast('Choose a farming field to mark a hunting area.');
       $('toast').hidden = true;
@@ -380,6 +442,13 @@ document.addEventListener('click', event => {
   const forge = event.target.closest('[data-forge]');
   if (forge && issue({ type: 'forge', item: forge.dataset.forge }, { quiet: true })) { storage(); toast('Forged equipment added to shared storage.'); }
   const equip = event.target.closest('[data-equip]'); if (equip && issue({ type: 'equip', item: equip.dataset.equip, card: equip.dataset.card || null })) equipment();
+  const gear = event.target.closest('[data-gear-equip]'); if (gear && issue({ type:'gear-equip', slot:gear.dataset.slot, item:gear.dataset.gearEquip, uid:gear.dataset.gearUid }, { quiet:true })) equipment();
+  const unequip = event.target.closest('[data-gear-unequip]'); if (unequip && issue({ type:'gear-unequip', slot:unequip.dataset.gearUnequip }, { quiet:true })) equipment();
+  const refine = event.target.closest('[data-refine-gear]'); if (refine && issue({ type:'refine-gear', uid:refine.dataset.refineGear }, { quiet:true })) { modal.querySelector('.gear-sheet') ? equipment() : storage(); }
+  const convert = event.target.closest('[data-refine-convert]'); if (convert && issue({ type:'refine-convert', from:convert.dataset.refineConvert, to:convert.dataset.refineTo }, { quiet:true })) storage();
+  const learn = event.target.closest('[data-skill-learn]'); if (learn && issue({ type:'learn-skill', skill:learn.dataset.skillLearn }, { quiet:true })) skills();
+  const prepareSkill = event.target.closest('[data-skill-prepare]'); if (prepareSkill && issue({ type:'prepare-skill', skill:prepareSkill.dataset.skillPrepare }, { quiet:true })) skills();
+  const useItem = event.target.closest('[data-use-item]'); if (useItem && issue({ type:'use-item', item:useItem.dataset.useItem }, { quiet:true })) storage();
   const modalAction = event.target.closest('[data-modal-action]')?.dataset.modalAction;
   if (modalAction === 'recover-all') { const ids = state.characters.filter(c => !c.mapId).map(c => c.id); if (issue({ type: 'recover', ids })) camp(); }
   if (modalAction === 'supply-all') { const ids = state.characters.filter(c => !c.mapId).map(c => c.id); if (issue({ type: 'resupply', ids })) camp(); }
@@ -392,6 +461,7 @@ document.addEventListener('click', event => {
 document.addEventListener('change', event => {
   const control = event.target;
   if (control.id === 'tactic-select') { issue({ type: 'tactic', tactic: control.value }, { quiet: true }); control.blur(); renderUI(); }
+  else if (control.id === 'combat-build-select') { if (issue({type:'set-build',build:control.value},{quiet:true})) skills(); }
   else if (control.id === 'assignment-select') { issue({ type: 'assignment', assignment: control.value }, { quiet: true }); control.blur(); renderUI(); }
   else if (control.id === 'target-pref-select') { issue({ type: 'tactic-config', key: 'targetPref', value: control.value }, { quiet: true }); control.blur(); renderUI(); }
   else {

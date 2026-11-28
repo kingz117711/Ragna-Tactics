@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame, command, advance, tick, gainExp, stats, settleOffline, rosterLimit, effectiveTactics, roleOf, advanceExpeditionGoals } from '../src/sim.js';
-import { OFFLINE_CAP, MONSTERS } from '../src/data.js';
+import { OFFLINE_CAP, MONSTERS, SKILL_TREES } from '../src/data.js';
 const ids = ['c1', 'c2'];
 test('a marked hunt survives manual repositioning, resume and offline settlement', () => {
   const s = createGame();
@@ -379,7 +379,7 @@ test('socketed duplicates can be stored, transferred and unsocketed independentl
 });
 test('Dunes card hunting settles the same earned cards live and offline', () => {
   const s = createGame(11);
-  for (const c of s.characters) { c.job='knight'; c.level=45; c.hp=stats(c).hp; }
+  for (const c of s.characters) { c.job='knight'; c.activeSkill=SKILL_TREES.knight[0].id; c.skills[c.activeSkill]=1; c.level=45; c.hp=stats(c).hp; }
   deploy(s,'morroc'); const live = structuredClone(s);
   const report = settleOffline(s,600); advance(live,600);
   assert.deepEqual(s.inventory,live.inventory);
@@ -443,8 +443,8 @@ test('prepared magic resolves each splash victim against its own affinity', () =
   c.targetId=fabre.id;
   assert.ok(command(s,{type:'attune',ids:['c1'],element:'fire'}));
   assert.equal(command(s,{type:'skill',ids:['c1']}),null);
-  assert.equal(400-poring.hp,Math.round(stats(c).atk*1.4*1.5));
-  assert.equal(400-fabre.hp,Math.round(stats(c).atk*2.4-MONSTERS.fabre.def));
+  assert.equal(400-poring.hp,Math.round(stats(c).atk*1.4*1.5*(1+stats(c).buildMods.skillPower)));
+  assert.equal(400-fabre.hp,Math.round(stats(c).atk*2.4*(1+stats(c).buildMods.skillPower)-MONSTERS.fabre.def));
   assert.equal(stats(c).skill,'Lightning Bolt');
 });
 
@@ -458,7 +458,7 @@ test('Caravan brooch converts drops from both regions into wearable gear', () =>
 });
 
 test('Payon rewards a prepared Holy Priest and preserves the healing loadout', () => {
-  const s=createGame(), [priest]=s.characters; priest.job='priest';
+  const s=createGame(), [priest]=s.characters; priest.job='priest'; priest.activeSkill=SKILL_TREES.priest[0].id; priest.skills[priest.activeSkill]=1;
   const prepare = element => command(s,{type:'attune',ids:[priest.id],element});
   assert.ok(prepare('water')); assert.equal(prepare('holy'),null);
   deploy(s,'payon',[priest.id]); const mobs=s.maps.payon.monsters;

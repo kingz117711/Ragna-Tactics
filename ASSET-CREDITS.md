@@ -40,3 +40,11 @@ every original file and confirms the runtime subset against the source catalogs.
 Ground, paths, foliage, and sanctuary outlines are provisional procedural Canvas
 scenery authored for this foundation. They are visually decorative and non-blocking.
 No source game maps or collision data were imported. Typography uses system fonts.
+
+The Renewal job catalog now includes additional paths, but new job portraits currently
+map to the nearest imported ancestor costume in the runtime index. Those fallback
+costumes are authentic imported RO sprites, but they are not unique outfits for those
+jobs. The new skill FX are custom Canvas treatments, and gear rows display RO item IDs
+rather than extracted official item icons. Do not describe either as authentic native
+skill/equipment artwork. See [`docs/RENEWAL-SYSTEM.md`](docs/RENEWAL-SYSTEM.md) for
+research links, implementation scope, and the lawful asset-import requirements.

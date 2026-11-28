@@ -18,7 +18,7 @@ export class Sprites {
     }));
   }
   hero(ctx, c, ms, stance = c.stance, direction = c.direction, scale = 0.7) {
-    const job = JOBS[c.job].native;
+    const job = JOBS[c.job].spriteNative ?? JOBS[c.job].native;
     const body = this.assets.get(`base-${job}-${c.sex}`), hair = this.assets.get(`hair-${c.sex}-2-0`);
     if (!body || !hair) return;
     const key = stance + direction;

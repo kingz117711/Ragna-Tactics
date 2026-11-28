@@ -1,5 +1,5 @@
 // Pure, serializable simulation. No DOM, storage, wall clock, or camera dependencies.
-import { ELEMENTS, affinityMultiplier, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, JOBS, MONSTERS, EQUIPMENT, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
+import { ELEMENTS, affinityMultiplier, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, jobCap, jobRequirement, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, SKILL_TREES, SKILL_INDEX, JOB_BUILDS, refineSuccessPercent, refineCost, refineSafeLimit, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
 
 export function random(state) {
   state.seed = (Math.imul(state.seed, 1664525) + 1013904223) >>> 0;
@@ -8,20 +8,78 @@ export function random(state) {
 export function availablePoints(c) {
   return 2 * (c.level - 1) - Object.values(c.attributes || {}).reduce((sum, points) => sum + points, 0);
 }
+export function refineBonuses(instance) {
+  const item = GEAR_ITEMS[instance?.itemId] || (typeof instance === 'string' ? GEAR_ITEMS[instance] : null);
+  const level = Math.max(0, Math.min(20, Number(instance?.refine) || 0));
+  if (!item?.refineable || !level) return { atk:0, matk:0, def:0 };
+  if (item.slot !== 'weapon') {
+    let def = 0;
+    for (let current = 1; current <= level; current++) def += Math.floor((3 + current) / 4);
+    return { atk:0, matk:0, def };
+  }
+  const perLevel = {1:2,2:3,3:5,4:7}[item.weaponLevel] || 0;
+  const highAt16 = {1:16,2:32,3:32,4:48}[item.weaponLevel] || 0;
+  const highPerLevel = {1:1,2:2,3:2,4:3}[item.weaponLevel] || 0;
+  const high = level >= 16 ? highAt16 + (level - 16) * highPerLevel : 0;
+  const value = perLevel * level + high;
+  return { atk:value, matk:value, def:0 };
+}
+function itemOfInstance(instance) {
+  return GEAR_ITEMS[typeof instance === 'string' ? instance : instance?.itemId];
+}
 export function stats(c) {
-  const job = JOBS[c.job], item = EQUIPMENT[c.equipment];
-  const { str = 0, vit = 0, agi = 0, int = 0, dex = 0, luk = 0 } = c.attributes || {};
+  const job = JOBS[c.job], item = EQUIPMENT[c.equipment] || EQUIPMENT.training;
+  const baseAttributes = c.attributes || {};
+  const gear = Object.values(c.gear || {}).map(instance => ({ instance, item:itemOfInstance(instance) })).filter(entry => entry.item);
+  const gearAttribute = key => gear.reduce((sum,{item}) => sum + (item[key] || 0),0);
+  const str = (baseAttributes.str || 0) + gearAttribute('str'), agi = (baseAttributes.agi || 0) + gearAttribute('agi');
+  const vit = (baseAttributes.vit || 0) + gearAttribute('vit'), int = (baseAttributes.int || 0) + gearAttribute('int');
+  const dex = (baseAttributes.dex || 0) + gearAttribute('dex'), luk = (baseAttributes.luk || 0) + gearAttribute('luk');
+  const build = (JOB_BUILDS[c.job] || []).find(option => option.id === c.build) || JOB_BUILDS[c.job]?.[0];
+  const buildMods = build?.mods || {};
+  const passiveRanks = Object.entries(c.skills || {}).reduce((sum, [id, level]) => {
+    const skill = SKILL_INDEX[id];
+    if (skill?.kind === 'passive') sum[skill.passive] = (sum[skill.passive] || 0) + level;
+    return sum;
+  }, {});
   const element = spellElement(c);
-  const spell = element ? ELEMENTS[element][c.job] : job.skill;
-  return { ...job, element, skill: spell, interval: job.interval / (1 + agi / 100), skillBonus: dex * 2, crit: luk / 100, regen: 0.9 + int * 0.025,
-    hp: job.hp + (c.level - 1) * 14 + vit * 10, atk: job.atk + (c.level - 1) * 2 + item.atk + str * 2 + (CARDS[c.card]?.atk || 0),
-    def: job.def + Math.floor((c.level - 1) / 3) + item.def + Math.floor(vit / 3) + (CARDS[c.card]?.def || 0), sp: 45 + c.level * 4 + int * 4 };
+  const prepared = (c.skills?.[c.activeSkill] > 0 && SKILL_INDEX[c.activeSkill]) || SKILL_TREES[c.job]?.[0];
+  const spell = element ? ELEMENTS[element][c.job] : prepared?.name || job.skill;
+  const affixes = gear.flatMap(({ instance }) => instance?.affixes || []);
+  const affix = Object.fromEntries(['atk','matk','def','hp','sp','crit','speed','skill'].map(stat => [stat, affixes.filter(a => GEAR_AFFIXES[a.id]?.stat === stat).reduce((sum,a) => sum + a.value,0)]));
+  const refined = gear.map(({ instance }) => refineBonuses(instance));
+  const gearAtk = gear.reduce((sum, {item}, i) => sum + (item.atk || 0) + refined[i].atk, 0) + affix.atk;
+  const gearMatk = gear.reduce((sum, {item}, i) => sum + (item.matk || 0) + refined[i].matk, 0) + affix.matk;
+  const gearDef = gear.reduce((sum, {item}, i) => sum + (item.def || 0) + refined[i].def, 0) + affix.def;
+  const passiveAtk = (passiveRanks.atk || 0) + Math.floor((passiveRanks.magic || 0) * 0.7);
+  const passiveDef = Math.floor((passiveRanks.def || 0) * 0.7);
+  const extraHp = gear.reduce((sum, {item}) => sum + (item.hp || 0), 0) + affix.hp;
+  const extraSp = gear.reduce((sum, {item}) => sum + (item.sp || 0), 0) + affix.sp;
+  const gearRange = gear.reduce((max, {item}) => Math.max(max, item.range || 1), 1) - 1;
+  const speedBonus = passiveRanks.atkSpeed || 0;
+  const rangeBonus = passiveRanks.range || 0;
+  const critBonus = passiveRanks.crit || 0;
+  const healBonus = passiveRanks.heal || 0;
+  const buff = c.buffs || {};
+  const skillRank = prepared ? c.skills?.[prepared.id] || 1 : 1;
+  return { ...job, element, skill: spell, buildName:build?.name || 'Balanced', buildMods,
+    cost: prepared?.spCost ? Math.max(1, Math.round(prepared.spCost * (1 - (skillRank - 1) * 0.035))) : job.cost,
+    cooldown: prepared?.cooldown ? Math.max(2, prepared.cooldown * (1 - (skillRank - 1) * 0.035)) : job.cooldown, splash: prepared?.splash || job.splash,
+    interval: job.interval / (1 + agi / 100 + speedBonus * 0.012 + affix.speed / 100 + (buff.tempo > 0 ? 0.15 : 0) + (buildMods.speed || 0)), skillBonus: dex * 2 + healBonus + affix.skill + Math.round((buildMods.heal || 0) * 10),
+    crit: luk / 100 + critBonus * 0.006 + affix.crit / 100 + (buildMods.crit || 0), regen: 0.9 + int * 0.025 + (passiveRanks.sp || 0) * 0.06,
+    hp: job.hp + (c.level - 1) * 14 + vit * 10 + extraHp,
+    atk: Math.round((job.atk + (c.level - 1) * 2 + item.atk + gearAtk + str * 2 + passiveAtk + (CARDS[c.card]?.atk || 0)) * (1 + (buildMods.atk || 0)) * (buff.atk > 0 ? 1.15 : 1)),
+    def: job.def + Math.floor((c.level - 1) / 3) + item.def + gearDef + passiveDef + Math.floor(vit / 3) + (CARDS[c.card]?.def || 0) + (buildMods.def || 0) + (buff.def > 0 ? 2 : 0),
+    mdef: gear.reduce((sum,{item}) => sum + (item.mdef || 0),0), blindRes:gear.reduce((sum,{item}) => sum + (item.blindRes || 0),0),
+    matk: job.atk + (c.level - 1) * 2 + int * 2 + gearMatk + (passiveRanks.magic || 0),
+    sp: 45 + c.level * 4 + int * 4 + extraSp + Math.round((buildMods.sp || 0) * 10), range: job.range + gearRange + rangeBonus * 0.05 + (buildMods.range || 0) };
 }
 export function character(id, name, sex = 'm') {
   return { id, ownerId: 'local-player', name, sex, job: 'novice', level: 1, exp: 0, jobLevel: 1, jobExp: 0,
     hp: 100, sp: 49, mapId: null, partyId: null, x: 0, y: 0, home: { x: 0, y: 0 },
     direction: 0, stance: 'idle', status: 'camp', order: 'farm', destination: null, targetId: null,
     cooldown: 0, attackTimer: 0, attackFlash: 0, potions: 10, tactic: 'safe', tactics: { ...TACTIC_PRESETS.safe }, equipment: 'training',
+    gear: {}, skills: { [SKILL_TREES.novice[0].id]: 1 }, activeSkill: SKILL_TREES.novice[0].id, skillPoints: 0, build:'balanced',
     assignment: 'balanced', kills: 0, earned: 0 };
 }
 export function effectiveTactics(c) {
@@ -29,6 +87,18 @@ export function effectiveTactics(c) {
   return { ...preset, ...(c.tactics || {}) };
 }
 export function roleOf(c) { return JOB_ROLES[c.job] || 'frontline'; }
+export function canEquipGear(jobId, itemId, baseLevel = 99) {
+  const item = GEAR_ITEMS[itemId];
+  if (!item || baseLevel < (item.equipLevel || 0) || item.excluded?.includes(jobId)) return false;
+  if (!item.classes) return true;
+  let current = jobId;
+  while (current) {
+    if (current === 'novice' && jobId !== 'novice') break;
+    if (item.classes.includes(current) || item.classes.includes(JOBS[current]?.family)) return true;
+    current = JOBS[current]?.parent;
+  }
+  return false;
+}
 export function partyOf(s, c) { return c.partyId ? s.parties.find(p => p.id === c.partyId) || null : null; }
 export function leaderOf(s, c) { const p = partyOf(s, c); return p ? s.characters.find(v => v.id === p.leaderId) || null : null; }
 export function isLeader(s, c) { const p = partyOf(s, c); return !!p && p.leaderId === c.id; }
@@ -47,11 +117,40 @@ function ensureLeaders(s) {
     }
   }
 }
+function makeGearInstance(s, itemId, affixes = []) {
+  return { uid:`g${s.nextId++}`, itemId, refine:0, affixes:affixes.map(a => ({ ...a })) };
+}
+function refreshGearCounts(s) {
+  s.inventory.gear = {};
+  for (const instance of s.inventory.gearItems || []) s.inventory.gear[instance.itemId] = (s.inventory.gear[instance.itemId] || 0) + 1;
+}
+export function rollGearAffixes(s, itemId, key) {
+  const item = GEAR_ITEMS[itemId];
+  const candidates = Object.entries(GEAR_AFFIXES).filter(([,affix]) => affix.slots.includes(item.slot));
+  const rarity = lootRoll(s,{id:key,kind:itemId},'affix-count');
+  const count = rarity < 0.1 ? 3 : rarity < 0.42 ? 2 : 1;
+  const rolled = [], remaining = [...candidates];
+  for (let i=0; i<Math.min(count,remaining.length); i++) {
+    const pick = Math.floor(lootRoll(s,{id:key,kind:itemId},`affix-${i}`) * remaining.length);
+    const [id,affix] = remaining.splice(pick,1)[0];
+    const valueRoll = lootRoll(s,{id:key,kind:itemId},`value-${i}`);
+    rolled.push({ id, value:affix.min + Math.floor(valueRoll * (affix.max - affix.min + 1)) });
+  }
+  return rolled;
+}
+function addGearToBag(s, itemId, affixes = []) {
+  if (!Object.hasOwn(GEAR_ITEMS,itemId)) return null;
+  s.inventory.gearItems ||= [];
+  const instance = makeGearInstance(s,itemId,affixes);
+  s.inventory.gearItems.push(instance); refreshGearCounts(s); return instance;
+}
 export function createGame(seed = 712711) {
   const s = { version: VERSION, ownerId: 'local-player', seed, time: 0, nextId: 1, characters: [character('c1', 'Aren'), character('c2', 'Lyra', 'f')],
-    parties: [], maps: {}, inventory: { zeny: 150, materials: {}, cards: {}, socketed: {}, equipment: { reliquary: 0, dune: 0, iron: 0, guard: 0, sanctuary: 0 } },
+    parties: [], maps: {}, inventory: { zeny: 150, materials: {}, cards: {}, socketed: {}, items: { red_potion:0, blue_potion:0, phracon:0, emveretarcon:0, elunium:0, oridecon:0, bradium:0, carnium:0 },
+      gear: {}, gearItems:[], equipment: { reliquary: 0, dune: 0, iron: 0, guard: 0, sanctuary: 0 } },
     milestones: { bossKills: 0, forestKills: 0, expeditionStep: 0 }, journal: [], effects: [] };
   for (const map of Object.values(MAPS)) populateField(s, map);
+  for (const itemId of ['knife','sword','bow','rod','mace','cotton_shirt','cotton_shirt','guard','guard','cap','cap','hood','hood','sandal','sandal','clip','clip']) addGearToBag(s,itemId);
   log(s, 'Your guild begins with two Novices. Deploy them together or explore separately.');
   return s;
 }
@@ -197,8 +296,13 @@ function applyCommand(s, cmd) {
     if (c.mapId) return 'Return to camp to choose a job.';
     if (c.status === 'down') return 'Recover at camp before advancing.';
     if (!jobChoices(c.job).some(([id]) => id === cmd.job)) return 'Choose an available job path.';
-    if (c.jobLevel < promotionLevel(c.job)) return 'Reach Job Lv. ' + promotionLevel(c.job) + ' first.';
-    c.job = cmd.job; c.jobLevel = 1; c.jobExp = 0; c.hp = stats(c).hp; c.sp = stats(c).sp;
+    const requirement = jobRequirement(c.job);
+    if (c.jobLevel < requirement.jobLevel) return 'Reach Job Lv. ' + requirement.jobLevel + ' first.';
+    if (c.level < requirement.baseLevel) return 'Reach Base Lv. ' + requirement.baseLevel + ' first.';
+    c.job = cmd.job; c.jobLevel = 1; c.jobExp = 0;
+    c.skills ||= {}; c.skills[SKILL_TREES[c.job][0].id] = Math.max(1, c.skills[SKILL_TREES[c.job][0].id] || 0); c.activeSkill = SKILL_TREES[c.job][0].id;
+    c.build = JOB_BUILDS[c.job]?.[0]?.id || 'balanced';
+    c.hp = stats(c).hp; c.sp = stats(c).sp;
     log(s, c.name + ' became a ' + JOBS[c.job].name + '!'); return null;
   }
   if (cmd.type === 'rename') {
@@ -214,10 +318,23 @@ function applyCommand(s, cmd) {
   }
   if (cmd.type === 'resupply') {
     if (units.some(c => c.mapId)) return 'Buy supplies at camp.';
-    const count = units.reduce((n, c) => n + Math.max(0, 10 - c.potions), 0), cost = count * 2;
+    const count = units.reduce((n, c) => n + Math.max(0, 10 - c.potions), 0);
+    const stored = s.inventory.items?.red_potion || 0, purchase = Math.max(0, count - stored), cost = purchase * 2;
     if (!count) return 'Everyone already has ten potions.';
     if (s.inventory.zeny < cost) return `You need ${cost} Zeny to refill this selection.`;
-    s.inventory.zeny -= cost; units.forEach(c => { c.potions = Math.max(c.potions, 10); }); return null;
+    s.inventory.zeny -= cost; s.inventory.items.red_potion = Math.max(0, stored - count);
+    units.forEach(c => { c.potions = Math.max(c.potions, 10); }); return null;
+  }
+  if (cmd.type === 'use-item') {
+    const item = ITEMS[cmd.item];
+    if (selected.length !== 1 || !item || item.type !== 'consumable') return 'Choose one adventurer and a usable item.';
+    const c = selected[0];
+    if (!(s.inventory.items?.[cmd.item] > 0)) return 'That item is not in the bag.';
+    if (item.effect === 'hp') c.hp = Math.min(stats(c).hp, c.hp + item.amount);
+    else if (item.effect === 'sp') c.sp = Math.min(stats(c).sp, c.sp + item.amount);
+    s.inventory.items[cmd.item]--;
+    if (c.mapId) effect(s, c.mapId, c.x, c.y, item.name, 'heal');
+    log(s, `${c.name} used ${item.name}.`); return null;
   }
   if (cmd.type === 'equip') {
     if (selected.length !== 1 || !Object.hasOwn(EQUIPMENT, cmd.item)) return 'Choose one character and an item.';
@@ -236,6 +353,75 @@ function applyCommand(s, cmd) {
     }
     if (cmd.item !== 'training') stock[key]--;
     c.equipment = cmd.item; c.card = card; c.hp = Math.min(c.hp, stats(c).hp); return null;
+  }
+  if (cmd.type === 'gear-equip' || cmd.type === 'gear-unequip') {
+    if (selected.length !== 1) return 'Choose one adventurer to manage equipment.';
+    const c = selected[0];
+    if (c.mapId) return 'Change equipment at camp.';
+    const slot = cmd.slot;
+    if (!Object.hasOwn(GEAR_SLOTS, slot)) return 'Choose a valid equipment slot.';
+    c.gear ||= {}; s.inventory.gearItems ||= [];
+    const old = c.gear[slot] || null;
+    const oldInstance = typeof old === 'string' ? makeGearInstance(s,old) : old;
+    const wantedId = cmd.type === 'gear-unequip' ? null : cmd.item;
+    let bagIndex = -1;
+    if (wantedId) bagIndex = cmd.uid ? s.inventory.gearItems.findIndex(instance => instance.uid === cmd.uid)
+      : s.inventory.gearItems.findIndex(instance => instance.itemId === wantedId);
+    const chosen = bagIndex >= 0 ? s.inventory.gearItems[bagIndex] : null;
+    const itemId = chosen?.itemId || wantedId;
+    const item = itemId ? GEAR_ITEMS[itemId] : null;
+    if (itemId && (!item || !gearFitsSlot(item,slot))) return 'That item does not fit this equipment slot.';
+    if (item && !canEquipGear(c.job,itemId,c.level)) return c.level < (item.equipLevel || 0) ? `This item requires Base Lv. ${item.equipLevel}.` : 'This job cannot equip that item.';
+    if (chosen && oldInstance?.uid === chosen.uid) return null;
+    if (wantedId && !chosen) return 'That item instance is not in your bag.';
+    if (cmd.type === 'gear-unequip' && !old) return null;
+    if (oldInstance) s.inventory.gearItems.push(oldInstance);
+    if (chosen) { s.inventory.gearItems.splice(bagIndex,1); c.gear[slot] = chosen; }
+    else delete c.gear[slot];
+    refreshGearCounts(s);
+    c.hp = Math.min(c.hp, stats(c).hp); c.sp = Math.min(c.sp, stats(c).sp);
+    log(s, itemId ? `${c.name} equipped ${item.name}${chosen?.refine ? ` +${chosen.refine}` : ''}.` : `${c.name} removed ${GEAR_SLOTS[slot]}.`);
+    return null;
+  }
+  if (cmd.type === 'refine-gear') {
+    if (selected.length !== 1 || selected[0].mapId) return 'Refine equipment at camp with one adventurer selected.';
+    const c = selected[0], uid = cmd.uid;
+    const bagIndex = s.inventory.gearItems?.findIndex(instance => instance.uid === uid) ?? -1;
+    let equippedSlot = Object.entries(c.gear || {}).find(([,instance]) => instance?.uid === uid)?.[0] || null;
+    const instance = bagIndex >= 0 ? s.inventory.gearItems[bagIndex] : equippedSlot ? c.gear[equippedSlot] : null;
+    if (!instance) return 'Select an item instance to refine.';
+    const item = GEAR_ITEMS[instance.itemId];
+    if (!item?.refineable || instance.refine >= 20) return 'This item cannot be refined further.';
+    const cost = refineCost(item,instance.refine);
+    if (s.inventory.zeny < cost.zeny || (s.inventory.items[cost.material] || 0) < cost.amount) return `Refining needs ${cost.amount} ${ITEMS[cost.material].name} and ${cost.zeny} Zeny.`;
+    const chance = refineSuccessPercent(item,instance.refine);
+    s.inventory.zeny -= cost.zeny; s.inventory.items[cost.material] -= cost.amount;
+    if (random(s) * 100 < chance) {
+      instance.refine++;
+      log(s, `${c.name} refined ${item.name} to +${instance.refine} (${chance}% chance).`);
+      if (c.mapId) effect(s,c.mapId,c.x,c.y,`+${instance.refine} ${item.name}`,'loot');
+    } else {
+      const breakChance = instance.refine >= 10 ? 0.2 : 1;
+      if (random(s) < breakChance) {
+        if (bagIndex >= 0) s.inventory.gearItems.splice(bagIndex,1);
+        else delete c.gear[equippedSlot];
+        refreshGearCounts(s);
+        log(s, `Refining failed. ${item.name} broke; its refine, cards and affixes were lost.`);
+      } else {
+        const previous = instance.refine; instance.refine = Math.max(0, instance.refine - 3);
+        log(s, `Refining failed. ${item.name} fell from +${previous} to +${instance.refine}.`);
+      }
+    }
+    c.hp = Math.min(c.hp,stats(c).hp); c.sp = Math.min(c.sp,stats(c).sp);
+    return null;
+  }
+  if (cmd.type === 'refine-convert') {
+    if (selected.length !== 1 || selected[0].mapId) return 'Exchange refinement ores at camp.';
+    const { from, to } = cmd;
+    const validPair = (from === 'oridecon' && to === 'bradium') || (from === 'elunium' && to === 'carnium');
+    if (!validPair || (s.inventory.items[from] || 0) < 3 || s.inventory.zeny < 50000) return 'Exchange needs three matching ores and 50,000 Zeny.';
+    s.inventory.items[from] -= 3; s.inventory.items[to] = (s.inventory.items[to] || 0) + 1; s.inventory.zeny -= 50000;
+    log(s, `Exchanged three ${ITEMS[from].name} for ${ITEMS[to].name}.`); return null;
   }
   if (cmd.type === 'attune') {
     const c = selected[0];
@@ -291,6 +477,31 @@ function applyCommand(s, cmd) {
   if (cmd.type === 'assignment') {
     if (!['balanced', 'experience', 'materials'].includes(cmd.assignment)) return 'Unknown assignment.';
     selected.forEach(c => { c.assignment = cmd.assignment; }); return null;
+  }
+  if (cmd.type === 'set-build') {
+    if (selected.length !== 1 || selected[0].mapId) return 'Choose a build at camp.';
+    const c = selected[0], build = JOB_BUILDS[c.job]?.find(option => option.id === cmd.build);
+    if (!build) return 'Choose a build for the current class.';
+    c.build = build.id; log(s, `${c.name} adopted the ${build.name} build.`); return null;
+  }
+  if (cmd.type === 'learn-skill') {
+    if (selected.length !== 1) return 'Choose one adventurer to train skills.';
+    const c = selected[0], skill = SKILL_INDEX[cmd.skill];
+    if (c.mapId) return 'Train skills at camp.';
+    if (!skill || !SKILL_TREES[c.job]?.some(node => node.id === skill.id)) return 'That skill is not in this job’s tree.';
+    const level = c.skills?.[skill.id] || 0;
+    if (level >= skill.maxLevel) return 'This skill is already mastered.';
+    if (c.jobLevel < skill.jobLevel) return 'Reach Job Lv. ' + skill.jobLevel + ' to learn this skill.';
+    if (skill.requires.some(req => (c.skills?.[req.skill] || 0) < req.level)) return 'Meet the prerequisite skill rank first.';
+    if ((c.skillPoints || 0) < 1) return 'Earn a Job level to gain a skill point.';
+    c.skills ||= {}; c.skills[skill.id] = level + 1; c.skillPoints--;
+    log(s, `${c.name} learned ${skill.name} Lv. ${level + 1}.`); return null;
+  }
+  if (cmd.type === 'prepare-skill') {
+    if (selected.length !== 1 || selected[0].mapId) return 'Prepare a skill at camp.';
+    const c = selected[0], skill = SKILL_INDEX[cmd.skill];
+    if (!skill || skill.kind !== 'active' || !(c.skills?.[skill.id] > 0)) return 'Learn that active skill before preparing it.';
+    c.activeSkill = skill.id; c.cooldown = 0; return null;
   }
   if (cmd.type === 'skill') {
     let cast = false;
@@ -359,20 +570,27 @@ function move(c, target, speed, dt) {
   c.y = Math.max(-15, Math.min(15, c.y + dy / d * n));
   c.stance = 'walk'; return n >= d;
 }
-function effect(s, mapId, x, y, text, kind = 'hit') {
-  s.effects.push({ id: s.nextId++, mapId, x, y, text, kind, life: 1.1 });
+function effect(s, mapId, x, y, text, kind = 'hit', data = {}) {
+  s.effects.push({ id: s.nextId++, mapId, x, y, text, kind, life: 1.1, ...data });
   if (s.effects.length > 70) s.effects.shift();
 }
 export function gainExp(s, c, exp, jobExp) {
   const previousJobLevel = c.jobLevel;
   c.exp += exp; c.jobExp += jobExp;
   while (c.level < 99 && c.exp >= baseNeed(c.level)) { c.exp -= baseNeed(c.level); c.level++; c.hp = stats(c).hp; c.sp = stats(c).sp; log(s, `${c.name} reached Base Lv. ${c.level}.`); }
-  const cap = c.job === 'novice' ? 10 : 50;
-  while (c.jobLevel < cap && c.jobExp >= jobNeed(c.jobLevel)) { c.jobExp -= jobNeed(c.jobLevel); c.jobLevel++; }
+  const cap = c.job === 'novice' ? 10 : jobCap(c.job);
+  while (c.jobLevel < cap && c.jobExp >= jobNeed(c.jobLevel)) { c.jobExp -= jobNeed(c.jobLevel); c.jobLevel++; c.skillPoints = (c.skillPoints || 0) + 1; }
   if (c.jobLevel >= cap) c.jobExp = Math.min(c.jobExp, jobNeed(cap));
   if (c.job === 'novice' && previousJobLevel < 10 && c.jobLevel === 10) {
     log(s, c.name + ' can now choose a first job at guild camp.');
   }
+}
+function lootRoll(s, monster, salt) {
+  let hash = (s.seed ^ 0x9e3779b9) >>> 0;
+  const text = `${monster.id}:${monster.kind}:${salt}`;
+  for (let i = 0; i < text.length; i++) hash = (Math.imul(hash ^ text.charCodeAt(i), 16777619)) >>> 0;
+  hash = (Math.imul(hash, 1664525) + 1013904223) >>> 0;
+  return hash / 4294967296;
 }
 function kill(s, m, killer) {
   if (m.rewarded) return;
@@ -390,6 +608,31 @@ function kill(s, m, killer) {
   s.inventory.zeny += def.zeny;
   s.inventory.materials[def.material] = (s.inventory.materials[def.material] || 0) + (killer.assignment === 'materials' ? 2 : 1);
   if (random(s) < 0.035) { const item = random(s) < 0.6 ? 'iron' : 'guard'; s.inventory.equipment[item]++; log(s, `${def.name} dropped ${EQUIPMENT[item].name}.`); }
+  if (lootRoll(s,m,'gear') < 0.035) {
+    const pool = m.kind === 'zombie' || m.kind === 'skeleton' ? ['silk_robe','buckler','boots','rosary'] :
+      m.kind === 'willow' || m.kind === 'fabre' ? ['cotton_shirt','cap','hood','sandal','clip'] : ['adventurer_suit','muffler','glove','circlet'];
+    const gearId = pool[Math.floor(lootRoll(s,m,'gear-choice') * pool.length)];
+    const affixes = rollGearAffixes(s,gearId,`${m.id}:kill:${s.milestones.enemiesDefeated}`);
+    addGearToBag(s,gearId,affixes);
+    const label = `${affixes.map(a => GEAR_AFFIXES[a.id].name).join(' ')}${affixes.length ? ' ' : ''}${GEAR_ITEMS[gearId].name}`;
+    log(s, `${def.name} dropped ${label}.`);
+    effect(s, m.mapId, m.x, m.y, label, 'loot');
+  }
+  if (lootRoll(s,m,'potion') < 0.06) {
+    const itemId = lootRoll(s,m,'potion-kind') < 0.78 ? 'red_potion' : 'blue_potion';
+    s.inventory.items[itemId] = (s.inventory.items[itemId] || 0) + 1;
+    effect(s, m.mapId, m.x, m.y, itemId === 'red_potion' ? 'Red Potion' : 'Blue Potion', 'loot');
+  }
+  if (lootRoll(s,m,'refine-metal') < 0.09) {
+    const metal = lootRoll(s,m,'refine-metal-kind') < 0.72 ? 'phracon' : 'emveretarcon';
+    s.inventory.items[metal] = (s.inventory.items[metal] || 0) + 1;
+    effect(s,m.mapId,m.x,m.y,ITEMS[metal].name,'loot');
+  }
+  if ((m.kind === 'zombie' || m.kind === 'skeleton') && lootRoll(s,m,'ore') < 0.035) {
+    const ore = lootRoll(s,m,'ore-kind') < 0.65 ? 'elunium' : 'oridecon';
+    s.inventory.items[ore] = (s.inventory.items[ore] || 0) + 1;
+    effect(s, m.mapId, m.x, m.y, ore === 'elunium' ? 'Elunium' : 'Oridecon', 'loot');
+  }
   if (Object.hasOwn(CARDS, m.kind) && (m.kind === 'phreeoni' || random(s) < 0.06)) {
     s.inventory.cards[m.kind] = (s.inventory.cards[m.kind] || 0) + 1;
     log(s, CARDS[m.kind].name + ' discovered in ' + MAPS[m.mapId].name + '! Socket it into equipment at camp.');
@@ -407,48 +650,87 @@ function kill(s, m, killer) {
   }
   effect(s, m.mapId, m.x, m.y, '+' + def.zeny + 'z', 'loot');
 }
+function refineOverupgrade(s,c) {
+  const weapon = Object.values(c.gear || {}).find(instance => itemOfInstance(instance)?.slot === 'weapon');
+  const item = itemOfInstance(weapon);
+  if (!weapon || !item?.refineable) return 0;
+  const over = Math.max(0,(weapon.refine || 0)-refineSafeLimit(item));
+  const perLevel = {1:2,2:5,3:8,4:14}[item.weaponLevel] || 0;
+  return over ? Math.floor(random(s) * (perLevel * over + 1)) : 0;
+}
 function damage(s, c, m, value, attackRange = stats(c).range) {
   // All damaging paths re-check reach at the point of resolution. Target locks are
   // intentions, not permission to deal damage across a map or through an overshoot.
   if (!m || m.hp <= 0 || !c.mapId || c.mapId !== m.mapId || distance(c, m) > attackRange + 1e-6) return false;
-  const dealt = Math.max(1, Math.round(value - MONSTERS[m.kind].def));
+  const dealt = Math.max(1, Math.round(value + refineOverupgrade(s,c) - MONSTERS[m.kind].def));
   m.hp -= dealt; m.targetId = c.id; effect(s, m.mapId, m.x, m.y, String(dealt));
   if (m.hp <= 0) kill(s, m, c);
   return true;
 }
 function useSkill(s, c, target, manual = false) {
   const st = stats(c);
-  if (c.cooldown > 0 || c.sp < st.cost) return false;
-  if (c.job === 'novice' || (roleOf(c) === 'support' && !st.element)) {
-    const allies = c.job === 'novice' ? [c] : partyMembers(s, c).filter(v => active(v) && v.mapId === c.mapId && distance(v, c) <= 8);
+  const node = (c.skills?.[c.activeSkill] > 0 && SKILL_INDEX[c.activeSkill]) || SKILL_TREES[c.job]?.[0];
+  const rank = Math.max(1, c.skills?.[node?.id] || 1);
+  const cost = node?.spCost ? Math.max(1, Math.round(node.spCost * (1 - (rank - 1) * 0.035))) : st.cost;
+  const cooldown = node?.cooldown ? Math.max(2, node.cooldown * (1 - (rank - 1) * 0.035)) : st.cooldown;
+  if (!node || c.cooldown > 0 || c.sp < cost) return false;
+  const effectType = node.effect;
+  const isHeal = ['heal','partyHeal','guard'].includes(effectType);
+  const support = roleOf(c) === 'support' || c.job === 'novice';
+  if (isHeal || (support && !target && !st.element)) {
+    const allies = c.job === 'novice' ? [c] : partyMembers(s, c).filter(v => active(v) && v.mapId === c.mapId && distance(v, c) <= (node.splash || 8));
     const healAt = effectiveTactics(c).healAt;
     const injured = allies.filter(v => v.hp < stats(v).hp * (manual ? 1 : healAt)).sort((a, b) => a.hp / stats(a).hp - b.hp / stats(b).hp)[0];
-    if (!injured) return false;
-    const recipients = c.job === 'priest' ? allies.filter(a => a.hp < stats(a).hp) : [injured];
+    if (!injured && !(effectType === 'partyHeal' && st.element === 'holy' && target)) return false;
+    const recipients = ['partyHeal','guard'].includes(effectType) ? allies.filter(a => a.hp < stats(a).hp) : injured ? [injured] : [];
     for (const ally of recipients) {
-      const amount = Math.min(stats(ally).hp - ally.hp, (c.job === 'novice' ? 28 : 45 + c.level * 5) + st.skillBonus);
+      const amount = Math.min(stats(ally).hp - ally.hp, ((c.job === 'novice' ? 24 : 35 + c.level * 4 + rank * 4) + st.skillBonus) * (1 + (st.buildMods?.heal || 0)));
       ally.hp += amount; effect(s, c.mapId, ally.x, ally.y, '+' + Math.round(amount), 'heal');
+      if (effectType === 'guard') { ally.buffs ||= {}; ally.buffs.def = Math.max(ally.buffs.def || 0, 8); }
+    }
+    if (effectType === 'partyHeal' && st.element === 'holy' && target && target.mapId === c.mapId) {
+      const undead = s.maps[c.mapId].monsters.filter(enemy => enemy.hp > 0 && distance(enemy, target) <= Math.max(node.splash || 0, 1));
+      for (const enemy of undead) if (['zombie','skeleton'].includes(enemy.kind)) damage(s,c,enemy,st.matk * node.rankPower * (1 + (rank - 1) * 0.14) * (1 + (st.buildMods?.skillPower || 0)) * affinityMultiplier('holy',enemy.kind),Math.max(st.range,node.range || 0));
+    }
+  } else if (effectType === 'buffAtk' || effectType === 'buffDef' || effectType === 'buffTempo') {
+    const allies = partyMembers(s,c).filter(v => active(v) && v.mapId === c.mapId && distance(v,c) <= (node.splash || 8));
+    for (const ally of allies) {
+      ally.buffs ||= {};
+      const key = effectType === 'buffAtk' ? 'atk' : effectType === 'buffDef' ? 'def' : 'tempo';
+      ally.buffs[key] = Math.max(ally.buffs[key] || 0, 10 + rank * 2);
     }
   } else {
-    if (!target || target.mapId !== c.mapId || distance(c, target) > st.range) return false;
-    const multiplier = c.job === 'assassin' ? (target.hp < MONSTERS[target.kind].hp / 2 ? 4 : 2.8) : roleOf(c) === 'ranged' && c.job !== 'archer' ? 2.4 : 2;
-    const splash = st.splash || (c.job === 'mage' || (c.job === 'priest' && st.element === 'holy') ? 3 : 0);
-    const centre = c.job === 'knight' || c.job === 'blacksmith' ? c : target;
-    const secondary = splash ? s.maps[c.mapId].monsters.filter(m => m !== target && m.hp > 0 && distance(m, centre) < splash) : [];
-    if (!damage(s, c, target, (st.atk * multiplier + st.skillBonus) * affinityMultiplier(st.element,target.kind), st.range)) return false;
-    if (affinityMultiplier(st.element,target.kind) > 1) effect(s,c.mapId,target.x,target.y,'Weakness!', 'skill');
-    const stagger = c.job === 'blacksmith' || c.job === 'wizard';
-    if (stagger && target.hp > 0) target.timer = Math.max(target.timer, 2);
-    for (const m of secondary.slice(0, c.job === 'hunter' ? 2 : secondary.length)) {
-      if (damage(s, c, m, (st.atk * 1.4 + st.skillBonus) * affinityMultiplier(st.element,m.kind), st.range + splash) && stagger && m.hp > 0) m.timer = Math.max(m.timer, 2);
-    }
-    if (c.job === 'swordsman') for (const m of s.maps[c.mapId].monsters) if (m.hp > 0 && distance(m, c) < 5) m.targetId = c.id;
+    if (!target || target.mapId !== c.mapId || distance(c, target) > Math.max(st.range, node.range || 0)) return false;
+    const skillStat = st.element || ['magic','sage'].includes(JOBS[c.job]?.family) ? st.matk : st.atk;
+    const multiplier = (c.job === 'mage' ? 2.4 : node.rankPower) * (1 + (rank - 1) * 0.14) * (1 + (st.buildMods?.skillPower || 0));
+    const splash = node.splash || (c.job === 'mage' ? 3 : 0);
+    const centre = ['area','areaControl','areaHoly','falcon','summon'].includes(effectType) ? target : target;
+    const secondary = splash ? s.maps[c.mapId].monsters.filter(m => m !== target && m.hp > 0 && distance(m, centre) <= splash) : [];
+    const deal = (enemy, extra = 1) => {
+      const element = effectType === 'areaHoly' ? 'holy' : st.element;
+      const affinity = affinityMultiplier(element, enemy.kind);
+      const value = (skillStat * multiplier * extra + st.skillBonus) * affinity * (enemy.statuses?.vulnerable ? 1.4 : 1);
+      const success = damage(s, c, enemy, value, Math.max(st.range, node.range || 0) + splash);
+      if (success && effectType === 'poison') { enemy.statuses ||= {}; enemy.statuses.poison = { time: 5, damage: Math.max(2, Math.round(st.atk * 0.18)), source: c.id }; }
+      if (success && effectType === 'vulnerability') { enemy.statuses ||= {}; enemy.statuses.vulnerable = 8; }
+      if (success && (node.control || effectType.includes('Control'))) enemy.timer = Math.max(enemy.timer, Math.max(2, (node.control || 1.5) * (1 + (st.buildMods?.control || 0))));
+      if (success && effectType === 'falcon') effect(s,c.mapId,enemy.x,enemy.y,'Falcon Strike!','skill');
+      return success;
+    };
+    if (!deal(target)) return false;
+    const splashFactor = c.job === 'mage' ? 1.4 / 2.4 : 0.72;
+    const secondaryTargets = c.job === 'hunter' ? secondary.slice(0, 2) : secondary;
+    for (const enemy of secondaryTargets) deal(enemy, splashFactor);
+    if (effectType === 'buffAtk' || effectType === 'venom') { c.buffs ||= {}; c.buffs.atk = Math.max(c.buffs.atk || 0, 8 + rank * 2); }
+    if (effectType === 'finisher') c.sp = Math.max(0, c.sp - Math.floor(st.sp * 0.08));
+    if (effectType === 'summon') c.buffs ||= {}, c.buffs.tempo = Math.max(c.buffs.tempo || 0, 6);
   }
-  c.sp -= st.cost; c.cooldown = st.cooldown; c.attackFlash = 0.5; c.stance = 'attack';
-  effect(s, c.mapId, c.x, c.y, st.skill, 'skill'); return true;
+  c.sp -= cost; c.cooldown = cooldown; c.attackFlash = 0.5; c.stance = 'attack';
+  effect(s, c.mapId, c.x, c.y, node.name + (rank > 1 ? ` Lv.${rank}` : ''), 'skill', { fx:effectType, jobId:c.job, element:st.element }); return true;
 }
 function tickCharacter(s, c, dt) {
   c.attackFlash = Math.max(0, c.attackFlash - dt); c.cooldown = Math.max(0, c.cooldown - dt); c.attackTimer = Math.max(0, c.attackTimer - dt);
+  for (const [key, time] of Object.entries(c.buffs || {})) { c.buffs[key] = Math.max(0, time - dt); if (c.buffs[key] === 0) delete c.buffs[key]; }
   const st = stats(c), tactics = effectiveTactics(c);
   if (!c.mapId) { c.stance = 'idle'; if (c.status !== 'down') { c.hp = Math.min(st.hp, c.hp + 12 * dt); c.sp = Math.min(st.sp, c.sp + 8 * dt); } return; }
   if (c.hp <= 0) { log(s, c.name + ' fell and returned to camp. Recover before redeploying.'); c.hp = 0; c.mapId = null; c.status = 'down'; c.targetId = null; c.destination = null; return; }
@@ -521,6 +803,16 @@ function tickCharacter(s, c, dt) {
 }
 function tickMonster(s, map, m, dt) {
   m.attackFlash = Math.max(0, m.attackFlash - dt);
+  if (m.statuses?.vulnerable > 0) { m.statuses.vulnerable = Math.max(0, m.statuses.vulnerable - dt); if (!m.statuses.vulnerable) delete m.statuses.vulnerable; }
+  if (m.statuses?.poison && m.hp > 0) {
+    const poison = m.statuses.poison; poison.time -= dt; poison.pulse = (poison.pulse || 0) + dt;
+    while (poison.pulse >= 1 && m.hp > 0) {
+      poison.pulse -= 1; m.hp -= poison.damage;
+      effect(s, map.id, m.x, m.y, String(poison.damage), 'skill');
+      if (m.hp <= 0) { const killer = s.characters.find(c => c.id === poison.source) || s.characters.find(c => c.mapId === map.id); if (killer) kill(s, m, killer); }
+    }
+    if (poison.time <= 0) delete m.statuses.poison;
+  }
   if (m.hp <= 0) {
     if (MAPS[map.id].boss) return;
     m.respawn -= dt;
