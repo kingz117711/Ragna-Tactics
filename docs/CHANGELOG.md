@@ -1,5 +1,29 @@
 # Changelog
 
+## 2026-11-28 — Per-class weapon visuals
+
+- **Every class now shows the weapon it actually holds.** The client stores one weapon
+  sprite per class per weapon type and draws it *only* during an attack motion, so the pack
+  exports attack-only overlays (`weapon-<job>-<sex>-<family>` in `index.json`) instead of
+  baking one weapon into each body. 182 weapon sets, pinned by blob id and SHA-256 in
+  `scripts/class-weapon-pins.json`: melee, spear, axe, mace, dagger, rod, staff, book, bow,
+  whip, knuckle, revolver/rifle and shuriken, for both genders.
+- **The equipped item decides what is drawn.** `src/sprites.js` maps the item's real
+  rAthena `kind` (`One-Handed Sword`, `Two-Handed Rod`, `Grenade Launcher`, …) to a family,
+  picks the class's overlay for it and swings on that weapon's own motion. Classes with no
+  art for the exact type follow the client's fallbacks (two-hander → sword, katar → dagger),
+  and transcendent/third jobs borrow their second job's kit, exactly as the client does.
+- **Bodies bake the swing motions too** (`fist`, `thrust`, `swing`, `aimed` route sets), so
+  a bow, a gun or a two-handed staff uses the client's aimed pose while a sword uses the
+  swing — the pose is no longer fixed at import time.
+- The five legacy core weapons now carry their real `kind` (from the pinned rAthena item
+  database) so every weapon resolves to a family; `artifacts/weapon-overlays.png` is the QA
+  sheet of ten families on both genders.
+- Guards: `tests/assets.test.js` gained a weapon-overlay test (every real family present,
+  overlays hold attack-motion routes only, all files on disk);
+  `scripts/import_class_sprites.py --verify` now checks each class has an overlay for every
+  weapon family it was imported with. `npm test` 106/0, `assets:verify`, `smoke` 11/11.
+
 ## 2026-11-28 — Real RO class sprites, skill icons, and a full equipment catalog
 
 - **Every one of the 59 jobs now renders its own native Ragnarok Online body.**

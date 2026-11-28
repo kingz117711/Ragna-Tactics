@@ -1175,155 +1175,1108 @@
    "blob": null,
    "sha256": "f1114a4b862c645295b4cc8f149218534c84533b1c33a3a1481e1aa0cf7eaf8d",
    "bytes": 67636
+  },
+  "weapon/kagerou_\ub0a8_13049.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/kagerou/kagerou_\u5de2_13049.act",
+   "blob": "9f465b690f5f6f9e0eb3e822e619ea15784a83d8",
+   "sha256": "b5269dce3a27303068ea5fd3bf2c6de13dd65be723814f23cdabbadb98f2c8d5",
+   "bytes": 41364
+  },
+  "weapon/kagerou_\ub0a8_13049.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/kagerou/kagerou_\u5de2_13049.spr",
+   "blob": "3cc7d1080ddc776606b0011df9b132fa841d942e",
+   "sha256": "9c90cb7c11ab21edf80dda028ebaa27d30607b49b8ad89a6c23a191572c45033",
+   "bytes": 6879
+  },
+  "weapon/oboro_\uc5ec_13049.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/oboro/oboro_\u54af_13049.act",
+   "blob": "2d5cb7f65668205edd7c248b12a000a77d6e1c9b",
+   "sha256": "e18fcc97caa13aee24664b020ad1fcdb70acc01e8284ab5f85a31467c01aab7c",
+   "bytes": 41236
+  },
+  "weapon/oboro_\uc5ec_13049.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/oboro/oboro_\u54af_13049.spr",
+   "blob": "9c15173ac96a9098ab7bb2b2465616437dc5dd59",
+   "sha256": "3d1b61a8c66e7e00eb56208ac219e482db4fad26987a7afdf32dd0c3d18037a4",
+   "bytes": 3971
+  },
+  "weapon/\uac74\ub108_\ub0a8_13150.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6252\u5448/\u6252\u5448_\u5de2_13150.act",
+   "blob": "8fbf2a1b67deca58dc01741c83aa125abc65770f",
+   "sha256": "4bedc5cba44dc2c923619e40a0c00a27bca46e1937d3c28293f40dd8f4a98877",
+   "bytes": 42772
+  },
+  "weapon/\uac74\ub108_\ub0a8_13150.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6252\u5448/\u6252\u5448_\u5de2_13150.spr",
+   "blob": "a92af3f0274b4ad5ccbef25af15be767a2573d10",
+   "sha256": "99b853cf2d07680d0293f832729aa1c3c25691a4cc5fafd2da2fa2e6da40d5c9",
+   "bytes": 4219
+  },
+  "weapon/\uac74\ub108_\uc5ec_13150.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6252\u5448/\u6252\u5448_\u54af_13150.act",
+   "blob": "9e2d9095e67f3ef4abf3e3756a93e2216fbda4ed",
+   "sha256": "e743a518b3c47ce6bb457a8de0d687cf88d92fbf5731fe990807c8420cf43715",
+   "bytes": 42772
+  },
+  "weapon/\uac74\ub108_\uc5ec_13150.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6252\u5448/\u6252\u5448_\u54af_13150.spr",
+   "blob": "f0270aca90a5ae954ae79c776d0f266594a5a7d5",
+   "sha256": "50a95afe1a6775d139bd2e6fb860f8e6a95cb95eb24e2c77c70b8ca47882bd09",
+   "bytes": 8695
+  },
+  "weapon/\ub2cc\uc790_\ub0a8_13049.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u56f1\u78ca/\u56f1\u78ca_\u5de2_13049.act",
+   "blob": "eb7edaae7f109a43f2e916daac84c2f798fd372b",
+   "sha256": "5c180192ce8cf533f2cb3cd58ff40b9626f91ed22eb4d4d5fa90347ded6d30df",
+   "bytes": 42068
+  },
+  "weapon/\ub2cc\uc790_\ub0a8_13049.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u56f1\u78ca/\u56f1\u78ca_\u5de2_13049.spr",
+   "blob": "4f0166ca423b675c8d81a794ff8ba9bb8619b8f1",
+   "sha256": "e46539622775f903211dcca9a8b65097de8a25405db218b0224b1418f7ed171b",
+   "bytes": 1511
+  },
+  "weapon/\ub2cc\uc790_\uc5ec_13049.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u56f1\u78ca/\u56f1\u78ca_\u54af_13049.act",
+   "blob": "e28409f7db0d65b14142abd2473a6c8b994d3c2d",
+   "sha256": "5ca4ee16b9f8614b59765b89c6c972709608c20d4e7989a1385bd0af8dffbe64",
+   "bytes": 42324
+  },
+  "weapon/\ub2cc\uc790_\uc5ec_13049.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u56f1\u78ca/\u56f1\u78ca_\u54af_13049.spr",
+   "blob": "bbd8ce71c8080d821f512f33a228f3cf12614f89",
+   "sha256": "dfc5786fd1e412daf6df9dc65d65f4f55ec823108e2c128baaeafdf300a73007",
+   "bytes": 2164
+  },
+  "weapon/\ub85c\uadf8_\ub0a8_1119.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u80ba\u5f0a/\u80ba\u5f0a_\u5de2_1119.act",
+   "blob": "835b12b5eff73459520abc1f4564ef7e2ca5c670",
+   "sha256": "003aacaac8a3f4145b1cc504da4b02e8866838584a8371e7f552e1115645d767",
+   "bytes": 42900
+  },
+  "weapon/\ub85c\uadf8_\ub0a8_1119.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u80ba\u5f0a/\u80ba\u5f0a_\u5de2_1119.spr",
+   "blob": "8606ad33be4bd6564c182070b034683f8325dbfd",
+   "sha256": "e57e2b4f0165f0039956392021968b57e62778175af62c32f1ed35e34a49283d",
+   "bytes": 2249
+  },
+  "weapon/\ub85c\uadf8_\ub0a8_1207.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u80ba\u5f0a/\u80ba\u5f0a_\u5de2_1207.act",
+   "blob": "208c1af392573c6f3954f4c444cfad56ef7f277d",
+   "sha256": "ea7b4ba65559491a7b04640237826887f4635213a8ff0f028f8d39ffd9813c9a",
+   "bytes": 42900
+  },
+  "weapon/\ub85c\uadf8_\ub0a8_1207.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u80ba\u5f0a/\u80ba\u5f0a_\u5de2_1207.spr",
+   "blob": "9b17017cbd42f9d4ef9aac3bdec2718ec74874b1",
+   "sha256": "74d8b13e99f61750f2b941a8137e8ed5e190ffb2cc4b56285862b116ea68b505",
+   "bytes": 1922
+  },
+  "weapon/\ub85c\uadf8_\ub0a8_1710.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u80ba\u5f0a/\u80ba\u5f0a_\u5de2_1710.act",
+   "blob": "2986da14faf325f546dc4be983b8c0ccd855a045",
+   "sha256": "18481e5c5bb020954653bd026360a1881da2b1727efbc12da1caa1287e4439eb",
+   "bytes": 42772
+  },
+  "weapon/\ub85c\uadf8_\ub0a8_1710.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u80ba\u5f0a/\u80ba\u5f0a_\u5de2_1710.spr",
+   "blob": "78f495a02338832c1a1647d0a87354a8febfb524",
+   "sha256": "0793725fdf89b6da236b59d8dda16b56f5935d87070686d5263ef90c4b77af8c",
+   "bytes": 3501
+  },
+  "weapon/\ub85c\uadf8_\uc5ec_1119.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u80ba\u5f0a/\u80ba\u5f0a_\u54af_1119.act",
+   "blob": "e4164e48857679e17cecdb0146510ee083c282ed",
+   "sha256": "04758f8540cfb14ac7140e5ba3b841306eb1adf5524796b5e131e2fdc56a3076",
+   "bytes": 42196
+  },
+  "weapon/\ub85c\uadf8_\uc5ec_1119.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u80ba\u5f0a/\u80ba\u5f0a_\u54af_1119.spr",
+   "blob": "212c046fd483aab6a848f5f561e3a07ee85a84c9",
+   "sha256": "f87d2be583c0cd9f06f09cded7c03b3242c5a84efce269e8592bf707b695971e",
+   "bytes": 3492
+  },
+  "weapon/\ub85c\uadf8_\uc5ec_1207.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u80ba\u5f0a/\u80ba\u5f0a_\u54af_1207.act",
+   "blob": "34f883f8e950b052b61af87ad6053afd6e6ec118",
+   "sha256": "c70901f0e1e2967334568034679ddde4cfeaf5f1f883517c46e188a35a7da75f",
+   "bytes": 41940
+  },
+  "weapon/\ub85c\uadf8_\uc5ec_1207.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u80ba\u5f0a/\u80ba\u5f0a_\u54af_1207.spr",
+   "blob": "b93fa72958ff71fc4afeac0812caebb9f9d45122",
+   "sha256": "59c98f2fad20f92eb6465d23a0725273ebaf588350fe51cc848019b86f59b98c",
+   "bytes": 3521
+  },
+  "weapon/\ub85c\uadf8_\uc5ec_1710.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u80ba\u5f0a/\u80ba\u5f0a_\u54af_1710.act",
+   "blob": "ed86e8b427a8568f8a81c8900d7b2417755162f5",
+   "sha256": "fb5283aa72fce12b04be22257b21b82a4365ac795e0e891f2ba142c9363e529e",
+   "bytes": 42068
+  },
+  "weapon/\ub85c\uadf8_\uc5ec_1710.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u80ba\u5f0a/\u80ba\u5f0a_\u54af_1710.spr",
+   "blob": "cc59bad7586f38cd31922f4adfca2dda6f311f69",
+   "sha256": "7f000a43b97411cc972b43326268cd7f828c9e797a6bba92fba288beb1262e88",
+   "bytes": 5772
+  },
+  "weapon/\ubabd\ud06c_\ub0a8_1524.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6839\u519c/\u6839\u519c_\u5de2_1524.act",
+   "blob": "efbc162b87326a6661ea5e285ee91a077ebf03d4",
+   "sha256": "9266209d64d79e4ed11d85a8379b366224392f67a4471b4e6d015b119fa15aa2",
+   "bytes": 42452
+  },
+  "weapon/\ubabd\ud06c_\ub0a8_1524.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6839\u519c/\u6839\u519c_\u5de2_1524.spr",
+   "blob": "d6d815d5ead15090b5bf3f14a9676ef535102330",
+   "sha256": "394a08cd0f50a100e5440556dad0fd97e7e8c3529a57e48d0723ca51872490fb",
+   "bytes": 3830
+  },
+  "weapon/\ubabd\ud06c_\ub0a8_1801.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6839\u519c/\u6839\u519c_\u5de2_1801.act",
+   "blob": "3e150a055c8dbb261027275f59bee87f3feb56b9",
+   "sha256": "160817d9668cc034334cc1052de78faf6a3f71c74026d0cb322f75f5a4a35251",
+   "bytes": 42644
+  },
+  "weapon/\ubabd\ud06c_\ub0a8_1801.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6839\u519c/\u6839\u519c_\u5de2_1801.spr",
+   "blob": "09a3a94b6c42f0ba153692ff178e49d01d27a238",
+   "sha256": "c9ded5b3dd220f7e1a4611cd9dad544d787cb4afa8df75a307ba16a74ecf48f0",
+   "bytes": 1757
+  },
+  "weapon/\ubabd\ud06c_\uc5ec_1524.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6839\u519c/\u6839\u519c_\u54af_1524.act",
+   "blob": "d89d0d2c788799237c5ee743f88d167443c731dd",
+   "sha256": "67894d180786d919dd9ccf7a8d9330d1f179bc57bde8a7a1614438645f5a7b39",
+   "bytes": 42068
+  },
+  "weapon/\ubabd\ud06c_\uc5ec_1524.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6839\u519c/\u6839\u519c_\u54af_1524.spr",
+   "blob": "cb0c27d742153071c21f56436bbbc862fd29dfa6",
+   "sha256": "d89c04f7b9c89d5aef861b1c98dcfba40d8eccc3f170e54fa248fe0b842b99e3",
+   "bytes": 3437
+  },
+  "weapon/\ubabd\ud06c_\uc5ec_1801.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6839\u519c/\u6839\u519c_\u54af_1801.act",
+   "blob": "3565ad0dafe58ef71ab74f2629d6ac3ce7c57d78",
+   "sha256": "33923986f8de8136b33e6a654f663bd7232a9d3532b216ee046c915b8459cb06",
+   "bytes": 41620
+  },
+  "weapon/\ubabd\ud06c_\uc5ec_1801.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6839\u519c/\u6839\u519c_\u54af_1801.spr",
+   "blob": "c44d5fe023915d642fe5898b9c7070391a945df3",
+   "sha256": "31bda0c892cf98031a57c2cd2ecf3451b3bfdb017e7d6c59e0a38359033a7149",
+   "bytes": 2301
+  },
+  "weapon/\ubb34\ud76c_\uc5ec_1207.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u516c\u9510/\u516c\u9510_\u54af_1207.act",
+   "blob": "63a5305d2864f7e20e32f2ec3c41a4c239b4ae6e",
+   "sha256": "eb555c372338015583fe7d4256d4632d22f1f0dd40143f102769c414adedd445",
+   "bytes": 42900
+  },
+  "weapon/\ubb34\ud76c_\uc5ec_1207.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u516c\u9510/\u516c\u9510_\u54af_1207.spr",
+   "blob": "041f57bd174c34f0f4b67b154c3608e1c7010a83",
+   "sha256": "f9ae1434782f3e2680d9c1a32b933977efb8d2c8d7fb5f9e407fa886b4953b30",
+   "bytes": 2804
+  },
+  "weapon/\ubb34\ud76c_\uc5ec_1710.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u516c\u9510/\u516c\u9510_\u54af_1710.act",
+   "blob": "9da1dde5d169075007e68a1ccecaeb1995c97714",
+   "sha256": "84725e16912ed9eefbc8673253db3384190ae8cd86d3bdc635acd45e11cdf4be",
+   "bytes": 42772
+  },
+  "weapon/\ubb34\ud76c_\uc5ec_1710.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u516c\u9510/\u516c\u9510_\u54af_1710.spr",
+   "blob": "145cf87a1511787f8468a387d80e06d682a95d51",
+   "sha256": "8053ad454faa88c9ba7e8bcf0eba853bdd64e885d4d70482b37b6bfd4466548a",
+   "bytes": 3846
+  },
+  "weapon/\ubb34\ud76c_\uc5ec_1956.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u516c\u9510/\u516c\u9510_\u54af_1956.act",
+   "blob": "492c79076d1c4a41bede1b9575c88a15752ac727",
+   "sha256": "c75c00fd0c9aaafa9ba51e1471fc58c2eef42c3e49c8ea7d0b1ada37f9ec1e64",
+   "bytes": 42900
+  },
+  "weapon/\ubb34\ud76c_\uc5ec_1956.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u516c\u9510/\u516c\u9510_\u54af_1956.spr",
+   "blob": "87f3fc32680dd3fa19b57a1b3a0510bbf5b0db85",
+   "sha256": "213171df42e27f3a9901b968e47bf8c609c64b11cd3887b137decfa0aca2009a",
+   "bytes": 5912
+  },
+  "weapon/\ubc14\ub4dc_\ub0a8_1207.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u5b98\u975b/\u5b98\u975b_\u5de2_1207.act",
+   "blob": "24735651ab65eeed21f073ff0a76fb975286714b",
+   "sha256": "19453cd3aff06c20b88aed4866bc08b93124c34a945f9d4881b35b3ce3fc3445",
+   "bytes": 42260
+  },
+  "weapon/\ubc14\ub4dc_\ub0a8_1207.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u5b98\u975b/\u5b98\u975b_\u5de2_1207.spr",
+   "blob": "983f16a928a2b99862913ef41e37b343adc21867",
+   "sha256": "241fb87ac3611217e8a27e9fdaea2160be27ab6c67ef77a08c50301cf19e4548",
+   "bytes": 1719
+  },
+  "weapon/\ubc14\ub4dc_\ub0a8_1710.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u5b98\u975b/\u5b98\u975b_\u5de2_1710.act",
+   "blob": "858c6c0614c41fb57eb50c0e63e17c456845f852",
+   "sha256": "128c74c5ad58436367ca680341368216d79daf5cd62b63ceba8ebe069e0a60ee",
+   "bytes": 42772
+  },
+  "weapon/\ubc14\ub4dc_\ub0a8_1710.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u5b98\u975b/\u5b98\u975b_\u5de2_1710.spr",
+   "blob": "10d500e8e08ce12ed89e39a637291565676041ea",
+   "sha256": "5946e47927b13f4edb7d6c85b63497fbf46543832192327169eefc234f0c756e",
+   "bytes": 6584
+  },
+  "weapon/\uc138\uc774\uc9c0_\ub0a8_1207.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6280\u635e\u7624/\u6280\u635e\u7624_\u5de2_1207.act",
+   "blob": "cc82ff48dcbff6792024ccb70ca4dbd25087c1ad",
+   "sha256": "08320033f5bb12e922bcb961b957b207c5a06453c9f2f5cb1e7dec123ce64a05",
+   "bytes": 42900
+  },
+  "weapon/\uc138\uc774\uc9c0_\ub0a8_1207.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6280\u635e\u7624/\u6280\u635e\u7624_\u5de2_1207.spr",
+   "blob": "7a5a1dbaec117bb88a60f1e387ebe040b29dbcc4",
+   "sha256": "e38c99243e91cbdcec9b375b59b823cd9c86bd879f898a1acc613c10f095124a",
+   "bytes": 1899
+  },
+  "weapon/\uc138\uc774\uc9c0_\ub0a8_1472.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6280\u635e\u7624/\u6280\u635e\u7624_\u5de2_1472.act",
+   "blob": "1adb8a17e826cf25d795a951bf6be7da26eee980",
+   "sha256": "49f0a266f10c9790103d32c551e0c4f32d00d827528d3786987477b198fd50f9",
+   "bytes": 42772
+  },
+  "weapon/\uc138\uc774\uc9c0_\ub0a8_1472.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6280\u635e\u7624/\u6280\u635e\u7624_\u5de2_1472.spr",
+   "blob": "e01bd03b46f0eff2bbff6487df37dcc0b8cbed95",
+   "sha256": "579b6bea7f9041e3823ccf4ca0db93739c5438cdc34d873d1225c8d803fcb56f",
+   "bytes": 5193
+  },
+  "weapon/\uc138\uc774\uc9c0_\ub0a8_1550.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6280\u635e\u7624/\u6280\u635e\u7624_\u5de2_1550.act",
+   "blob": "466c474565967acca8b6403423b5d7db3eb52ffc",
+   "sha256": "2d5fb5455e125b98eddd3eb73d8143421a724a4f1185a7f945947330929c86a5",
+   "bytes": 42580
+  },
+  "weapon/\uc138\uc774\uc9c0_\ub0a8_1550.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6280\u635e\u7624/\u6280\u635e\u7624_\u5de2_1550.spr",
+   "blob": "ae0da24803cc711b6588913f21b592840a48ffd2",
+   "sha256": "c741b0c2452c08e23f6ac5a8e67752ab3f571f67fd5f1ab3e0c72d25b4642d7d",
+   "bytes": 7524
+  },
+  "weapon/\uc138\uc774\uc9c0_\ub0a8_1610.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6280\u635e\u7624/\u6280\u635e\u7624_\u5de2_1610.act",
+   "blob": "42bbfdeee4a4afed82b569adb8e3afc1c1d7bd01",
+   "sha256": "2763eaa6cdf3a64b466c197944aa47ec56b4a5dc56a5a346d2dc489aa0412fa1",
+   "bytes": 42772
+  },
+  "weapon/\uc138\uc774\uc9c0_\ub0a8_1610.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6280\u635e\u7624/\u6280\u635e\u7624_\u5de2_1610.spr",
+   "blob": "a5d555ddf0a59f443411716513ff58940a3c0ff5",
+   "sha256": "75b98efb1caa3d765aef38f2fd280d6937ba74e96cbab8f90c4e4d19ca741b14",
+   "bytes": 4535
+  },
+  "weapon/\uc138\uc774\uc9c0_\uc5ec_1207.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6280\u635e\u7624/\u6280\u635e\u7624_\u54af_1207.act",
+   "blob": "f6769f7f64f731f2f2219e7b617179d251e4fbb4",
+   "sha256": "54b8715d863bd482e2b0f515d705fdbfe974eaaec8f3a7fcf437c5b2cf9e4a32",
+   "bytes": 42708
+  },
+  "weapon/\uc138\uc774\uc9c0_\uc5ec_1207.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6280\u635e\u7624/\u6280\u635e\u7624_\u54af_1207.spr",
+   "blob": "a508a76a266e9fd112b1bf570db61eeda64e3c0c",
+   "sha256": "8888587b1f9e9265f42aee8bf7b7ee0457016ea3d4d623a41f3b464365334648",
+   "bytes": 3546
+  },
+  "weapon/\uc138\uc774\uc9c0_\uc5ec_1472.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6280\u635e\u7624/\u6280\u635e\u7624_\u54af_1472.act",
+   "blob": "0265f2fe06529e88183df222b6de21ba1f23955a",
+   "sha256": "4ac714d6f2b43bbb9a0545f2a3dbc3d757a18cd04057e33186aa36792e3763fd",
+   "bytes": 42772
+  },
+  "weapon/\uc138\uc774\uc9c0_\uc5ec_1472.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6280\u635e\u7624/\u6280\u635e\u7624_\u54af_1472.spr",
+   "blob": "6c0d6bf8188cac1203afec4f22331c1d3a633c67",
+   "sha256": "eeaadf10dddcb12f9f5be39e02f3ca92c27d81a17fae98907d1bf2dea81ab279",
+   "bytes": 4127
+  },
+  "weapon/\uc138\uc774\uc9c0_\uc5ec_1550.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6280\u635e\u7624/\u6280\u635e\u7624_\u54af_1550.act",
+   "blob": "eac487b1f62bb70dd67f9611ad73bbc713f6c3dc",
+   "sha256": "7ff5f9ee78e30a0eb9882a2b6f8dffe464360ea6f2ce01003d16fecef8bbb2dc",
+   "bytes": 42452
+  },
+  "weapon/\uc138\uc774\uc9c0_\uc5ec_1550.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6280\u635e\u7624/\u6280\u635e\u7624_\u54af_1550.spr",
+   "blob": "9cefaa230fc4925d508173e686a7348c64852775",
+   "sha256": "d8af517cfde7c7f9ed9776abaed372cba26e86493ccf14ccde588e5c0fc97b87",
+   "bytes": 4336
+  },
+  "weapon/\uc138\uc774\uc9c0_\uc5ec_1610.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6280\u635e\u7624/\u6280\u635e\u7624_\u54af_1610.act",
+   "blob": "b78e66d15732dd957058f071056d07b103133420",
+   "sha256": "3958e91edaecf9042ffb915b887d6c70a0df1241fa51d821df141ad4ff2a4bfc",
+   "bytes": 42772
+  },
+  "weapon/\uc138\uc774\uc9c0_\uc5ec_1610.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6280\u635e\u7624/\u6280\u635e\u7624_\u54af_1610.spr",
+   "blob": "272e2790e79f62894eae4fd0bbf0011ea98ab96a",
+   "sha256": "eb6335127feed521b453f033d61fc737e5d441fac7c8a594df1271f88ddbb791",
+   "bytes": 2753
+  },
+  "weapon/\uc250\ub3c4\uc6b0\uccb4\uc774\uc11c_\ub0a8_13049.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6e85\u6863\u5feb\u7709\u635e\u8f91/\u6e85\u6863\u5feb\u7709\u635e\u8f91_\u5de2_13049.act",
+   "blob": "af1498cd25f1050b942b3e01cf42242c561b8d26",
+   "sha256": "e324e0e731cee71aa93fa7e31d22b9d4117b141a4e2b6d395a2abeee9a542dac",
+   "bytes": 42900
+  },
+  "weapon/\uc250\ub3c4\uc6b0\uccb4\uc774\uc11c_\ub0a8_13049.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6e85\u6863\u5feb\u7709\u635e\u8f91/\u6e85\u6863\u5feb\u7709\u635e\u8f91_\u5de2_13049.spr",
+   "blob": "62a6ec41ee346f57e1ba820c164ddc56500833eb",
+   "sha256": "5512332938c4a564f2cd15998fbfc0a26acb4738e408aff8abaf5386609d6d74",
+   "bytes": 2069
+  },
+  "weapon/\uc288\ud37c\ub178\ube44\uc2a4_\ub0a8_1207.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u9171\u6b3a\u7574\u539a\u80f6/\u9171\u6b3a\u7574\u539a\u80f6_\u5de2_1207.act",
+   "blob": "c5b1b89354a2c697043c5f5633a643ba5f3ace15",
+   "sha256": "1976adb2c42c7145732a165fa067ccf56438a27a776e0bc85ae7e5c552e3fb57",
+   "bytes": 42900
+  },
+  "weapon/\uc288\ud37c\ub178\ube44\uc2a4_\ub0a8_1207.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u9171\u6b3a\u7574\u539a\u80f6/\u9171\u6b3a\u7574\u539a\u80f6_\u5de2_1207.spr",
+   "blob": "3eabacb50d4c8cd5bb4ba5cc29afd0009ab7148d",
+   "sha256": "6886cb5b059d0383ec1c487fa68cc3de584aa34e3f8f1adeab8351efd4f53239",
+   "bytes": 2511
+  },
+  "weapon/\uc288\ud37c\ub178\ube44\uc2a4_\uc5ec_1207.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u9171\u6b3a\u7574\u539a\u80f6/\u9171\u6b3a\u7574\u539a\u80f6_\u54af_1207.act",
+   "blob": "e7944e53eb87e979c7a1f7e0871bf90e92e6b197",
+   "sha256": "45050206c5765bc865f3ec7c5eb660faf6bde826dce8f3a8b423a289ea0b05e6",
+   "bytes": 42772
+  },
+  "weapon/\uc288\ud37c\ub178\ube44\uc2a4_\uc5ec_1207.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u9171\u6b3a\u7574\u539a\u80f6/\u9171\u6b3a\u7574\u539a\u80f6_\u54af_1207.spr",
+   "blob": "d1b5779ee3fc0411c47864d9abbafe0cc9a7504e",
+   "sha256": "09ea7ab64329b428d9d74f288056742a412a9bd26fa7b45a6087a33a78fd7320",
+   "bytes": 2783
+  },
+  "weapon/\uc5f0\uae08\uc220\uc0ac_\ub0a8_1119.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6977\u965b\u8d31\u8364/\u6977\u965b\u8d31\u8364_\u5de2_1119.act",
+   "blob": "c315594c03f4a0fbb8f8b3eb43087ffedabbae79",
+   "sha256": "5870a8c15218800f8fff0116912689a69f3c471063d4ce5765730d0128997100",
+   "bytes": 42772
+  },
+  "weapon/\uc5f0\uae08\uc220\uc0ac_\ub0a8_1119.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6977\u965b\u8d31\u8364/\u6977\u965b\u8d31\u8364_\u5de2_1119.spr",
+   "blob": "a85085059a3266fe8c6a7301d49f3af98ac172fa",
+   "sha256": "bdd84bc755e22a9d2273dd2373102e0039bb49b58702d98875b27a28935714a3",
+   "bytes": 3358
+  },
+  "weapon/\uc5f0\uae08\uc220\uc0ac_\ub0a8_1207.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6977\u965b\u8d31\u8364/\u6977\u965b\u8d31\u8364_\u5de2_1207.act",
+   "blob": "cf0f398fce82eac12dd6704ea7e0b4de7403fd7a",
+   "sha256": "1afe154f6a7008d7acca8dc265f5da738344682a4da4550f0f49135c5f6dd29b",
+   "bytes": 42900
+  },
+  "weapon/\uc5f0\uae08\uc220\uc0ac_\ub0a8_1207.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6977\u965b\u8d31\u8364/\u6977\u965b\u8d31\u8364_\u5de2_1207.spr",
+   "blob": "19d322be232eb95995f13f1882f629759bea7cdf",
+   "sha256": "c6292b05658cca195891d833af47ff9db7d5230ab7b8791c4b947bdaa64d08e3",
+   "bytes": 3531
+  },
+  "weapon/\uc5f0\uae08\uc220\uc0ac_\ub0a8_1354.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6977\u965b\u8d31\u8364/\u6977\u965b\u8d31\u8364_\u5de2_1354.act",
+   "blob": "0448696b03dead273066f56ebe1b78ad352a5a20",
+   "sha256": "905d122af0c5e2bcd158156183f838c9314163c996d77bfbef01b9b37da88bff",
+   "bytes": 42772
+  },
+  "weapon/\uc5f0\uae08\uc220\uc0ac_\ub0a8_1354.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6977\u965b\u8d31\u8364/\u6977\u965b\u8d31\u8364_\u5de2_1354.spr",
+   "blob": "3b16450a52136293b6f66eefcecbbbaf307e9f47",
+   "sha256": "e30ea0e160eb748011173a8ef1a04e3a7e975f05ebe8d807bab5792153ef2e92",
+   "bytes": 4621
+  },
+  "weapon/\uc5f0\uae08\uc220\uc0ac_\ub0a8_1504.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6977\u965b\u8d31\u8364/\u6977\u965b\u8d31\u8364_\u5de2_1504.act",
+   "blob": "8d5d9e64977e3a48871eb89d0f6b72e41b7b3690",
+   "sha256": "307cc4b96f902e85dd3d8da68cb3ab16d25f4aea410e0db857bc6e92f78d1827",
+   "bytes": 42772
+  },
+  "weapon/\uc5f0\uae08\uc220\uc0ac_\ub0a8_1504.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6977\u965b\u8d31\u8364/\u6977\u965b\u8d31\u8364_\u5de2_1504.spr",
+   "blob": "adcd1e1b74a63d60b4b153ac0267d3e8b2a429bf",
+   "sha256": "cd3d7d157f6f6d92c034aa4ec6b19dbca71ef5be486f5a148cb4f8efafa742cb",
+   "bytes": 4041
+  },
+  "weapon/\uc5f0\uae08\uc220\uc0ac_\uc5ec_1119.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6977\u965b\u8d31\u8364/\u6977\u965b\u8d31\u8364_\u54af_1119.act",
+   "blob": "76c8aba27114c9543b4b5cf9e1a49933864cb950",
+   "sha256": "67e9725e39bd2c398e8f5e1d7716b3d41b7a098f9994693318fba09cef9a93ae",
+   "bytes": 43412
+  },
+  "weapon/\uc5f0\uae08\uc220\uc0ac_\uc5ec_1119.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6977\u965b\u8d31\u8364/\u6977\u965b\u8d31\u8364_\u54af_1119.spr",
+   "blob": "73d2969f5f29a34a0b74e26bb75bc1b59af21090",
+   "sha256": "c60f0eac5bf4865a5d76ec07e43013dab3ae970b483c31b723c65d9385bc18c5",
+   "bytes": 2594
+  },
+  "weapon/\uc5f0\uae08\uc220\uc0ac_\uc5ec_1207.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6977\u965b\u8d31\u8364/\u6977\u965b\u8d31\u8364_\u54af_1207.act",
+   "blob": "8fd784b367025849557394af70923a5de902879d",
+   "sha256": "777e648ea6f5335025d7decb9121d9e9c525307867ef29f1273eb1929abc6d52",
+   "bytes": 43604
+  },
+  "weapon/\uc5f0\uae08\uc220\uc0ac_\uc5ec_1207.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6977\u965b\u8d31\u8364/\u6977\u965b\u8d31\u8364_\u54af_1207.spr",
+   "blob": "75c43ba986fdb4ca6092d1333e4641c33cb44307",
+   "sha256": "58df29add5b9101bcbccc4587ba19b1d19adb607e961d762000fb06e80ec266b",
+   "bytes": 3747
+  },
+  "weapon/\uc5f0\uae08\uc220\uc0ac_\uc5ec_1354.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6977\u965b\u8d31\u8364/\u6977\u965b\u8d31\u8364_\u54af_1354.act",
+   "blob": "e437d5bbf88bb346c0e870bc1a828312267cecc9",
+   "sha256": "28e33cbe0eea68cc0672049d76b70d64987d0dbd8c12ffacac62c905c1572c15",
+   "bytes": 42708
+  },
+  "weapon/\uc5f0\uae08\uc220\uc0ac_\uc5ec_1354.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6977\u965b\u8d31\u8364/\u6977\u965b\u8d31\u8364_\u54af_1354.spr",
+   "blob": "74975e33a2a8a5b45637ea71c811799d870de671",
+   "sha256": "608cbe1d819bbbb0de765c3aec0080205c325171d9040c069964118f1c47f5bc",
+   "bytes": 3633
+  },
+  "weapon/\uc5f0\uae08\uc220\uc0ac_\uc5ec_1504.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6977\u965b\u8d31\u8364/\u6977\u965b\u8d31\u8364_\u54af_1504.act",
+   "blob": "4c7b1e0386734e2b41f09e978c37b92d2ed74b83",
+   "sha256": "22363869774b5ddfc985d28458c5397f8b622455edfbed9b90c71ab95b592a02",
+   "bytes": 43412
+  },
+  "weapon/\uc5f0\uae08\uc220\uc0ac_\uc5ec_1504.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u6977\u965b\u8d31\u8364/\u6977\u965b\u8d31\u8364_\u54af_1504.spr",
+   "blob": "783e02bb3b91c1740def0a919bd00b581b11b9d3",
+   "sha256": "2329e5f7bc6d001a698cf757f85dcd187df7fa31b815e174b7f376b53fee5725",
+   "bytes": 3108
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\ub0a8_1116.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u5de2_1116.act",
+   "blob": "16a4835a356b0cb971de8dbb9d23c8027e956241",
+   "sha256": "ede111777e40d66e641a75857451077ed309157bdbfa708193492fdf8d29e548",
+   "bytes": 42516
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\ub0a8_1116.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u5de2_1116.spr",
+   "blob": "9e04fcf1227db2efaa4668e6e372061065da8d32",
+   "sha256": "ca33584743bde54e992fd4d1a316ab9d8fcffe5c7590b01391a750197603c8e6",
+   "bytes": 2088
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\ub0a8_1119.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u5de2_1119.act",
+   "blob": "7edfd3c9224abbad16801c21b4c9a9000989cbf8",
+   "sha256": "40bd74f3007a38b66c2b453961754f4dded3a7686a0090e2b8e1cbdaa3c725a4",
+   "bytes": 42516
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\ub0a8_1119.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u5de2_1119.spr",
+   "blob": "b68d945d6f4e3efe65186095273f8aad947ebd72",
+   "sha256": "adb80cb4f749ce7b084c0687e2d89d409c2f6abcf5210835c127b356c9893bb7",
+   "bytes": 2282
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\ub0a8_1207.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u5de2_1207.act",
+   "blob": "1a48871f9cea6d071bc009e2b4e04a56753b0f34",
+   "sha256": "b6e186f5dae3d966b059bbdedb7f4d525f351e73229339d5c70cc967f74588d7",
+   "bytes": 42516
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\ub0a8_1207.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u5de2_1207.spr",
+   "blob": "9640aecbe193eb7ba004b2235d889a7db3707c8e",
+   "sha256": "84e9fe000d452e146fb50198a2cdfef79255aaabf052634ccab34258fc3a447e",
+   "bytes": 2346
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\ub0a8_1354.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u5de2_1354.act",
+   "blob": "5b1448f15ec34b27f74f7a515875cadf00fa2baa",
+   "sha256": "a1508e0f1ba0afef0ed1dd4e806571cb72cd592678dbc5cbdeee05ae064aef3c",
+   "bytes": 42516
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\ub0a8_1354.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u5de2_1354.spr",
+   "blob": "e9a59e4b2fc7631a5b3aad6b10de1d4ca1286870",
+   "sha256": "7aa9838fc055d4486b8427c345dacc03db8ee47aaa809accb86a03bb11d827c4",
+   "bytes": 3136
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\ub0a8_1410.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u5de2_1410.act",
+   "blob": "f1cc0083f3be6b57ced48a2dccf841002cf4282a",
+   "sha256": "f9f1b4aa47bc4b2ee99595bde856ba4fca713841dd2ce5164f47f997d12682c9",
+   "bytes": 42388
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\ub0a8_1410.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u5de2_1410.spr",
+   "blob": "7a45eb5155fcb4617543aba0dde6f4fa27056594",
+   "sha256": "789fdf35c017ac2868e54cabf61d6eeabb65408ddadcf1248eea9a623d144cfd",
+   "bytes": 4479
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\ub0a8_1504.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u5de2_1504.act",
+   "blob": "9c537d371c9851bee11d4295ee258ef9161e887e",
+   "sha256": "d2c3ef268d6acaf56ec87f8fb9d6715ed562f3f63953ac4537392fc63fa0bcf3",
+   "bytes": 42516
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\ub0a8_1504.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u5de2_1504.spr",
+   "blob": "cf3214b31d4bcfdcfebe253cdc582863f191b5cb",
+   "sha256": "768e42ea3cb2d7f447d3d416e8c7ca3d1a6505a1bc8d0325026194cf1bdf69c3",
+   "bytes": 3031
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\uc5ec_1116.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u54af_1116.act",
+   "blob": "01fbfe7ec4b8d42724a7a5aec749ac9f75d1a556",
+   "sha256": "459015dfb4958ecb3e88ad9d37d44e1bc4b3ddd366df962bec67929d91d39ae9",
+   "bytes": 43540
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\uc5ec_1116.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u54af_1116.spr",
+   "blob": "a63110d5ff8aee56dbc8d9a8c34a53571de8dab1",
+   "sha256": "bcfe651301cb95e485b7d2ec2c922262e7e693b65a0ed02247ea9df617b828c3",
+   "bytes": 3346
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\uc5ec_1119.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u54af_1119.act",
+   "blob": "47f738565ececcec387ee1102554cfefdbe3b351",
+   "sha256": "63169ab29ea725f543e2cb56028aa8b4d65d400f076716448008f203dc5d5307",
+   "bytes": 43540
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\uc5ec_1119.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u54af_1119.spr",
+   "blob": "495937c6ac05a4eadf560a84cae943807d1faa69",
+   "sha256": "b3132e0a0c470a59f6948e2f34a9261c9342e4b1131e2a5659747925781aecb1",
+   "bytes": 4050
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\uc5ec_1207.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u54af_1207.act",
+   "blob": "dd08bd6ff91c423188fcc790df54dd444da9a2c3",
+   "sha256": "1761cd7aac11f0da2c82d7b81365585d7ece573672c5d605c9595b39eb3427b1",
+   "bytes": 43540
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\uc5ec_1207.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u54af_1207.spr",
+   "blob": "538cb74ecbc037b47a7f7ec63da9a19cd5a5d0d5",
+   "sha256": "9a47f7e9e22e38e462d5919bb9afe45eece2c5da1f68c5bc17c625d0ec79e410",
+   "bytes": 3425
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\uc5ec_1354.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u54af_1354.act",
+   "blob": "f16e686520b0873209b5914a44052539549d81d6",
+   "sha256": "0471f99659c852f68178c35d264102d632857aabb3faa425e375d1ab767809bc",
+   "bytes": 43540
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\uc5ec_1354.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u54af_1354.spr",
+   "blob": "da6dc3712752566c22aac30f3b87fdab674ebebc",
+   "sha256": "b60c2efc1906cbfd917dcb1e29caca18ab6c32985c99ba6ce3eec250bedeb41a",
+   "bytes": 5079
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\uc5ec_1410.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u54af_1410.act",
+   "blob": "7c40bbf13d26d8c9890c28cad985d2f43e672c36",
+   "sha256": "8ff83e7bb508b2c007678a47b9498a6e32765fe7669da037fccb368e84c70a8e",
+   "bytes": 42772
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\uc5ec_1410.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u54af_1410.spr",
+   "blob": "4d85a251578a202c7ea0dae3d2f3427d2af3dc6c",
+   "sha256": "497768971cdc36d260a7734f22842aa8cdb777571f1913a8b6e5c55e531b2aee",
+   "bytes": 3136
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\uc5ec_1504.act": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u54af_1504.act",
+   "blob": "758a69d94510cef46f0f08ec09653d9e59c47818",
+   "sha256": "aecf9ba9a129df7fd673f7ab70aee52be5033cc2b7baf95b508dbc46aeff50f0",
+   "bytes": 43540
+  },
+  "weapon/\ud06c\ub8e8\uc138\uc774\ub354_\uc5ec_1504.spr": {
+   "repo": "linhan85/rAthenaCN_LeeClient",
+   "path": "data/sprite/\u7262\u57c3\u7ec3/\u519c\u98ce\u6280\u635e\u6b79/\u519c\u98ce\u6280\u635e\u6b79_\u54af_1504.spr",
+   "blob": "d80604bb2cb59885d4dd63ef13f401aa760e90b6",
+   "sha256": "6ed17b468f21061ccaf89605f988318e3e17c927bcdd342de3f2c3cd17994421",
+   "bytes": 4483
+  },
+  "weapon/\ud0dc\uad8c\uc18c\ub144_\ub0a8_\ud074\ub7fd.act": {
+   "repo": "rAthena-Thailand/ClientROThailand",
+   "path": "Client-2025-06-04/Pre-Renewal/data/sprite/\u00c0\u00ce\u00b0\u00a3\u00c1\u00b7/\u00c5\u00c2\u00b1\u00c7\u00bc\u00d2\u00b3\u00e2/\u00c5\u00c2\u00b1\u00c7\u00bc\u00d2\u00b3\u00e2_\u00b3\u00b2_\u00c5\u00ac\u00b7\u00b4.act",
+   "blob": "6052907cca7bd366d4e57a08e318aa724e5b7e81",
+   "sha256": "7b567644611ae0c28132985f6efec1b1852ca7a2de59dac3fd70688619e18b50",
+   "bytes": 30932
+  },
+  "weapon/\ud0dc\uad8c\uc18c\ub144_\ub0a8_\ud074\ub7fd.spr": {
+   "repo": "rAthena-Thailand/ClientROThailand",
+   "path": "Client-2025-06-04/Pre-Renewal/data/sprite/\u00c0\u00ce\u00b0\u00a3\u00c1\u00b7/\u00c5\u00c2\u00b1\u00c7\u00bc\u00d2\u00b3\u00e2/\u00c5\u00c2\u00b1\u00c7\u00bc\u00d2\u00b3\u00e2_\u00b3\u00b2_\u00c5\u00ac\u00b7\u00b4.spr",
+   "blob": "6f3ede6f853b4157870d0888c3d960f761c77cdd",
+   "sha256": "0b458200ae2627222cb196a718154958b7bd9bd84ccd14734e829c8016231bb6",
+   "bytes": 5392
+  },
+  "weapon/\ud0dc\uad8c\uc18c\ub144_\uc5ec_\ud074\ub7fd.act": {
+   "repo": "rAthena-Thailand/ClientROThailand",
+   "path": "Client-2025-06-04/Pre-Renewal/data/sprite/\u00c0\u00ce\u00b0\u00a3\u00c1\u00b7/\u00c5\u00c2\u00b1\u00c7\u00bc\u00d2\u00b3\u00e2/\u00c5\u00c2\u00b1\u00c7\u00bc\u00d2\u00b3\u00e2_\u00bf\u00a9_\u00c5\u00ac\u00b7\u00b4.act",
+   "blob": "afa1d3acf0beb8a8a3a25de268f05dd4f8a7bc84",
+   "sha256": "1e1dbcdf28e54aece7e358ce7e6c4c983af6064c43f919bfdf3bbe55c1ad93e1",
+   "bytes": 30292
+  },
+  "weapon/\ud0dc\uad8c\uc18c\ub144_\uc5ec_\ud074\ub7fd.spr": {
+   "repo": "rAthena-Thailand/ClientROThailand",
+   "path": "Client-2025-06-04/Pre-Renewal/data/sprite/\u00c0\u00ce\u00b0\u00a3\u00c1\u00b7/\u00c5\u00c2\u00b1\u00c7\u00bc\u00d2\u00b3\u00e2/\u00c5\u00c2\u00b1\u00c7\u00bc\u00d2\u00b3\u00e2_\u00bf\u00a9_\u00c5\u00ac\u00b7\u00b4.spr",
+   "blob": "13706ed73633cac0ae78b01d0017d11e03cfe978",
+   "sha256": "54bde9b9858a62d377c91ed3a9fec4a65bd0101d5a8e77d3d104472047663bda",
+   "bytes": 7215
   }
  },
  "outputs": {
-  "atlas-0054d1327f6c5506d9c4.png": "0054d1327f6c5506d9c41ce2ed92ee19024cb796d65732f12f96438d69ab50c8",
-  "atlas-00d84e4b50dc3fad1522.png": "00d84e4b50dc3fad1522693927de086ccf975efea24ebf995ba3cde0b4c08010",
-  "atlas-00f9bf5f6b537d390aef.png": "00f9bf5f6b537d390aef08b04dec0a0d2979c9952ebd1d75f106e2e983b58e1a",
-  "atlas-01d0a51c7f837b8f42df.png": "01d0a51c7f837b8f42df561f9826fcab410fe35a30cbfb72e1709fdb38942b95",
-  "atlas-066681779c9b24c5ef9f.png": "066681779c9b24c5ef9ffb74e99e2b5d1d26e6f6a8f534d37805b31357c3c5c0",
-  "atlas-07ada79e874877131eb4.png": "07ada79e874877131eb4ce873b05c84096ccdf6c6cc8504b5416cb705ce9b663",
-  "atlas-07aedd6646f87d6a784e.png": "07aedd6646f87d6a784ed0b0e8fbccde4e5b23d23d5cac0a0cd21d11f37a735d",
-  "atlas-0e44594b16503c3ec0ad.png": "0e44594b16503c3ec0ada9c207545bbf6958f1ca72c6776684dcd04a6909127d",
-  "atlas-0f52d1e1f88c5ea499db.png": "0f52d1e1f88c5ea499db6a93eb89f40ecf7bc5a9d9fb9f7c77e4c29ad00b8e51",
-  "atlas-0ff00856a688f56d2f7c.png": "0ff00856a688f56d2f7c4037011b69dcad666d73600bb2bb04260f6463f4fddb",
-  "atlas-13111cf9687ac05ea23c.png": "13111cf9687ac05ea23c72a7c1d0e5edfdcabeeead53b5f15a51fbe22e9ebf8d",
-  "atlas-13d1b7233c27d740f0ae.png": "13d1b7233c27d740f0aeb897d8501b7059928631f06f362d22a316f7fe60dc0f",
-  "atlas-15b4a6274e16030f5a5a.png": "15b4a6274e16030f5a5a3c0950399e2e2817388a22e027ab3f25d8ee49d92d1d",
-  "atlas-171c1e83785cbc937e7d.png": "171c1e83785cbc937e7daa29e84c7ae1da00d4f9676940985ee226143e9376b3",
-  "atlas-1a16f92a7e53375c08a8.png": "1a16f92a7e53375c08a8228ba78726f80ee00284cf086048e963ea04404ecc39",
-  "atlas-1d2cb135eee2c1b4aa5a.png": "1d2cb135eee2c1b4aa5a881a24026f242262c4f6b642c5466fd2b188fbd8e922",
-  "atlas-1e01b39b306b3a5ec1aa.png": "1e01b39b306b3a5ec1aa0d32db12fd75d04613292ca184dd9ade1dd578f2ac75",
-  "atlas-290a01c6bae40899b62d.png": "290a01c6bae40899b62d94bf8404388f7d57352034d62bc96afc9714c4505dbc",
-  "atlas-2a3c56b499f9f077533b.png": "2a3c56b499f9f077533bc0135cbdaf7ba62f63c150b55685a1c3faea3cb702b6",
-  "atlas-2feb95043541912b054f.png": "2feb95043541912b054f931c2fd78ecaf715b6f77ac59274c0cbfb16f1a54ad2",
-  "atlas-31c013c8db145af85542.png": "31c013c8db145af855425046874c27a9db9d41cbe344bbcfdd2b7d604359f409",
-  "atlas-35ccbdaebc6220942cb5.png": "35ccbdaebc6220942cb5ea3aeec89d7331d71bdadda88cb6a32ed80d1b66895f",
-  "atlas-36328f6d43c8b30816d1.png": "36328f6d43c8b30816d1180ae41c0ebaa13e704857084f81b9aa083893f54268",
-  "atlas-37dfe7a232fb395fc632.png": "37dfe7a232fb395fc632399aaae98d3e92fe0cc84b886cdf90e1c34c56e67886",
-  "atlas-3cff2b2c74e716ba6ace.png": "3cff2b2c74e716ba6ace50f9295636f8f79f3b32b24294c2134dff7b78c0a217",
-  "atlas-3da7e7e08ad1afe4308c.png": "3da7e7e08ad1afe4308cabc6785e7d7a1a33ac81b01e3045cd3344253469f822",
-  "atlas-474bc8427a2db35c65e0.png": "474bc8427a2db35c65e0fac77cabf6f14e77d3192528535fd5a96caae2d5c50a",
-  "atlas-485d128260b91a51e221.png": "485d128260b91a51e22156b28925f92c1ba7f86d799a50f7fa7d0ca2979bb82d",
-  "atlas-48d6a23a9e9ca4ad52f5.png": "48d6a23a9e9ca4ad52f5495784e05a20837dc1632afb98ecc86786c59518ca75",
-  "atlas-4a98876a73ace32cf14f.png": "4a98876a73ace32cf14f906e0f5241ae5e4ae4812d831f3c9e2424356c382454",
-  "atlas-4f5a97d8c3f68feb44b5.png": "4f5a97d8c3f68feb44b5e54a70230f729216cd502817154724158aa9830b54b2",
-  "atlas-508c3a3eec16a1eaaa38.png": "508c3a3eec16a1eaaa38dbefb318497b9bf311676e9fd117883b832ea7fd51bc",
-  "atlas-51106edfd959654f7300.png": "51106edfd959654f730066f3868bd4db6d6ed26190a7ed48fff4e1dafeb3d08a",
-  "atlas-582d7fb719143385193b.png": "582d7fb719143385193bfa9eba274a459bfcb52d66aabf0adfbb6a7891583362",
-  "atlas-5c9d657f39cc0422e45a.png": "5c9d657f39cc0422e45a16f10539c3d7921985442c0ee15d88a8f4602090086b",
-  "atlas-60b7262352c42125dc98.png": "60b7262352c42125dc985b977b7477de83ccd5efa9ed43c41d7565310c66c007",
-  "atlas-61968da6405123154426.png": "61968da6405123154426bcc6c3891188d1316a97d56549cad8cb75778770e44f",
-  "atlas-65611c7e99bb2b2c240b.png": "65611c7e99bb2b2c240beae7ef04a0f5c112fbacfee3cde75e6809549a82915e",
-  "atlas-667a77f6829cb9bb3a97.png": "667a77f6829cb9bb3a9773df23fdde35729949ef49f281bd98491279e237b70c",
-  "atlas-6bfbe6d101b4144e9c48.png": "6bfbe6d101b4144e9c48104e0aa441596a5f31cdb3fa28d62e55d1dfbdb8be53",
-  "atlas-6c133a2da08f8ca26352.png": "6c133a2da08f8ca2635245c9fc91b856db5ceae2056ff555b0bfae50f5d4d21a",
-  "atlas-6c797b716127c2dc86fe.png": "6c797b716127c2dc86fe5cf4758eff923d945d1abdd5bd2f1006c6cb2361aa06",
-  "atlas-6cbf5e2b6c6bd56519c7.png": "6cbf5e2b6c6bd56519c7766f88c827d8d4fbf2ac64bdce6372095735dbbf10c1",
-  "atlas-718899516dbb8e650c31.png": "718899516dbb8e650c314b223ba88b76e8dfc8c4debbe6d20c0ca64b7f424832",
-  "atlas-75910e8ffb5b895a8b48.png": "75910e8ffb5b895a8b480110da16d55110549d8ca6bafc0628e47c3221892770",
-  "atlas-782a4847b757257a795e.png": "782a4847b757257a795ede48a78059f7ae6a4def51e6cfab03c6a83aeed1eb93",
-  "atlas-79d299d8d8a992dcf382.png": "79d299d8d8a992dcf38293bed49150d377a1466a5a5d41ce747bbaf53e313011",
-  "atlas-7abe57e74de18fecc42b.png": "7abe57e74de18fecc42b38a2f01ba479e96cf4d522c3ab232d361b4e458f0305",
-  "atlas-7fc4c578e58d51160864.png": "7fc4c578e58d51160864df9a4c069f4d5ebc9fb5dec034e99944185f28514f59",
-  "atlas-86083ab7b6ad9f1572ff.png": "86083ab7b6ad9f1572ff38250825fe0d490cb069324cca047ca4b9a676a8ff27",
-  "atlas-8eb34fa106ad343fd826.png": "8eb34fa106ad343fd8261a06dce11eb37680d4a6177d3fcc7828421f393d5ad3",
-  "atlas-910aa8fd6558cb648589.png": "910aa8fd6558cb648589b3cfef5c3fa91882a24fe968e05dbe2d7a0c0654ddb0",
-  "atlas-911777ce4d020c14f917.png": "911777ce4d020c14f917c6cebafb15ee05f1b7b5b98794fb5612b223cc5f062a",
-  "atlas-97ed8b86c4b393b98fa0.png": "97ed8b86c4b393b98fa0102e4bb3fae7e97770fbf5efa963e69cdbceabf01375",
-  "atlas-9948ac11595e00c044f5.png": "9948ac11595e00c044f5776ef78ab165eb18b064a344fc5c48cc6dee55164102",
-  "atlas-9b0ced499d1fba56c662.png": "9b0ced499d1fba56c662c2f993b73c0bcd4fb82b14850a92d45fd4779494621e",
-  "atlas-9d85fe0b8aeb00d614fb.png": "9d85fe0b8aeb00d614fb8b5618e9be6c563e78435036391c35482b4570725ef7",
-  "atlas-9e5009c4b514ed838cde.png": "9e5009c4b514ed838cdeddeee9bdece7c9411237151d718a07f95de116343570",
-  "atlas-ac2107b5fb358929045f.png": "ac2107b5fb358929045f3f3490c1a743977bb926eb9cc310290bc46fa7258595",
-  "atlas-aef3afda5d9a1c6fc312.png": "aef3afda5d9a1c6fc3122e421caaec11950a5429ec525d81b9af1ecf57c2adfc",
-  "atlas-b0e9cded4830def0df80.png": "b0e9cded4830def0df800eb970b855d0027b339d3bf83d45b6463214c672fa15",
-  "atlas-b67a26dd098b802babd9.png": "b67a26dd098b802babd9b1b0424e62ab64317599f689ebca145a0a5e8ab1e6d2",
-  "atlas-cc071250b9d02d240e3c.png": "cc071250b9d02d240e3ca70fb48616bd718d23540fe8dd4fe96286b3719cecb8",
-  "atlas-ccdb182760e18bcd5835.png": "ccdb182760e18bcd5835df9592f8eaee6d596733844303c01db2d75ebb8519b8",
-  "atlas-dde59e4c1ca7029beab7.png": "dde59e4c1ca7029beab7eded0cfac6efd429e85648d90f4ae2cfce1aa11998cf",
-  "atlas-e2ab38ba49b87de56199.png": "e2ab38ba49b87de56199cdeb2412fd6504e766ed1ede9585a24b8ed68687961c",
-  "atlas-e81faf9e2a0777e856ce.png": "e81faf9e2a0777e856ce071a6867606717fc148d6ad0d3f101ac76bbe9edf93a",
-  "atlas-ec44852f8e8c1a5f705b.png": "ec44852f8e8c1a5f705b1aed7cbda74e8d5b56a301c1aa60702ac51e377b2150",
-  "atlas-ee1baa1e77c0b8b80181.png": "ee1baa1e77c0b8b801817acff3af92cdf1c235331b362b3135d1e48c1f1f86da",
-  "atlas-f50d8ac0a81a5ab58080.png": "f50d8ac0a81a5ab580805d65b8e81e8ffdcdea66c9d4e5b9e34e1ee17b12d5e5",
-  "atlas-f806be1122ae2a076e4b.png": "f806be1122ae2a076e4b1feeeadb812bda261073b5901b68e06eed16509607e5",
-  "atlas-fb2d72fe997ab43d5efd.png": "fb2d72fe997ab43d5efd4267c4d80904c33658c6bb763b7d14558060eed4f3a4",
+  "atlas-00950021bd6a91960f99.png": "00950021bd6a91960f9918bf63479316caecdce6dcf667afbd299a42e640847b",
+  "atlas-04668a38d18fac6e5c15.png": "04668a38d18fac6e5c15757f3fd6fc407f77f66415779f5dce4a2c5ffcf05f7e",
+  "atlas-06775f7d4bdc4dc06d44.png": "06775f7d4bdc4dc06d4407b1c4292c58cb15aa24be4842823fed645d3a3ebbf2",
+  "atlas-06ed90d1f9ecb0f789ef.png": "06ed90d1f9ecb0f789ef136bac469ae72c1c4f835e7c9b6320f68fbd621c6c72",
+  "atlas-09080ec838a57c4703bb.png": "09080ec838a57c4703bb191f74b37295bef35a75842a69d9276116ac3d43aade",
+  "atlas-0cde132be1b887bb8e5a.png": "0cde132be1b887bb8e5ab7c62219fa410939619b5d4f0cb4a2e4cd99c0fc9bf1",
+  "atlas-0ce6a3b3aa1b2c57c4bc.png": "0ce6a3b3aa1b2c57c4bcf16cf9cdf20880f6f7a082cd52bce85812d774743411",
+  "atlas-0f3fbcbd6ff911c25701.png": "0f3fbcbd6ff911c257010c550b44b67196db74335d8cd35ff7dc3bdc4c1d8ba9",
+  "atlas-105732a4ef62095247a7.png": "105732a4ef62095247a70ba5e4e9374047fef1303baceaba888ad474d793e016",
+  "atlas-10c4fd330655614700be.png": "10c4fd330655614700be3c248cdb54111953e5216821d3ebe1d7eb6b35d2586d",
+  "atlas-123028c5d256cb598973.png": "123028c5d256cb598973c648ad32d62b7b06454e42251c02c87073ce6c298229",
+  "atlas-12f41e9f4c476aa60739.png": "12f41e9f4c476aa607392d9c91cd55b67b2f5b412695a5229a49f19689fe76de",
+  "atlas-14969735f973acd686d9.png": "14969735f973acd686d92ec6279415fccee8f03654480bbbe85f157b638bddfd",
+  "atlas-1565f9aaaa00cbc3a9b7.png": "1565f9aaaa00cbc3a9b7de24af6f9428c1db9bf54ffcae7eeff1465816a0b154",
+  "atlas-16edbd0b125d0522403c.png": "16edbd0b125d0522403cb84e72d2c45031ef134a5c2e69f1190ddbaa6c6ffc34",
+  "atlas-19338af7bf3aa99823d9.png": "19338af7bf3aa99823d9f27c0a584e33ee13b3a0164d27e862e85052bc202c92",
+  "atlas-1b54bb4703b2b4f54e32.png": "1b54bb4703b2b4f54e328e08b9f7fec896af406f1df3388fed3fa5564eab0ca5",
+  "atlas-1fb087f810db834c2486.png": "1fb087f810db834c2486fa40479e44813a690b261789698c3eb94d99e38cb0ea",
+  "atlas-270c1ed5860aa05c8d12.png": "270c1ed5860aa05c8d12dc9036e3018e4b8b91acac65c761e61732b7b8d1be69",
+  "atlas-277e3277c055130614ae.png": "277e3277c055130614ae298e3fea51295081939a73c3c00b974a14684d1231db",
+  "atlas-27dff193b57575ee6fad.png": "27dff193b57575ee6fad2ad9509c09651525a2b08a41fda52fda6b5c82993edd",
+  "atlas-29d9c7cfbb50960d3878.png": "29d9c7cfbb50960d3878d306e2584d4e67b2302a1a28a9fc77f970503c35b742",
+  "atlas-2ac7b57e150b34670d0c.png": "2ac7b57e150b34670d0cfbae53ac2e9d7f3cbf7a0c326103f24fd7f51c65e7da",
+  "atlas-2adc68c92238e27d7d34.png": "2adc68c92238e27d7d34b2bf228d688c9590d87d0fd4482c2aedac6b0963569e",
+  "atlas-2b3183ac3eade603d196.png": "2b3183ac3eade603d19645f65871d7ee5d3a85eba0797436eb6eadbdebc0c72b",
+  "atlas-2b6f425555bca9c2266f.png": "2b6f425555bca9c2266fdd6d7429c8b1339ecc7877858d4a77e223dd86c31da8",
+  "atlas-2b75a0a192558d8c89b0.png": "2b75a0a192558d8c89b09d8e83201a5ac20f00f0ee9e92b52b341bd9245e606d",
+  "atlas-2c66abb050f81677109c.png": "2c66abb050f81677109c182da6f004e61326ea6347f27633755503659fe5aebf",
+  "atlas-2f91634a19fb4d251ed8.png": "2f91634a19fb4d251ed80d4e890ad54f8d9c688a45ede84e551443e9ef2afd49",
+  "atlas-3287b4e0ac2256d33ca3.png": "3287b4e0ac2256d33ca3ad27b242e53fbb03773213238638a6f65b234d2e2b3f",
+  "atlas-34b1b42e3ec340e6d92d.png": "34b1b42e3ec340e6d92d63b73dec920cad25ab058a98701ea012e1e2d6b5a9d8",
+  "atlas-351a90cc8343d464177b.png": "351a90cc8343d464177bed4d691d33c849bbe88a7e9a1a8776724ee2fa4cab9e",
+  "atlas-3adce4fcca22ed4faf2f.png": "3adce4fcca22ed4faf2fc64303fa5bf2c0dfdd4dc9f6174d7e3b4d4d637a8e1e",
+  "atlas-3b5f323f5e50a44e0f66.png": "3b5f323f5e50a44e0f66921619a1c5a9d0bc71925f5a5ecab0f93dcdc46ec5eb",
+  "atlas-3cb982e461e05b2005e8.png": "3cb982e461e05b2005e800f98fa445fd657a0556f9bfeab59630a006b8d82458",
+  "atlas-3ed165c3a66c609d137a.png": "3ed165c3a66c609d137ae096ea774f50356d04a6b051b6ac90ce10dcf4fb5bc6",
+  "atlas-41126eea028a23c6c56e.png": "41126eea028a23c6c56ef0d7e3d9128170640405eb05ee94e935a820c9dee1ed",
+  "atlas-42f6689eba219f2fdfab.png": "42f6689eba219f2fdfab0e5c590ebf1be5b244e9d9dcdb19cba662539ff1304c",
+  "atlas-432f28d1b90f30404c5a.png": "432f28d1b90f30404c5aa51de9547ef4b99739522c1afb7dc54b6aed53f0ca19",
+  "atlas-43e9399c691062dde7d4.png": "43e9399c691062dde7d4ef72b74787df946fd223dcd9bd7d924bf46d704e720c",
+  "atlas-44de099773778ba190c2.png": "44de099773778ba190c264f8ef4a9b37d97a29e44a9ad8980e6e63bcd4482d46",
+  "atlas-44e125736b0995fab1b7.png": "44e125736b0995fab1b7b9201a87d9b90f9db63225c3f5c6016a496b25c113e1",
+  "atlas-455de42831b1baf1edab.png": "455de42831b1baf1edabe0beee0d3adced67aaa062d945ce47b744d961014f4c",
+  "atlas-49e63c70a7a4d14ca7e8.png": "49e63c70a7a4d14ca7e8125f9155b676f1efdb2c8d981e0e6952bd3133b3831e",
+  "atlas-4acf59889bec018ade4a.png": "4acf59889bec018ade4ac6637031898594e07f4de1b3701f81f933f85abaa1a0",
+  "atlas-4b6f4ec0c1c50c84f6e2.png": "4b6f4ec0c1c50c84f6e27f89f87a48469bef36a836547287d99766450e2b0617",
+  "atlas-4d0dc2a59288b0688683.png": "4d0dc2a59288b06886838c606c459d67dafd498c15d84db729de881d56cace00",
+  "atlas-4d529ba3c210f189befe.png": "4d529ba3c210f189befe71e6b1ee92cabf3da0f2055df75bfd000229d38b2611",
+  "atlas-5661433c0ce76d58f54c.png": "5661433c0ce76d58f54c9c3ad05ce3a978baf1e6fbbb23b3cf1cfc4461ec6362",
+  "atlas-56f93aa49f8f1809c83e.png": "56f93aa49f8f1809c83e81c30428f3a1af1b0691140cd55b18bae85129e7009f",
+  "atlas-57976896929c8f646d99.png": "57976896929c8f646d99304a3141ecaec3cd303f65c16e5fdf3db61af055f012",
+  "atlas-5b0f62462b75e65cc619.png": "5b0f62462b75e65cc6196108a1e17d71cd1c53523b19d6e53f3d43adaa87b582",
+  "atlas-5dad744be392fcce15a4.png": "5dad744be392fcce15a450786e1aa8b9af7d7744d85543e2aa7482af5ef9a59b",
+  "atlas-5e78e237f0ce48bd4a07.png": "5e78e237f0ce48bd4a0791734f68e285003b2a796ed32166cc1e78a8e24fe667",
+  "atlas-5ea76e988ba35c4b3144.png": "5ea76e988ba35c4b314494b1b445a7bbdbf642abb95895015bb454244416050e",
+  "atlas-5f2e71e47ed59cadb9d0.png": "5f2e71e47ed59cadb9d0d069c62b7610a4370e4b532b1bc0f4d89adb18e3d00a",
+  "atlas-629af7f840bb64bd6d94.png": "629af7f840bb64bd6d9492051d11259dfa91b6acaf92831baf416d4c7eb9445d",
+  "atlas-633eb74d196ffca83247.png": "633eb74d196ffca8324712c607ab4124484db66bb2739ffc1d8dbc6d846ee9b5",
+  "atlas-636912fdb07987b22808.png": "636912fdb07987b2280827bdc19d2d3278e41860b00a7489feb6265bb54e7771",
+  "atlas-637ed5f9c43c3e5de9c2.png": "637ed5f9c43c3e5de9c23764fc2319616665fbef1228a14d5f27307e550cb02a",
+  "atlas-65d93e24988d29a1dd8a.png": "65d93e24988d29a1dd8a9cf82b045c6e3658ca83b730a43e6c423ef4efe56994",
+  "atlas-65f46f4034e2ca6bb8ab.png": "65f46f4034e2ca6bb8ab021dcab7aa0b5af1b569df1b4d781bc5c54c95c0cd9b",
+  "atlas-6691a2849359b622778e.png": "6691a2849359b622778e07385dc69ea1adff5487aa66da48eba605d5afaa453d",
+  "atlas-685b5369b6d3f3f54e9b.png": "685b5369b6d3f3f54e9b5771faf74149b4497d409a9133a04475e2cd4e398553",
+  "atlas-68ad19db42d1eb2d3181.png": "68ad19db42d1eb2d3181faf8cdd6f424485f9ea5cb3332461f6944655c58b1c3",
+  "atlas-69d4a27f6bfdff6c79d5.png": "69d4a27f6bfdff6c79d59b45ccd9aa94a4f5e4e836cbbcf0567dec31c68a68e6",
+  "atlas-6aa2251f713e31757974.png": "6aa2251f713e31757974cb6fd59a68264e11737bc52d567a8946c877c5db11c0",
+  "atlas-6bf0db0c80d01d369538.png": "6bf0db0c80d01d369538e1b274a7168800d38be5bf22f7faed29f39273f3936a",
+  "atlas-6d0647e76e8dfc9392f6.png": "6d0647e76e8dfc9392f69a9fa9033701c89367a29c7d3a61404305ef670ce77f",
+  "atlas-708c686715107def4de6.png": "708c686715107def4de6111f8e3210d7c89a30b446c14ad37a7a12ba0318a782",
+  "atlas-731eac4283a80b5d94cb.png": "731eac4283a80b5d94cb4594e1f34592bd5c4a2483e482900eede43f0c6e541c",
+  "atlas-775c146ded0e841f5f83.png": "775c146ded0e841f5f83c3df2383a25e5863c434dca06cf673e1be28f545bbb3",
+  "atlas-77bea300d47eec836dab.png": "77bea300d47eec836dab2a905a2addc82fe25db2f6767759eefe76e530065f9e",
+  "atlas-78d970ba67ac7d4188b1.png": "78d970ba67ac7d4188b1e3a8410fa37c828f18fb8008062e84671dcefcb4a6da",
+  "atlas-7d5ea830f0d1dff5319a.png": "7d5ea830f0d1dff5319a71395f6c08254e338d21038b1e82ec7720b5f74644cb",
+  "atlas-813752d26b4523d2efe7.png": "813752d26b4523d2efe7129efaeefd149f1b2dedee8be62ff74217de69de28f9",
+  "atlas-81e07875400e2588e458.png": "81e07875400e2588e4582be9180e1af3b11e50a10171f40ed1da26f83c4fc9c5",
+  "atlas-82eb9fe0320a98ac919d.png": "82eb9fe0320a98ac919d09c7808f121dfe39db0be53383fe640a0d853571c179",
+  "atlas-83ec91982f14870a9e56.png": "83ec91982f14870a9e5649ab71b9a1961a574459f51c9d2f2407f63b250fe858",
+  "atlas-8515c2d222364af44a5b.png": "8515c2d222364af44a5ba3bc34a7fda10cf7c57bf31da66198369674f54b4c62",
+  "atlas-86040f32dba7961b82b9.png": "86040f32dba7961b82b9a2b5a4e69c1e971d041efd82e4e03a8fbeb4b1e93426",
+  "atlas-88a50494336d209864eb.png": "88a50494336d209864eb222f000e95b09e68d5f136743f89de08248ff7d8dc41",
+  "atlas-88e07c89d26112790852.png": "88e07c89d26112790852096885afcd3486c0373c2b0d4c05beb5a00965ca48e4",
+  "atlas-8a82c68464e2f3774925.png": "8a82c68464e2f3774925b0b6b646ac85c064b7e3ea87507eb7efd071c9136aa5",
+  "atlas-8e47776bedd85ba9212f.png": "8e47776bedd85ba9212fc0ce7f5323f645b4129263306fc016c3d147390b0eda",
+  "atlas-91d94ef8de78a96a7afb.png": "91d94ef8de78a96a7afb1cb09e0ed0dedc203c7b1ea42a5c85f0b66c1066702c",
+  "atlas-98c9d6bfa3222c64f10b.png": "98c9d6bfa3222c64f10b91f93662359b451dbba5c7b3b92e4ed909e492b495d9",
+  "atlas-996658a37c90a75e2dd0.png": "996658a37c90a75e2dd06ceea1dc8741d4bc1f7f2d31878168af9efa7f4c9dee",
+  "atlas-9a4ee9cd8289b20be2a0.png": "9a4ee9cd8289b20be2a073324b3b98f2d6c909c7fa8df9e25d61ca23bd139f43",
+  "atlas-9cc7d5d668ca7769213f.png": "9cc7d5d668ca7769213f5549c22600ecb5a185eca48bd45efb8d6958aae872f2",
+  "atlas-9e01b59878ec65f40b14.png": "9e01b59878ec65f40b1467ba396bc79dcba8b55997c79e2e4d36582f6fe9717e",
+  "atlas-9eea83bfb65b9d82be84.png": "9eea83bfb65b9d82be84a77b0bc81196ac962cac9c97369f9cd870815a8067be",
+  "atlas-9fe1dccde5abbbb8dacf.png": "9fe1dccde5abbbb8dacf2cc2f41a9250822433874c79ce27736dd6a0d05655e1",
+  "atlas-a382709c12049112e402.png": "a382709c12049112e402c96696f6353ece17214e7d23408beb05fdd5b2d21af1",
+  "atlas-a3df9755f8a882d34cb3.png": "a3df9755f8a882d34cb398fc3fe9384c9b49aae3a3e28442fe00de5ccb132bc4",
+  "atlas-a4ec9089842f08bb5e01.png": "a4ec9089842f08bb5e0148d1e6a1e660cec10720d653c03e6a03ab7dd0565896",
+  "atlas-a6408b3082c311f3169c.png": "a6408b3082c311f3169cd61e405e5201d140ee4c05a54a2e4a876bbba407c2cf",
+  "atlas-a6ddb03def553a72226b.png": "a6ddb03def553a72226b476f9b561d794f683a4fe8884a35c263cffbd0ae40c2",
+  "atlas-a760d3d87c0571634833.png": "a760d3d87c05716348335b1293e60130c63fb562c6999db8ea1c22058c8097eb",
+  "atlas-a81fa008e143c089e34a.png": "a81fa008e143c089e34a7c222cd1f3c28407709bcb7f83dfb8bc9519ff89bbe8",
+  "atlas-a8778073d5b918387f03.png": "a8778073d5b918387f03dda426f1571f12bd5145fb3be7077cb0681e821d35c8",
+  "atlas-a9f108bb16e3833827ee.png": "a9f108bb16e3833827ee15fe5d22521f524472d5d584d942f146ab4af5a33d18",
+  "atlas-ab20b8c68b4cf7698514.png": "ab20b8c68b4cf76985142305a1bfec7a3b5be884368870fc2e22a9b351ec1de6",
+  "atlas-ab24dcfee48bbd39e795.png": "ab24dcfee48bbd39e795710a2927d2c0bc1b63953483d59ee78a2a5192931ae9",
+  "atlas-ae817482a2e5ae46cf51.png": "ae817482a2e5ae46cf51d239ea7c5a2f652f958eb90c74d0002e11be7a389b8f",
+  "atlas-b0a844ee089532dbc25a.png": "b0a844ee089532dbc25ab94f2673bdc6a3ca4c16a6077f2d263d9fbe1a928e14",
+  "atlas-b4c7ec31087b78464df7.png": "b4c7ec31087b78464df78c1ff8e3e2812da8bdf1a56f948641f7b1ed1bd42288",
+  "atlas-b82d47a9a6e093795db1.png": "b82d47a9a6e093795db1f1d403fad066018a287f116a00b3fbe69499027d4f94",
+  "atlas-b86d1cfff97e8d630e88.png": "b86d1cfff97e8d630e88be8f87a08bfea63acfe03fea43f43c72a8ee4f92551b",
+  "atlas-b8d5ff71b6aed9632417.png": "b8d5ff71b6aed9632417b4db6a145942866e25d59a2e460a2c7b8ad0e15bbffb",
+  "atlas-bd2249f61bf1c3a9455a.png": "bd2249f61bf1c3a9455a89508ea31c7a9d21c5bb7421ae0d8e2e06646a41763c",
+  "atlas-bee07bed12e6b2bce453.png": "bee07bed12e6b2bce453fde156a64a3e103bb8b9d9c94b7c54a6726ff7ea685e",
+  "atlas-c124ae1ae05b4e4934a7.png": "c124ae1ae05b4e4934a7939e75d625071dc5b0eb9e7340290fe366418dcd6652",
+  "atlas-c18f14cbf34a67257492.png": "c18f14cbf34a6725749232bca3c3fb2c3f7c42610a7f022e954ed4a4a0d2b4ca",
+  "atlas-c41a847adb39a9b99f0d.png": "c41a847adb39a9b99f0d750293cf4102cfb84f049e0ad06b5464b484bab32ba4",
+  "atlas-c6fe7be4c616ae738b6a.png": "c6fe7be4c616ae738b6a8423de200a95722b33aa643f56e3d8f246760091a02b",
+  "atlas-c7e2b1fbe70f31179aa5.png": "c7e2b1fbe70f31179aa5b2394bfef2e7666af19cabe65bbb6a4cb6e268680c2e",
+  "atlas-c89995e046abdcc0a5ba.png": "c89995e046abdcc0a5ba34aa7252834fd1570a9893dae44d2b1f36df0f606ccb",
+  "atlas-ca099ebbaaa9ec5ac88c.png": "ca099ebbaaa9ec5ac88cf030207e306dd33a83af53e1bcee19ee4672eb9e9c68",
+  "atlas-ca3a7ff22a9727dbe464.png": "ca3a7ff22a9727dbe4643aca91f765a2f1201e0aacf5d4b3e30dc4e09267defc",
+  "atlas-cb128a70201791bd43a2.png": "cb128a70201791bd43a256ec8a21d9fcf2c8bc4948fde88eca04b44c9d532200",
+  "atlas-cd6c6099ad0679f9325f.png": "cd6c6099ad0679f9325f7b9da91d5f48b02d970d985b4ca6ed1af1fc6adca7ab",
+  "atlas-d02d8ab0ce076d46512b.png": "d02d8ab0ce076d46512bb1d3f7b5723672bea6ca7542d1e966bb74d325d4363f",
+  "atlas-d0d753f9110ae8d33d10.png": "d0d753f9110ae8d33d10254078b15e355456809458a7da149e5ba1193d9ef773",
+  "atlas-d2b9a762380af3d09e6e.png": "d2b9a762380af3d09e6e2287158f65c2372af55ff371e7d6dbdfa802c58281bb",
+  "atlas-d564c816048e0437d94a.png": "d564c816048e0437d94a2439e367c92ccea35a54b7176e6b7b8141c94f6e49dd",
+  "atlas-d83ce75d1e47c17708e5.png": "d83ce75d1e47c17708e50fc9fb316e965c34930ccece5199f60a277dd18b25b0",
+  "atlas-da9240032edded3ddb84.png": "da9240032edded3ddb84ee3c260fcbb903aff0d84cc2a2a9d97ad47c39993349",
+  "atlas-dbae48bb911b0119f877.png": "dbae48bb911b0119f877cd5107167d4119342949ce10437a31d9a12d475b02ca",
+  "atlas-dd1d6255e1d3d81aa1c4.png": "dd1d6255e1d3d81aa1c484d041e221e9a7bb3fb526f523477c043178e3a5c645",
+  "atlas-dd7193459fc9c48cc617.png": "dd7193459fc9c48cc6178fe4b629b431f9532a2eddae5c21074e6154ecda0a05",
+  "atlas-e1bb937c5b3ac8374150.png": "e1bb937c5b3ac8374150a84f05947aec541a546e49a0283f4643939681e6aac2",
+  "atlas-e1f792c7d61bfef17e92.png": "e1f792c7d61bfef17e92fccf472bced4509b19e24f9ff2444727f017c8248857",
+  "atlas-e255be2fdfa27337232e.png": "e255be2fdfa27337232eb1c5d30c26186f981deedd899e81701f0ae7a9dcc54b",
+  "atlas-e279ccb12d4db0d5b3fa.png": "e279ccb12d4db0d5b3fa92fb105eaec87faceb348c405b296aa070f95b3b00ab",
+  "atlas-e27bc4b9ad0aa3fba4f2.png": "e27bc4b9ad0aa3fba4f247e8606761718af02f9dbf40ebb2296449933d40b958",
+  "atlas-e800e6ba91210d4a0dc0.png": "e800e6ba91210d4a0dc0ef563e86689ac3a5b638bd9acf2752751a4a2ab05b73",
+  "atlas-eafce1a94a30b1e21095.png": "eafce1a94a30b1e21095a053c6e295ad48031f7cc51774e417a50f4c365ae72b",
+  "atlas-ebd19eab73e99721f052.png": "ebd19eab73e99721f0526eece25c7b9bac99671ef86de0e08f5b94514169642b",
+  "atlas-ec4ae6c61be062c928a4.png": "ec4ae6c61be062c928a4f6b49e45e851332ac7ec0386103b3416b3f01f1179a4",
+  "atlas-ecd14ec91e7f639c1203.png": "ecd14ec91e7f639c120320a74501e5ca544569c6282e82659200e8410aae78d8",
+  "atlas-eeda2ddff78fce3ec6a8.png": "eeda2ddff78fce3ec6a868182c637a1c7c9deaa8b4e7037614f1d06aa2d3e760",
+  "atlas-f4b517ea0788bf82dc13.png": "f4b517ea0788bf82dc13bf412bb64221298238ead4db7281f38f771b109b7c16",
+  "atlas-fa025b1d07cd682f0244.png": "fa025b1d07cd682f0244d2047b7e8d412f8d6c83a9763343875f0c51b7e8baaf",
+  "atlas-fa09c82d6649c0388883.png": "fa09c82d6649c03888837f7736fcd4e192645e6b00e4c6a24ef33e4d94fcc289",
+  "atlas-fc360a07d685142e8c51.png": "fc360a07d685142e8c5128e8cfb02bc3a290b3725348a9e0ddaac430a808ce65",
+  "atlas-fd0b5a33ec8b6c7189fa.png": "fd0b5a33ec8b6c7189faf7d9773192aba957b6ae0918379af6e8f05b17b05227",
+  "atlas-fe9b5b2383d19ff9e3a7.png": "fe9b5b2383d19ff9e3a78cdb69482d70d6d0963c2f5097aa2f8851dd34b44819",
   "atlas-fefb90e96999b68a80b1.png": "fefb90e96999b68a80b1d1c016d5d0db300db270d8a76e0fbf09db4f8756111a",
-  "poses-00025a34ff332d19236c.json": "00025a34ff332d19236c0f73c4b1e35ec5da6e38c4689ec2762869858f7d964d",
-  "poses-0014ef6950eccedbaedc.json": "0014ef6950eccedbaedc1992f9765a8c48225cd895affad11fe7923c6c32cd84",
-  "poses-05b32793d817f4ec3dd3.json": "05b32793d817f4ec3dd3db8bf920f79c46b6255e5994cfc9b183263859f0388e",
-  "poses-096b2930c56e9b6eb31a.json": "096b2930c56e9b6eb31abd53231da4a01bb34f0ba7bc77be157d976e65e8f87f",
-  "poses-1190b367e4fa2ae1b2f1.json": "1190b367e4fa2ae1b2f1dc51413049e49cd99bb80ca021fde190cb0cdadca271",
-  "poses-12e237923f6844997d74.json": "12e237923f6844997d742a014e84fc027a99863c088e5a14be25ee3624ebca86",
-  "poses-15aa4525e8a14b6557d1.json": "15aa4525e8a14b6557d16dfe5b72d57f797acb1845348c875de1cfbb682f02f2",
-  "poses-1621c7749436f9cf004b.json": "1621c7749436f9cf004b9df3bc06b62071136f0bb17cde41ad927a807c9095be",
-  "poses-17ca475e5315a5d054f8.json": "17ca475e5315a5d054f8c731f567c1e7a5a8eaddecf99f77fb8ea611d7e6f62f",
-  "poses-1a2a50fe5df4f8ee3698.json": "1a2a50fe5df4f8ee369813f812d809ee3be97c2d6cac0becfacec0877a2b3b0a",
-  "poses-1ba13c95ce6fe218a6a2.json": "1ba13c95ce6fe218a6a236706c6068dbc8ea8943da66dc96ac63634cff204782",
-  "poses-1ccb9387ed3a8342e8f7.json": "1ccb9387ed3a8342e8f73a0c6675944594d03fd7dc2f94083f895cd245796f74",
-  "poses-2047f4366b073134b990.json": "2047f4366b073134b990e4cca704ebd11b5bb7d8a7a78725448cfc0e5320a1a0",
-  "poses-262e6112ba92d2cac360.json": "262e6112ba92d2cac360969df198feba30560d93e7270978187f60298d6ded43",
-  "poses-2852b313a2add0cee790.json": "2852b313a2add0cee7900c108b8d55838bd09a2e974455d69224122f2024adab",
-  "poses-2b90822f87c9a11cc2de.json": "2b90822f87c9a11cc2de7ba83aa1997d3373e5209eba563046af2c3178861610",
-  "poses-2deb060b3bfcd0271ed9.json": "2deb060b3bfcd0271ed9df9150cb87fdf4769f8366b1dddefa4e4e584f221f82",
-  "poses-2e09372ec8a63dafbdfe.json": "2e09372ec8a63dafbdfe0dbb9801d1442478edc34e6d1bcdb97df636f0b1cd50",
-  "poses-3085add0e1130c852cde.json": "3085add0e1130c852cde10e028e96b8e05f9eb6cc78fd1a7a5c255385b4a5fc2",
-  "poses-32d1082485a7e2a0f8a8.json": "32d1082485a7e2a0f8a821d9a758e30c0ff7486597d1e943ac96e7ce8cd5d030",
-  "poses-33531bae50b033a53866.json": "33531bae50b033a53866913ff51328dbef956b2b3d87c2e4df03379efe031684",
-  "poses-34fdbfa015366445d573.json": "34fdbfa015366445d5735186156186cae0c2cac4104cb887e3628e0a6b22dca8",
-  "poses-38511ef84ab49a10511a.json": "38511ef84ab49a10511abcc6c2ebc080f292a30f8e4099555df54188b35b8e5e",
-  "poses-3b7bca8762bd58940b52.json": "3b7bca8762bd58940b5276383f120e3f85d742527e2f99d7298ce55f53769597",
-  "poses-41ab5d509b4bd52bd2fe.json": "41ab5d509b4bd52bd2fe26178119c04938c4e653b127f046082925ee5913ef89",
-  "poses-44b3e78c8729a5e76a73.json": "44b3e78c8729a5e76a73260d1eb58721efd5f72cc3c5a4e5d1b86dab92a79823",
-  "poses-530e01bad4ba2226bbd6.json": "530e01bad4ba2226bbd61dd38f174c667440cdaadf6af809a703e35a649115e4",
-  "poses-66acdf1f8caa2789737f.json": "66acdf1f8caa2789737f14f980f7a620691a99c39fa9f32b59fc13b1b080e7fa",
-  "poses-694ef5c31fee5502119a.json": "694ef5c31fee5502119a7ff203a586e97be0d4e862556821e85de49600133944",
-  "poses-6c83e3593b7b21602ef7.json": "6c83e3593b7b21602ef750c456a2b630d03ca76fc85c43598df11fbb14cfee17",
-  "poses-6f87fb0750d8ea16b736.json": "6f87fb0750d8ea16b736c48e4450d796ba9534c6ea95637263a4efc5e54e6d2c",
-  "poses-6fc703a051aa12cb2f08.json": "6fc703a051aa12cb2f08b2035e03855f284053abd742b1c35e80a2008478cd31",
-  "poses-703b5312fa2ede065fe3.json": "703b5312fa2ede065fe303a4329d7cd73749b094d680d51f412407f568e09e24",
-  "poses-714301a9c0349e0d3c73.json": "714301a9c0349e0d3c73e763bcf5b4c49d2d6848e87ff3e1bfe14d9d34caaa08",
-  "poses-740c9a67ae937f0cb52e.json": "740c9a67ae937f0cb52e4cf1cbd0080f7b378f7c023c9454db3bd2a9270d31b6",
-  "poses-75ca0592002356338f47.json": "75ca0592002356338f473e79d85e3f225330ef43236ed5413ae5bc7143e350ea",
-  "poses-784c9d748dc4cf3c0c27.json": "784c9d748dc4cf3c0c273e52fb882eab0daf74dd939252cf535ea705a156e34e",
-  "poses-78f9383ceafd5d2a5f3d.json": "78f9383ceafd5d2a5f3d35a6c17380f331663c8da4a5c390b9de103f94f9b288",
-  "poses-7918c755e6900e423e96.json": "7918c755e6900e423e96e8c89606457895c033d123019b81f55cd9892c52af68",
-  "poses-80a96d8c77fd8c00c379.json": "80a96d8c77fd8c00c379a7d6d5d3fa73ff3190f6af376a02319bc91e67ecb3cd",
-  "poses-8563e464a4ddebe3e009.json": "8563e464a4ddebe3e009b8e8f75698eee3df1b31e1f05b1afe25b3580a1a4b75",
-  "poses-8cc6b0be33f81a608bc2.json": "8cc6b0be33f81a608bc226a6cbda288274a13316a782de951512ab1bf3fc8e15",
-  "poses-93069cfc0e4165a95f01.json": "93069cfc0e4165a95f012cf8dfc32fa40889539c0b8461a85acbe0ff10c7cc26",
-  "poses-979fc74d8ada7fb44b34.json": "979fc74d8ada7fb44b3438fcb79f44eb31e56d366f1f79d589708b67562e80e8",
-  "poses-9a67742f6662d74e9965.json": "9a67742f6662d74e996591e198f0ae86864a81d71ce40cf7e88939c5af7301d9",
-  "poses-9ee2e5f7514992cc56f5.json": "9ee2e5f7514992cc56f56cfb55321ed9cdec19453a22e41260dc58f3e51dc6e1",
-  "poses-a143b81f1dbf20b206db.json": "a143b81f1dbf20b206db4faeb447288a33be63dd486c89ceb711f1bbde32902a",
-  "poses-aa97a9d950b034a9f31b.json": "aa97a9d950b034a9f31b5d1a2202dfe673cb00fba26307d5b0a765bc1cd2558a",
-  "poses-affc7fae4e92606a506f.json": "affc7fae4e92606a506f7926fae65772298eec631b9cab8f065ff1327a364aca",
-  "poses-be6740ac5797e7cfe24a.json": "be6740ac5797e7cfe24ad4385b16764f5cddb5f24cfa9d6dabb4c1b421537c22",
-  "poses-c47cf55728eca6d7dbce.json": "c47cf55728eca6d7dbceaad2cba0164b13128a8a8f1b71e017b1bc3cfa232918",
-  "poses-c577643073a85f3cca0f.json": "c577643073a85f3cca0f0e6a1e397497b9ac7ad3954f98216ae145a15b3fd77d",
-  "poses-c69ef0cd40038b4c769e.json": "c69ef0cd40038b4c769e241cb31c6ae26d78fafe460aec3c340dd23e25337335",
-  "poses-c9024d359952b6038afb.json": "c9024d359952b6038afbbd0def53f41fbf6826c29a7cd3dad9fe42d8e4b4aa30",
-  "poses-cf8bbd81b9790f09def4.json": "cf8bbd81b9790f09def4a60d2268851275e5c2d87dd3036e84b9a74832de7d47",
-  "poses-cfd0492bcea7b033dfc0.json": "cfd0492bcea7b033dfc026ae160cb6ff6e2b5b0e9722990bee29442b7452de3f",
-  "poses-d0f80874933f29a70aa5.json": "d0f80874933f29a70aa57fbdba33e6f3b3e8d2932fb97911a36452ac7c74ae28",
-  "poses-d2b336e2a0ccea8a6c17.json": "d2b336e2a0ccea8a6c17448cffb47acb8583ef8e81755ff830c55f33d7f5be19",
-  "poses-d38f667763a18c695475.json": "d38f667763a18c69547568aa33d39cceb4d5525e801d64561f88fbd9ed5d1cc8",
-  "poses-d5471dad298c657298f8.json": "d5471dad298c657298f864d9bea684eeae5da508bda85448e232769d85de831e",
-  "poses-d5a05c7cf1ea093d8c65.json": "d5a05c7cf1ea093d8c65f7d7b22d34acdb3684b1c9e08c25cb7ddc40999245b1",
-  "poses-dd623de254952fbb564f.json": "dd623de254952fbb564f379fde5625de83b1f62b4c992e17a4e8a4798d18ec0e",
-  "poses-e18410c52d716fa7629d.json": "e18410c52d716fa7629d6a7c427e7a36e81f828ed7a34790b211f7c6ae7cb516",
-  "poses-ef16027dbe9c690da37b.json": "ef16027dbe9c690da37baffa114b1f2096a017765c08343d1777157290d0db0f",
-  "poses-f02b1ce466f617723a05.json": "f02b1ce466f617723a05080137ff0b7991012ff3d796866e4a0f72377ffdd50f",
-  "poses-f1dd53192e44b4cc889c.json": "f1dd53192e44b4cc889cdc34f1c1394fd91ce7b1b392c893bf535dc8122e915f",
-  "poses-f39124d6800741910513.json": "f39124d6800741910513c07422a2d504be09214fd672342c165ace55e27442a4",
-  "poses-f4f2b21a7cef2b2d95b6.json": "f4f2b21a7cef2b2d95b6a48c5857f795b6598ec94310a63f1bb0bb59a2c7a81f",
-  "poses-f506ffd3644620d57d3f.json": "f506ffd3644620d57d3fecd78b3f566dc37199628b097e58ac0a27c846eac523",
-  "poses-fc17c700d75daef20596.json": "fc17c700d75daef20596d3ed533439879ddf238feb184c19f97d43fcfb5c66ff",
-  "poses-fc534147c354c7a19bdd.json": "fc534147c354c7a19bdd04adb036c270cc71902a891aefb7ea8d8b84a90f546d",
-  "poses-fea5ccf40fbd2de84132.json": "fea5ccf40fbd2de84132bb1029d28855ded8ce889a9c94c12ad4bdaff5311d71",
-  "poses-ffd0863c7a8a3d79013d.json": "ffd0863c7a8a3d79013d1a67366ad548535e907d38b2c89d25fbdcd4f9ca32c4"
+  "poses-03566bb49b121f460767.json": "03566bb49b121f46076761bffcbae296ce739686121ed15d07203e9a45eaf631",
+  "poses-045c71ffd0215e49b582.json": "045c71ffd0215e49b5821d85de052369908bf009f3d65359e3443081609043ce",
+  "poses-045dfbb5210c11d95e93.json": "045dfbb5210c11d95e93b94e3ac52ff448e8e72e5d620db4332f892ec406f639",
+  "poses-04e462c505ab20288c0a.json": "04e462c505ab20288c0ad3628feccf8089c97cc04f76905b98d17d25ab754558",
+  "poses-083e57a0a7a042002616.json": "083e57a0a7a042002616438d61db0cfcf6703ba1ca9fe7fee30948f2741d528f",
+  "poses-09ab0a0cf1f12a8420ec.json": "09ab0a0cf1f12a8420eca4a16df2602c933b0a30e64c6a1eb38728384e9f8f72",
+  "poses-0e60fc681e5f1b76e036.json": "0e60fc681e5f1b76e0369b58f40afe8160f88de4ad6266160e0a1ce1ee614fa4",
+  "poses-108a6e3f6623a0f437be.json": "108a6e3f6623a0f437be44ef0a4579c6294da3f650977fb5b2d8f105674f88c7",
+  "poses-10c86945fc8efd2805e5.json": "10c86945fc8efd2805e521864f48ee808d193c7d538a2a959e03c2f128f064e9",
+  "poses-11f03674ac9adb0d6de8.json": "11f03674ac9adb0d6de8301f075395cb018f852ad8c383edc9928db77027bd85",
+  "poses-1259d660bf9da4eba61a.json": "1259d660bf9da4eba61a3f9be5668fc48d8f5b7185dfec794c39d0215bff4c4f",
+  "poses-1399386866e8fa3a870b.json": "1399386866e8fa3a870b5b8f99aa958b0a2814263b08d7f149a6b02082be177f",
+  "poses-14e1c9d9c48e0b3a2368.json": "14e1c9d9c48e0b3a236824192ec3dad9bead826558bb55911c0e01d920ce7506",
+  "poses-15835fec3e0aa8cbb281.json": "15835fec3e0aa8cbb281970f75ec3084fb2c6b615f87f85ed10b1af153cafec7",
+  "poses-160ae7e7bfc6c7822048.json": "160ae7e7bfc6c7822048061043b07988da329639cb184a9957e0241e4b1c9975",
+  "poses-17ab76b645527b51ac3b.json": "17ab76b645527b51ac3bab855f89d1e108c98666e6f0b9b42ee955b48a127063",
+  "poses-1848fc2a807ddb8321e4.json": "1848fc2a807ddb8321e400242283273a52045e9d01441ee161659453aadde41c",
+  "poses-1851214cc19337542a2c.json": "1851214cc19337542a2c97e880c1c5a0ae8400bea50b2d1b503ee7178a76505f",
+  "poses-19159d82ef163d37e74f.json": "19159d82ef163d37e74fc9f3d0082dcc1cf5b935318f3fdf14649a759a721d33",
+  "poses-1999ee5326cbce91ccdf.json": "1999ee5326cbce91ccdf1b2b544e73518bd05b5db4b4288d3a2d142c1071031a",
+  "poses-1a118795f8ef2efa6211.json": "1a118795f8ef2efa62115970873263567e4941bdf39223cd3292be08d4758c47",
+  "poses-1a4194c4a734b80c5736.json": "1a4194c4a734b80c5736fc9ad0a078d8080aa5f4b8c08b124a113b6e8c238a40",
+  "poses-1a5a73a06b5e27bd3917.json": "1a5a73a06b5e27bd391753390eda653425cebc30007bfa94c6a97c9a45995751",
+  "poses-1c122a0c33384eb9bcad.json": "1c122a0c33384eb9bcadf0db4886c1b5fdb3970f51b32c94eae2f01eeb7a45d9",
+  "poses-1fd4bce10c84a3c83c05.json": "1fd4bce10c84a3c83c058c2361df85ef5c50f484cbcb99f96aadf0d553d2bace",
+  "poses-20b5597a967f3919c836.json": "20b5597a967f3919c836c96427505118ebeaf3c1b989296e620548637c92c740",
+  "poses-2456dc5fe959023249a2.json": "2456dc5fe959023249a2e7e49ffcaca4b83f484cd3f572cd356f5dc08b0653db",
+  "poses-25dea446b5d48f50720e.json": "25dea446b5d48f50720edef1d42a996ab7d226d92813d260ef5d7945bc5f52d5",
+  "poses-283821af63457a37b19b.json": "283821af63457a37b19b7d11112c9d5829e768026f04327a02852bce56fd8504",
+  "poses-284cedfdae33b254de1f.json": "284cedfdae33b254de1fc9df73b6f653a4b25378700bd4b9699cac0608824aed",
+  "poses-28529fce65e24c2e48fb.json": "28529fce65e24c2e48fbf9055ed2d7633a8abe772976b238bb9ab0a30aa2dcbe",
+  "poses-291ad2326d97dd3b4ee1.json": "291ad2326d97dd3b4ee100ce90f64e48b3ed92dfe03a4cdca4f46214f4d45918",
+  "poses-29fd34f7f925e62b293b.json": "29fd34f7f925e62b293b90beb07dccd826f756796b28c4eaa221edaf1a58e06f",
+  "poses-2a0d3e6769b96a0a5d51.json": "2a0d3e6769b96a0a5d51ab943c592689d78ac88efc11885f03aea8a914141eef",
+  "poses-2a83950335915f441808.json": "2a83950335915f44180809ff7733dbbcd22105c3c386c71c79115733bc74d74d",
+  "poses-2ab2eb578b36296a6017.json": "2ab2eb578b36296a6017e813a87f722516c57125913de47c3453ccbd5773d419",
+  "poses-2c1677b5e0ca395be61c.json": "2c1677b5e0ca395be61ce13c4e068c6a100a4762308d952c972b864b074b9ccf",
+  "poses-2d1caccacf7df006b726.json": "2d1caccacf7df006b726ad5186a9c2567a16f079bc0f80710491cb114858f1e0",
+  "poses-2e49491dbdd84ce451cc.json": "2e49491dbdd84ce451ccc794865a29f9828af0e8a0de2ca73864935f7380bb75",
+  "poses-31c73b3cde056e082149.json": "31c73b3cde056e082149de71d0c92082042b2b3d5164de752e1401bcb5bb04b3",
+  "poses-34f81a9bd8445ca1900e.json": "34f81a9bd8445ca1900e5cda05bd665ceff35f022462904933f87c80bcb8173f",
+  "poses-36f0c3eaa7646e330422.json": "36f0c3eaa7646e3304229031311deec6d4fc7c2b557ae89b2ab02d3317065608",
+  "poses-37306ca08ace8dffb6c0.json": "37306ca08ace8dffb6c07d8cdeca26e3ee3a1c44d1fb84b73c474a5d7dfa838d",
+  "poses-37f56ad27558f9a9d74a.json": "37f56ad27558f9a9d74a815e04609d515f9ad00e29a7d48d230d9c4c43fd2def",
+  "poses-3898472199fa633f385e.json": "3898472199fa633f385e8cf640692e6cef0ec9ec3908427ee869a1e1b8d92c3d",
+  "poses-3b6a7a93307182ab1f23.json": "3b6a7a93307182ab1f23fed1d9ab31a314b6e2379bec025864fe5bebe9354eec",
+  "poses-3c45885b5e54c01b3c56.json": "3c45885b5e54c01b3c5654559da7956d05cd1de3f2a56f649a9370d6e85e6321",
+  "poses-3c7537bb602ae93a79d0.json": "3c7537bb602ae93a79d03f425255a07da6260683e78af5b82ea3f00cd5c574c1",
+  "poses-3d1ed880b79e4df3d08e.json": "3d1ed880b79e4df3d08e5bb78d0a1381620ede83eb13a98d32fa7e7f2c9368a1",
+  "poses-44b0abbabc77b506884b.json": "44b0abbabc77b506884bd22fb8a2148a9c487444526153156e8132dc1c7614c2",
+  "poses-453d9a828a7961bd268d.json": "453d9a828a7961bd268dffef8bd165494d38cc608c930837f681f831866e19f7",
+  "poses-46aec43e50ca6daa8992.json": "46aec43e50ca6daa899285f1fa01454dc03de041e5a61ede4735c952298147d2",
+  "poses-4a3c3a6d48018a76c6bd.json": "4a3c3a6d48018a76c6bdab8748f6f3142682e13ad331911eb7423f70e897ebfd",
+  "poses-4a744ae2b062c80f4203.json": "4a744ae2b062c80f42035ae1c13fab3e88a2728303b099d7605bde9816ad66f4",
+  "poses-4a9632df2fd23517031d.json": "4a9632df2fd23517031d550acab22028e9cdac6f4e2e62099ca81806d5d69c0b",
+  "poses-4c0668122d5614558c07.json": "4c0668122d5614558c0791477734a04e8423364606367e38ef97840c401feee3",
+  "poses-4c7b617757209254b77c.json": "4c7b617757209254b77c90930f3ac12a5c86821751148fd3d0054ac778069cfb",
+  "poses-4c7d7999c6c1c1a99ee2.json": "4c7d7999c6c1c1a99ee2c3926104fa3d23a777ca49cdd86c1fe621b332a68b3b",
+  "poses-5097f51e0d74db5baea9.json": "5097f51e0d74db5baea9bf00a7706f9395c11d00b39a1a3f8a25866ec8782848",
+  "poses-523fdab2ef914c356613.json": "523fdab2ef914c356613ba5371f46cb9f2b4c6a79c5c0b45990fb2544d4d01ab",
+  "poses-551ce6410f73bf248bc6.json": "551ce6410f73bf248bc68b1c689c8d5a72416db890126998dc8a0de4daa54221",
+  "poses-5671ae02947e4382d769.json": "5671ae02947e4382d7691d2b4a77be8e56d5a8f1792139172b4dfbca6de2bfd1",
+  "poses-56a4f2e7ffec26f1380d.json": "56a4f2e7ffec26f1380df46da812333122530ea2e8b03477d86e2409e18ee282",
+  "poses-594b92cabfda156698a5.json": "594b92cabfda156698a52434d4c081923ad266b5316483c2aa940e757d0a1502",
+  "poses-5b52d669eebaa9c86723.json": "5b52d669eebaa9c86723b6149e2219526a65724f78867e77c24af22f00664b60",
+  "poses-5ef7107b2613b88007e8.json": "5ef7107b2613b88007e8cb473810d3fd9dac4b72f2ca830db923d38451821c67",
+  "poses-61e6b4cba8b5394fb18e.json": "61e6b4cba8b5394fb18ef4bb657c684b9caad25f491ae3e9ab8002a4e1f08b0d",
+  "poses-632fadcefee15b9f87a5.json": "632fadcefee15b9f87a584a499f50b0a266bf970539d612b71f71213de9051c2",
+  "poses-646ead0babb236fd0d84.json": "646ead0babb236fd0d84b1de27760fdd9fe9349863895820ba19d3e5b308a4ae",
+  "poses-65f918baec3c6fbc64b2.json": "65f918baec3c6fbc64b29ed7db5853f10e17aeddf8179bee847a01445f510622",
+  "poses-675e1c346cecc50e2433.json": "675e1c346cecc50e24338c6a00942621cbcfca1e2a4e9fd6c0e3339e50ccc4da",
+  "poses-676dd4526d1137a2dabe.json": "676dd4526d1137a2dabe76776616d78e2d1bc32fc006ff1c20a355479b939591",
+  "poses-67cf9d033d3a5746625c.json": "67cf9d033d3a5746625c1a281ee862847cdc7d09a70654c63569539983d20c98",
+  "poses-6968b35a59b325c5c42f.json": "6968b35a59b325c5c42fb059d4dfa515f589af8c658794e19dcff9cd24daa973",
+  "poses-69f16954a8195536efab.json": "69f16954a8195536efabe58b952a53ae7ad43d0651ed69d3c0fc98c3261a4cfe",
+  "poses-6b3ff26720d6918156a9.json": "6b3ff26720d6918156a9b1b7d5b205d34a999474527a0f6deb863bd05d5f68d4",
+  "poses-6bdd4247a4b213624622.json": "6bdd4247a4b213624622c7dff7262124ec47adae42c0926622631f6fc03e072b",
+  "poses-6f43ee117b1382f857d5.json": "6f43ee117b1382f857d5f9883edb8884c08ae9e9dac6376f13d77dda5f9ba6de",
+  "poses-6f93c7c88057bad41861.json": "6f93c7c88057bad41861c0dac9c44e611be58cab5b8beaf0b0abb9099371f6bc",
+  "poses-70354f3a7bb86c8d5d55.json": "70354f3a7bb86c8d5d551a6143894f2445b081f2a463c030483def619067079c",
+  "poses-703d379484cb213c7763.json": "703d379484cb213c7763931d02c22471450d95a382115e50a3b8355cc097685e",
+  "poses-7378559c120116586155.json": "7378559c1201165861554749841809d79f2931689e25530d34ddfba9ca02fbb4",
+  "poses-7450b2f7b2bc343854cc.json": "7450b2f7b2bc343854cc5d91d3b773639f569cda3da1b8fb7fac09ef3a633b86",
+  "poses-7469be86ae7cf76f5e92.json": "7469be86ae7cf76f5e92040e10846ce6c767ee630f22414bcbe7f272c387648b",
+  "poses-753c6fa8660b79c88a61.json": "753c6fa8660b79c88a61a6263536ec798c5b2b07357ab63715a8276a6ea037fe",
+  "poses-7632c0296cee8d07778e.json": "7632c0296cee8d07778e7d3b7c86d1c9985f72c3260035ed9e30eb7a5774920f",
+  "poses-766434ee7e3bf19e4737.json": "766434ee7e3bf19e47378fdab3d41c2ee0fab4588256b2460667a50403a81967",
+  "poses-783c0b57644c40cbb295.json": "783c0b57644c40cbb295dd6928b71eb9e293d3f0e0539ad64838ccf1077fa54a",
+  "poses-78dcbc9439ee9cbc8944.json": "78dcbc9439ee9cbc89442041d1b5057da1279a9016cc2c2ef3cd02f11f0509fd",
+  "poses-795251fafd567628ba5c.json": "795251fafd567628ba5cd2a4657a5997d3b4880b5ea9fe40f405daf427db887f",
+  "poses-7dea43a253c17b0a9c6c.json": "7dea43a253c17b0a9c6c7eb8baa84d85fcbf6ba3e2419926f312ccde0d821c6a",
+  "poses-7ea68c272214d9874372.json": "7ea68c272214d9874372c8c68f1274aa5e7dcc765aa3ece1a5398bf01e2e8e49",
+  "poses-7fc32197b9ebbb07be09.json": "7fc32197b9ebbb07be0913b6d6681043df09c0ddf66ab1d36248380d90fdb464",
+  "poses-806616bd41b82ae4e778.json": "806616bd41b82ae4e7786b1333743be413d05e281e4a978fbea414a374a94560",
+  "poses-8288fb4d717975784801.json": "8288fb4d7179757848017243130ebc168be3ac9b4cdef5077c4d403d78db7b84",
+  "poses-82922a45a0e86f9b38a8.json": "82922a45a0e86f9b38a8ec69b5a984418197d899ea7f6c597f65d2b211d459bb",
+  "poses-82a1b14606eb961f87fc.json": "82a1b14606eb961f87fc367823bd63eca1f3e217953dcac3d32c4ec0667ebc42",
+  "poses-839ea4229d22323c8fa5.json": "839ea4229d22323c8fa512503ca6a03ec854b4032438a2426a2f2b75eaeb2357",
+  "poses-85477e00a40460ffd995.json": "85477e00a40460ffd9953eb75aae925aae5096c72e33c15906fbdbe5dbf4a0c8",
+  "poses-85deea4b715fd4500535.json": "85deea4b715fd4500535cec18a2dc65d60c62cdc1237114e087bffbaa38feaa1",
+  "poses-885407a6a4945a4cd1bd.json": "885407a6a4945a4cd1bdbcd878826d5f07fdef35481210aa4f223fc5aefe1633",
+  "poses-89873d3ae2dbdc426c1c.json": "89873d3ae2dbdc426c1cff7ecd3282b132fabfe38a09ee6bd325cb4eefb620fa",
+  "poses-8c0d131b75f8a88576b6.json": "8c0d131b75f8a88576b64f09274fcea859943d6052924496da9b5bf99058dbb5",
+  "poses-8df87a5f2b18326a9fae.json": "8df87a5f2b18326a9fae4afd00c66cfdb2f54f2a34076ed7a2772bcce0b73063",
+  "poses-8e8a6ffc028f83a0ee8f.json": "8e8a6ffc028f83a0ee8f806e42a69e9f4ec5adb0747aa8b2a12078e09214fd18",
+  "poses-8ea6a074e3071a6086f1.json": "8ea6a074e3071a6086f1acd48c069c2ed650777fe461019d734971ed8917716f",
+  "poses-8f2808b79fd96316bd2d.json": "8f2808b79fd96316bd2d2695475cc6fb6ffbafe4e3dc4385df410fadf55600a1",
+  "poses-8f8a2b4778fb569849f2.json": "8f8a2b4778fb569849f29ca881ae2376683c913e543aab503a72bf00dd1a9b20",
+  "poses-8fef5f8f894bc7d9e40c.json": "8fef5f8f894bc7d9e40c2e905de75ac73faf503fb4dcb8f305c2f43d3564114f",
+  "poses-912313c8dca5d72beffa.json": "912313c8dca5d72beffaebf4c6570c1e80fcb11e58891592b4e5d58d1fbea6ae",
+  "poses-970bb9c1fb7ded65f6fb.json": "970bb9c1fb7ded65f6fbaeff9a553eb74a1c44b2b43e0e257928a4b1014f9f6c",
+  "poses-978d69d3cfc90037d7c3.json": "978d69d3cfc90037d7c3495ffa79ccad266a340d94decefd2921b02855628ad7",
+  "poses-97b061f7c74e8771cfe8.json": "97b061f7c74e8771cfe895695f9c6be9d94fc1b6a287ac71acd186b0c0ab9e3d",
+  "poses-9aa5d9408807c3b2ed51.json": "9aa5d9408807c3b2ed51dbd96f832f6ea4c4439fe2f11a21e6cdb5808cb826f5",
+  "poses-9ab722d9a85dd361e3a9.json": "9ab722d9a85dd361e3a9ba2585c166fc9a4522fd39e5fd1c6909e4d18da75ac2",
+  "poses-9bfabcd5ec4d1a3ff14b.json": "9bfabcd5ec4d1a3ff14b85a6dabb82053acbc92e96aa4b05eb23339c1c242a99",
+  "poses-9c0641b710d18fbbbdba.json": "9c0641b710d18fbbbdba8b936021059d90d919ecfb638d66533b6f02959890da",
+  "poses-9c0f91ea1265db52156b.json": "9c0f91ea1265db52156bfc0d4d8e3e2fcf52efebf2a02ac0ca4befff9af5977e",
+  "poses-9c645912306f4f861cd8.json": "9c645912306f4f861cd8963e74eed31809baa05f65592676129e4aaa41e7ddf7",
+  "poses-9ce0f9e7dea81986555c.json": "9ce0f9e7dea81986555ce4fc110ecd18f0ca7ac39fa2de9ae4e619dd9598bee3",
+  "poses-9ce3c3268783e7aed5df.json": "9ce3c3268783e7aed5dfa86adb60294381ece91b7ec8a56ff064568a0c3cf0cb",
+  "poses-9dc25d52b5b35770d006.json": "9dc25d52b5b35770d006894df1435ad0ce590d71c35d723571a45a32c71a9a52",
+  "poses-9ddc7785cf644ada8693.json": "9ddc7785cf644ada8693d9b079418da89bc1fb805af4e5f39e1da4d716a4aabe",
+  "poses-9fbb3390c77b5fdb0290.json": "9fbb3390c77b5fdb029053e5e65c01ff6fd4f098c0945cde47c20cc0c9b9b2f0",
+  "poses-a09fb7e815f312a72580.json": "a09fb7e815f312a725801e3c2b41bc80c810a9bdd30c7df7ea738e5c8bc5c11d",
+  "poses-a192125966dd38863dda.json": "a192125966dd38863dda907951be5185e264190d5e4dddd78683d5aeacef5d1c",
+  "poses-a62eba154d5453bec53b.json": "a62eba154d5453bec53b9d0bd9ff88532a7013cd3c5cafac58edc9d6ab0f8bf5",
+  "poses-a71c9f6f2b6f9cabfd14.json": "a71c9f6f2b6f9cabfd14e4e0d3901c0c6e0544d8ef1908286ea161d0e9caea92",
+  "poses-a7c1714fcc055e583ca5.json": "a7c1714fcc055e583ca5ef672315ab9ee201a4b795a57f4600fb7ffca9c384ab",
+  "poses-aab2caedba235b01d18a.json": "aab2caedba235b01d18a17891ab05dd80cc1051a016df4f771338bbd27e428b0",
+  "poses-aafda2f4b05c88cedd87.json": "aafda2f4b05c88cedd87aadb647c520d4b2ee751fba200919b7f1a258ef0ff33",
+  "poses-ae59133a84bfca15ee99.json": "ae59133a84bfca15ee99b4114e09992407e8a0eb2c895b1aa419b60ae63d5f68",
+  "poses-af1180f341d40443b4b1.json": "af1180f341d40443b4b106521f99fe40a29d14fe5974219d52d249d831adaafb",
+  "poses-b423d5c55f1367541edb.json": "b423d5c55f1367541edb3d2fe845da3da82409f395326da2abd8cb68aebb3963",
+  "poses-b68f8684252c2bacdbd0.json": "b68f8684252c2bacdbd0d757a2a277aa7262da688065c894f585d77398e97fe6",
+  "poses-b69cb582eef4188a6024.json": "b69cb582eef4188a6024a9c4225801e95a135438455e00868f2c2a3c2243f069",
+  "poses-b6cc83904def95606816.json": "b6cc83904def95606816edde996535d5fbb63e01c9ad7dc1e9b4daaa1ba4873e",
+  "poses-b84bc4281a8e5e67e6ed.json": "b84bc4281a8e5e67e6ed7c185f1e290027121d343e77954031eb6f70b566c1fc",
+  "poses-b90e560dc4cd1fd46a1e.json": "b90e560dc4cd1fd46a1ee0b17e1bc85eb5be38f9a0eb4812319855be419c0e40",
+  "poses-b9180526c15ee0d3f10c.json": "b9180526c15ee0d3f10c2dc1b96046e84ef0750f986952d5499d0e5618cd1b95",
+  "poses-ba32e686174ec45ddd78.json": "ba32e686174ec45ddd783ff043c671478560c2a490f2c09a274020ce732c0e48",
+  "poses-baf0d773738314b9962f.json": "baf0d773738314b9962f9e3d6e31b3d7962e4ae60266bde37ba577d5c5df7199",
+  "poses-bb7ce8a3c2ea20d71217.json": "bb7ce8a3c2ea20d7121765e592127a8766840c18782587f51ac0a97bc6b13583",
+  "poses-be38717b2a921ffd402d.json": "be38717b2a921ffd402ddcc44e2614d4d4809ed9c15ab182f8dec993b07ca383",
+  "poses-c0ba0992bb70070de7e2.json": "c0ba0992bb70070de7e2cdd6617fabb5671a1f88d29f7ccf42a51853f6298c95",
+  "poses-c0f6dd00bf52dc99b660.json": "c0f6dd00bf52dc99b66028272ea58b5b9c91e449052918c36dfa559ba363f7e5",
+  "poses-c10ca43b94cfbe9a3f94.json": "c10ca43b94cfbe9a3f9401def6db9ac93afdf1cf82f89680380e13e442d7ffab",
+  "poses-c12444a8de5e03d2a17a.json": "c12444a8de5e03d2a17afa9b42b2253a22e03d3067ea108e719d7112b6062023",
+  "poses-c5415a1f5c36c3293ca5.json": "c5415a1f5c36c3293ca5df914ead4f40d0b78a4a3abb8fe8e0f9541f5047be43",
+  "poses-c5695ae8c3a3a814d625.json": "c5695ae8c3a3a814d6250fa47eb496d48b67156c9da7645a5a52dad4fe5214b5",
+  "poses-c72e278a487ef20d9e6f.json": "c72e278a487ef20d9e6f5ed5974c2e58c2414f340875ec941fa04e5f99c2a999",
+  "poses-c764d49bf7bd9b0e1b5c.json": "c764d49bf7bd9b0e1b5c1818f230ed21c4319be6804d5d24c61824020243c4a4",
+  "poses-c8defb950341281cc3f1.json": "c8defb950341281cc3f1c8838eaf3380a1c714e517be7bc8e9d3ced24ef6fa74",
+  "poses-cab39653b06c7c6faa23.json": "cab39653b06c7c6faa23397f7491256d68234a5832b067bcb24a2ec658a1af35",
+  "poses-cb3cb328bee53cc2fbaa.json": "cb3cb328bee53cc2fbaa75296cae7af9a7675cf264b0422dce6a4b3a24e8ed5e",
+  "poses-cb65d0a17b04e78a5e4b.json": "cb65d0a17b04e78a5e4bc08ba6d09a8b343e1b264b73630c6f12b8f39d5a6a25",
+  "poses-cd09420b8ef1e86e1905.json": "cd09420b8ef1e86e1905dd2d7be8bd49b3dd6df3dcf1f581f9ac7c4620a2db3f",
+  "poses-d03f6a6717c9dc548949.json": "d03f6a6717c9dc548949d2a547b01f200306b5e063828c048f16394ffc6582c6",
+  "poses-d0d12aefd3d0724f04b8.json": "d0d12aefd3d0724f04b83c1076e6ea93b187584af2eaefe18cd5394be19a6121",
+  "poses-d240109932df59a1bc3f.json": "d240109932df59a1bc3fd846a679a9ddb95f04fe006483b6da114830c2f52d64",
+  "poses-d31abf31dfaa0b0252f4.json": "d31abf31dfaa0b0252f4434b10ef31025ba8d5ca2fca6158b1f9530a0c1ef50b",
+  "poses-d40ec81d20eda2a701e9.json": "d40ec81d20eda2a701e991a328c45a6c9b068370cf5e78a28456203efd3b3e78",
+  "poses-d4a83a0fb71fbdfba2b4.json": "d4a83a0fb71fbdfba2b4288d404e8a01258344f1605511db405e3a5fbaac85fa",
+  "poses-d506404d4a235657e25b.json": "d506404d4a235657e25b84f68ed01c84c31bcad3874457595aeddf6f4e629138",
+  "poses-d72560de9607cab97833.json": "d72560de9607cab97833edff6a7d7e8380ab2b3027f1f31527659fbba283aa43",
+  "poses-d74ddd1facac654fd2b0.json": "d74ddd1facac654fd2b08b4cfb34bac5113858945094d29217b560aa95750605",
+  "poses-d8078383cd12c7860196.json": "d8078383cd12c7860196cfaa5ce73f35ce7402c5a4e64cf90e3a8efe98e1bead",
+  "poses-d857ef51cbd4e0eaf892.json": "d857ef51cbd4e0eaf892d303c03661aa0cf435817014f831726567cb9fb47be0",
+  "poses-d9e380265e9fd4614d92.json": "d9e380265e9fd4614d928d7244b895bf2ca9c37550673bb1927f38ee02849fa5",
+  "poses-db4c8af1c9b6f8957127.json": "db4c8af1c9b6f89571278e3914a490d4324c4adee5965d08a4243f5609856c3e",
+  "poses-e0288b064bfb1499db48.json": "e0288b064bfb1499db4860b4ceaf9bb0be5558b7c1ccba837720aeadc6e29b8c",
+  "poses-e18dd5d13fd6207bddf5.json": "e18dd5d13fd6207bddf54349f4566ba7dfc74ea0b6e9a0804af565af1afee3e9",
+  "poses-e3311a9c3f4c07ccf759.json": "e3311a9c3f4c07ccf75997f46df3825fa8d71dbf65e7f25e7dceb688921710cc",
+  "poses-e45c2cab9d2082f27557.json": "e45c2cab9d2082f2755766f892066c4f507214cefe066ee7c4eb7370627dbf88",
+  "poses-e499b36b0662886e3d80.json": "e499b36b0662886e3d806f1b94aafad0878db91c70fe8ccaa2263a73f068a158",
+  "poses-e4c360f72dfcc83a39ba.json": "e4c360f72dfcc83a39ba37816c6823cd0734b788e034392affaaa54424c386ac",
+  "poses-e8483be0c192f0b539e3.json": "e8483be0c192f0b539e301159b39d7a708d86cdffe9bae202795253e78daf797",
+  "poses-ea219c518b70677ad6cd.json": "ea219c518b70677ad6cda0b8105d7642c9385cb325420c37213c04bdf1d9a492",
+  "poses-edb8767f4ed1b128603e.json": "edb8767f4ed1b128603e2e801d567aaf05da0dc8f417fe06c3785c1c8ee71d5a",
+  "poses-edde904fa6a708c8f87a.json": "edde904fa6a708c8f87a17e47c949d6d428080a5ca2de39a4ddbe77e63eff26c",
+  "poses-eeefa5251f2e27948e12.json": "eeefa5251f2e27948e1268054aff187e49e0b855db4834639870f2f8d4b55d1f",
+  "poses-ef0eef6540c50347c09c.json": "ef0eef6540c50347c09cbf401d177c7a3ded372ec41a8af343353b18158f776b",
+  "poses-f0fd5b4c1af23865625b.json": "f0fd5b4c1af23865625b2853b671b9dfc233ddd2054a70eecfaaaba732f49df7",
+  "poses-f3543c8400a0f13eac8f.json": "f3543c8400a0f13eac8f891a4f3ca4d2bf325ba941a47fa2bb150d84b766cdc7",
+  "poses-f3604dabfe9021b85bdd.json": "f3604dabfe9021b85bdd0ea313febca193e0ed5ee1c9b3852ef71c772e2077ed",
+  "poses-f48457ded105d82327ea.json": "f48457ded105d82327ead730b80cc7a7556dfdb0fc295d5c78475d358606bde8",
+  "poses-f609ef4416caecd7dd77.json": "f609ef4416caecd7dd779a41fbce12c308de8fc56cdfbee872c0f92b55195b76",
+  "poses-f7bbaa29cf993fc2cb13.json": "f7bbaa29cf993fc2cb13f45beb3d50fc07851359d43966a4013355da61112e95",
+  "poses-f9fffa5389a414bc664b.json": "f9fffa5389a414bc664b8ff7f4378c7b731cccf4bdaad7e674bfd718d86d95a1",
+  "poses-fbfa4219bb6cdf8fc208.json": "fbfa4219bb6cdf8fc2083a6b8bf96ea119b2490bdd92977e07d055f467f9b42e",
+  "poses-fd795bd5e946483d7e55.json": "fd795bd5e946483d7e5500e524d3b58780e0c9f5394a6da6d6120f08419c2348",
+  "poses-fe3c2cf5de1e82d39993.json": "fe3c2cf5de1e82d39993406aa28662d10ea0b66fa71ca2b4d11946908b84eaee",
+  "poses-fe5ad0b8f100119b1541.json": "fe5ad0b8f100119b1541305549d02ae9e18d1dbcbda57062a988b1da504a70cc",
+  "poses-ff002d414cca6c95df7a.json": "ff002d414cca6c95df7ac8ea39d761a49db3992131359fbb44ced1f6d0faf693"
  },
  "note": "Native Ragnarok Online client files, decoded and composited as the client does. Reuse does not grant ownership of the underlying artwork.",
  "repository": "devilm/costume-ro",
@@ -1331,324 +2284,1148 @@
  "headStyle": "2",
  "index": {
   "base-14-f": {
-   "meta": "poses-fc17c700d75daef20596.json",
-   "image": "atlas-e2ab38ba49b87de56199.png"
+   "meta": "poses-6b3ff26720d6918156a9.json",
+   "image": "atlas-77bea300d47eec836dab.png"
   },
   "base-14-m": {
-   "meta": "poses-714301a9c0349e0d3c73.json",
-   "image": "atlas-9d85fe0b8aeb00d614fb.png"
+   "meta": "poses-783c0b57644c40cbb295.json",
+   "image": "atlas-c18f14cbf34a67257492.png"
   },
   "base-15-f": {
-   "meta": "poses-262e6112ba92d2cac360.json",
-   "image": "atlas-3da7e7e08ad1afe4308c.png"
+   "meta": "poses-fbfa4219bb6cdf8fc208.json",
+   "image": "atlas-ca3a7ff22a9727dbe464.png"
   },
   "base-15-m": {
-   "meta": "poses-8563e464a4ddebe3e009.json",
-   "image": "atlas-6bfbe6d101b4144e9c48.png"
+   "meta": "poses-970bb9c1fb7ded65f6fb.json",
+   "image": "atlas-6aa2251f713e31757974.png"
   },
   "base-16-f": {
-   "meta": "poses-dd623de254952fbb564f.json",
-   "image": "atlas-9b0ced499d1fba56c662.png"
+   "meta": "poses-9aa5d9408807c3b2ed51.json",
+   "image": "atlas-5b0f62462b75e65cc619.png"
   },
   "base-16-m": {
-   "meta": "poses-05b32793d817f4ec3dd3.json",
-   "image": "atlas-75910e8ffb5b895a8b48.png"
+   "meta": "poses-28529fce65e24c2e48fb.json",
+   "image": "atlas-636912fdb07987b22808.png"
   },
   "base-17-f": {
-   "meta": "poses-12e237923f6844997d74.json",
-   "image": "atlas-97ed8b86c4b393b98fa0.png"
+   "meta": "poses-db4c8af1c9b6f8957127.json",
+   "image": "atlas-bee07bed12e6b2bce453.png"
   },
   "base-17-m": {
-   "meta": "poses-7918c755e6900e423e96.json",
-   "image": "atlas-6c133a2da08f8ca26352.png"
+   "meta": "poses-766434ee7e3bf19e4737.json",
+   "image": "atlas-a6ddb03def553a72226b.png"
   },
   "base-18-f": {
-   "meta": "poses-f4f2b21a7cef2b2d95b6.json",
-   "image": "atlas-910aa8fd6558cb648589.png"
+   "meta": "poses-676dd4526d1137a2dabe.json",
+   "image": "atlas-fc360a07d685142e8c51.png"
   },
   "base-18-m": {
-   "meta": "poses-ffd0863c7a8a3d79013d.json",
-   "image": "atlas-0f52d1e1f88c5ea499db.png"
+   "meta": "poses-04e462c505ab20288c0a.json",
+   "image": "atlas-c41a847adb39a9b99f0d.png"
   },
   "base-19-f": {
-   "meta": "poses-d5471dad298c657298f8.json",
-   "image": "atlas-b0e9cded4830def0df80.png"
+   "meta": "poses-29fd34f7f925e62b293b.json",
+   "image": "atlas-a4ec9089842f08bb5e01.png"
   },
   "base-19-m": {
-   "meta": "poses-38511ef84ab49a10511a.json",
-   "image": "atlas-ac2107b5fb358929045f.png"
+   "meta": "poses-19159d82ef163d37e74f.json",
+   "image": "atlas-e1bb937c5b3ac8374150.png"
   },
   "base-20-f": {
-   "meta": "poses-d5471dad298c657298f8.json",
-   "image": "atlas-b0e9cded4830def0df80.png"
+   "meta": "poses-29fd34f7f925e62b293b.json",
+   "image": "atlas-a4ec9089842f08bb5e01.png"
   },
   "base-20-m": {
-   "meta": "poses-38511ef84ab49a10511a.json",
-   "image": "atlas-ac2107b5fb358929045f.png"
+   "meta": "poses-19159d82ef163d37e74f.json",
+   "image": "atlas-e1bb937c5b3ac8374150.png"
   },
   "base-23-f": {
-   "meta": "poses-530e01bad4ba2226bbd6.json",
-   "image": "atlas-0e44594b16503c3ec0ad.png"
+   "meta": "poses-453d9a828a7961bd268d.json",
+   "image": "atlas-56f93aa49f8f1809c83e.png"
   },
   "base-23-m": {
-   "meta": "poses-f39124d6800741910513.json",
-   "image": "atlas-290a01c6bae40899b62d.png"
+   "meta": "poses-c764d49bf7bd9b0e1b5c.json",
+   "image": "atlas-5dad744be392fcce15a4.png"
   },
   "base-24-f": {
-   "meta": "poses-c577643073a85f3cca0f.json",
-   "image": "atlas-066681779c9b24c5ef9f.png"
+   "meta": "poses-c72e278a487ef20d9e6f.json",
+   "image": "atlas-b86d1cfff97e8d630e88.png"
   },
   "base-24-m": {
-   "meta": "poses-affc7fae4e92606a506f.json",
-   "image": "atlas-79d299d8d8a992dcf382.png"
+   "meta": "poses-7632c0296cee8d07778e.json",
+   "image": "atlas-3287b4e0ac2256d33ca3.png"
   },
   "base-25-f": {
-   "meta": "poses-9ee2e5f7514992cc56f5.json",
-   "image": "atlas-171c1e83785cbc937e7d.png"
+   "meta": "poses-108a6e3f6623a0f437be.json",
+   "image": "atlas-432f28d1b90f30404c5a.png"
   },
   "base-25-m": {
-   "meta": "poses-2b90822f87c9a11cc2de.json",
-   "image": "atlas-07ada79e874877131eb4.png"
+   "meta": "poses-67cf9d033d3a5746625c.json",
+   "image": "atlas-29d9c7cfbb50960d3878.png"
   },
   "base-4015-f": {
-   "meta": "poses-be6740ac5797e7cfe24a.json",
-   "image": "atlas-f50d8ac0a81a5ab58080.png"
+   "meta": "poses-aab2caedba235b01d18a.json",
+   "image": "atlas-fd0b5a33ec8b6c7189fa.png"
   },
   "base-4015-m": {
-   "meta": "poses-2047f4366b073134b990.json",
-   "image": "atlas-0054d1327f6c5506d9c4.png"
+   "meta": "poses-9ce3c3268783e7aed5df.json",
+   "image": "atlas-7d5ea830f0d1dff5319a.png"
   },
   "base-4016-f": {
-   "meta": "poses-6f87fb0750d8ea16b736.json",
-   "image": "atlas-8eb34fa106ad343fd826.png"
+   "meta": "poses-b69cb582eef4188a6024.json",
+   "image": "atlas-12f41e9f4c476aa60739.png"
   },
   "base-4016-m": {
-   "meta": "poses-34fdbfa015366445d573.json",
-   "image": "atlas-9948ac11595e00c044f5.png"
+   "meta": "poses-f3543c8400a0f13eac8f.json",
+   "image": "atlas-4d0dc2a59288b0688683.png"
   },
   "base-4017-f": {
-   "meta": "poses-9a67742f6662d74e9965.json",
-   "image": "atlas-2feb95043541912b054f.png"
+   "meta": "poses-edde904fa6a708c8f87a.json",
+   "image": "atlas-2f91634a19fb4d251ed8.png"
   },
   "base-4017-m": {
-   "meta": "poses-8cc6b0be33f81a608bc2.json",
-   "image": "atlas-aef3afda5d9a1c6fc312.png"
+   "meta": "poses-9fbb3390c77b5fdb0290.json",
+   "image": "atlas-dd1d6255e1d3d81aa1c4.png"
   },
   "base-4018-f": {
-   "meta": "poses-44b3e78c8729a5e76a73.json",
-   "image": "atlas-718899516dbb8e650c31.png"
+   "meta": "poses-65f918baec3c6fbc64b2.json",
+   "image": "atlas-0f3fbcbd6ff911c25701.png"
   },
   "base-4018-m": {
-   "meta": "poses-2e09372ec8a63dafbdfe.json",
-   "image": "atlas-1e01b39b306b3a5ec1aa.png"
+   "meta": "poses-f0fd5b4c1af23865625b.json",
+   "image": "atlas-6bf0db0c80d01d369538.png"
   },
   "base-4019-f": {
-   "meta": "poses-703b5312fa2ede065fe3.json",
-   "image": "atlas-782a4847b757257a795e.png"
+   "meta": "poses-cd09420b8ef1e86e1905.json",
+   "image": "atlas-fa025b1d07cd682f0244.png"
   },
   "base-4019-m": {
-   "meta": "poses-00025a34ff332d19236c.json",
-   "image": "atlas-7fc4c578e58d51160864.png"
+   "meta": "poses-a62eba154d5453bec53b.json",
+   "image": "atlas-c7e2b1fbe70f31179aa5.png"
   },
   "base-4020-f": {
-   "meta": "poses-784c9d748dc4cf3c0c27.json",
-   "image": "atlas-508c3a3eec16a1eaaa38.png"
+   "meta": "poses-083e57a0a7a042002616.json",
+   "image": "atlas-81e07875400e2588e458.png"
   },
   "base-4020-m": {
-   "meta": "poses-f506ffd3644620d57d3f.json",
-   "image": "atlas-fb2d72fe997ab43d5efd.png"
+   "meta": "poses-85477e00a40460ffd995.json",
+   "image": "atlas-0cde132be1b887bb8e5a.png"
   },
   "base-4021-f": {
-   "meta": "poses-784c9d748dc4cf3c0c27.json",
-   "image": "atlas-508c3a3eec16a1eaaa38.png"
+   "meta": "poses-083e57a0a7a042002616.json",
+   "image": "atlas-81e07875400e2588e458.png"
   },
   "base-4021-m": {
-   "meta": "poses-f506ffd3644620d57d3f.json",
-   "image": "atlas-fb2d72fe997ab43d5efd.png"
+   "meta": "poses-85477e00a40460ffd995.json",
+   "image": "atlas-0cde132be1b887bb8e5a.png"
   },
   "base-4046-f": {
-   "meta": "poses-6c83e3593b7b21602ef7.json",
-   "image": "atlas-4a98876a73ace32cf14f.png"
+   "meta": "poses-e4c360f72dfcc83a39ba.json",
+   "image": "atlas-637ed5f9c43c3e5de9c2.png"
   },
   "base-4046-m": {
-   "meta": "poses-f02b1ce466f617723a05.json",
-   "image": "atlas-582d7fb719143385193b.png"
+   "meta": "poses-c5695ae8c3a3a814d625.json",
+   "image": "atlas-88a50494336d209864eb.png"
   },
   "base-4047-f": {
-   "meta": "poses-694ef5c31fee5502119a.json",
-   "image": "atlas-667a77f6829cb9bb3a97.png"
+   "meta": "poses-2ab2eb578b36296a6017.json",
+   "image": "atlas-b0a844ee089532dbc25a.png"
   },
   "base-4047-m": {
-   "meta": "poses-f1dd53192e44b4cc889c.json",
-   "image": "atlas-dde59e4c1ca7029beab7.png"
+   "meta": "poses-8f8a2b4778fb569849f2.json",
+   "image": "atlas-3adce4fcca22ed4faf2f.png"
   },
   "base-4049-f": {
-   "meta": "poses-17ca475e5315a5d054f8.json",
-   "image": "atlas-00f9bf5f6b537d390aef.png"
+   "meta": "poses-675e1c346cecc50e2433.json",
+   "image": "atlas-ecd14ec91e7f639c1203.png"
   },
   "base-4049-m": {
-   "meta": "poses-d38f667763a18c695475.json",
-   "image": "atlas-65611c7e99bb2b2c240b.png"
+   "meta": "poses-d4a83a0fb71fbdfba2b4.json",
+   "image": "atlas-e800e6ba91210d4a0dc0.png"
   },
   "base-4054-f": {
-   "meta": "poses-c47cf55728eca6d7dbce.json",
-   "image": "atlas-911777ce4d020c14f917.png"
+   "meta": "poses-d9e380265e9fd4614d92.json",
+   "image": "atlas-775c146ded0e841f5f83.png"
   },
   "base-4054-m": {
-   "meta": "poses-cfd0492bcea7b033dfc0.json",
-   "image": "atlas-31c013c8db145af85542.png"
+   "meta": "poses-be38717b2a921ffd402d.json",
+   "image": "atlas-65d93e24988d29a1dd8a.png"
   },
   "base-4055-f": {
-   "meta": "poses-ef16027dbe9c690da37b.json",
-   "image": "atlas-2a3c56b499f9f077533b.png"
+   "meta": "poses-160ae7e7bfc6c7822048.json",
+   "image": "atlas-b82d47a9a6e093795db1.png"
   },
   "base-4055-m": {
-   "meta": "poses-2deb060b3bfcd0271ed9.json",
-   "image": "atlas-ee1baa1e77c0b8b80181.png"
+   "meta": "poses-8df87a5f2b18326a9fae.json",
+   "image": "atlas-9a4ee9cd8289b20be2a0.png"
   },
   "base-4056-f": {
-   "meta": "poses-096b2930c56e9b6eb31a.json",
-   "image": "atlas-1d2cb135eee2c1b4aa5a.png"
+   "meta": "poses-1848fc2a807ddb8321e4.json",
+   "image": "atlas-91d94ef8de78a96a7afb.png"
   },
   "base-4056-m": {
-   "meta": "poses-a143b81f1dbf20b206db.json",
-   "image": "atlas-485d128260b91a51e221.png"
+   "meta": "poses-7dea43a253c17b0a9c6c.json",
+   "image": "atlas-731eac4283a80b5d94cb.png"
   },
   "base-4057-f": {
-   "meta": "poses-75ca0592002356338f47.json",
+   "meta": "poses-d72560de9607cab97833.json",
    "image": "atlas-fefb90e96999b68a80b1.png"
   },
   "base-4057-m": {
-   "meta": "poses-1190b367e4fa2ae1b2f1.json",
-   "image": "atlas-07aedd6646f87d6a784e.png"
+   "meta": "poses-d506404d4a235657e25b.json",
+   "image": "atlas-16edbd0b125d0522403c.png"
   },
   "base-4058-f": {
-   "meta": "poses-c9024d359952b6038afb.json",
-   "image": "atlas-5c9d657f39cc0422e45a.png"
+   "meta": "poses-523fdab2ef914c356613.json",
+   "image": "atlas-ae817482a2e5ae46cf51.png"
   },
   "base-4058-m": {
-   "meta": "poses-d0f80874933f29a70aa5.json",
-   "image": "atlas-6c797b716127c2dc86fe.png"
+   "meta": "poses-646ead0babb236fd0d84.json",
+   "image": "atlas-00950021bd6a91960f99.png"
   },
   "base-4059-f": {
-   "meta": "poses-33531bae50b033a53866.json",
-   "image": "atlas-4f5a97d8c3f68feb44b5.png"
+   "meta": "poses-284cedfdae33b254de1f.json",
+   "image": "atlas-9e01b59878ec65f40b14.png"
   },
   "base-4059-m": {
-   "meta": "poses-3085add0e1130c852cde.json",
-   "image": "atlas-01d0a51c7f837b8f42df.png"
+   "meta": "poses-5b52d669eebaa9c86723.json",
+   "image": "atlas-68ad19db42d1eb2d3181.png"
   },
   "base-4060-f": {
-   "meta": "poses-93069cfc0e4165a95f01.json",
-   "image": "atlas-13d1b7233c27d740f0ae.png"
+   "meta": "poses-37306ca08ace8dffb6c0.json",
+   "image": "atlas-a760d3d87c0571634833.png"
   },
   "base-4060-m": {
-   "meta": "poses-2852b313a2add0cee790.json",
-   "image": "atlas-86083ab7b6ad9f1572ff.png"
+   "meta": "poses-3898472199fa633f385e.json",
+   "image": "atlas-82eb9fe0320a98ac919d.png"
   },
   "base-4061-f": {
-   "meta": "poses-32d1082485a7e2a0f8a8.json",
-   "image": "atlas-f806be1122ae2a076e4b.png"
+   "meta": "poses-9bfabcd5ec4d1a3ff14b.json",
+   "image": "atlas-da9240032edded3ddb84.png"
   },
   "base-4061-m": {
-   "meta": "poses-c69ef0cd40038b4c769e.json",
-   "image": "atlas-ec44852f8e8c1a5f705b.png"
+   "meta": "poses-0e60fc681e5f1b76e036.json",
+   "image": "atlas-4b6f4ec0c1c50c84f6e2.png"
   },
   "base-4062-f": {
-   "meta": "poses-979fc74d8ada7fb44b34.json",
-   "image": "atlas-37dfe7a232fb395fc632.png"
+   "meta": "poses-8e8a6ffc028f83a0ee8f.json",
+   "image": "atlas-2b75a0a192558d8c89b0.png"
   },
   "base-4062-m": {
-   "meta": "poses-cf8bbd81b9790f09def4.json",
-   "image": "atlas-00d84e4b50dc3fad1522.png"
+   "meta": "poses-b90e560dc4cd1fd46a1e.json",
+   "image": "atlas-ab24dcfee48bbd39e795.png"
   },
   "base-4063-f": {
-   "meta": "poses-979fc74d8ada7fb44b34.json",
-   "image": "atlas-37dfe7a232fb395fc632.png"
+   "meta": "poses-8e8a6ffc028f83a0ee8f.json",
+   "image": "atlas-2b75a0a192558d8c89b0.png"
   },
   "base-4063-m": {
-   "meta": "poses-cf8bbd81b9790f09def4.json",
-   "image": "atlas-00d84e4b50dc3fad1522.png"
+   "meta": "poses-b90e560dc4cd1fd46a1e.json",
+   "image": "atlas-ab24dcfee48bbd39e795.png"
   },
   "base-4064-f": {
-   "meta": "poses-e18410c52d716fa7629d.json",
-   "image": "atlas-e81faf9e2a0777e856ce.png"
+   "meta": "poses-14e1c9d9c48e0b3a2368.json",
+   "image": "atlas-14969735f973acd686d9.png"
   },
   "base-4064-m": {
-   "meta": "poses-80a96d8c77fd8c00c379.json",
-   "image": "atlas-9e5009c4b514ed838cde.png"
+   "meta": "poses-85deea4b715fd4500535.json",
+   "image": "atlas-ec4ae6c61be062c928a4.png"
   },
   "base-4065-f": {
-   "meta": "poses-1a2a50fe5df4f8ee3698.json",
-   "image": "atlas-0ff00856a688f56d2f7c.png"
+   "meta": "poses-b423d5c55f1367541edb.json",
+   "image": "atlas-455de42831b1baf1edab.png"
   },
   "base-4065-m": {
-   "meta": "poses-3b7bca8762bd58940b52.json",
-   "image": "atlas-15b4a6274e16030f5a5a.png"
+   "meta": "poses-09ab0a0cf1f12a8420ec.json",
+   "image": "atlas-2b6f425555bca9c2266f.png"
   },
   "base-4066-f": {
-   "meta": "poses-66acdf1f8caa2789737f.json",
-   "image": "atlas-48d6a23a9e9ca4ad52f5.png"
+   "meta": "poses-2a0d3e6769b96a0a5d51.json",
+   "image": "atlas-5f2e71e47ed59cadb9d0.png"
   },
   "base-4066-m": {
-   "meta": "poses-d2b336e2a0ccea8a6c17.json",
-   "image": "atlas-1a16f92a7e53375c08a8.png"
+   "meta": "poses-a71c9f6f2b6f9cabfd14.json",
+   "image": "atlas-ab20b8c68b4cf7698514.png"
   },
   "base-4211-f": {
-   "meta": "poses-fc534147c354c7a19bdd.json",
-   "image": "atlas-35ccbdaebc6220942cb5.png"
+   "meta": "poses-045dfbb5210c11d95e93.json",
+   "image": "atlas-dd7193459fc9c48cc617.png"
   },
   "base-4211-m": {
-   "meta": "poses-1ba13c95ce6fe218a6a2.json",
-   "image": "atlas-61968da6405123154426.png"
+   "meta": "poses-f3604dabfe9021b85bdd.json",
+   "image": "atlas-6d0647e76e8dfc9392f6.png"
   },
   "base-4212-f": {
-   "meta": "poses-fc534147c354c7a19bdd.json",
-   "image": "atlas-35ccbdaebc6220942cb5.png"
+   "meta": "poses-045dfbb5210c11d95e93.json",
+   "image": "atlas-dd7193459fc9c48cc617.png"
   },
   "base-4212-m": {
-   "meta": "poses-41ab5d509b4bd52bd2fe.json",
-   "image": "atlas-6cbf5e2b6c6bd56519c7.png"
+   "meta": "poses-89873d3ae2dbdc426c1c.json",
+   "image": "atlas-1fb087f810db834c2486.png"
   },
   "base-4215-f": {
-   "meta": "poses-15aa4525e8a14b6557d1.json",
-   "image": "atlas-51106edfd959654f7300.png"
+   "meta": "poses-44b0abbabc77b506884b.json",
+   "image": "atlas-9eea83bfb65b9d82be84.png"
   },
   "base-4215-m": {
-   "meta": "poses-78f9383ceafd5d2a5f3d.json",
-   "image": "atlas-b67a26dd098b802babd9.png"
+   "meta": "poses-7fc32197b9ebbb07be09.json",
+   "image": "atlas-2ac7b57e150b34670d0c.png"
   },
   "base-4218-f": {
-   "meta": "poses-d5a05c7cf1ea093d8c65.json",
-   "image": "atlas-cc071250b9d02d240e3c.png"
+   "meta": "poses-9dc25d52b5b35770d006.json",
+   "image": "atlas-fe9b5b2383d19ff9e3a7.png"
   },
   "base-4218-m": {
-   "meta": "poses-fea5ccf40fbd2de84132.json",
-   "image": "atlas-3cff2b2c74e716ba6ace.png"
+   "meta": "poses-15835fec3e0aa8cbb281.json",
+   "image": "atlas-04668a38d18fac6e5c15.png"
   },
   "base-4239-f": {
-   "meta": "poses-1ccb9387ed3a8342e8f7.json",
-   "image": "atlas-ccdb182760e18bcd5835.png"
+   "meta": "poses-97b061f7c74e8771cfe8.json",
+   "image": "atlas-5661433c0ce76d58f54c.png"
   },
   "base-4239-m": {
-   "meta": "poses-0014ef6950eccedbaedc.json",
-   "image": "atlas-7abe57e74de18fecc42b.png"
+   "meta": "poses-1851214cc19337542a2c.json",
+   "image": "atlas-e27bc4b9ad0aa3fba4f2.png"
   },
   "base-4240-f": {
-   "meta": "poses-aa97a9d950b034a9f31b.json",
-   "image": "atlas-474bc8427a2db35c65e0.png"
+   "meta": "poses-551ce6410f73bf248bc6.json",
+   "image": "atlas-83ec91982f14870a9e56.png"
   },
   "base-4240-m": {
-   "meta": "poses-740c9a67ae937f0cb52e.json",
-   "image": "atlas-60b7262352c42125dc98.png"
+   "meta": "poses-f609ef4416caecd7dd77.json",
+   "image": "atlas-ebd19eab73e99721f052.png"
   },
   "base-4308-f": {
-   "meta": "poses-1621c7749436f9cf004b.json",
-   "image": "atlas-36328f6d43c8b30816d1.png"
+   "meta": "poses-8288fb4d717975784801.json",
+   "image": "atlas-cd6c6099ad0679f9325f.png"
   },
   "base-4308-m": {
-   "meta": "poses-6fc703a051aa12cb2f08.json",
-   "image": "atlas-13111cf9687ac05ea23c.png"
+   "meta": "poses-594b92cabfda156698a5.json",
+   "image": "atlas-685b5369b6d3f3f54e9b.png"
+  },
+  "weapon-14-f-axe": {
+   "meta": "poses-885407a6a4945a4cd1bd.json",
+   "image": "atlas-c124ae1ae05b4e4934a7.png"
+  },
+  "weapon-14-f-dagger": {
+   "meta": "poses-e45c2cab9d2082f27557.json",
+   "image": "atlas-19338af7bf3aa99823d9.png"
+  },
+  "weapon-14-f-mace": {
+   "meta": "poses-3c7537bb602ae93a79d0.json",
+   "image": "atlas-351a90cc8343d464177b.png"
+  },
+  "weapon-14-f-spear": {
+   "meta": "poses-795251fafd567628ba5c.json",
+   "image": "atlas-fa09c82d6649c0388883.png"
+  },
+  "weapon-14-f-sword": {
+   "meta": "poses-37f56ad27558f9a9d74a.json",
+   "image": "atlas-34b1b42e3ec340e6d92d.png"
+  },
+  "weapon-14-f-twohand": {
+   "meta": "poses-cab39653b06c7c6faa23.json",
+   "image": "atlas-4acf59889bec018ade4a.png"
+  },
+  "weapon-14-m-axe": {
+   "meta": "poses-4c7b617757209254b77c.json",
+   "image": "atlas-277e3277c055130614ae.png"
+  },
+  "weapon-14-m-dagger": {
+   "meta": "poses-8fef5f8f894bc7d9e40c.json",
+   "image": "atlas-cb128a70201791bd43a2.png"
+  },
+  "weapon-14-m-mace": {
+   "meta": "poses-a192125966dd38863dda.json",
+   "image": "atlas-633eb74d196ffca83247.png"
+  },
+  "weapon-14-m-spear": {
+   "meta": "poses-4c7d7999c6c1c1a99ee2.json",
+   "image": "atlas-8e47776bedd85ba9212f.png"
+  },
+  "weapon-14-m-sword": {
+   "meta": "poses-4a744ae2b062c80f4203.json",
+   "image": "atlas-d02d8ab0ce076d46512b.png"
+  },
+  "weapon-14-m-twohand": {
+   "meta": "poses-25dea446b5d48f50720e.json",
+   "image": "atlas-1b54bb4703b2b4f54e32.png"
+  },
+  "weapon-15-f-knuckle": {
+   "meta": "poses-17ab76b645527b51ac3b.json",
+   "image": "atlas-eafce1a94a30b1e21095.png"
+  },
+  "weapon-15-f-mace": {
+   "meta": "poses-3d1ed880b79e4df3d08e.json",
+   "image": "atlas-49e63c70a7a4d14ca7e8.png"
+  },
+  "weapon-15-m-knuckle": {
+   "meta": "poses-e499b36b0662886e3d80.json",
+   "image": "atlas-98c9d6bfa3222c64f10b.png"
+  },
+  "weapon-15-m-mace": {
+   "meta": "poses-f7bbaa29cf993fc2cb13.json",
+   "image": "atlas-123028c5d256cb598973.png"
+  },
+  "weapon-16-f-book": {
+   "meta": "poses-d0d12aefd3d0724f04b8.json",
+   "image": "atlas-813752d26b4523d2efe7.png"
+  },
+  "weapon-16-f-dagger": {
+   "meta": "poses-4a3c3a6d48018a76c6bd.json",
+   "image": "atlas-ca099ebbaaa9ec5ac88c.png"
+  },
+  "weapon-16-f-rod": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-16-f-staff": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-16-m-book": {
+   "meta": "poses-edb8767f4ed1b128603e.json",
+   "image": "atlas-d2b9a762380af3d09e6e.png"
+  },
+  "weapon-16-m-dagger": {
+   "meta": "poses-8ea6a074e3071a6086f1.json",
+   "image": "atlas-44e125736b0995fab1b7.png"
+  },
+  "weapon-16-m-rod": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-16-m-staff": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-17-f-bow": {
+   "meta": "poses-af1180f341d40443b4b1.json",
+   "image": "atlas-5e78e237f0ce48bd4a07.png"
+  },
+  "weapon-17-f-dagger": {
+   "meta": "poses-d857ef51cbd4e0eaf892.json",
+   "image": "atlas-42f6689eba219f2fdfab.png"
+  },
+  "weapon-17-f-sword": {
+   "meta": "poses-31c73b3cde056e082149.json",
+   "image": "atlas-88e07c89d26112790852.png"
+  },
+  "weapon-17-m-bow": {
+   "meta": "poses-34f81a9bd8445ca1900e.json",
+   "image": "atlas-b8d5ff71b6aed9632417.png"
+  },
+  "weapon-17-m-dagger": {
+   "meta": "poses-9c645912306f4f861cd8.json",
+   "image": "atlas-e1f792c7d61bfef17e92.png"
+  },
+  "weapon-17-m-sword": {
+   "meta": "poses-10c86945fc8efd2805e5.json",
+   "image": "atlas-06ed90d1f9ecb0f789ef.png"
+  },
+  "weapon-18-f-axe": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-18-f-dagger": {
+   "meta": "poses-7450b2f7b2bc343854cc.json",
+   "image": "atlas-8515c2d222364af44a5b.png"
+  },
+  "weapon-18-f-mace": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-18-f-sword": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-18-m-axe": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-18-m-dagger": {
+   "meta": "poses-e8483be0c192f0b539e3.json",
+   "image": "atlas-dbae48bb911b0119f877.png"
+  },
+  "weapon-18-m-mace": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-18-m-sword": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-19-f-bow": {
+   "meta": "poses-2e49491dbdd84ce451cc.json",
+   "image": "atlas-69d4a27f6bfdff6c79d5.png"
+  },
+  "weapon-19-f-dagger": {
+   "meta": "poses-4a9632df2fd23517031d.json",
+   "image": "atlas-c89995e046abdcc0a5ba.png"
+  },
+  "weapon-19-f-whip": {
+   "meta": "poses-fe3c2cf5de1e82d39993.json",
+   "image": "atlas-10c4fd330655614700be.png"
+  },
+  "weapon-19-m-bow": {
+   "meta": "poses-8f2808b79fd96316bd2d.json",
+   "image": "atlas-3ed165c3a66c609d137a.png"
+  },
+  "weapon-19-m-dagger": {
+   "meta": "poses-3b6a7a93307182ab1f23.json",
+   "image": "atlas-a9f108bb16e3833827ee.png"
+  },
+  "weapon-20-f-bow": {
+   "meta": "poses-2e49491dbdd84ce451cc.json",
+   "image": "atlas-69d4a27f6bfdff6c79d5.png"
+  },
+  "weapon-20-f-dagger": {
+   "meta": "poses-4a9632df2fd23517031d.json",
+   "image": "atlas-c89995e046abdcc0a5ba.png"
+  },
+  "weapon-20-f-whip": {
+   "meta": "poses-fe3c2cf5de1e82d39993.json",
+   "image": "atlas-10c4fd330655614700be.png"
+  },
+  "weapon-20-m-bow": {
+   "meta": "poses-8f2808b79fd96316bd2d.json",
+   "image": "atlas-3ed165c3a66c609d137a.png"
+  },
+  "weapon-20-m-dagger": {
+   "meta": "poses-3b6a7a93307182ab1f23.json",
+   "image": "atlas-a9f108bb16e3833827ee.png"
+  },
+  "weapon-23-f-dagger": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-23-m-dagger": {
+   "meta": "poses-82922a45a0e86f9b38a8.json",
+   "image": "atlas-27dff193b57575ee6fad.png"
+  },
+  "weapon-24-f-gun": {
+   "meta": "poses-cb65d0a17b04e78a5e4b.json",
+   "image": "atlas-d564c816048e0437d94a.png"
+  },
+  "weapon-24-m-gun": {
+   "meta": "poses-806616bd41b82ae4e778.json",
+   "image": "atlas-c6fe7be4c616ae738b6a.png"
+  },
+  "weapon-25-f-dagger": {
+   "meta": "poses-d240109932df59a1bc3f.json",
+   "image": "atlas-629af7f840bb64bd6d94.png"
+  },
+  "weapon-25-m-dagger": {
+   "meta": "poses-78dcbc9439ee9cbc8944.json",
+   "image": "atlas-78d970ba67ac7d4188b1.png"
+  },
+  "weapon-4015-f-axe": {
+   "meta": "poses-885407a6a4945a4cd1bd.json",
+   "image": "atlas-c124ae1ae05b4e4934a7.png"
+  },
+  "weapon-4015-f-dagger": {
+   "meta": "poses-e45c2cab9d2082f27557.json",
+   "image": "atlas-19338af7bf3aa99823d9.png"
+  },
+  "weapon-4015-f-mace": {
+   "meta": "poses-3c7537bb602ae93a79d0.json",
+   "image": "atlas-351a90cc8343d464177b.png"
+  },
+  "weapon-4015-f-spear": {
+   "meta": "poses-a7c1714fcc055e583ca5.json",
+   "image": "atlas-fa09c82d6649c0388883.png"
+  },
+  "weapon-4015-f-sword": {
+   "meta": "poses-37f56ad27558f9a9d74a.json",
+   "image": "atlas-34b1b42e3ec340e6d92d.png"
+  },
+  "weapon-4015-f-twohand": {
+   "meta": "poses-cab39653b06c7c6faa23.json",
+   "image": "atlas-4acf59889bec018ade4a.png"
+  },
+  "weapon-4015-m-axe": {
+   "meta": "poses-4c7b617757209254b77c.json",
+   "image": "atlas-277e3277c055130614ae.png"
+  },
+  "weapon-4015-m-dagger": {
+   "meta": "poses-8fef5f8f894bc7d9e40c.json",
+   "image": "atlas-cb128a70201791bd43a2.png"
+  },
+  "weapon-4015-m-mace": {
+   "meta": "poses-a192125966dd38863dda.json",
+   "image": "atlas-633eb74d196ffca83247.png"
+  },
+  "weapon-4015-m-spear": {
+   "meta": "poses-11f03674ac9adb0d6de8.json",
+   "image": "atlas-8e47776bedd85ba9212f.png"
+  },
+  "weapon-4015-m-sword": {
+   "meta": "poses-4a744ae2b062c80f4203.json",
+   "image": "atlas-d02d8ab0ce076d46512b.png"
+  },
+  "weapon-4015-m-twohand": {
+   "meta": "poses-25dea446b5d48f50720e.json",
+   "image": "atlas-1b54bb4703b2b4f54e32.png"
+  },
+  "weapon-4016-f-knuckle": {
+   "meta": "poses-17ab76b645527b51ac3b.json",
+   "image": "atlas-eafce1a94a30b1e21095.png"
+  },
+  "weapon-4016-f-mace": {
+   "meta": "poses-3d1ed880b79e4df3d08e.json",
+   "image": "atlas-49e63c70a7a4d14ca7e8.png"
+  },
+  "weapon-4016-m-knuckle": {
+   "meta": "poses-e3311a9c3f4c07ccf759.json",
+   "image": "atlas-98c9d6bfa3222c64f10b.png"
+  },
+  "weapon-4016-m-mace": {
+   "meta": "poses-20b5597a967f3919c836.json",
+   "image": "atlas-123028c5d256cb598973.png"
+  },
+  "weapon-4017-f-book": {
+   "meta": "poses-1259d660bf9da4eba61a.json",
+   "image": "atlas-813752d26b4523d2efe7.png"
+  },
+  "weapon-4017-f-dagger": {
+   "meta": "poses-d03f6a6717c9dc548949.json",
+   "image": "atlas-ca099ebbaaa9ec5ac88c.png"
+  },
+  "weapon-4017-f-rod": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4017-f-staff": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4017-m-book": {
+   "meta": "poses-7378559c120116586155.json",
+   "image": "atlas-d2b9a762380af3d09e6e.png"
+  },
+  "weapon-4017-m-dagger": {
+   "meta": "poses-9c0641b710d18fbbbdba.json",
+   "image": "atlas-44e125736b0995fab1b7.png"
+  },
+  "weapon-4017-m-rod": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4017-m-staff": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4018-f-bow": {
+   "meta": "poses-af1180f341d40443b4b1.json",
+   "image": "atlas-5e78e237f0ce48bd4a07.png"
+  },
+  "weapon-4018-f-dagger": {
+   "meta": "poses-d857ef51cbd4e0eaf892.json",
+   "image": "atlas-42f6689eba219f2fdfab.png"
+  },
+  "weapon-4018-f-sword": {
+   "meta": "poses-31c73b3cde056e082149.json",
+   "image": "atlas-88e07c89d26112790852.png"
+  },
+  "weapon-4018-m-bow": {
+   "meta": "poses-34f81a9bd8445ca1900e.json",
+   "image": "atlas-b8d5ff71b6aed9632417.png"
+  },
+  "weapon-4018-m-dagger": {
+   "meta": "poses-9c645912306f4f861cd8.json",
+   "image": "atlas-e1f792c7d61bfef17e92.png"
+  },
+  "weapon-4018-m-sword": {
+   "meta": "poses-10c86945fc8efd2805e5.json",
+   "image": "atlas-06ed90d1f9ecb0f789ef.png"
+  },
+  "weapon-4019-f-axe": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4019-f-dagger": {
+   "meta": "poses-632fadcefee15b9f87a5.json",
+   "image": "atlas-8515c2d222364af44a5b.png"
+  },
+  "weapon-4019-f-mace": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4019-f-sword": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4019-m-axe": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4019-m-dagger": {
+   "meta": "poses-e8483be0c192f0b539e3.json",
+   "image": "atlas-dbae48bb911b0119f877.png"
+  },
+  "weapon-4019-m-mace": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4019-m-sword": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4020-f-bow": {
+   "meta": "poses-2e49491dbdd84ce451cc.json",
+   "image": "atlas-69d4a27f6bfdff6c79d5.png"
+  },
+  "weapon-4020-f-dagger": {
+   "meta": "poses-b84bc4281a8e5e67e6ed.json",
+   "image": "atlas-c89995e046abdcc0a5ba.png"
+  },
+  "weapon-4020-f-whip": {
+   "meta": "poses-912313c8dca5d72beffa.json",
+   "image": "atlas-10c4fd330655614700be.png"
+  },
+  "weapon-4020-m-bow": {
+   "meta": "poses-8f2808b79fd96316bd2d.json",
+   "image": "atlas-3ed165c3a66c609d137a.png"
+  },
+  "weapon-4020-m-dagger": {
+   "meta": "poses-3b6a7a93307182ab1f23.json",
+   "image": "atlas-a9f108bb16e3833827ee.png"
+  },
+  "weapon-4021-f-bow": {
+   "meta": "poses-2e49491dbdd84ce451cc.json",
+   "image": "atlas-69d4a27f6bfdff6c79d5.png"
+  },
+  "weapon-4021-f-dagger": {
+   "meta": "poses-b84bc4281a8e5e67e6ed.json",
+   "image": "atlas-c89995e046abdcc0a5ba.png"
+  },
+  "weapon-4021-f-whip": {
+   "meta": "poses-912313c8dca5d72beffa.json",
+   "image": "atlas-10c4fd330655614700be.png"
+  },
+  "weapon-4021-m-bow": {
+   "meta": "poses-8f2808b79fd96316bd2d.json",
+   "image": "atlas-3ed165c3a66c609d137a.png"
+  },
+  "weapon-4021-m-dagger": {
+   "meta": "poses-3b6a7a93307182ab1f23.json",
+   "image": "atlas-a9f108bb16e3833827ee.png"
+  },
+  "weapon-4046-f-mace": {
+   "meta": "poses-70354f3a7bb86c8d5d55.json",
+   "image": "atlas-bd2249f61bf1c3a9455a.png"
+  },
+  "weapon-4046-m-mace": {
+   "meta": "poses-03566bb49b121f460767.json",
+   "image": "atlas-44de099773778ba190c2.png"
+  },
+  "weapon-4047-f-mace": {
+   "meta": "poses-61e6b4cba8b5394fb18e.json",
+   "image": "atlas-bd2249f61bf1c3a9455a.png"
+  },
+  "weapon-4047-m-mace": {
+   "meta": "poses-291ad2326d97dd3b4ee1.json",
+   "image": "atlas-44de099773778ba190c2.png"
+  },
+  "weapon-4049-f-mace": {
+   "meta": "poses-ef0eef6540c50347c09c.json",
+   "image": "atlas-bd2249f61bf1c3a9455a.png"
+  },
+  "weapon-4049-m-mace": {
+   "meta": "poses-1c122a0c33384eb9bcad.json",
+   "image": "atlas-44de099773778ba190c2.png"
+  },
+  "weapon-4054-f-axe": {
+   "meta": "poses-2c1677b5e0ca395be61c.json",
+   "image": "atlas-e279ccb12d4db0d5b3fa.png"
+  },
+  "weapon-4054-f-dagger": {
+   "meta": "poses-ea219c518b70677ad6cd.json",
+   "image": "atlas-4d529ba3c210f189befe.png"
+  },
+  "weapon-4054-f-mace": {
+   "meta": "poses-703d379484cb213c7763.json",
+   "image": "atlas-a81fa008e143c089e34a.png"
+  },
+  "weapon-4054-f-spear": {
+   "meta": "poses-f9fffa5389a414bc664b.json",
+   "image": "atlas-d0d753f9110ae8d33d10.png"
+  },
+  "weapon-4054-f-sword": {
+   "meta": "poses-045c71ffd0215e49b582.json",
+   "image": "atlas-8a82c68464e2f3774925.png"
+  },
+  "weapon-4054-f-twohand": {
+   "meta": "poses-283821af63457a37b19b.json",
+   "image": "atlas-105732a4ef62095247a7.png"
+  },
+  "weapon-4054-m-axe": {
+   "meta": "poses-69f16954a8195536efab.json",
+   "image": "atlas-f4b517ea0788bf82dc13.png"
+  },
+  "weapon-4054-m-dagger": {
+   "meta": "poses-aafda2f4b05c88cedd87.json",
+   "image": "atlas-41126eea028a23c6c56e.png"
+  },
+  "weapon-4054-m-mace": {
+   "meta": "poses-e0288b064bfb1499db48.json",
+   "image": "atlas-2b3183ac3eade603d196.png"
+  },
+  "weapon-4054-m-spear": {
+   "meta": "poses-d8078383cd12c7860196.json",
+   "image": "atlas-a6408b3082c311f3169c.png"
+  },
+  "weapon-4054-m-sword": {
+   "meta": "poses-3c45885b5e54c01b3c56.json",
+   "image": "atlas-3cb982e461e05b2005e8.png"
+  },
+  "weapon-4054-m-twohand": {
+   "meta": "poses-1a5a73a06b5e27bd3917.json",
+   "image": "atlas-6691a2849359b622778e.png"
+  },
+  "weapon-4055-f-dagger": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4055-f-rod": {
+   "meta": "poses-839ea4229d22323c8fa5.json",
+   "image": "atlas-a8778073d5b918387f03.png"
+  },
+  "weapon-4055-f-staff": {
+   "meta": "poses-4c0668122d5614558c07.json",
+   "image": "atlas-eeda2ddff78fce3ec6a8.png"
+  },
+  "weapon-4055-m-dagger": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4055-m-rod": {
+   "meta": "poses-6f93c7c88057bad41861.json",
+   "image": "atlas-43e9399c691062dde7d4.png"
+  },
+  "weapon-4055-m-staff": {
+   "meta": "poses-1fd4bce10c84a3c83c05.json",
+   "image": "atlas-2adc68c92238e27d7d34.png"
+  },
+  "weapon-4056-f-bow": {
+   "meta": "poses-baf0d773738314b9962f.json",
+   "image": "atlas-b4c7ec31087b78464df7.png"
+  },
+  "weapon-4056-f-dagger": {
+   "meta": "poses-36f0c3eaa7646e330422.json",
+   "image": "atlas-708c686715107def4de6.png"
+  },
+  "weapon-4056-m-bow": {
+   "meta": "poses-f48457ded105d82327ea.json",
+   "image": "atlas-a382709c12049112e402.png"
+  },
+  "weapon-4056-m-dagger": {
+   "meta": "poses-ae59133a84bfca15ee99.json",
+   "image": "atlas-65f46f4034e2ca6bb8ab.png"
+  },
+  "weapon-4057-f-book": {
+   "meta": "poses-1399386866e8fa3a870b.json",
+   "image": "atlas-2c66abb050f81677109c.png"
+  },
+  "weapon-4057-f-mace": {
+   "meta": "poses-2456dc5fe959023249a2.json",
+   "image": "atlas-d83ce75d1e47c17708e5.png"
+  },
+  "weapon-4057-f-rod": {
+   "meta": "poses-c8defb950341281cc3f1.json",
+   "image": "atlas-e255be2fdfa27337232e.png"
+  },
+  "weapon-4057-f-staff": {
+   "meta": "poses-c0ba0992bb70070de7e2.json",
+   "image": "atlas-06775f7d4bdc4dc06d44.png"
+  },
+  "weapon-4057-m-book": {
+   "meta": "poses-b68f8684252c2bacdbd0.json",
+   "image": "atlas-a3df9755f8a882d34cb3.png"
+  },
+  "weapon-4057-m-mace": {
+   "meta": "poses-6f43ee117b1382f857d5.json",
+   "image": "atlas-3b5f323f5e50a44e0f66.png"
+  },
+  "weapon-4057-m-rod": {
+   "meta": "poses-bb7ce8a3c2ea20d71217.json",
+   "image": "atlas-9fe1dccde5abbbb8dacf.png"
+  },
+  "weapon-4057-m-staff": {
+   "meta": "poses-d74ddd1facac654fd2b0.json",
+   "image": "atlas-996658a37c90a75e2dd0.png"
+  },
+  "weapon-4058-f-axe": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4058-f-dagger": {
+   "meta": "poses-9c0f91ea1265db52156b.json",
+   "image": "atlas-9cc7d5d668ca7769213f.png"
+  },
+  "weapon-4058-f-mace": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4058-f-sword": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4058-m-axe": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4058-m-dagger": {
+   "meta": "poses-9ab722d9a85dd361e3a9.json",
+   "image": "atlas-09080ec838a57c4703bb.png"
+  },
+  "weapon-4058-m-mace": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4058-m-sword": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4059-f-dagger": {
+   "meta": "poses-7ea68c272214d9874372.json",
+   "image": "atlas-0ce6a3b3aa1b2c57c4bc.png"
+  },
+  "weapon-4059-f-sword": {
+   "meta": "poses-fe5ad0b8f100119b1541.json",
+   "image": "atlas-1565f9aaaa00cbc3a9b7.png"
+  },
+  "weapon-4059-m-dagger": {
+   "meta": "poses-cb3cb328bee53cc2fbaa.json",
+   "image": "atlas-86040f32dba7961b82b9.png"
+  },
+  "weapon-4059-m-sword": {
+   "meta": "poses-d31abf31dfaa0b0252f4.json",
+   "image": "atlas-5ea76e988ba35c4b3144.png"
+  },
+  "weapon-4060-f-axe": {
+   "meta": "poses-b6cc83904def95606816.json",
+   "image": "atlas-c124ae1ae05b4e4934a7.png"
+  },
+  "weapon-4060-f-dagger": {
+   "meta": "poses-9ddc7785cf644ada8693.json",
+   "image": "atlas-19338af7bf3aa99823d9.png"
+  },
+  "weapon-4060-f-mace": {
+   "meta": "poses-e18dd5d13fd6207bddf5.json",
+   "image": "atlas-351a90cc8343d464177b.png"
+  },
+  "weapon-4060-f-spear": {
+   "meta": "poses-6968b35a59b325c5c42f.json",
+   "image": "atlas-fa09c82d6649c0388883.png"
+  },
+  "weapon-4060-f-sword": {
+   "meta": "poses-a09fb7e815f312a72580.json",
+   "image": "atlas-34b1b42e3ec340e6d92d.png"
+  },
+  "weapon-4060-f-twohand": {
+   "meta": "poses-c10ca43b94cfbe9a3f94.json",
+   "image": "atlas-4acf59889bec018ade4a.png"
+  },
+  "weapon-4060-m-axe": {
+   "meta": "poses-5671ae02947e4382d769.json",
+   "image": "atlas-277e3277c055130614ae.png"
+  },
+  "weapon-4060-m-dagger": {
+   "meta": "poses-753c6fa8660b79c88a61.json",
+   "image": "atlas-cb128a70201791bd43a2.png"
+  },
+  "weapon-4060-m-mace": {
+   "meta": "poses-c0f6dd00bf52dc99b660.json",
+   "image": "atlas-633eb74d196ffca83247.png"
+  },
+  "weapon-4060-m-spear": {
+   "meta": "poses-82a1b14606eb961f87fc.json",
+   "image": "atlas-8e47776bedd85ba9212f.png"
+  },
+  "weapon-4060-m-sword": {
+   "meta": "poses-c5415a1f5c36c3293ca5.json",
+   "image": "atlas-d02d8ab0ce076d46512b.png"
+  },
+  "weapon-4060-m-twohand": {
+   "meta": "poses-1999ee5326cbce91ccdf.json",
+   "image": "atlas-1b54bb4703b2b4f54e32.png"
+  },
+  "weapon-4061-f-book": {
+   "meta": "poses-9ce0f9e7dea81986555c.json",
+   "image": "atlas-813752d26b4523d2efe7.png"
+  },
+  "weapon-4061-f-dagger": {
+   "meta": "poses-c12444a8de5e03d2a17a.json",
+   "image": "atlas-ca099ebbaaa9ec5ac88c.png"
+  },
+  "weapon-4061-f-rod": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4061-f-staff": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4061-m-book": {
+   "meta": "poses-56a4f2e7ffec26f1380d.json",
+   "image": "atlas-d2b9a762380af3d09e6e.png"
+  },
+  "weapon-4061-m-dagger": {
+   "meta": "poses-fd795bd5e946483d7e55.json",
+   "image": "atlas-44e125736b0995fab1b7.png"
+  },
+  "weapon-4061-m-rod": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4061-m-staff": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4062-f-bow": {
+   "meta": "poses-2e49491dbdd84ce451cc.json",
+   "image": "atlas-69d4a27f6bfdff6c79d5.png"
+  },
+  "weapon-4062-f-dagger": {
+   "meta": "poses-b84bc4281a8e5e67e6ed.json",
+   "image": "atlas-c89995e046abdcc0a5ba.png"
+  },
+  "weapon-4062-f-whip": {
+   "meta": "poses-912313c8dca5d72beffa.json",
+   "image": "atlas-10c4fd330655614700be.png"
+  },
+  "weapon-4062-m-bow": {
+   "meta": "poses-8f2808b79fd96316bd2d.json",
+   "image": "atlas-3ed165c3a66c609d137a.png"
+  },
+  "weapon-4062-m-dagger": {
+   "meta": "poses-8c0d131b75f8a88576b6.json",
+   "image": "atlas-a9f108bb16e3833827ee.png"
+  },
+  "weapon-4063-f-bow": {
+   "meta": "poses-2e49491dbdd84ce451cc.json",
+   "image": "atlas-69d4a27f6bfdff6c79d5.png"
+  },
+  "weapon-4063-f-dagger": {
+   "meta": "poses-b84bc4281a8e5e67e6ed.json",
+   "image": "atlas-c89995e046abdcc0a5ba.png"
+  },
+  "weapon-4063-f-whip": {
+   "meta": "poses-912313c8dca5d72beffa.json",
+   "image": "atlas-10c4fd330655614700be.png"
+  },
+  "weapon-4063-m-bow": {
+   "meta": "poses-8f2808b79fd96316bd2d.json",
+   "image": "atlas-3ed165c3a66c609d137a.png"
+  },
+  "weapon-4063-m-dagger": {
+   "meta": "poses-8c0d131b75f8a88576b6.json",
+   "image": "atlas-a9f108bb16e3833827ee.png"
+  },
+  "weapon-4064-f-axe": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4064-f-dagger": {
+   "meta": "poses-978d69d3cfc90037d7c3.json",
+   "image": "atlas-8515c2d222364af44a5b.png"
+  },
+  "weapon-4064-f-mace": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4064-f-sword": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4064-m-axe": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4064-m-dagger": {
+   "meta": "poses-2d1caccacf7df006b726.json",
+   "image": "atlas-dbae48bb911b0119f877.png"
+  },
+  "weapon-4064-m-mace": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4064-m-sword": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4065-f-bow": {
+   "meta": "poses-46aec43e50ca6daa8992.json",
+   "image": "atlas-5e78e237f0ce48bd4a07.png"
+  },
+  "weapon-4065-f-dagger": {
+   "meta": "poses-eeefa5251f2e27948e12.json",
+   "image": "atlas-42f6689eba219f2fdfab.png"
+  },
+  "weapon-4065-f-sword": {
+   "meta": "poses-2a83950335915f441808.json",
+   "image": "atlas-88e07c89d26112790852.png"
+  },
+  "weapon-4065-m-dagger": {
+   "meta": "poses-5ef7107b2613b88007e8.json",
+   "image": "atlas-57976896929c8f646d99.png"
+  },
+  "weapon-4066-f-knuckle": {
+   "meta": "poses-17ab76b645527b51ac3b.json",
+   "image": "atlas-eafce1a94a30b1e21095.png"
+  },
+  "weapon-4066-f-mace": {
+   "meta": "poses-5097f51e0d74db5baea9.json",
+   "image": "atlas-49e63c70a7a4d14ca7e8.png"
+  },
+  "weapon-4066-m-knuckle": {
+   "meta": "poses-1a4194c4a734b80c5736.json",
+   "image": "atlas-98c9d6bfa3222c64f10b.png"
+  },
+  "weapon-4066-m-mace": {
+   "meta": "poses-b9180526c15ee0d3f10c.json",
+   "image": "atlas-123028c5d256cb598973.png"
+  },
+  "weapon-4211-f-dagger": {
+   "meta": "poses-ff002d414cca6c95df7a.json",
+   "image": "atlas-629af7f840bb64bd6d94.png"
+  },
+  "weapon-4211-m-dagger": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4212-f-dagger": {
+   "meta": "poses-ba32e686174ec45ddd78.json",
+   "image": "atlas-270c1ed5860aa05c8d12.png"
+  },
+  "weapon-4212-m-dagger": {
+   "meta": "poses-1a118795f8ef2efa6211.json",
+   "image": "atlas-78d970ba67ac7d4188b1.png"
+  },
+  "weapon-4215-f-gun": {
+   "meta": "poses-cb65d0a17b04e78a5e4b.json",
+   "image": "atlas-d564c816048e0437d94a.png"
+  },
+  "weapon-4215-m-gun": {
+   "meta": "poses-806616bd41b82ae4e778.json",
+   "image": "atlas-c6fe7be4c616ae738b6a.png"
+  },
+  "weapon-4239-f-mace": {
+   "meta": "poses-7469be86ae7cf76f5e92.json",
+   "image": "atlas-bd2249f61bf1c3a9455a.png"
+  },
+  "weapon-4239-m-mace": {
+   "meta": "poses-03566bb49b121f460767.json",
+   "image": "atlas-44de099773778ba190c2.png"
+  },
+  "weapon-4240-f-mace": {
+   "meta": "poses-d40ec81d20eda2a701e9.json",
+   "image": "atlas-bd2249f61bf1c3a9455a.png"
+  },
+  "weapon-4240-m-mace": {
+   "meta": "poses-6bdd4247a4b213624622.json",
+   "image": "atlas-44de099773778ba190c2.png"
   }
  }
 }

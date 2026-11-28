@@ -86,7 +86,8 @@ attack animation shifted the same way. Nothing is redrawn, recoloured or traced.
 | What | Repository | Path |
 | --- | --- | --- |
 | Class bodies, heads | [`devilm/costume-ro`](https://github.com/devilm/costume-ro) | `data/sprite/인간족/몸통/{남,여}`, `data/sprite/인간족/머리통/{남,여}`, `data/sprite/도람족/…` |
-| Held weapon sprites | [`rAthena-Thailand/ClientROThailand`](https://github.com/rAthena-Thailand/ClientROThailand) | `Client-2025-06-04/Pre-Renewal/data/sprite/인간족/<job>/` |
+| Held weapon sprites (melee, spear, axe, mace, dagger, rod, staff, book, bow, whip) | [`rAthena-Thailand/ClientROThailand`](https://github.com/rAthena-Thailand/ClientROThailand) | `Client-2025-06-04/Pre-Renewal/data/sprite/인간족/<job>/<job>_{남,여}_<item id>.{spr,act}` |
+| Held weapon sprites (revolver, rifle, shuriken, Rogue bow, instrument) | [`linhan85/rAthenaCN_LeeClient`](https://github.com/linhan85/rAthenaCN_LeeClient) | `data/sprite/인간족/<job>/<job>_{남,여}_<item id>.{spr,act}` (folder names stored as GBK-mangled CP949; the importer decodes both) |
 
 Files are fetched through the GitHub contents API (the sandbox cannot reach
 `raw.githubusercontent.com`) and pinned by git blob id and SHA-256; the same pins
@@ -94,6 +95,20 @@ Prontera-Grind already publishes for these client files are reused where the pat
 and [`public/assets/class-provenance.json`](public/assets/class-provenance.json) records
 every source and every generated file. `public/assets/index.json` gains one derived key,
 `classWardrobe`, listing the new outfits only.
+
+### Weapon overlays
+
+The client only draws a held weapon during an attack motion — there is no idle or walk
+weapon art in any of these files — so weapons ship as their own attack-only atlases next to
+the bodies in `index.json` under `weapon-<job>-<sex>-<family>`. Each class holds the weapon
+sprite the client actually ships for its own body, keyed by the real item id in the file
+name (a `kind` from rAthena's item database decides the family: `One-Handed Sword → sword`,
+`Two-Handed Rod → staff`, `Grenade Launcher → gun`, …). Where the client has no art for a
+body, the class borrows its second job's kit exactly as the client does (Paladin → Crusader,
+Ministry → Bard, third jobs → their second job) and the runtime falls back along the same
+order per weapon type (a two-hander is carried as a sword, a katar as a dagger).
+`scripts/class-weapon-pins.json` is the tracked manifest: 182 weapon sets, each pinned by
+git blob id and SHA-256, with its source repository and raw path.
 
 ```sh
 python3 scripts/import_class_sprites.py            # fetch (cached), rebuild the pack

@@ -31,7 +31,29 @@ test('every job resolves to its own native body sprite', () => {
   const shipped = new Set(Object.keys(index.wardrobe).filter(key => key.startsWith('base-')));
   const expected = Object.values(JOBS).flatMap(job => ['m', 'f'].map(sex => `base-${job.native}-${sex}`))
     .filter(key => !shipped.has(key));
-  assert.deepEqual(Object.keys(index.classWardrobe || {}).sort(), expected.sort(), 'the class pack covers exactly the jobs the shipped wardrobe does not');
+  const bodies = Object.keys(index.classWardrobe || {}).filter(key => key.startsWith('base-'));
+  assert.deepEqual(bodies.sort(), expected.sort(), 'the class pack covers exactly the jobs the shipped wardrobe does not');
+});
+
+test('every class holds a client weapon sprite for the types it can equip', () => {
+  const pack = index.classWardrobe || {};
+  const families = new Set(Object.keys(pack).filter(key => key.startsWith('weapon-'))
+    .map(key => key.split('-').pop()));
+  // Real client weapon art covers the melee, ranged and magic families; nothing here is drawn.
+  for (const family of ['sword', 'twohand', 'dagger', 'spear', 'axe', 'mace', 'rod', 'staff', 'book', 'bow']) {
+    assert.ok(families.has(family), `the pack carries ${family} weapon sprites`);
+  }
+  assert.ok(Object.keys(pack).filter(key => key.startsWith('weapon-')).length >= 60,
+    'weapon overlays cover the roster, not a token sample');
+  for (const [key, entry] of Object.entries(pack)) {
+    if (!key.startsWith('weapon-')) continue;
+    const meta = JSON.parse(readFileSync(join(assets, 'wardrobe', 'classes', entry.meta), 'utf8'));
+    // Overlays carry attack motion routes only, matching how the client draws held weapons.
+    const routes = Object.keys(meta.actions);
+    assert.equal(routes.length, 8, `${key} has one route per direction`);
+    assert.ok(routes.every(route => /^(fist|thrust|swing|aimed)\d$/.test(route)),
+      `${key} holds only attack-motion routes`);
+  }
 });
 
 test('the class pack is indexed and every listed file exists', () => {

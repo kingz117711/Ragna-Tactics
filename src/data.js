@@ -256,11 +256,11 @@ export const EQUIPMENT = {
 export const GEAR_SLOTS = { weapon:'Weapon', armor:'Armor', shield:'Shield', head:'Headgear', garment:'Garment', footwear:'Footwear', accessory1:'Accessory I', accessory2:'Accessory II' };
 export function gearFitsSlot(item, slot) { return item?.slot === slot || (item?.slot?.startsWith('accessory') && slot?.startsWith('accessory')); }
 export const GEAR_ITEMS = {
-  knife:{name:'Knife',roId:1201,slot:'weapon',atk:17,weaponLevel:1,range:1,slots:3,weight:40,buy:50,equipLevel:1,refineable:true,classes:['novice','swordsman','mage','archer','merchant','thief','alchemist','assassin','blacksmith','crusader','knight','rogue','hunter','bard','dancer','ninja','kagerou','oboro','soul_linker']},
-  sword:{name:'Sword',roId:1101,slot:'weapon',atk:25,weaponLevel:1,range:1,slots:3,weight:50,buy:100,equipLevel:2,refineable:true,classes:['novice','swordsman','knight','crusader','merchant','thief']},
-  bow:{name:'Bow',roId:1702,slot:'weapon',atk:15,weaponLevel:1,range:5,slots:4,weight:50,buy:1000,equipLevel:4,refineable:true,classes:['archer','hunter','bard','dancer','thief','rogue']},
-  rod:{name:'Rod',roId:1602,slot:'weapon',atk:15,matk:30,weaponLevel:1,range:1,slots:4,weight:40,buy:50,equipLevel:1,refineable:true,classes:['novice','mage','acolyte','monk','priest','sage','soul_linker']},
-  mace:{name:'Club',roId:1501,slot:'weapon',atk:23,weaponLevel:1,range:1,slots:3,weight:70,buy:120,equipLevel:2,refineable:true,classes:['novice','swordsman','acolyte','merchant','knight','crusader','monk','priest','blacksmith','alchemist']},
+  knife:{name:'Knife',roId:1201,slot:'weapon',kind:'Dagger',atk:17,weaponLevel:1,range:1,slots:3,weight:40,buy:50,equipLevel:1,refineable:true,classes:['novice','swordsman','mage','archer','merchant','thief','alchemist','assassin','blacksmith','crusader','knight','rogue','hunter','bard','dancer','ninja','kagerou','oboro','soul_linker']},
+  sword:{name:'Sword',roId:1101,slot:'weapon',kind:'One-Handed Sword',atk:25,weaponLevel:1,range:1,slots:3,weight:50,buy:100,equipLevel:2,refineable:true,classes:['novice','swordsman','knight','crusader','merchant','thief']},
+  bow:{name:'Bow',roId:1702,slot:'weapon',kind:'Bow',atk:15,weaponLevel:1,range:5,slots:4,weight:50,buy:1000,equipLevel:4,refineable:true,classes:['archer','hunter','bard','dancer','thief','rogue']},
+  rod:{name:'Rod',roId:1602,slot:'weapon',kind:'Rod',atk:15,matk:30,weaponLevel:1,range:1,slots:4,weight:40,buy:50,equipLevel:1,refineable:true,classes:['novice','mage','acolyte','monk','priest','sage','soul_linker']},
+  mace:{name:'Club',roId:1501,slot:'weapon',kind:'Mace',atk:23,weaponLevel:1,range:1,slots:3,weight:70,buy:120,equipLevel:2,refineable:true,classes:['novice','swordsman','acolyte','merchant','knight','crusader','monk','priest','blacksmith','alchemist']},
   cotton_shirt:{name:'Cotton Shirt',roId:2301,slot:'armor',def:10,armorLevel:1,slots:0,weight:10,buy:10,refineable:true},
   silk_robe:{name:'Silk Robe',roId:2321,slot:'armor',def:20,mdef:10,armorLevel:1,slots:0,weight:40,buy:8000,refineable:true,classes:['novice','swordsman','mage','acolyte','merchant','knight','crusader','wizard','sage','priest','monk','blacksmith','alchemist','soul_linker']},
   adventurer_suit:{name:'Jacket',roId:2303,slot:'armor',def:15,armorLevel:1,slots:0,weight:20,buy:200,refineable:true},

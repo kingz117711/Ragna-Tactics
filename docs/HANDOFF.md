@@ -16,8 +16,17 @@ item's own shop value. `src/gear-catalog.json` and `src/gear-shop.json` are gene
 by `scripts/build_gear_catalog.py` from rAthena's pinned item database (fetched on
 demand, never committed) — edit the script's curation rules, never the JSON.
 
-Next: gear sets and refine UX around the new catalog, per-class visual weapon swaps,
-and the merchant's restock/inflation curve.
+Each class also draws the weapon it actually holds. The client keeps a weapon sprite per
+class per weapon type and only animates it during an attack motion, so
+`public/assets/wardrobe/classes/` carries attack-only overlay atlases
+(`weapon-<job>-<sex>-<family>`, 182 client sets pinned in
+`scripts/class-weapon-pins.json`). `src/sprites.js` picks the overlay and the body's swing
+motion from the equipped item's real `kind`, so a Crusader swings a sword, a Sage a book,
+a Gunslinger a revolver, and a Monk punches. Classes without art for the exact type fall
+back the way the client does (two-hander → sword, katar → dagger, …).
+
+Next: gear sets and refine UX around the new catalog, and the merchant's
+restock/inflation curve.
 
 ## Character skills and skill FX
 
