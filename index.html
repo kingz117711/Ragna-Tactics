@@ -19,7 +19,7 @@
   </header>
   <div class="app-layout">
     <aside class="sidebar">
-      <div class="sidebar-heading"><span class="eyebrow">EXPEDITIONS</span><span class="tiny muted">03 LOCATIONS</span></div>
+      <div class="sidebar-heading"><span class="eyebrow">EXPEDITIONS</span><span class="tiny muted" id="location-count"></span></div>
       <h2>Expedition map</h2>
       <nav id="map-list" aria-label="World locations"></nav>
       <div class="camp-card"><div><span class="camp-symbol">⌂</span><strong>Guild camp</strong></div><p>A place to rest, resupply,<br>and choose your next path.</p><button class="text-button" data-action="camp">Manage camp <span>↗</span></button></div>
@@ -30,6 +30,7 @@
         <canvas id="battlefield" tabindex="0" aria-label="Battlefield. Select characters using the roster. Right-click ground to move, or use the Move command."></canvas>
         <div class="map-heading"><div class="eyebrow" id="map-tier">FIELD · LV 1–4</div><h1 id="map-name">South Prontera</h1><p id="map-subtitle">A quiet beginning</p></div>
         <div class="view-tools"><button class="icon-button" id="zoom-out" aria-label="Zoom out">−</button><span id="zoom-label">65%</span><button class="icon-button" id="zoom-in" aria-label="Zoom in">+</button><span class="tool-divider"></span><button class="icon-button" id="fit-camera" aria-label="Fit whole map" title="Fit map (F)">⛶</button><button class="icon-button" id="grid-button" aria-label="Toggle map grid" aria-pressed="false" title="Toggle grid">▦</button><button id="find-unit" title="Find an adventurer (G)" aria-label="Find an adventurer">Find</button></div>
+        <button id="expand-minimap" aria-haspopup="dialog" aria-label="Open map overview" title="Open map overview">⤢</button>
         <canvas id="minimap" width="344" height="264" aria-label="Field minimap. Click to move the view." title="Click or drag to move the view"></canvas>
         <div id="boss-status" class="boss-status" hidden></div>
         <div id="first-expedition" class="first-expedition"><span class="eyebrow">SOUTH PRONTERA · GUILD CAMP</span><h3>Your first expedition</h3><p>Hunt Porings in South Prontera. Reach Job Lv. 10<br>to choose a first job for each Novice.</p><button class="primary" id="first-deploy">Plan your first expedition <span>↗</span></button><button class="dismiss-coach" id="dismiss-coach" aria-label="Dismiss introduction">×</button></div>
@@ -47,6 +48,7 @@
       <div class="roster-heading"><div><span class="eyebrow">YOUR ADVENTURERS</span><h2>The guild</h2></div><span id="roster-count" class="roster-count">2 / 5</span></div>
       <div class="roster-selection"><span class="tiny muted">SELECT YOUR ADVENTURERS</span><button class="text-button" id="multi-select" aria-pressed="false" title="Toggle additive selection. Shift-click also adds characters.">Multi</button><button class="text-button" id="select-all">All</button><button class="text-button" id="detail-toggle" aria-expanded="false" aria-controls="detail-stack">Details</button></div>
       <div id="roster" class="roster"></div>
+      <button id="character-sheet" class="character-sheet-button" aria-haspopup="dialog" hidden></button>
       <button id="job-notice" class="job-notice" data-action="camp" hidden><strong>Job advancement available</strong><span id="job-names"></span><span>Open guild camp ↗</span></button>
       <button id="recruit-button" class="recruit-button"><span>+</span><span id="recruit-label">The next chapter awaits</span><span>♧</span></button>
       <div id="detail-stack" class="detail-stack">
@@ -60,7 +62,7 @@
     </aside>
   </div>
   <div id="toast" class="toast" role="status" hidden></div>
-  <dialog id="modal"><div class="modal-top"><span id="modal-eyebrow" class="eyebrow">GUILD MANAGEMENT</span><button id="modal-close" class="icon-button" aria-label="Close dialog">×</button></div><h2 id="modal-title"></h2><div id="modal-body"></div></dialog>
+  <dialog id="modal" aria-labelledby="modal-title"><div class="modal-top"><span id="modal-eyebrow" class="eyebrow">GUILD MANAGEMENT</span><button id="modal-close" class="icon-button" aria-label="Close dialog">×</button></div><h2 id="modal-title"></h2><div id="modal-body"></div></dialog>
   <input id="import-file" type="file" accept="application/json,.json" hidden>
 </body>
 </html>

@@ -21,6 +21,7 @@ const modal = $('modal');
 function html(id, content) { if ($(id).innerHTML !== content) $(id).innerHTML = content; }
 function toast(message) { $('toast').textContent = message; $('toast').hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { $('toast').hidden = true; }, 4500); }
 function showModal(title, content, eyebrow = 'GUILD MANAGEMENT') {
+  modal.classList.remove('character-dialog', 'monitor-dialog');
   $('modal-title').textContent = title; $('modal-eyebrow').textContent = eyebrow; $('modal-body').innerHTML = content;
   if (!modal.open) modal.showModal();
 }
@@ -62,6 +63,12 @@ function renderUI() {
     $('active-bounty-progress').textContent = state.bounty.kills + ' / ' + bounty.count;
     $('claim-bounty').disabled = state.bounty.kills < bounty.count;
   }
+  const characterButton = $('character-sheet');
+  characterButton.hidden = units.length !== 1;
+  if (units.length === 1) characterButton.textContent = 'Manage ' + units[0].name + ' ↗';
+  $('location-count').textContent = Object.keys(MAPS).length + ' locations';
+  if (modal.open && $('monitor-content')) updateMonitor();
+  if (modal.open && $('character-vitals')) updateCharacterVitals();
   $('zeny').textContent = number(state.inventory.zeny);
   $('map-name').textContent = map.name; $('map-subtitle').textContent = map.subtitle; $('map-tier').textContent = map.tier;
   html('map-list', Object.values(MAPS).map((m, i) => {
@@ -163,16 +170,60 @@ function deployment() {
 function camp() {
   showModal('Back at the guild camp.', `<p>Recover and change jobs here. Deployed adventurers must retreat before they can use camp services.</p>${state.characters.map(c => `<div class="camp-unit"><img src="${sprites.portrait(c)}" alt=""><div><strong>${esc(c.name)} · ${JOBS[c.job].name}</strong><p>${c.mapId ? `At ${MAPS[c.mapId].name}${engaged(state, c) ? ' · In combat' : ''}` : c.status === 'down' ? 'Defeated · recovery needed' : `At camp · ${c.potions} potions`}</p></div><button data-camp-unit="${c.id}" data-service="${c.mapId ? 'retreat' : c.status !== 'down' && c.jobLevel >= promotionLevel(c.job) && c.level >= promotionRequirement(c.job).baseLevel ? 'advance' : 'recover'}">${c.mapId ? 'Recall' : c.status !== 'down' && c.jobLevel >= promotionLevel(c.job) && c.level >= promotionRequirement(c.job).baseLevel ? 'Choose job' : 'Recover'}</button></div>`).join('')}<div class="camp-actions"><button data-modal-action="recover-all">Recover at camp</button><button data-modal-action="supply-all">Refill camp potions · 2z each</button></div><p style="margin-top:15px">Recovery is free in this foundation. Refills bring each character to ten potions. Each potion restores 65 HP automatically below 45% HP.</p>${modalError}`);
 }
+const characterPages = [
+  ['overview', 'Overview'], ['gear', 'Equipment'], ['skills', 'Skills'], ['stats', 'Stats'], ['job', 'Job path'],
+];
+function showCharacterModal(page, c, title, content) {
+  const nav = characterPages.map(([id,label]) =>
+    `<button data-character-page="${id}" data-id="${c.id}" ${id === page ? 'aria-current="page"' : ''}>${label}</button>`
+  ).join('');
+  showModal(title, `<nav class="sheet-tabs" aria-label="Character pages">${nav}</nav><div class="sheet-page">${content}</div>`, c.name + ' · ' + JOBS[c.job].name);
+  modal.classList.add('character-dialog');
+  modal.scrollTop = 0;
+}
+function updateCharacterVitals() {
+  const c = selectedCharacters()[0], st = stats(c);
+  const vitals = { health:`${Math.ceil(c.hp)} / ${st.hp}`, spirit:`${Math.floor(c.sp)} / ${st.sp}`,
+    level:`${c.level} / ${c.jobLevel}`, field:c.mapId ? MAPS[c.mapId].name : 'Guild camp', status:worldActivity(c), potions:c.potions };
+  for (const node of $('character-vitals').querySelectorAll('[data-vital]')) {
+    node.textContent = vitals[node.dataset.vital];
+  }
+}
+function characterOverview(c) {
+  const info = [['health','HP'],['spirit','SP'],['level','Base / Job Lv.'],['field','Location'],['status','Activity'],['potions','Potions']];
+  showCharacterModal('overview',c,c.name,`<header class="sheet-profile"><img src="${sprites.portrait(c)}" alt=""><div><strong>${JOBS[c.job].name}</strong><p>${jobLineage(c.job).join(' → ')}</p></div><button data-world-character="${c.id}">Locate ↗</button></header>
+    <dl id="character-vitals" class="sheet-vitals">${info.map(([id,label])=>`<div><dt>${label}</dt><dd data-vital="${id}"></dd></div>`).join('')}</dl>`);
+  updateCharacterVitals();
+}
+function characterSkills(c) {
+  const st = stats(c), build = selectedBuild(c.job,c.buildId);
+  const elemental = st.element || JOB_ROLES[c.job] === 'support';
+  showCharacterModal('skills',c,'Skills and builds',`<section class="sheet-profile"><div><span class="eyebrow">ACTIVE SKILL</span><h3>${esc(st.skill)}</h3><p>${st.cost} SP · ${st.cooldown}s cooldown</p></div></section>
+    <label class="tactics-toggle sheet-skill-toggle"><input type="checkbox" id="sheet-auto-skill" data-tactics-key="autoSkill" ${effectiveTactics(c).autoSkill ? 'checked' : ''}> Automatically use this adventurer’s skill</label>
+    <h3>Combat build</h3><p>${build ? esc(build.name) + ' · ' + esc(build.style) : 'This job uses its signature skill.'}</p>
+    <div class="detail-actions">${classBuilds(c.job).length > 1 ? '<button data-action="builds">Choose combat build</button>' : ''}${elemental ? '<button data-action="spellbook">Prepare spell</button>' : ''}</div>`);
+}
+function openCharacterPage(page, id) {
+  const c = state.characters.find(unit => unit.id === id);
+  if (!c) return;
+  setSelection(c.id);
+  if (page === 'gear') equipment();
+  else if (page === 'skills') characterSkills(c);
+  else if (page === 'stats') attributes();
+  else if (page === 'job') advanceJob(c.id);
+  else characterOverview(c);
+  modal.querySelector('[aria-current="page"]')?.focus({preventScroll:true});
+}
 function advanceJob(id = [...selected][0]) {
   const c = state.characters.find(v => v.id === id);
   if (!c) return;
   selected = new Set([c.id]);
   const choices = jobChoices(c.job), gate = promotionLevel(c.job), first = c.job === 'novice';
   if (!choices.length) {
-    showModal(JOBS[c.job].name, `<div class="milestone-note">${jobLineage(c.job).join(' → ')}</div><h3>${JOBS[c.job].skill}</h3><p>${JOBS[c.job].description}</p>`, 'TRANSCENDENT JOB');
+    showCharacterModal('job', c, JOBS[c.job].name, `<div class="milestone-note">${jobLineage(c.job).join(' → ')}</div><h3>${JOBS[c.job].skill}</h3><p>${JOBS[c.job].description}</p>`, 'TRANSCENDENT JOB');
     return;
   }
-  showModal(first ? 'Choose a new beginning.' : 'Advance your calling.', `<p>${esc(c.name)} · ${JOBS[c.job].name} · Job Lv. ${c.jobLevel} / ${gate}</p><p>Return to camp at Job Lv. ${gate}${promotionRequirement(c.job).baseLevel > 1 ? ` and Base Lv. ${promotionRequirement(c.job).baseLevel}` : ''} to advance. Keep your equipment. Your new job begins at Job Lv. 1.</p><form id="job-form"><div class="modal-grid">${choices.map(([key, job]) => `<label class="choice-card"><input type="radio" name="job" value="${key}" required><img class="job-preview" src="${sprites.portrait({ ...c, job: key })}" alt=""><span class="tiny"> ${job.role}</span><strong>${job.name}</strong><p>${job.description}</p></label>`).join('')}</div>${modalError}<div class="modal-footer"><span>Each adventurer chooses independently.</span><button type="submit" class="primary" ${c.jobLevel < gate || c.level < promotionRequirement(c.job).baseLevel || c.mapId || c.status === 'down' ? 'disabled' : ''}>Choose job <span>✧</span></button></div></form>`, first ? 'NOVICE → FIRST JOB' : (JOBS[c.job].parent ? 'SECOND JOB → TRANSCENDENT' : 'FIRST JOB → SECOND JOB'));
+  showCharacterModal('job', c, first ? 'Choose a new beginning.' : 'Advance your calling.', `<p>${esc(c.name)} · ${JOBS[c.job].name} · Job Lv. ${c.jobLevel} / ${gate}</p><p>Return to camp at Job Lv. ${gate}${promotionRequirement(c.job).baseLevel > 1 ? ` and Base Lv. ${promotionRequirement(c.job).baseLevel}` : ''} to advance. Keep your equipment. Your new job begins at Job Lv. 1.</p><form id="job-form"><div class="modal-grid">${choices.map(([key, job]) => `<label class="choice-card"><input type="radio" name="job" value="${key}" required><img class="job-preview" src="${sprites.portrait({ ...c, job: key })}" alt=""><span class="tiny"> ${job.role}</span><strong>${job.name}</strong><p>${job.description}</p></label>`).join('')}</div>${modalError}<div class="modal-footer"><span>Each adventurer chooses independently.</span><button type="submit" class="primary" ${c.jobLevel < gate || c.level < promotionRequirement(c.job).baseLevel || c.mapId || c.status === 'down' ? 'disabled' : ''}>Choose job <span>✧</span></button></div></form>`, first ? 'NOVICE → FIRST JOB' : (JOBS[c.job].parent ? 'SECOND JOB → TRANSCENDENT' : 'FIRST JOB → SECOND JOB'));
   $('job-form').onsubmit = event => { event.preventDefault(); const job = new FormData(event.currentTarget).get('job'); issue({ type: 'promote', job, ids: [c.id] }, { close: true }); };
 }
 function recruit() {
@@ -185,7 +236,7 @@ function recruit() {
 function attributes() {
   const c = selectedCharacters()[0], draft = {};
   if (!c || selected.size !== 1) return;
-  showModal(c.name + '’s attributes', `<p>Earn two points per Base level. Spend them at camp. Job changes preserve your build.</p>
+  showCharacterModal('stats', c, c.name + '’s attributes', `<p>Earn two points per Base level. Spend them at camp. Job changes preserve your build.</p>
     <div class="attribute-rows">${Object.entries(ATTRIBUTES).map(([id, stat]) => `<div class="inventory-row"><div><strong>${id.toUpperCase()} · ${stat.name}</strong><p>${stat.effect}</p></div><div class="stat-stepper"><button data-stat="${id}" data-step="-1" aria-label="Decrease ${stat.name}">−</button><output id="stat-${id}"></output><button data-stat="${id}" data-step="1" aria-label="Increase ${stat.name}">+</button></div></div>`).join('')}</div>
     <p id="stat-preview" aria-live="polite"></p><div class="modal-footer"><strong id="stat-remaining"></strong><button id="train-stats" class="primary">Train attributes</button></div>${modalError}`, 'CHARACTER BUILD');
   const refresh = () => {
@@ -228,7 +279,7 @@ function equipment() {
   const ore = material ? state.inventory.materials[material] || 0 : 0;
   const workshop = c.equipment === 'training' ? '<p>Equip field gear to unlock refinement.</p>' : cost
     ? `<div class="inventory-row"><div><strong>Refine to +${rank+1}</strong><p>+2 ATK · +1 DEF · ${ore}/${cost.ore} ${material} · ${cost.zeny} Zeny</p><p>${rank < 3 ? 'Emveretarcon comes from Payon undead.' : `${material} drops in Payon Cave; weapon gear uses Oridecon and defensive gear uses Elunium.`}</p></div><button data-refine="${rank+1}" ${c.mapId || ore < cost.ore || state.inventory.zeny < cost.zeny ? 'disabled' : ''}>Refine</button></div>` : '<p>Maximum refinement · +10 ATK and +5 DEF</p>';
-  showModal(`${c.name}’s equipment`, `<p>Change legacy relic equipment and sockets at camp. Renewal equipment instances have their own slots, refine level, and affixes.</p>${stock}<h3>${rank ? '+' + rank + ' ' : ''}${EQUIPMENT[c.equipment].name} · ${c.equipment === 'training' ? 'No socket' : equipped}</h3>${workshop}${cardRows(c)}${c.card ? `<button data-socket="" ${c.mapId ? 'disabled' : ''}>Remove card</button>` : ''}<h3>Renewal equipment</h3>${gearLoadout(c)}${modalError}`);
+  showCharacterModal('gear', c, `${c.name}’s equipment`, `<p>Change legacy relic equipment and sockets at camp. Renewal equipment instances have their own slots, refine level, and affixes.</p>${stock}<h3>${rank ? '+' + rank + ' ' : ''}${EQUIPMENT[c.equipment].name} · ${c.equipment === 'training' ? 'No socket' : equipped}</h3>${workshop}${cardRows(c)}${c.card ? `<button data-socket="" ${c.mapId ? 'disabled' : ''}>Remove card</button>` : ''}<h3>Renewal equipment</h3>${gearLoadout(c)}${modalError}`);
 }
 function gearInstanceTitle(instance) {
   const item=GEAR_ITEMS[instance.itemId],prefix=instance.refine?`+${instance.refine} `:'';
@@ -305,33 +356,79 @@ function worldActivity(c) {
 function assignmentName(c) {
   return ({ balanced: 'Balanced', experience: 'Training', materials: 'Gathering' })[c.assignment] || c.assignment;
 }
-function worldOverview() {
-  const deployed = state.characters.filter(c => c.mapId);
-  const attention = state.characters.flatMap(c => [
-    c.status === 'down' ? { c, label: 'Defeated · recover at camp' } : null,
-    c.mapId && c.potions === 0 ? { c, label: 'No potions remaining' } : null,
-    c.mapId && c.potions > 0 && c.potions <= 2 ? { c, label: 'Supplies running low' } : null,
-    c.mapId && c.hp / stats(c).hp <= 0.3 ? { c, label: 'Low health · check retreat tactics' } : null,
-    c.job === 'novice' && c.jobLevel >= 10 && !c.mapId ? { c, label: 'Job advancement available' } : null,
-  ].filter(Boolean));
-  const groups = Object.values(MAPS).map(map => {
-    const team = deployed.filter(c => c.mapId === map.id);
-    return `<section class="world-map-group"><div class="world-map-heading"><strong>${map.name}</strong><button data-world-map="${map.id}">View map ↗</button></div>${team.length ? team.map(c => `<button class="world-unit" data-world-character="${c.id}"><span class="world-unit-title">${esc(c.name)} <small>${c.partyId ? esc(state.parties.find(p => p.id === c.partyId)?.name || 'Party') : 'Independent'}</small></span><span>${worldActivity(c)} · ${assignmentName(c)}</span><span class="world-condition ${c.status === 'down' ? 'critical' : c.hp / stats(c).hp <= 0.3 || c.potions <= 2 ? 'warning' : ''}">HP ${Math.ceil(c.hp)}/${stats(c).hp} · ${c.potions} potions</span></button>`).join('') : '<p class="world-empty">No deployed adventurers</p>'}</section>`;
-  }).join('');
-  showModal('Every expedition, at a glance', `${attention.length ? `<section class="attention-list"><h3>Needs attention · ${attention.length}</h3>${attention.map(({ c, label }) => `<button data-world-character="${c.id}">${esc(c.name)} · ${label} ↗</button>`).join('')}</section>` : '<p>Nothing needs your attention right now.</p>'}<div class="world-overview">${groups}</div>`, 'WORLD OVERVIEW');
+const monitorViews = [['fields','By field'],['roster','By adventurer'],['alerts','Needs attention']];
+function characterAlerts(c) {
+  const alerts = [];
+  if (c.status === 'down') alerts.push('Defeated · recover at camp');
+  if (c.mapId && c.hp / stats(c).hp <= 0.3) alerts.push('Low health');
+  if (c.mapId && c.potions <= 2) alerts.push(c.potions ? 'Supplies running low' : 'No potions remaining');
+  if (c.jobLevel >= promotionLevel(c.job)) alerts.push('Job advancement available');
+  return alerts;
+}
+function monitorUnit(c) {
+  return `<article class="monitor-unit" data-monitor-unit="${c.id}">
+    <div class="monitor-unit-head"><img src="${sprites.portrait(c)}" alt=""><div><strong>${esc(c.name)}</strong><small data-monitor-job></small></div></div>
+    <div class="monitor-unit-state"><span data-monitor-location></span><span data-monitor-status></span></div>
+    <div class="monitor-unit-meters"><span data-monitor-hp></span><span data-monitor-sp></span><span data-monitor-potions></span><span data-monitor-kills></span></div>
+    <p class="monitor-warnings" data-monitor-warnings></p>
+    <div class="detail-actions"><button data-world-character="${c.id}">Locate</button><button data-character-page="overview" data-id="${c.id}">Manage</button></div>
+  </article>`;
+}
+function updateMonitor() {
+  const content = $('monitor-content'), view = content.dataset.view;
+  const alertCount = state.characters.filter(c => characterAlerts(c).length).length;
+  $('monitor-deployed').textContent = state.characters.filter(c => c.mapId).length;
+  $('monitor-active').textContent = new Set(state.characters.map(c => c.mapId).filter(Boolean)).size;
+  $('monitor-alerts').textContent = alertCount;
+  if ($('monitor-clear')) $('monitor-clear').hidden = alertCount > 0;
+  for (const row of content.querySelectorAll('[data-monitor-unit]')) {
+    const c = state.characters.find(unit => unit.id === row.dataset.monitorUnit), st = stats(c), warnings = characterAlerts(c);
+    const group = row.closest('[data-monitor-field]');
+    if (view === 'fields' && group?.dataset.monitorField !== (c.mapId || 'camp')) {
+      content.querySelector(`[data-monitor-field="${c.mapId || 'camp'}"]`).append(row);
+    }
+    row.hidden = view === 'alerts' && !warnings.length;
+    if (row.hidden) continue;
+    const party = state.parties.find(p => p.id === c.partyId);
+    const readouts = { job:`${JOBS[c.job].name} · Lv. ${c.level}`,
+      location:c.mapId ? MAPS[c.mapId].name : 'Guild camp',
+      status:[worldActivity(c), c.mapId ? assignmentName(c) : null, party ? party.name : 'Independent'].filter(Boolean).join(' · '),
+      hp:`HP ${Math.ceil(c.hp)}/${st.hp}`, sp:`SP ${Math.floor(c.sp)}/${st.sp}`,
+      potions:`${c.potions} potions`, kills:`${number(c.kills)} kills`, warnings:warnings.join(' · ') };
+    for (const [key,value] of Object.entries(readouts)) {
+      const node = row.querySelector('[data-monitor-' + key + ']');
+      if (node.textContent !== value) node.textContent = value;
+    }
+  }
+  for (const group of content.querySelectorAll('[data-monitor-field]')) {
+    group.querySelector('.world-empty').hidden = !!group.querySelector('[data-monitor-unit]:not([hidden])');
+  }
+}
+function worldOverview(view = 'fields') {
+  const tabs = monitorViews.map(([id,label])=>`<button data-monitor-view="${id}" ${id === view ? 'aria-current="page"' : ''}>${label}</button>`).join('');
+  const units = state.characters.map(monitorUnit).join('');
+  const groups = view === 'fields' ? [...Object.values(MAPS), {id:'camp',name:'Guild camp'}].map(map =>
+    `<section class="world-map-group" data-monitor-field="${map.id}"><div class="world-map-heading"><strong>${map.name}</strong>${map.id !== 'camp' ? `<button data-world-map="${map.id}">View map ↗</button>` : ''}</div><p class="world-empty">No adventurers here</p></section>`
+  ).join('') + units : units;
+  showModal('World overview',`<div class="monitor-summary"><div><strong id="monitor-deployed"></strong> Deployed</div><div><strong id="monitor-active"></strong> Active maps</div><div><strong id="monitor-alerts"></strong> Need attention</div></div>
+    <nav class="sheet-tabs" aria-label="Monitoring views">${tabs}</nav>
+    <div id="monitor-content" class="world-overview" data-view="${view}">${view === 'alerts' ? '<p id="monitor-clear">No alerts for your guild.</p>' : ''}${groups}</div>`, 'LIVE EXPEDITIONS');
+  modal.classList.add('monitor-dialog'); modal.scrollTop = 0;
+  updateMonitor();
+  modal.querySelector('[aria-current="page"]')?.focus({preventScroll:true});
 }
 function spellbook() {
   const c = selectedCharacters()[0], current = spellElement(c) || 'support';
   const support = JOB_ROLES[c.job] === 'support' ? `<div class="inventory-row"><div><strong>${JOBS[c.job].skill}</strong><p>Restore party HP</p></div><button data-attune="support" ${current === 'support' || c.mapId ? 'disabled' : ''}>${current === 'support' ? 'Prepared' : 'Prepare'}</button></div>` : '';
   const rows = support + Object.entries(ELEMENTS).filter(([,e]) => e[combatJob(c.job)]).map(([id, e]) => `<div class="inventory-row"><div><strong>${e[combatJob(c.job)]}</strong><p>${e.name} magic · strong against ${ELEMENTS[e.beats]?.name || 'Undead'}</p></div><button data-attune="${id}" ${current === id || c.mapId ? 'disabled' : ''}>${current === id ? 'Prepared' : 'Prepare'}</button></div>`).join('');
-  showModal(c.name + '’s spellbook', `<p>Prepare one spell at camp for manual casts and automatic farming. Weakness adds 50% spell damage. Matching the enemy element reduces it by 25%.</p>${rows}${modalError}`,'ELEMENTAL MAGIC');
+  showCharacterModal('skills', c, c.name + '’s spellbook', `<p>Prepare one spell at camp for manual casts and automatic farming. Weakness adds 50% spell damage. Matching the enemy element reduces it by 25%.</p>${rows}${modalError}`,'ELEMENTAL MAGIC');
 }
 function buildBook() {
   const c = selectedCharacters()[0];
   if (!c || selected.size !== 1) return toast('Select one adventurer to configure a build.');
   const current = selectedBuild(c.job, c.buildId);
   const rows = classBuilds(c.job).map(build => `<section class="build-option ${current?.id === build.id ? 'active' : ''}"><div><span class="eyebrow">${build.style.toUpperCase()} · ${build.rotation}</span><h3>${build.name}</h3><p>Signature: ${build.skills.at(-1)} · ${build.resource}</p><p>${build.skills.join(' · ')}</p></div><button data-build="${build.id}" ${current?.id === build.id || c.mapId || c.status === 'down' ? 'disabled' : ''}>${current?.id === build.id ? 'Active build' : 'Prepare build'}</button></section>`).join('');
-  showModal(c.name + '’s combat build', `<p>Builds set the automatic skill rotation and combat behavior. Change builds at camp; your choice is saved with this adventurer.</p>${rows || '<p>This class has no combat build options yet.</p>'}${modalError}`, 'CLASS TRAINING');
+  showCharacterModal('skills', c, c.name + '’s combat build', `<p>Builds set the automatic skill rotation and combat behavior. Change builds at camp; your choice is saved with this adventurer.</p>${rows || '<p>This class has no combat build options yet.</p>'}${modalError}`, 'CLASS TRAINING');
 }
 function fieldGuide() {
   const habitats = { zombie:'payon', skeleton:'payon', poring:'meadow', fabre:'meadow', willow:'forest', scorpion:'morroc', peco:'morroc', baphomet:'arena', phreeoni:'lair' };
@@ -415,6 +512,10 @@ async function settle(elapsed, { activeTab = false } = {}) {
 
 document.addEventListener('click', event => {
   if (!state || !ready) return;
+  const monitorView = event.target.closest('[data-monitor-view]');
+  if (monitorView) { worldOverview(monitorView.dataset.monitorView); return; }
+  const sheetPage = event.target.closest('[data-character-page]');
+  if (sheetPage) { openCharacterPage(sheetPage.dataset.characterPage,sheetPage.dataset.id); return; }
   const map = event.target.closest('[data-map]'); if (map) { switchMap(map.dataset.map); return; }
   const card = event.target.closest('[data-character]'); if (card) { setSelection(card.dataset.character, event.shiftKey || multiSelect); return; }
   if (event.target.closest('[data-goal-next]')) { takeGoalAction(); return; }
@@ -482,8 +583,12 @@ document.addEventListener('change', event => {
     const key = control.dataset.tacticsKey;
     if (key) {
       const value = key === 'autoSkill' ? control.checked : Number(control.value) / 100;
-      issue({ type: 'tactic-config', key, value }, { quiet: true });
-      control.blur(); renderUI();
+      const accepted = issue({ type: 'tactic-config', key, value }, { quiet: true });
+      if (control.id === 'sheet-auto-skill') {
+        if (!accepted) control.checked = !value;
+      } else {
+        control.blur(); renderUI();
+      }
     }
   }
 });
@@ -505,7 +610,8 @@ $('select-all').onclick = () => { selected = new Set(state.characters.map(c => c
 $('multi-select').onclick = () => { multiSelect = !multiSelect; $('multi-select').setAttribute('aria-pressed', multiSelect); $('multi-select').textContent = multiSelect ? 'Multi ✓' : 'Multi'; };
 $('first-deploy').onclick = () => { selected = new Set(state.characters.map(c => c.id)); deployment(); };
 $('dismiss-coach').onclick = () => { coachDismissed = true; renderUI(); };
-$('recruit-button').onclick = recruit; $('settings-button').onclick = settings; $('bag-button').onclick = bag; $('guide-button').onclick = fieldGuide; $('bounty-button').onclick = bountyBoard; $('storage-button').onclick = storage; $('world-button').onclick = worldOverview;
+$('character-sheet').onclick = () => openCharacterPage('overview', selectedCharacters()[0]?.id);
+$('recruit-button').onclick = recruit; $('settings-button').onclick = settings; $('bag-button').onclick = bag; $('guide-button').onclick = fieldGuide; $('bounty-button').onclick = bountyBoard; $('storage-button').onclick = storage; $('world-button').onclick = () => worldOverview();
 $('modal-close').onclick = closeModal;
 $('save-button').onclick = () => { persist(); toast(saveError ? 'Export your guild to preserve progress.' : 'Guild saved.'); };
 $('zoom-in').onclick = () => { renderer.zoom(1.18); renderUI(); }; $('zoom-out').onclick = () => { renderer.zoom(1 / 1.18); renderUI(); };
@@ -564,19 +670,30 @@ $('hunt-here').onclick = () => {
   }
 };
 // Minimap: click or drag to jump the camera to a world point.
+$('expand-minimap').onclick = () => {
+  const map = MAPS[renderer.mapId];
+  const rows = state.characters.map((c,index)=>`<button data-world-character="${c.id}"><strong>${index+1} · ${esc(c.name)}</strong><small>${c.mapId ? MAPS[c.mapId].name : 'Guild camp'}</small></button>`).join('');
+  showModal(map.name,`<canvas id="expanded-minimap" width="640" height="400" aria-label="Current map overview"></canvas><div class="atlas-roster">${rows}</div>`,'MAP NAVIGATION');
+  const overview = $('expanded-minimap');
+  renderer.drawMinimap(overview,state,selected);
+  overview.onclick = event => {
+    navigateMinimap(overview,event);
+    closeModal();
+  };
+};
 const minimap = $('minimap');
 let minimapDragging = false;
-const minimapNavigate = event => {
+const navigateMinimap = (canvas,event) => {
   if (!ready) return;
-  const r = minimap.getBoundingClientRect();
-  const world = renderer.minimapToWorld(minimap,
-    (event.clientX - r.left) * (minimap.width / r.width),
-    (event.clientY - r.top) * (minimap.height / r.height));
+  const r = canvas.getBoundingClientRect();
+  const world = renderer.minimapToWorld(canvas,
+    (event.clientX - r.left) * (canvas.width / r.width),
+    (event.clientY - r.top) * (canvas.height / r.height));
   renderer.centerOn(world);
   renderUI();
 };
-minimap.addEventListener('pointerdown', event => { if (!ready) return; minimapDragging = true; minimap.setPointerCapture(event.pointerId); minimapNavigate(event); });
-minimap.addEventListener('pointermove', event => { if (minimapDragging) minimapNavigate(event); });
+minimap.addEventListener('pointerdown', event => { if (!ready) return; minimapDragging = true; minimap.setPointerCapture(event.pointerId); navigateMinimap(minimap,event); });
+minimap.addEventListener('pointermove', event => { if (minimapDragging) navigateMinimap(minimap,event); });
 minimap.addEventListener('pointerup', () => { minimapDragging = false; });
 minimap.addEventListener('pointercancel', () => { minimapDragging = false; });
 $('find-unit').onclick = () => {
@@ -624,7 +741,11 @@ function frame(now) {
   while (accumulator >= STEP) { tick(state); accumulator -= STEP; }
   const preview = orderMode === 'rally' && previewPointer ? renderer.world(previewPointer.x, previewPointer.y) : null;
   renderer.draw(state, selected, hovered, accumulator, preview && { ...preview, radius: Number(radiusControl.value) });
-  if (now - lastMinimap >= 100) { renderer.drawMinimap($('minimap'), state, selected); lastMinimap = now; }
+  if (now - lastMinimap >= 100) {
+    renderer.drawMinimap($('minimap'), state, selected);
+    if (modal.open && $('expanded-minimap')) renderer.drawMinimap($('expanded-minimap'),state,selected);
+    lastMinimap = now;
+  }
   if (now - lastUI > 500) { renderUI(); lastUI = now; }
   if (now - lastSave > 5000) { persist(); lastSave = now; }
 }
