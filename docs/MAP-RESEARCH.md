@@ -10,6 +10,34 @@ Ragnarok Origin is the visual reference for continuous roads, layered scenery, t
 - [Gravity’s Ragnarok series overview](https://img.gravity.co.kr/GravityUpload/0000/2026/02/13/Gravity%20IR%20Presentation_2025_4Q_EN.pdf)
 - [Prontera-Grind terrain source](https://github.com/KzeR7/Prontera-Grind/tree/f47bf27e3092c385ba050da1cdb2fde4176f5183/Updates/map-sprites-v2/work)
 
+## Use the atlas as the content plan
+
+[Atlas data](../src/atlas.js) records the six regions and their destination IDs,
+recommended levels, encounter types and map-building hooks. The browser decides
+playability from [the runtime map registry](../src/data.js). Keep planned entries
+out of runtime saves, deployment and encounter simulation until their terrain,
+spawn groups and starting positions are ready.
+
+Location names follow Ragnarok Online. The level bands and encounter notes
+are Ragna Tactics design targets. The atlas groups nearby locations for browsing.
+The early fields and boss locations draw on Gravity's world and monster guides.
+Later destinations include locations listed in the official Eden Group guides.
+
+- [Gravity’s regional map index](https://ro.gnjoy.com/guide/runemidgarts/maparea.asp?mapSeq=291&parentMapSeq=157)
+- [iRO classic location names](https://renewal.playragnarok.com/news/newslist.aspx/1000?page=172)
+- [Gravity’s Baphomet entry](https://ro.gnjoy.com/guide/runemidgarts/popup/monsterview.asp?monsterID=BAPHOMET) and [Phreeoni entry](https://ro.gnjoy.com/guide/runemidgarts/popup/monsterview.asp?monsterID=PHREEONI)
+- [iRO Eden Group quests](https://playragnarok.com/news/updatedetail.aspx?id=246) and [late-game hunting areas](https://renewal.playragnarok.com/news/eventdetail.aspx?id=104&p=37)
+
+After the South Prontera pilot, build **Prontera Culvert** first. Use its
+water channels to exercise bank transitions and short hunting loops. Follow
+with **Sunken Ship** for prop layering and **Ant Hell** for separate party
+routes with clear regrouping points.
+For each release, use the atlas ID in the map registry, add the corresponding
+save migration and validate deployment, minimap markers, combat rewards and
+offline progression. Progression above Lv. 99 also needs an EXP curve, stat and
+save validation, item availability and encounter tuning before those ranges
+are playable.
+
 ## Build the art and map pipeline
 
 1. Create a South Prontera test strip with three transitions: grass to dirt, grass to shoreline and cliff to grass. Keep the current projection and existing character scale. Author edge and corner combinations in one mixed Terrain Set. Check straight edges, inner and outer corners, three-way joins, river bends and road forks. Give base tiles several compatible variants and put low-frequency color variation and sparse decals on a separate layer. Avoid baking shadows into every ground tile. [Tiled Terrain Sets](https://doc.mapeditor.org/en/latest/manual/terrain/)
@@ -19,7 +47,7 @@ Ragnarok Origin is the visual reference for continuous roads, layered scenery, t
 
 ## Stream the visuals
 
-- Choose 16×16 tile chunks as the first benchmark. Convert the four viewport corners into world coordinates using the existing inverse projection. Add overscan for tall props and include one neighboring ring. Queue missing chunks in distance order, draw a low-detail ground fallback until each is ready, and build only a bounded amount per animation frame. Profile worker rasterization with OffscreenCanvas if main-thread work still produces frame spikes. Keep a main-thread fallback.
+- The current renderer builds up to four missing detailed chunks per frame, closest first, over a cached map overview. For authored terrain, choose 16×16 tile chunks as the first benchmark. Convert the four viewport corners into world coordinates using the existing inverse projection. Add overscan for tall props and include one neighboring ring. Queue missing chunks in distance order, draw a low-detail ground fallback until each is ready, and build only a bounded amount per animation frame. Profile worker rasterization with OffscreenCanvas if main-thread work still produces frame spikes. Keep a main-thread fallback.
 - Composite ground and transitions into cached chunk images at a consistent pixel density. Use shared world-space boundaries and bleed/gutters at sampled texture borders. Publish the same tile seed across adjacent chunks so edge choices and variants match. Sort visible tall props and units together by projected foot position.
 - Budget by actual decoded bytes and pin the current visible set. At full zoom-out use a baked overview terrain layer so a large map cannot thrash the detailed cache. Cancel obsolete prefetch on map switch. Keep simulation, RNG, saving and monster respawns independent of chunk state.
 - Test at several device pixel ratios and fractional zoom levels. Pan slowly across seams and quickly across unloaded edges on desktop and a phone. Record cold time to first usable frame, p95 frame interval during panning, worst chunk-build time and cache bytes. Initial target: p95 below 33 ms on the chosen phone and no blank foreground during travel.

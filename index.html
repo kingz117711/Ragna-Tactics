@@ -15,13 +15,14 @@
   <header class="topbar">
     <a class="brand" href="/" aria-label="Ragna Tactics home"><span class="brand-mark">✧</span><span>RAGNA<span class="brand-sub">TACTICS</span></span></a>
     <div class="breadcrumb"><span class="muted">YOUR GUILD</span><span class="slash">/</span> Expedition overview <span class="build-tag">0.2</span></div>
-    <div class="top-resources"><span class="live-indicator">LIVE WORLD</span><span class="currency"><span class="coin">Z</span><strong id="zeny">150</strong><span class="muted">Zeny</span></span><button class="icon-button" data-action="camp" title="Guild camp" aria-label="Manage guild camp">⌂</button><button class="bag-button" id="bag-button" title="Inventory · equipment, potions, and materials">Bag</button><button class="icon-button" id="settings-button" title="Saves, controls, and help" aria-label="Open settings">☰</button></div>
+    <div class="top-resources"><span class="live-indicator">LIVE WORLD</span><span class="currency"><span class="coin">Z</span><strong id="zeny">150</strong><span class="muted">Zeny</span></span><button class="icon-button" data-action="camp" title="Guild camp" aria-label="Manage guild camp">⌂</button><button class="bag-button" id="adventurer-workspace" aria-controls="adventurer-panel" aria-expanded="false">Character</button><button class="bag-button" id="bag-button" title="Inventory · equipment, potions, and materials">Bag</button><button class="icon-button" id="settings-button" title="Saves, controls, and help" aria-label="Open settings">☰</button></div>
   </header>
   <div class="app-layout">
     <aside class="sidebar">
       <div class="sidebar-heading"><span class="eyebrow">EXPEDITIONS</span><span class="tiny muted" id="location-count"></span></div>
       <h2>Expedition map</h2>
-      <nav id="map-list" aria-label="World locations"></nav>
+      <button id="world-atlas" class="atlas-entry" type="button" data-open-atlas aria-haspopup="dialog"><span aria-hidden="true">◈</span><strong>World atlas</strong><small id="atlas-count"></small></button>
+      <nav id="map-list" aria-label="Playable locations"></nav>
       <div class="camp-card"><div><span class="camp-symbol">⌂</span><strong>Guild camp</strong></div><p>A place to rest, resupply,<br>and choose your next path.</p><button class="text-button" data-action="camp">Manage camp <span>↗</span></button></div>
       <div class="sidebar-bottom"><span class="eyebrow">GUILD MILESTONES</span><div id="milestones"></div><div class="save-status"><span id="save-dot" class="status-dot"></span><span id="save-status">Saved on this device</span><button id="save-button" title="Save now">↻</button></div></div>
     </aside>
@@ -37,6 +38,14 @@
         <div class="map-footer"><span id="map-population">No adventurers deployed</span><span class="map-control-hint">SCROLL TO ZOOM <i>·</i> DRAG TO PAN <i>·</i> RIGHT-CLICK TO MOVE</span><span class="compass" aria-label="North">N <span>↑</span></span></div>
         <div id="order-hint" class="order-hint" hidden><span id="order-instruction"></span><div id="hunt-tools" hidden><label>Radius <select id="hunt-radius"></select></label><button id="hunt-here">Centre on unit</button></div></div>
       </section>
+      <section id="field-console" class="field-console" aria-label="Selected adventurer orders" hidden>
+        <div id="individual-orders" class="individual-orders"></div><div id="field-hotbar" class="field-hotbar" aria-label="Selected adventurer skills"></div>
+      </section>
+      <section id="adventurer-panel" class="adventurer-panel" aria-labelledby="workspace-name" hidden>
+        <header class="workspace-header"><img id="workspace-portrait" alt=""><div><h2 id="workspace-name"></h2><p id="workspace-job"></p></div><button id="workspace-close" aria-label="Close character panel">×</button></header>
+        <nav id="workspace-tabs" class="workspace-tabs" aria-label="Character customization"></nav>
+        <div id="workspace-content" class="workspace-content"></div>
+      </section>
       <section class="command-deck" aria-label="Character commands">
         <div class="command-selection"><span class="eyebrow">COMMAND DECK</span><strong id="selection-title">2 adventurers selected</strong><span id="selection-description">Ready for their first adventure</span></div>
         <div class="command-buttons"><button data-action="move" title="Move to a point (M)"><span>➤</span>Move<kbd>M</kbd></button><button data-action="rally" title="Mark a hunting area"><span>◎</span>Hunt area</button><button data-action="hold" title="Hold current position (H)"><span>◇</span>Hold<kbd>H</kbd></button><button data-action="resume" title="Resume farming (R)"><span>↻</span>Farm<kbd>R</kbd></button><button data-action="skill" title="Use selected character's skill (Q)"><span>✧</span>Skill<kbd>Q</kbd></button><button data-action="retreat" class="retreat" title="Retreat to camp (T)"><span>↩</span>Retreat<kbd>T</kbd></button></div>
@@ -48,7 +57,6 @@
       <div class="roster-heading"><div><span class="eyebrow">YOUR ADVENTURERS</span><h2>The guild</h2></div><span id="roster-count" class="roster-count">2 / 5</span></div>
       <div class="roster-selection"><span class="tiny muted">SELECT YOUR ADVENTURERS</span><button class="text-button" id="multi-select" aria-pressed="false" title="Toggle additive selection. Shift-click also adds characters.">Multi</button><button class="text-button" id="select-all">All</button><button class="text-button" id="detail-toggle" aria-expanded="false" aria-controls="detail-stack">Details</button></div>
       <div id="roster" class="roster"></div>
-      <button id="character-sheet" class="character-sheet-button" aria-haspopup="dialog" hidden></button>
       <button id="job-notice" class="job-notice" data-action="camp" hidden><strong>Job advancement available</strong><span id="job-names"></span><span>Open guild camp ↗</span></button>
       <button id="recruit-button" class="recruit-button"><span>+</span><span id="recruit-label">The next chapter awaits</span><span>♧</span></button>
       <div id="detail-stack" class="detail-stack">

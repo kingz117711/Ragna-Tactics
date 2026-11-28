@@ -43,7 +43,7 @@ export const MAPS = {
     },
   },
   forest: {
-    id: 'forest', name: 'Willow Wood', subtitle: 'Beyond the familiar paths', tier: 'FIELD · LV 4–8', color: '#698a7b', monster: 'willow', count: 7, radius: 16,
+    id: 'forest', name: 'Payon Forest', subtitle: 'Beyond the familiar paths', tier: 'FIELD · LV 4–8', color: '#698a7b', monster: 'willow', count: 7, radius: 16,
     bounds: { x: 32, y: 27 }, terrain: { base: 'grass_forest', accent: 'grass_olive', path: 'dirt_payon', edge: 'cliff_rock' },
     road: [[[-29, 22], [-16, 10], [-4, 2], [8, -6], [29, -23]]],
     scenery: {
@@ -56,10 +56,10 @@ export const MAPS = {
     },
   },
   payon: { id: 'payon', name: 'Payon Cave', subtitle: 'Lanterns beneath the eastern ridge', tier: 'DUNGEON · LV 12–18', color: '#a49bb9', monster: 'zombie', count: 8, radius: 16, bounds: { x: 29, y: 27 }, terrain: { base: 'ruin_cobble', accent: 'cliff_rock', path: 'dirt_payon', edge: 'cliff_rock' }, road: [[[-26, 20], [-12, 12], [-3, 1], [10, -8], [26, -19]]], scenery: { border: ['rock_cliff_crag', 'rock_boulder_mossy'] } },
-  morroc: { id: 'morroc', name: 'Morroc Dunes', subtitle: 'The southern caravan road', tier: 'FIELD · LV 8–14', color: '#cba976', monster: 'scorpion', count: 8, radius: 16, bounds: { x: 33, y: 27 }, terrain: { base: 'sand', accent: 'sand_dark', path: 'dirt_path', edge: 'cliff_sand' }, road: [[[-30, 22], [-17, 13], [-4, 4], [10, -5], [29, -21]]], scenery: { border: ['rock_boulder_mossy', 'rock_cliff_crag'] } },
-  arena: { id: 'arena', boss: true, name: 'The Broken Sanctuary', subtitle: 'Something stirs beneath the ruins', tier: 'BOSS · PARTY RECOMMENDED', color: '#807e95', monster: 'baphomet', count: 1, radius: 16, bounds: { x: 22, y: 20 }, terrain: { base: 'ruin_cobble', accent: 'cliff_rock', path: 'ruin_cobble', edge: 'cliff_rock' }, scenery: { border: ['standing_stone', 'rock_cliff_crag'] } },
+  morroc: { id: 'morroc', name: 'Sograt Desert', subtitle: 'The southern caravan road', tier: 'FIELD · LV 8–14', color: '#cba976', monster: 'scorpion', count: 8, radius: 16, bounds: { x: 33, y: 27 }, terrain: { base: 'sand', accent: 'sand_dark', path: 'dirt_path', edge: 'cliff_sand' }, road: [[[-30, 22], [-17, 13], [-4, 4], [10, -5], [29, -21]]], scenery: { border: ['rock_boulder_mossy', 'rock_cliff_crag'] } },
+  arena: { id: 'arena', boss: true, name: 'Labyrinth Forest', subtitle: 'Baphomet awakens among the ruins', tier: 'BOSS · PARTY RECOMMENDED', color: '#807e95', monster: 'baphomet', count: 1, radius: 16, bounds: { x: 22, y: 20 }, terrain: { base: 'ruin_cobble', accent: 'cliff_rock', path: 'ruin_cobble', edge: 'cliff_rock' }, scenery: { border: ['standing_stone', 'rock_cliff_crag'] } },
 };
-MAPS.lair = { id: 'lair', boss: true, name: 'Sandsea Hollow', subtitle: 'Beneath the caravan road', tier: 'MVP · LV 18+', color: '#c38667', monster: 'phreeoni', count: 1, radius: 16, bounds: { x: 25, y: 23 }, terrain: { base: 'sand_dark', accent: 'sand', path: 'sand', edge: 'cliff_sand' }, scenery: { border: ['rock_cliff_crag', 'rock_boulder_mossy'] } };
+MAPS.lair = { id: 'lair', boss: true, name: 'Sograt Desert · Phreeoni', subtitle: 'Phreeoni beneath the caravan road', tier: 'MVP · LV 18+', color: '#c38667', monster: 'phreeoni', count: 1, radius: 16, bounds: { x: 25, y: 23 }, terrain: { base: 'sand_dark', accent: 'sand', path: 'sand', edge: 'cliff_sand' }, scenery: { border: ['rock_cliff_crag', 'rock_boulder_mossy'] } };
 export const mapBounds = mapId => MAPS[mapId]?.bounds || { x: 15, y: 15 };
 export const JOBS = {
   novice: { name: 'Novice', native: 0, role: 'A new beginning', hp: 100, atk: 10, def: 1, range: 1.8, speed: 3.1, interval: 1.05, skill: 'First Aid', cost: 8, cooldown: 10, description: 'Recover your own HP. Learn the basics before choosing a path.' },
@@ -236,7 +236,7 @@ export function gearVariant(key) {
 }
 export const EQUIPMENT = {
   reliquary: { name:'Payon reliquary', atk:3, def:6, refineMaterial:'Elunium', description:'+3 attack · +6 defense · a feather-bound ward from Payon Cave.' },
-  dune: { name: 'Caravan brooch', atk: 6, def: 2, refineMaterial:'Oridecon', description: '+6 attack · +2 defense · forged from Morroc and Willow Wood materials.' },
+  dune: { name: 'Caravan brooch', atk: 6, def: 2, refineMaterial:'Oridecon', description: '+6 attack · +2 defense · forged from Sograt Desert and Payon Forest materials.' },
   training: { name: 'Training weapon', atk: 0, def: 0, description: 'A dependable first companion.' },
   iron: { name: 'Iron armament', atk: 5, def: 0, refineMaterial:'Oridecon', description: '+5 attack · suitable for every first job.' },
   guard: { name: 'Guard insignia', atk: 1, def: 3, refineMaterial:'Elunium', description: '+1 attack · +3 defense.' },
@@ -280,6 +280,32 @@ export function refineSafeLimit(item){return item?.slot==='weapon'?REFINE_SAFE_L
 export function refineSuccessPercent(item,currentRefine){const target=currentRefine+1;if(!item?.refineable||target>20||target<1)return 0;if(target<=10)return NORMAL_REFINE_RATES[item.slot==='weapon'?item.weaponLevel:'armor']?.[target]??0;const level=item.slot==='weapon'?item.weaponLevel:'armor';if(target<=14)return level===4||level==='armor'?8:18;if(target<=18)return level===4||level==='armor'?7:17;return level===4||level==='armor'?5:15;}
 export function refineCost(item,currentRefine){if(currentRefine>=10)return{zeny:100000,material:item.slot==='weapon'?'bradium':'carnium',amount:1};if(item.slot!=='weapon')return{zeny:2000,material:'elunium',amount:1};const costs={1:[50,'phracon'],2:[200,'emveretarcon'],3:[5000,'oridecon'],4:[20000,'oridecon']};const[zeny,material]=costs[item.weaponLevel]||costs[4];return{zeny,material,amount:1};}
 export const ITEMS = { red_potion:{name:'Red Potion',type:'consumable',description:'Recover HP when used.',effect:'hp',amount:65,roId:501},blue_potion:{name:'Blue Potion',type:'consumable',description:'Recover SP when used.',effect:'sp',amount:45,roId:505},phracon:{name:'Phracon',type:'refining ore',roId:1010},emveretarcon:{name:'Emveretarcon',type:'refining ore',roId:1011},oridecon:{name:'Oridecon',type:'refining ore',roId:984},elunium:{name:'Elunium',type:'refining ore',roId:985},bradium:{name:'Bradium',type:'refining ore',roId:6224},carnium:{name:'Carnium',type:'refining ore',roId:6223}};
+// Field techniques are additional active skills. The existing class build
+// supplies slot one. Each eligible class keeps its techniques after promotion.
+export const FIRST_JOB_KIT = {
+  swordsman:'sword', archer:'bow', mage:'rod', acolyte:'mace', merchant:'mace', thief:'knife',
+};
+export const FIELD_SKILLS = {
+  provoke: { job:'swordsman', name:'Provoke', type:'taunt', levels:[2,6,9], sp:5, time:8, range:6, text:'Draw a targeted enemy away from an ally.' },
+  magnum: { job:'swordsman', name:'Magnum Break', type:'area', levels:[4,7,10], sp:10, time:9, radius:2.8, power:1.25, element:'fire', text:'Sweep enemies around you with a burst of fire.' },
+  arrowShower: { job:'archer', name:'Arrow Shower', type:'area', levels:[2,6,9], sp:9, time:7, radius:2.5, power:1.2, text:'Hit enemies clustered around your target.' },
+  snare: { job:'archer', name:'Snaring Shot', type:'strike', levels:[4,7,10], sp:7, time:8, power:0.8, status:'slow', text:'Slow an enemy so your archer can keep distance.' },
+  frost: { job:'mage', name:'Frost Diver', type:'strike', levels:[2,6,9], sp:9, time:9, power:0.9, element:'water', status:'freeze', text:'Freeze a target to give the party room to move.' },
+  fireball: { job:'mage', name:'Fire Ball', type:'area', levels:[4,7,10], sp:12, time:8, radius:3, power:1.3, element:'fire', text:'Burst fire around the target.' },
+  bless: { job:'acolyte', name:'Blessing', type:'buff', levels:[2,6,9], sp:9, time:12, text:'Boost the attack of nearby party members.' },
+  mend: { job:'acolyte', name:'Emergency Heal', type:'heal', levels:[4,7,10], sp:11, time:10, text:'Heal the designated ally or the most injured party member.' },
+  cart: { job:'merchant', name:'Cart Sweep', type:'area', levels:[2,6,9], sp:9, time:8, radius:3, power:1.2, text:'Hit nearby enemies with the cart.' },
+  rallyCry: { job:'merchant', name:'Rallying Cry', type:'buff', levels:[4,7,10], sp:8, time:12, text:'Boost attack for nearby party members.' },
+  venom: { job:'thief', name:'Venom Strike', type:'strike', levels:[2,6,9], sp:6, time:8, power:1.1, status:'poison', text:'Wound a target and apply poison.' },
+  sand: { job:'thief', name:'Sand Attack', type:'strike', levels:[4,7,10], sp:5, time:8, power:0.8, status:'blind', text:'Blind a target to reduce its accuracy.' },
+};
+export function fieldSkillAvailable(job, id) {
+  if (!Object.hasOwn(FIELD_SKILLS,id)) return false;
+  for (let current = job; current; current = JOBS[current]?.parent) {
+    if (current === FIELD_SKILLS[id].job) return true;
+  }
+  return false;
+}
 export const TACTICS = {
   safe: { name: 'Safe farming', retreat: 0.22, skill: true },
   aggressive: { name: 'Aggressive', retreat: 0.1, skill: true },

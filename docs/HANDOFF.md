@@ -1,8 +1,32 @@
-# Milestone handoff — 2026-11-27
+# Milestone handoff — 2026-11-28
+
+## World atlas and combat presentation
+
+Open **World atlas** above the playable quick links or from the deployment picker.
+The atlas groups 27 destinations across six regions. Recommended level filtering
+includes any destination whose range overlaps the chosen band. A playable map
+opens the field view or preselects a deployment destination. Planned cards show
+the biome, encounter type and design hook. The expedition still needs confirmation
+to deploy. The implemented base-level cap is 99.
+
+Use the stable destination IDs and [map pipeline](MAP-RESEARCH.md) for future
+maps. Start with the existing South Prontera terrain pilot, then use Prontera
+Culvert to exercise a new dungeon and verify the transition from planning to play.
+
+Combat settings remember all hits, highlights, or hidden text in this browser.
+Camera shake is optional, defaults off and observes reduced motion. Automatic
+casts hold position until resolution or interruption. The renderer interpolates
+positions between simulation ticks, caches a ground overview for wide zoom and
+prepares nearby detailed terrain chunks as the camera moves in.
+
+## Independent adventurer controls
+
+See ADVENTURER-WORKFLOW.md for the main-bar workspace, individual field orders,
+per-character hotbar and cards on Renewal equipment instances.
 
 ## Character management and monitoring
 
-Select one adventurer to reveal Manage in the roster. The sheet groups live
+Select one adventurer and use Character in the main bar. The sheet groups live
 vitals, equipment, skill/build controls, attributes and job advancement.
 The Skills page can toggle automatic skill use for this adventurer independently.
 World Overview now has live field, adventurer and alert views, with actions
@@ -28,8 +52,8 @@ order animation.
 
 Rules to keep: redeploying starts a fresh expedition and clears the old hunting area.
 Redeploying or switching maps while in a fight is refused; retreat to camp first.
-Terrain is decorative and has no collision yet. The chunk cache is bounded at 96 and
-must stay at least as large as the largest map's full-view chunk count (meadow ≈63).
+Terrain is decorative and has no collision yet. Detailed chunks use a 160-entry
+cache. The wide view uses a separate three-map overview cache.
 
 Open gaps: no authored South Prontera layout exists upstream, so the layout is
 procedural. Other terrain families (sand, water, cliff, bridge) are unimported. There
@@ -77,7 +101,7 @@ Open Stats on one adventurer. Each earned Base level grants two points, includin
 levels in older saves. At camp, preview and train STR, AGI, VIT, INT, DEX and LUK.
 The simulation uses the bonuses live and offline. Job changes preserve them.
 
-## Sandsea Hollow MVP
+## Sograt Desert · Phreeoni MVP
 
 Deploy two first-job or higher adventurers for Phreeoni. During Sand Pact,
 gather in the blue circle around the marked ally to divide damage. Leave
@@ -85,7 +109,7 @@ the red circle during Sinkhole. A live clear awards the Phreeoni Card.
 Both boss expeditions recall their teams offline. Baphomet keeps its own
 progression and roster unlocks.
 
-## Morroc Dunes and card builds
+## Sograt Desert and card builds
 
 Scorpions and Peco Pecos drop attack and defense cards. A character can socket
 one card into equipped non-training gear at camp. Unequipping stores the gear

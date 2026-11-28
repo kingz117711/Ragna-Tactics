@@ -540,3 +540,64 @@ test('all six transcendent jobs keep their equipment and learned builds at secon
     deploy(s,'payon',['c1']); advance(s,60); assert.ok(c.kills>0);
   }
 });
+
+test('field orders target one adventurer, support follows an ally, boss focus remains individual', () => {
+  const s = createGame();
+  const [a,b] = s.characters;
+  a.job='swordsman'; b.job='archer';
+  assert.equal(command(s,{type:'party',ids}),null);
+  assert.equal(command(s,{type:'deploy',mapId:'meadow',ids}),null);
+  assert.ok(command(s,{type:'field-order',ids:['c2'],mapId:'forest',order:'support',allyId:'c1'}));
+  assert.equal(command(s,{type:'field-order',ids:['c2'],mapId:'meadow',order:'support',allyId:'c1'}),null);
+  b.x = a.x + 12;
+  const gap = b.x - a.x;
+  tick(s); assert.equal(b.supportId,'c1'); assert.ok(b.x-a.x < gap);
+  const boss = createGame();
+  boss.characters.forEach((c,i)=>c.job=i?'archer':'swordsman');
+  assert.equal(command(boss,{type:'party',ids}),null);
+  assert.equal(command(boss,{type:'deploy',mapId:'arena',ids}),null);
+  assert.equal(command(boss,{type:'field-order',ids:['c1'],mapId:'arena',order:'boss'}),null);
+  assert.equal(boss.characters[0].order,'focus');
+  assert.equal(boss.characters[1].order,'farm');
+  assert.equal(command(boss,{type:'hold',ids:['c1'],individual:true}),null);
+  assert.equal(boss.characters[0].order,'hold');
+  assert.equal(boss.characters[1].order,'farm');
+});
+
+test('techniques train and persist per adventurer, and manual skills spend only that unit’s SP',async()=>{
+  const {decodeSave,encodeSave}=await import('../src/persistence.js');
+  const s=createGame(), [a,b]=s.characters; a.job='swordsman'; a.jobLevel=7; b.job='archer'; b.jobLevel=7;
+  const run=(type,fields)=>command(s,{type,ids:['c1'],...fields});
+  assert.ok(run('technique-train',{skillId:'arrowShower'}));
+  assert.equal(run('technique-train',{skillId:'provoke'}),null);
+  assert.equal(run('technique-train',{skillId:'magnum'}),null);
+  assert.equal(run('technique-slot',{slot:0,skillId:'provoke',auto:false}),null);
+  assert.equal(run('technique-slot',{slot:1,skillId:'magnum',auto:true}),null);
+  assert.equal(run('deploy',{mapId:'meadow'}),null);
+  const target=s.maps.meadow.monsters[0]; target.x=a.x+1; target.y=a.y; target.targetId='c2'; a.targetId=target.id;
+  const sp=a.sp, allySp=b.sp;
+  assert.ok(run('technique-cast',{slot:1,mapId:'forest'}));
+  assert.equal(run('technique-cast',{slot:1,mapId:'meadow'}),null);
+  assert.equal(target.targetId,'c1');
+  assert.equal(a.sp,sp-5); assert.equal(b.sp,allySp);
+  assert.ok(run('technique-cast',{slot:1,mapId:'meadow'}));
+  assert.equal(run('technique-cast',{slot:2,mapId:'meadow'}),null);
+  const loaded=decodeSave(encodeSave(s)).state;
+  assert.deepEqual(loaded.characters[0].techniques,a.techniques);
+  assert.equal(loaded.characters[1].techniques,undefined);
+});
+
+test('equipment cards survive transfers and keep their effects on the worn instance',async()=>{
+  const {decodeSave,encodeSave}=await import('../src/persistence.js');
+  const s=createGame(), [a,b]=s.characters;
+  s.inventory.gear={knife:1}; s.inventory.gearItems=[{uid:'test_knife',itemId:'knife',refine:0,affixes:[]}];
+  s.inventory.cards.scorpion=1;
+  const equip=id=>command(s,{type:'gear-equip',ids:[id],slot:'weapon',uid:'test_knife',item:'knife'});
+  const socket=(id,card)=>command(s,{type:'gear-card',ids:[id],uid:'test_knife',card,index:0});
+  assert.equal(equip(a.id),null); const atk=stats(a).atk;
+  assert.equal(socket(a.id,'scorpion'),null); assert.ok(stats(a).atk>atk);
+  assert.equal(command(s,{type:'gear-unequip',ids:[a.id],slot:'weapon'}),null);
+  assert.deepEqual(decodeSave(encodeSave(s)).state.inventory.gearItems[0].cards,['scorpion']);
+  assert.equal(equip(b.id),null); assert.deepEqual(b.gear.weapon.cards,['scorpion']);
+  assert.equal(socket(b.id,null),null); assert.equal(s.inventory.cards.scorpion,1);
+});

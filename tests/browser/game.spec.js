@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { createGame, gainExp } from '../../src/sim.js';
+import { command, createGame, gainExp } from '../../src/sim.js';
 import { jobChoices } from '../../src/data.js';
 import { encodeSave } from '../../src/persistence.js';
 import { fitZoom, project } from '../../src/renderer.js';
@@ -47,7 +47,7 @@ test('new guild deploys, forms a party, switches maps, orders movement, and save
   await page.getByRole('button', { name: 'Plan your first expedition' }).click();
   await page.getByRole('button', { name: 'Begin expedition' }).click();
   await expect(page.locator('#map-population')).toContainText('2 adventurers');
-  await page.locator('[data-map="forest"]').click(); await expect(page.locator('#map-name')).toHaveText('Willow Wood');
+  await page.locator('[data-map="forest"]').click(); await expect(page.locator('#map-name')).toHaveText('Payon Forest');
   await expect(page.locator('#map-population')).toContainText('0 adventurers');
   await page.locator('[data-map="meadow"]').click();
   await page.locator('[data-action="move"]').click();
@@ -79,7 +79,7 @@ test('job advancement, boss deployment, and storage work from a progressed save'
   await page.locator('#select-all').click(); await page.getByRole('button', { name: 'Link as party' }).click();
   await page.locator('[data-action="deploy"]').click(); await page.locator('input[value="arena"]').check();
   await page.getByRole('button', { name: 'Begin expedition' }).click();
-  await expect(page.locator('#boss-status')).toBeVisible(); await expect(page.locator('#map-name')).toHaveText('The Broken Sanctuary');
+  await expect(page.locator('#boss-status')).toBeVisible(); await expect(page.locator('#map-name')).toHaveText('Labyrinth Forest');
   await page.screenshot({ path: 'artifacts/foundation-boss.png', fullPage: true });
   await page.locator('#storage-button').click(); await expect(page.locator('#modal')).toContainText('Sanctuary relic');
 });
@@ -198,9 +198,9 @@ test('move, hold, focus, retreat, resume, multi-map overview and character navig
   await page.locator('[data-action="retreat"]').click();
   await expect.poll(async () => (await saved()).characters[0].mapId, { timeout: 24000 }).toBeNull();
   await page.locator('#world-button').click();
-  await expect(page.locator('#modal')).toContainText('Willow Wood');
+  await expect(page.locator('#modal')).toContainText('Payon Forest');
   await page.locator('[data-world-character="c2"]').click();
-  await expect(page.locator('#map-name')).toHaveText('Willow Wood');
+  await expect(page.locator('#map-name')).toHaveText('Payon Forest');
   await expect.poll(async () => (await saved()).characters[1].mapId).toBe('forest');
 });
 test('expedition goal action deploys the starting pair and v1 saves without new fields still load', async ({ page }) => {
@@ -330,7 +330,7 @@ test('view Morroc and socket a Peco Peco Card at camp', async ({page}) => {
   const s = createGame(); s.inventory.cards.peco = 1; s.characters[0].equipment = 'guard';
   await page.addInitScript(raw => { if (!localStorage.length) localStorage.setItem('ragna-tactics:save:v1',raw); },encodeSave(s));
   await boot(page); await page.locator('[data-map="morroc"]').click();
-  await expect(page.locator('#map-name')).toHaveText('Morroc Dunes');
+  await expect(page.locator('#map-name')).toHaveText('Sograt Desert');
   await page.locator('[data-character="c1"]').first().click(); await page.locator('[data-action="equipment"]').click();
   await page.locator('[data-socket="peco"]').click();
   await expect(page.getByRole('heading',{name:'Guard insignia · Peco Peco Card'})).toBeVisible();
@@ -339,7 +339,7 @@ test('view Morroc and socket a Peco Peco Card at camp', async ({page}) => {
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).state.characters[0].card)).toBe('peco');
 });
 
-test('deploy a second-job duo to Sandsea Hollow and read the MVP party order', async ({page}) => {
+test('deploy a second-job duo to Sograt Desert · Phreeoni and read the MVP party order', async ({page}) => {
   const s = createGame();
   Object.assign(s.characters[0], {job:'knight',level:24,hp:550});
   Object.assign(s.characters[1], {job:'priest',level:24,hp:460});
@@ -397,7 +397,7 @@ test('prepare elemental magic and use the field guide to find a weak target', as
   await page.locator('#modal-close').click(); await page.locator('#guide-button').click();
   const entry=page.locator('.bounty-entry').filter({has:page.getByRole('heading',{name:'Phreeoni',exact:true})});
   await expect(entry).toContainText('Weak to Earth');
-  await entry.getByRole('button').click(); await expect(page.locator('#map-name')).toHaveText('Sandsea Hollow');
+  await entry.getByRole('button').click(); await expect(page.locator('#map-name')).toHaveText('Sograt Desert · Phreeoni');
 });
 
 test('settle a split guild, craft the Payon ward, prepare Holy magic and deploy', async ({page}) => {
@@ -480,7 +480,7 @@ test('South Prontera holds two separate hunting areas and both teams keep farmin
   expect(Math.hypot(areas.characters[0].farmCenter.x + 25, areas.characters[0].farmCenter.y - 17)).toBeLessThan(1);
   expect(Math.hypot(areas.characters[1].farmCenter.x - 23, areas.characters[1].farmCenter.y - 8)).toBeLessThan(1);
   expect(areas.characters[0].farmCenter).not.toEqual(areas.characters[1].farmCenter);
-  // Send Lyra to Willow Wood; Aren must keep farming the meadow unattended.
+  // Send Lyra to Payon Forest; Aren must keep farming the meadow unattended.
   // (Redeploying out of an active fight is refused — retreat to camp first.)
   await page.locator('[data-character="c2"]').click();
   await page.locator('[data-action="retreat"]').click();
@@ -582,20 +582,19 @@ test('manage one adventurer from the roster and jump to them from the expanded m
   await page.setViewportSize({width:390,height:844});
   await boot(page);
   await page.locator('#roster [data-character="c1"]').click();
-  await expect(page.locator('#character-sheet')).toContainText('Manage Aren');
-  await page.locator('#character-sheet').click();
-  await expect(page.locator('#character-vitals')).toContainText('Guild camp');
-  for (const tab of ['gear','skills','stats','job']) {
-    await page.locator(`[data-character-page="${tab}"]`).click();
-    await expect(page.locator(`[data-character-page="${tab}"]`)).toHaveAttribute('aria-current','page');
+  await page.locator('#adventurer-workspace').click();
+  await expect(page.locator('#workspace-name')).toHaveText('Aren');
+  for (const tab of ['gear','skills','stats','jobs']) {
+    await page.locator(`[data-workspace-page="${tab}"]`).click();
+    await expect(page.locator(`[data-workspace-page="${tab}"]`)).toHaveAttribute('aria-current','page');
     if (tab === 'skills') {
-      await page.locator('#sheet-auto-skill').uncheck();
+      await page.locator('#workspace-auto').uncheck();
       const saved = await readSave(page);
       expect(saved.characters.map(c=>c.tactics.autoSkill)).toEqual([false,true]);
     }
   }
   await page.screenshot({path:'artifacts/character-sheet-mobile.png'});
-  await page.locator('#modal-close').click();
+  await page.locator('#workspace-close').click();
   await page.locator('#expand-minimap').click();
   await expect(page.locator('#expanded-minimap')).toBeVisible();
   await page.locator('#modal [data-world-character="c2"]').click();
@@ -615,5 +614,151 @@ test('monitor views show field locations, per-character vitals and actionable al
   await page.locator('[data-monitor-view="alerts"]').click();
   await expect(page.locator('[data-monitor-unit]:visible')).toHaveCount(1);
   await page.locator('[data-monitor-unit="c1"]').getByRole('button',{name:'Manage'}).click();
-  await expect(page.locator('#modal-title')).toHaveText('Aren');
+  await expect(page.locator('#modal')).toBeHidden();
+  await expect(page.locator('#workspace-name')).toHaveText('Aren');
+});
+
+test('main-bar workspace promotes one adventurer and compares and sockets individual gear', async ({page})=>{
+  const s=createGame();
+  s.characters[0].jobLevel=10;
+  s.characters[0].level=5;
+  s.inventory.gear={knife:1};
+  s.inventory.gearItems=[{uid:'test_knife',itemId:'knife',refine:0,affixes:[]}];
+  s.inventory.cards.scorpion=1;
+  await page.addInitScript(raw=>{ if(!localStorage.length) localStorage.setItem('ragna-tactics:save:v1',raw); },encodeSave(s));
+  await boot(page);
+  await page.locator('#roster [data-character="c1"]').click();
+  await page.locator('#adventurer-workspace').click();
+  await expect(page.locator('#adventurer-panel')).toBeVisible();
+  await expect(page.locator('#modal')).toBeHidden();
+  await expect(page.locator('.gear-delta')).toContainText('ATK +17');
+  await page.screenshot({path:'artifacts/workspace-desktop.png',animations:'disabled'});
+  await page.locator('[data-workspace-equip="test_knife"]').click();
+  await page.locator('[data-workspace-socket="scorpion"]').click();
+  await page.locator('[data-workspace-page="stats"]').click();
+  await page.getByRole('button',{name:'Add STR',exact:true}).click();
+  await page.locator('[data-workspace-apply-stats]').click();
+  expect((await readSave(page)).characters[0].attributes.str).toBe(1);
+  await page.locator('[data-workspace-page="jobs"]').click();
+  await page.locator('[data-workspace-job="swordsman"]').click();
+  await page.locator('[data-workspace-promote]').click();
+  const saved=await readSave(page);
+  expect(saved.characters[0].gear.weapon.cards).toEqual(['scorpion']);
+  expect(saved.characters.map(c=>c.job)).toEqual(['swordsman','novice']);
+  expect(saved.inventory.gear.sword).toBe(1);
+});
+
+test('field hotbar casts one adventurer’s trained skill while another team stays deployed',async({page})=>{
+  const s=createGame(), {command}=await import('../../src/sim.js');
+  const [a,b]=s.characters;
+  a.job='swordsman'; a.jobLevel=4; a.tactics.autoSkill=false;
+  b.job='archer';
+  command(s,{type:'deploy',ids:[b.id],mapId:'forest'});
+  const place=command(s,{type:'deploy',ids:[a.id],mapId:'meadow'});
+  expect(place).toBeNull();
+  a.techniques={ranks:{magnum:1},slots:[{id:'magnum',auto:false},null],timers:{}};
+  a.order='hold'; a.attackTimer=100;
+  const target=s.maps.meadow.monsters[0];
+  Object.assign(target,{x:a.x+1,y:a.y,hp:200,timer:100});
+  a.targetId=target.id;
+  s.maps.meadow.monsters=[target]; s.maps.forest.monsters=[]; s.seed=0;
+  await page.addInitScript(raw=>{if(!localStorage.length)localStorage.setItem('ragna-tactics:save:v1',raw);},encodeSave(s));
+  await boot(page);
+  await page.locator('#roster [data-character="c1"]').click();
+  await expect(page.locator('#field-console')).toBeVisible();
+  await expect(page.locator('[data-hotbar="1"]')).toBeEnabled();
+  await page.keyboard.press('2');
+  const saved=await readSave(page);
+  expect(saved.characters[0].techniques.timers.magnum).toBe(9);
+  expect(saved.characters[1].mapId).toBe('forest');
+  expect(saved.maps.meadow.monsters[0].hp).toBeLessThan(200);
+  await page.setViewportSize({width:390,height:844});
+  await expect(page.locator('#field-hotbar')).toBeInViewport();
+  await page.screenshot({path:'artifacts/field-console-phone.png',animations:'disabled'});
+});
+
+test('atlas groups 27 destinations by region, filters through Lv. 150, and only routes to live maps', async ({ page }) => {
+  await boot(page);
+  await page.getByRole('button', { name: /World atlas/ }).click();
+  const atlas = page.locator('dialog.atlas-dialog');
+  await expect(atlas.locator('.atlas-region')).toHaveCount(6);
+  await expect(atlas.locator('.atlas-map')).toHaveCount(27);
+  await expect(atlas.locator('[data-atlas-map]')).toHaveCount(6);
+  await page.screenshot({ path: 'artifacts/world-atlas-desktop.png', animations: 'disabled' });
+  await atlas.getByLabel('Recommended level').selectOption({ label: 'Lv. 126–150' });
+  await expect(atlas.getByRole('heading', { name: 'Biolabs 3F' })).toBeVisible();
+  await expect(atlas.getByRole('heading', { name: 'South Prontera' })).toHaveCount(0);
+  await expect(atlas.locator('[data-atlas-map]')).toHaveCount(0);
+  await atlas.getByLabel('Playable only').check();
+  await expect(atlas.getByText(/No destinations match/)).toBeVisible();
+  await atlas.getByLabel('Recommended level').selectOption('');
+  await expect(atlas.locator('.atlas-map')).toHaveCount(6);
+  await atlas.locator('[data-atlas-map=forest]').click();
+  await expect(page.locator('#map-name')).toHaveText('Payon Forest');
+  await expect(page.locator('#map-population')).toContainText('0 adventurers');
+  await page.locator('#first-deploy').click();
+  await page.getByRole('button', { name: /Browse the world atlas/ }).click();
+  await atlas.locator('[data-atlas-map=morroc]').click();
+  await expect(page.locator('input[name=destination][value=morroc]')).toBeChecked();
+  await expect(page.locator('input[name=destination]')).toHaveCount(6);
+});
+
+test('the world atlas fits a phone and combat display settings survive reload', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await boot(page);
+  await page.getByRole('button', { name: /World atlas/ }).click();
+  const atlas = page.locator('dialog.atlas-dialog');
+  await expect(atlas).toBeVisible();
+  expect(await atlas.evaluate(el => el.scrollWidth === el.clientWidth && el.scrollHeight > el.clientHeight)).toBe(true);
+  await page.screenshot({ path: 'artifacts/world-atlas-mobile.png', animations: 'disabled' });
+  await page.locator('#modal-close').click();
+  await page.locator('#settings-button').click();
+  const combatText = page.getByRole('combobox', { name: 'Combat text', exact: true });
+  const shake = page.getByLabel(/Shake on critical hits/);
+  await expect(combatText).toHaveValue('all');
+  await expect(shake).not.toBeChecked();
+  await combatText.selectOption('highlights');
+  await shake.check();
+  await page.reload();
+  await expect(page.locator('#loading')).toBeHidden();
+  await page.locator('#settings-button').click();
+  await expect(combatText).toHaveValue('highlights');
+  await expect(shake).toBeChecked();
+});
+
+test('walking renders intermediate positions and every playable field paints at fit zoom', async ({ page }) => {
+  const state = createGame(71);
+  const [c] = state.characters;
+  command(state, { type: 'deploy', ids: [c.id], mapId: 'meadow' });
+  command(state, { type: 'move', ids: [c.id], mapId: 'meadow', point: { x: 15, y: 7 } });
+  await page.addInitScript(({ raw, name }) => {
+    localStorage.setItem('ragna-tactics:save:v1', raw);
+    window.walkSamples = [];
+    const fill = CanvasRenderingContext2D.prototype.fillText;
+    CanvasRenderingContext2D.prototype.fillText = function (text, x, y, ...args) {
+      if (this.canvas.id === 'battlefield' && text === name && window.walkSamples.length < 150) {
+        const point = this.getTransform().transformPoint({ x, y });
+        window.walkSamples.push([performance.now(), point.x]);
+      }
+      return fill.call(this, text, x, y, ...args);
+    };
+  }, { raw: encodeSave(state), name: c.name });
+  await boot(page);
+  await expect.poll(() => page.evaluate(() => window.walkSamples.some(([time, x], index, samples) => {
+    const next = samples[index + 1], after = samples[index + 2];
+    return next && after && after[0] - time < 80 && x < next[1] && next[1] < after[1];
+  }))).toBe(true);
+  for (const id of ['meadow', 'forest', 'payon', 'morroc', 'arena', 'lair']) {
+    await page.locator(`[data-map="${id}"]`).click();
+    const painted = await page.locator('#battlefield').evaluate(async canvas => {
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const { width, height } = canvas;
+      const pixels = canvas.getContext('2d').getImageData(0, 0, width, height);
+      const rgb = (x, y) => [...pixels.data.slice((Math.round(y) * width + Math.round(x)) * 4, (Math.round(y) * width + Math.round(x)) * 4 + 3)];
+      const edge = rgb(20, 20);
+      const ground = rgb(width * 0.42, height * 0.54);
+      return Math.hypot(...ground.map((channel, i) => channel - edge[i])) > 20;
+    });
+    expect(painted, id).toBe(true);
+  }
 });

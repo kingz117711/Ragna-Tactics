@@ -1,4 +1,4 @@
-import { combatJob, classBuilds, defaultBuild, gearKey, gearVariant, REFINEMENT, ORE_INFO, ELEMENTS, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, MONSTERS, HUNT_RADII, VERSION, MAPS, mapBounds, JOBS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, TACTICS, TACTIC_PRESETS, TARGET_PREFS, STATUS } from './data.js';
+import { FIELD_SKILLS, fieldSkillAvailable, combatJob, classBuilds, defaultBuild, gearKey, gearVariant, REFINEMENT, ORE_INFO, ELEMENTS, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, MONSTERS, HUNT_RADII, VERSION, MAPS, mapBounds, JOBS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, TACTICS, TACTIC_PRESETS, TARGET_PREFS, STATUS } from './data.js';
 import { availablePoints, populateField, createGame, advanceExpeditionGoals } from './sim.js';
 export const SAVE_KEY = 'ragna-tactics:save:v1';
 export const BACKUP_KEY = 'ragna-tactics:backup:v1';
@@ -31,11 +31,25 @@ export function validateState(s) {
       gearInstanceIds.add(instance.uid);instance.refine??=0;instance.affixes??=[];
       valid(Number.isInteger(instance.refine)&&finite(instance.refine,0,20)&&(instance.refine===0||item.refineable));
       valid(Array.isArray(instance.affixes)&&instance.affixes.length<=3);
+    valid(instance.cards === undefined || (Array.isArray(instance.cards) && instance.cards.length <= item.slots && instance.cards.every(id=>own(CARDS,id))));
       const seenAffixes=new Set();
       for(const affix of instance.affixes){
         valid(affix&&own(GEAR_AFFIXES,affix.id)&&!seenAffixes.has(affix.id)&&GEAR_AFFIXES[affix.id].slots.includes(item.slot));seenAffixes.add(affix.id);
         valid(Number.isInteger(affix.value)&&finite(affix.value,GEAR_AFFIXES[affix.id].min,GEAR_AFFIXES[affix.id].max));
       }
+    }
+    if (c.techniques !== undefined) {
+      const {ranks,slots,timers} = c.techniques || {};
+      valid(ranks && typeof ranks === 'object' && !Array.isArray(ranks));
+      for (const [id,rank] of Object.entries(ranks)) valid(fieldSkillAvailable(c.job,id) && Number.isInteger(rank) && finite(rank,1,FIELD_SKILLS[id].levels.length));
+      valid(Array.isArray(slots) && slots.length === 2);
+      const equipped = new Set();
+      for (const slot of slots) if (slot !== null) {
+        valid(slot && own(ranks,slot.id) && !equipped.has(slot.id) && typeof slot.auto === 'boolean');
+        equipped.add(slot.id);
+      }
+      valid(timers && typeof timers === 'object' && !Array.isArray(timers));
+      for (const [id,timer] of Object.entries(timers)) valid(own(ranks,id) && finite(timer,0,FIELD_SKILLS[id].time));
     }
     if (c.buildId === undefined) c.buildId = defaultBuild(c.job);
     valid(c.buildId === null || classBuilds(c.job).some(build => build.id === c.buildId));
@@ -77,7 +91,10 @@ export function validateState(s) {
     valid(/^p\d+$/.test(p.id) && !parties.has(p.id) && text(p.name) && ids.has(p.leaderId)); parties.add(p.id);
     valid(s.characters.filter(c => c.partyId === p.id).length >= 2 && s.characters.find(c => c.id === p.leaderId).partyId === p.id);
   }
-  for (const c of s.characters) valid(!c.partyId || parties.has(c.partyId));
+  for (const c of s.characters) {
+    valid(!c.partyId || parties.has(c.partyId));
+    valid(c.supportId === undefined || (ids.has(c.supportId) && c.supportId !== c.id));
+  }
   const monsterIds = new Set();
   for (const key of Object.keys(MAPS)) {
     if (['morroc','lair','payon'].includes(key) && s.maps && !Object.hasOwn(s.maps, key)) continue;
@@ -95,6 +112,7 @@ export function validateState(s) {
       valid(enemy.statuses && typeof enemy.statuses === 'object' && !Array.isArray(enemy.statuses));
       for (const [status, record] of Object.entries(enemy.statuses)) valid(own(STATUS, status) && record && finite(record.remaining, 0, 30) && finite(record.potency, 0, 100) && ids.has(record.sourceId));
       valid(finite(enemy.hp, -10000, 10000) && finite(enemy.timer, -10, 100) && finite(enemy.respawn, -1, 100));
+      valid(enemy.threatLock === undefined || finite(enemy.threatLock,0,4));
       valid(enemy.targetId === null || ids.has(enemy.targetId));
       valid(['idle', 'walk', 'attack'].includes(enemy.stance) && Number.isInteger(enemy.direction) && finite(enemy.direction, 0, 7));
       valid(finite(enemy.attackFlash, 0, 2));
@@ -123,6 +141,7 @@ export function validateState(s) {
     gearInstanceIds.add(instance.uid);instance.refine??=0;instance.affixes??=[];
     valid(Number.isInteger(instance.refine)&&finite(instance.refine,0,20)&&(instance.refine===0||item.refineable));
     valid(Array.isArray(instance.affixes)&&instance.affixes.length<=3);
+    valid(instance.cards === undefined || (Array.isArray(instance.cards) && instance.cards.length <= item.slots && instance.cards.every(id=>own(CARDS,id))));
     const seenAffixes=new Set();
     for(const affix of instance.affixes){
       valid(affix&&own(GEAR_AFFIXES,affix.id)&&!seenAffixes.has(affix.id)&&GEAR_AFFIXES[affix.id].slots.includes(item.slot));seenAffixes.add(affix.id);

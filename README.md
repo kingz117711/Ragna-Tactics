@@ -27,7 +27,7 @@ with Web Locks support; localhost and HTTPS are supported. Open just one game ta
 4. Select a different map to view it. This never moves your characters or stops
    another team's simulation. Deploy individuals separately to farm different maps.
 5. At **Novice Job Lv. 10**, retreat, open **Guild camp** (⌂), and choose a first job.
-6. Promote at least two adventurers, deploy them to The Broken Sanctuary, and
+6. Promote at least two adventurers, deploy them to Labyrinth Forest, and
    defeat Baphomet. Move out of the red attack indicators. Recruit your third Novice.
 
 Camera: scroll or +/− to zoom, drag to pan, F to fit. Double-click a portrait to
