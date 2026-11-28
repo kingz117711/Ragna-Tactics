@@ -474,7 +474,10 @@ h2{
   flex:1;
   min-height:260px;
   overflow:hidden;
-  isolation:isolate
+  isolation:isolate;
+  /* Matches the canvas mist so the field has no visible cut edge before the
+     first frame paints (the renderer draws the same atmosphere). */
+  background:#1e2f26
 }
 .battlefield canvas{
   width:100%;

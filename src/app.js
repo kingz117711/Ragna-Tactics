@@ -1002,6 +1002,9 @@ document.addEventListener('visibilitychange', async () => {
   else if (hiddenAt) { const elapsed = (Date.now() - hiddenAt) / 1000; hiddenAt = null; try { await settle(elapsed, { activeTab: true }); renderUI(); } catch (err) { toast(err.message); } lastTime = performance.now(); }
 });
 window.addEventListener('pagehide', persist);
+// Read-only debug seam for automated visual checks and support reports: the live
+// camera, the viewed field and the canvas size. Nothing here mutates game state.
+window.__ragna = { get renderer() { return renderer; }, get sprites() { return sprites; }, get mapId() { return renderer?.mapId; }, get state() { return state; } };
 function frame(now) {
   requestAnimationFrame(frame);
   if (!ready || !state || document.hidden || settling) { lastTime = now; return; }
