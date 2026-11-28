@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-11-28 — South Prontera terrain pilot and skills
+
+- Added the first seamless terrain pilot on the `meadow` map: imported original
+  Prontera-Grind terrain/prop art (pinned commit, provenance manifest), a Tiled
+  authoring file plus a deterministic build-time converter, and a baked layout with a
+  branching road network, shoreline, two hunting districts and 8 landmarks. Terrain is
+  decorative (no collision) and kept separate from gameplay data.
+- Added detail-on-approach rendering: LOD levels (full/tiles-only/overview), bounded
+  chunk cache with visible-set pinning, and prefetch. Extended the minimap with
+  roads, zones, shoreline, landmarks and a direct jump to every roster member.
+- Added a learnable Skills system: a `SKILLS` catalog, the full Swordsman vertical
+  slice, `skill-learn`/`loadout` commands with save validation and migration,
+  auto/manual loadout mode, and a Skills page UI. Promoting to a new job line resets
+  skills and rebuilds the loadout; transcendent jobs resolve their mastery line.
+- Added terrain migration invariants and skill round-trip tests (82/82 unit tests).
+- Captured desktop/overview/closeup/phone and Skills screenshots plus cold-load and
+  pan metrics. See docs/MAP-RESEARCH.md and docs/MMO-FEATURE-GAPS.md.
+
 ## 2026-11-27 — Playable foundation 0.1
 
 - Established the owner-confirmed direction and a root AGENTS.md for continuation.

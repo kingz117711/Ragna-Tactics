@@ -285,6 +285,58 @@ export const TACTICS = {
   aggressive: { name: 'Aggressive', retreat: 0.1, skill: true },
   conserve: { name: 'Conserve SP', retreat: 0.25, skill: false },
 };
+// Learnable skill catalog. The Swordsman line (Swordsman → Knight → Lord Knight)
+// is the complete vertical slice: multiple skills, each with ranks that unlock at
+// job levels. Other lines carry their signature skill at rank 1 so the Skills
+// page stays consistent; they expand in later milestones.
+export const SKILLS = {
+  bash: { name: 'Bash', job: 'swordsman', maxRank: 3, cost: 7, cooldown: 5, unlock: [1, 6, 15], description: 'A heavy strike that draws enemy attention.', effect: 'single' },
+  power_strike: { name: 'Power Strike', job: 'swordsman', maxRank: 2, cost: 9, cooldown: 6, unlock: [4, 14], description: 'Cleave up to two foes with a powered swing.', effect: 'splash' },
+  brandish_spear: { name: 'Brandish Spear', job: 'knight', maxRank: 3, cost: 11, cooldown: 6, unlock: [1, 9, 22], description: 'Sweep nearby enemies and draw them onto the Knight.', effect: 'splash' },
+  pierce: { name: 'Pierce', job: 'knight', maxRank: 2, cost: 8, cooldown: 4, unlock: [3, 12], description: 'A focused spear thrust against a single foe.', effect: 'single' },
+  spiral_pierce: { name: 'Spiral Pierce', job: 'lordKnight', maxRank: 3, cost: 13, cooldown: 7, unlock: [1, 12, 28], description: 'A sweeping spear strike draws enemies within five tiles.', effect: 'splash' },
+  fire_bolt: { name: 'Fire Bolt', job: 'mage', maxRank: 1, cost: 10, cooldown: 6, unlock: [1], description: 'Strike a target and nearby enemies with fire.', effect: 'splash' },
+  double_strafe: { name: 'Double Strafe', job: 'archer', maxRank: 1, cost: 8, cooldown: 5, unlock: [1], description: 'Two quick arrows against a priority target.', effect: 'single' },
+  heal: { name: 'Heal', job: 'acolyte', maxRank: 1, cost: 9, cooldown: 5, unlock: [1], description: 'Restore the most injured party member.', effect: 'heal' },
+  mammonite: { name: 'Mammonite', job: 'merchant', maxRank: 1, cost: 8, cooldown: 6, unlock: [1], description: 'A forceful single-target strike.', effect: 'single' },
+  envenom: { name: 'Envenom', job: 'thief', maxRank: 1, cost: 7, cooldown: 5, unlock: [1], description: 'A quick piercing strike against a single enemy.', effect: 'single' },
+  sanctuary: { name: 'Sanctuary', job: 'priest', maxRank: 1, cost: 15, cooldown: 6, unlock: [1], description: 'Restore HP to injured party members within eight tiles.', effect: 'heal' },
+  storm_gust: { name: 'Storm Gust', job: 'wizard', maxRank: 1, cost: 16, cooldown: 6, unlock: [1], description: 'Blast a cluster around the target and delay their attacks.', effect: 'splash' },
+  hammer_fall: { name: 'Hammer Fall', job: 'blacksmith', maxRank: 1, cost: 11, cooldown: 6, unlock: [1], description: 'Strike clustered foes and delay their attacks.', effect: 'splash' },
+  blitz_beat: { name: 'Blitz Beat', job: 'hunter', maxRank: 1, cost: 12, cooldown: 5, unlock: [1], description: 'Your falcon strikes the target and nearby enemies.', effect: 'splash' },
+  sonic_blow: { name: 'Sonic Blow', job: 'assassin', maxRank: 1, cost: 12, cooldown: 5, unlock: [1], description: 'Burst down a single foe; extra below half HP.', effect: 'single' },
+};
+export function skillDef(id) { return SKILLS[id] || null; }
+export function skillMaxRank(id) { return SKILLS[id]?.maxRank || 1; }
+export function skillUnlockLevel(id, rank) { return SKILLS[id]?.unlock?.[rank - 1] ?? 1; }
+// Skills are authored under a base job line; transcendent jobs (High Wizard,
+// etc.) inherit their mastery line's catalog via JOBS[id].mastery. Resolve the
+// effective job before filtering so signature skills work for every tier.
+export function skillCatalog(job) {
+  const eff = (job && JOBS[job] && JOBS[job].mastery) ? JOBS[job].mastery : job;
+  return Object.entries(SKILLS).filter(([, def]) => def.job === eff);
+}
+// The signature skill used for loadout defaults and validation: resolves a
+// transcendent job to its mastery line so a promoted character still has a
+// default active skill (e.g. High Wizard -> storm_gust).
+export function loadoutSignatureSkillId(job) {
+  const eff = (job && JOBS[job] && JOBS[job].mastery) ? JOBS[job].mastery : job;
+  return skillCatalog(eff)[0]?.[0] || null;
+}
+// The signature skill shown for combat presentation: only a job's own catalog,
+// so transcendent builds keep their build skill as the visible cast signature.
+export function signatureSkillId(job) {
+  return Object.entries(SKILLS).filter(([, def]) => def.job === job)[0]?.[0] || null;
+}
+export function learnedRank(c, id) { return Math.max(0, Math.min(skillMaxRank(id), Math.round(Number(c.skills?.[id]) || 0))); }
+export function skillPower(c) { let total = 0; for (const id of Object.keys(c.skills || {})) total += learnedRank(c, id) * 2; return total; }
+export function activeSkillId(c) {
+  const last = c.loadout?.at(-1);
+  if (last && SKILLS[last] && learnedRank(c, last) > 0) return last;
+  return signatureSkillId(c.job);
+}
+export function defaultLoadout(c) { const sig = loadoutSignatureSkillId(c.job); return sig ? [sig] : []; }
+export function loadoutMode(c) { return c.loadoutMode === 'manual' ? 'manual' : 'auto'; }
 // Per-character tactics. A preset is a starting point; the detailed fields below
 // are what the simulation actually reads. Thresholds are HP fractions (0–0.95).
 export const TACTIC_PRESETS = {

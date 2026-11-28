@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame, command, advance, tick, gainExp, stats, settleOffline, rosterLimit, effectiveTactics, roleOf, advanceExpeditionGoals } from '../src/sim.js';
-import { OFFLINE_CAP, MONSTERS, mapBounds } from '../src/data.js';
+import { OFFLINE_CAP, MONSTERS, mapBounds, MAPS, SKILLS, skillCatalog, learnedRank, skillPower, activeSkillId, skillUnlockLevel } from '../src/data.js';
+import { readFileSync } from 'node:fs';
+import { encodeSave, decodeSave } from '../src/persistence.js';
 const ids = ['c1', 'c2'];
 test('a marked hunt survives manual repositioning, resume and offline settlement', () => {
   const s = createGame();
@@ -539,4 +541,77 @@ test('all six transcendent jobs keep their equipment and learned builds at secon
     assert.ok(stats(c).skill); assert.ok(stats(c).hp>150);
     deploy(s,'payon',['c1']); advance(s,60); assert.ok(c.kills>0);
   }
+});
+
+test('South Prontera terrain migration keeps camp, spawn, retreat and hunt paths', () => {
+  // The authored Tiled layout is visual-only; these assertions prove the
+  // gameplay geometry it was built against still drives the simulation.
+  const layout = JSON.parse(readFileSync(new URL('../public/assets/terrain/south-prontera.json', import.meta.url), 'utf8'));
+  const b = mapBounds('meadow');
+  assert.equal(layout.mapId, 'meadow');
+  assert.ok(layout.roads.length >= 2, 'authored branching road present');
+  assert.equal(layout.zones.length, 2, 'two hunting districts authored');
+  assert.ok(layout.landmarks.length >= 4, 'readable landmarks authored');
+  for (const z of layout.zones) assert.ok(Math.abs(z.x) <= b.x && Math.abs(z.y) <= b.y, 'zone inside bounds');
+  for (const [x, y] of layout.shoreline) assert.ok(Math.abs(x) <= b.x + 2 && Math.abs(y) <= b.y + 2, 'shoreline inside bounds');
+
+  const s = createGame();
+  deploy(s, 'meadow', ['c1']);
+  const farmer = s.characters[0];
+  // Spawn/deploy lands on the map's deploy point inside bounds.
+  assert.equal(farmer.mapId, 'meadow');
+  assert.ok(Math.abs(farmer.x) <= b.x && Math.abs(farmer.y) <= b.y);
+  assert.deepEqual(farmer.home, { x: farmer.x, y: farmer.y });
+  // Assignment path: a marked hunt area sets the farming anchor and radius.
+  assert.equal(command(s, { type: 'rally', ids: ['c1'], mapId: 'meadow', point: { x: 4, y: 4 }, radius: 6 }), null);
+  assert.deepEqual(farmer.farmCenter, { x: 4, y: 4 });
+  assert.equal(farmer.farmRadius, 6);
+  // Manual movement then retreat both resolve through the camp exit.
+  assert.equal(command(s, { type: 'move', ids: ['c1'], point: { x: 6, y: 6 } }), null);
+  assert.deepEqual(farmer.destination, { x: 6, y: 6 });
+  assert.equal(command(s, { type: 'retreat', ids: ['c1'] }), null);
+  assert.equal(farmer.order, 'retreat');
+  assert.deepEqual(farmer.destination, MAPS.meadow.camp);
+  advance(s, 120);
+  assert.equal(farmer.mapId, null);
+  assert.equal(farmer.status, 'camp');
+});
+
+test('Swordsman skills are learnable by job level and strengthen the active loadout', () => {
+  const s = createGame();
+  const c = s.characters[0];
+  Object.assign(c, { job: 'swordsman', jobLevel: 1, level: 1, mapId: null, status: 'camp' });
+  const bash = SKILLS.bash, power = SKILLS.power_strike;
+  // Rank 2 bash is gated until Job Lv. 6.
+  assert.equal(command(s, { type: 'skill-learn', ids: ['c1'], skillId: 'bash' }), null);
+  assert.equal(c.skills.bash, 1);
+  assert.ok(command(s, { type: 'skill-learn', ids: ['c1'], skillId: 'bash' }));
+  c.jobLevel = 6;
+  assert.equal(command(s, { type: 'skill-learn', ids: ['c1'], skillId: 'bash' }), null);
+  assert.equal(c.skills.bash, 2);
+  // Power Strike unlocks at Job Lv. 4 and joins the loadout automatically.
+  c.jobLevel = 4;
+  assert.equal(command(s, { type: 'skill-learn', ids: ['c1'], skillId: 'power_strike' }), null);
+  assert.equal(c.skills.power_strike, 1);
+  assert.ok(c.loadout.includes('power_strike'));
+  // Skill ranks add live skill power and the loadout picks the active skill.
+  const powerBefore = skillPower(c);
+  assert.ok(powerBefore >= 3);
+  assert.equal(command(s, { type: 'loadout', ids: ['c1'], skills: ['bash', 'power_strike'] }), null);
+  assert.equal(activeSkillId(c), 'power_strike');
+  assert.equal(stats(c).skill, power.name);
+  // Manual mode suspends automatic skill use.
+  assert.equal(command(s, { type: 'loadout', ids: ['c1'], skills: ['bash', 'power_strike'], mode: 'manual' }), null);
+  assert.equal(c.loadoutMode, 'manual');
+  // An unknown or unlearned skill is rejected without mutation.
+  const before = structuredClone(c);
+  assert.ok(command(s, { type: 'skill-learn', ids: ['c1'], skillId: 'spiral_pierce' }));
+  assert.ok(command(s, { type: 'loadout', ids: ['c1'], skills: ['spiral_pierce'] }));
+  assert.deepEqual(c, before);
+  // A full skill save round-trips with ranks and loadout intact.
+  const restored = decodeSave(encodeSave(s)).state.characters[0];
+  assert.equal(restored.skills.bash, 2);
+  assert.equal(restored.skills.power_strike, 1);
+  assert.deepEqual(restored.loadout, ['bash', 'power_strike']);
+  assert.equal(restored.loadoutMode, 'manual');
 });

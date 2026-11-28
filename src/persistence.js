@@ -1,4 +1,4 @@
-import { combatJob, classBuilds, defaultBuild, gearKey, gearVariant, REFINEMENT, ORE_INFO, ELEMENTS, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, MONSTERS, HUNT_RADII, VERSION, MAPS, mapBounds, JOBS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, TACTICS, TACTIC_PRESETS, TARGET_PREFS, STATUS } from './data.js';
+import { combatJob, classBuilds, defaultBuild, gearKey, gearVariant, REFINEMENT, ORE_INFO, ELEMENTS, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, MONSTERS, HUNT_RADII, VERSION, MAPS, mapBounds, JOBS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, TACTICS, TACTIC_PRESETS, TARGET_PREFS, STATUS, SKILLS, skillMaxRank, learnedRank, defaultLoadout, loadoutSignatureSkillId, signatureSkillId } from './data.js';
 import { availablePoints, populateField, createGame, advanceExpeditionGoals } from './sim.js';
 export const SAVE_KEY = 'ragna-tactics:save:v1';
 export const BACKUP_KEY = 'ragna-tactics:backup:v1';
@@ -39,6 +39,24 @@ export function validateState(s) {
     }
     if (c.buildId === undefined) c.buildId = defaultBuild(c.job);
     valid(c.buildId === null || classBuilds(c.job).some(build => build.id === c.buildId));
+    // Learned skills and loadouts are new; older v1 saves derive a default.
+    if (c.skills === undefined) c.skills = {};
+    valid(c.skills && typeof c.skills === 'object' && !Array.isArray(c.skills));
+    const effJob = (c.job && JOBS[c.job] && JOBS[c.job].mastery) ? JOBS[c.job].mastery : c.job;
+    for (const [id, rank] of Object.entries(c.skills)) {
+      valid(Object.hasOwn(SKILLS, id) && SKILLS[id].job === effJob);
+      valid(Number.isInteger(rank) && rank >= 1 && rank <= skillMaxRank(id));
+      valid(rank <= skillMaxRank(id));
+      c.skills[id] = learnedRank(c, id);
+    }
+    if (c.loadout === undefined) c.loadout = defaultLoadout(c);
+    valid(Array.isArray(c.loadout) && c.loadout.length <= 6);
+    for (const id of c.loadout) valid(Object.hasOwn(SKILLS, id) && SKILLS[id].job === effJob && (learnedRank(c, id) > 0 || id === loadoutSignatureSkillId(c.job)));
+    if (c.loadoutMode === undefined) c.loadoutMode = 'auto';
+    valid(['auto', 'manual'].includes(c.loadoutMode));
+    // Jobs with a skill catalog always carry a usable loadout; jobs without one
+    // (e.g. Novice) keep an empty list.
+    if (!c.loadout.length && loadoutSignatureSkillId(c.job)) c.loadout = defaultLoadout(c);
     if (c.buffTimer === undefined) c.buffTimer = 0;
     if (c.buffAtk === undefined) c.buffAtk = 0;
     valid(finite(c.buffTimer, 0, 60) && finite(c.buffAtk, 0, 0.5));

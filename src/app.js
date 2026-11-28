@@ -1,4 +1,4 @@
-import { jobLineage, combatJob, REFINEMENT, ORE_INFO, gearVariant, AFFINITIES, ELEMENTS, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, promotionRequirement, classBuilds, selectedBuild, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, refineCost, refineSuccessPercent, refineSafeLimit, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
+import { jobLineage, combatJob, REFINEMENT, ORE_INFO, gearVariant, AFFINITIES, ELEMENTS, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, promotionRequirement, classBuilds, selectedBuild, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, refineCost, refineSuccessPercent, refineSafeLimit, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed, SKILLS, skillCatalog, learnedRank, skillUnlockLevel, skillPower, activeSkillId, loadoutMode } from './data.js';
 import { availablePoints, forgePrice, command, tick, stats, rosterLimit, engaged, effectiveTactics, isLeader, canEquipGear } from './sim.js';
 import { SAVE_KEY, loadGame, saveGame, encodeSave, decodeSave } from './persistence.js';
 import { Sprites } from './sprites.js';
@@ -157,7 +157,7 @@ function renderInspector(units) {
     content = `<div class="inspector-title">${units.length ? 'Better, together.' : 'Choose your adventurer.'}</div><p>${units.length ? 'Link your adventurers into a party to share targets, support each other, and earn shared EXP. Or deploy separately to cover more ground.' : 'Select a portrait to inspect equipment, tactics, and progression.'}</p>${units.length ? `<div class="detail-row"><span>Selected supplies</span><strong>${potions} potions</strong></div><label class="form-label">Tactics<select id="tactic-select"><option value="" disabled selected>Apply to selection…</option>${Object.entries(TACTICS).map(([key, t]) => `<option value="${key}">${t.name}</option>`).join('')}</select></label><p>Job changes become available at Novice Job Lv. 10. Every character chooses their own path.</p>` : ''}`;
   } else {
     const c = units[0], st = stats(c);
-    content = `<div class="inspector-title">${JOBS[c.job].name} <span class="tiny muted">${JOBS[c.job].role}</span></div><div class="detail-row"><span>Base Lv. ${c.level}</span><strong>${number(c.exp)} / ${baseNeed(c.level)} EXP</strong></div><div class="progress"><i style="width:${Math.min(100, c.exp / baseNeed(c.level) * 100)}%"></i></div><div class="detail-row"><span>Job Lv. ${c.jobLevel} / ${JOBS[c.job].jobLevelCap || (c.job === 'novice' ? 10 : 50)}</span><strong>${c.jobLevel >= promotionLevel(c.job) ? 'Job change ready' : `${number(c.jobExp)} / ${jobNeed(c.jobLevel)}`}</strong></div><div class="progress"><i style="width:${Math.min(100, c.jobExp / jobNeed(c.jobLevel) * 100)}%"></i></div><div class="detail-row"><span>HP / SP</span><strong>${Math.ceil(c.hp)}/${st.hp} · ${Math.floor(c.sp)}/${st.sp}</strong></div><div class="detail-row"><span>ATK / DEF · Potions</span><strong>${st.atk} / ${st.def} · ${c.potions}</strong></div><div class="detail-row"><span>Combat role</span><strong>${ROLE_LABELS[JOB_ROLES[c.job]]}${c.partyId ? ` · ${isLeader(state, c) ? 'Party leader' : 'Follower'}` : ''}</strong></div><label class="form-label">Starting preset<select id="tactic-select">${Object.entries(TACTICS).map(([key, t]) => `<option value="${key}" ${c.tactic === key ? 'selected' : ''}>${t.name}</option>`).join('')}</select></label>${tacticsMarkup(c)}<label class="form-label">Farming objective<select id="assignment-select">${[['balanced', 'Balanced farming'], ['experience', 'Training · +15% Base EXP'], ['materials', 'Gathering · double materials']].map(([key, label]) => `<option value="${key}" ${c.assignment === key ? 'selected' : ''}>${label}</option>`).join('')}</select></label><div class="detail-row"><span>Assignment · status</span><strong>${c.mapId ? `${MAPS[c.mapId].name} · ${c.status}` : c.status === 'down' ? 'Defeated · camp' : 'Guild camp'}</strong></div><div class="detail-actions">${(st.element || JOB_ROLES[c.job] === 'support') ? '<button data-action="spellbook">Spellbook</button>' : ''}<button data-action="attributes">Stats · ${availablePoints(c)} pts</button><button data-action="equipment">Equipment</button>${classBuilds(c.job).length > 1 ? '<button data-action="builds">Build</button>' : ''}<button data-action="advance">Job path</button><button data-action="rename">Rename</button>${c.partyId && !isLeader(state, c) ? '<button data-action="leader" title="Make this adventurer the party leader">Lead party</button>' : ''}</div><p><span style="color:var(--gold)">${st.skill}</span> · ${st.cost} SP · ${c.cast ? `Casting · ${c.cast.remaining.toFixed(1)}s` : c.cooldown > 0 ? c.cooldown.toFixed(1) + 's cooldown' : 'Ready'} · Hit ${Math.round(st.hit * 100)}% · Flee ${Math.round(st.flee * 100)}%<br>${st.element ? ELEMENTS[st.element].name + ' magic · strong against ' + (ELEMENTS[ELEMENTS[st.element].beats]?.name || 'Undead') : st.description || JOBS[c.job].description}</p>`;
+    content = `<div class="inspector-title">${JOBS[c.job].name} <span class="tiny muted">${JOBS[c.job].role}</span></div><div class="detail-row"><span>Base Lv. ${c.level}</span><strong>${number(c.exp)} / ${baseNeed(c.level)} EXP</strong></div><div class="progress"><i style="width:${Math.min(100, c.exp / baseNeed(c.level) * 100)}%"></i></div><div class="detail-row"><span>Job Lv. ${c.jobLevel} / ${JOBS[c.job].jobLevelCap || (c.job === 'novice' ? 10 : 50)}</span><strong>${c.jobLevel >= promotionLevel(c.job) ? 'Job change ready' : `${number(c.jobExp)} / ${jobNeed(c.jobLevel)}`}</strong></div><div class="progress"><i style="width:${Math.min(100, c.jobExp / jobNeed(c.jobLevel) * 100)}%"></i></div><div class="detail-row"><span>HP / SP</span><strong>${Math.ceil(c.hp)}/${st.hp} · ${Math.floor(c.sp)}/${st.sp}</strong></div><div class="detail-row"><span>ATK / DEF · Potions</span><strong>${st.atk} / ${st.def} · ${c.potions}</strong></div><div class="detail-row"><span>Combat role</span><strong>${ROLE_LABELS[JOB_ROLES[c.job]]}${c.partyId ? ` · ${isLeader(state, c) ? 'Party leader' : 'Follower'}` : ''}</strong></div><label class="form-label">Starting preset<select id="tactic-select">${Object.entries(TACTICS).map(([key, t]) => `<option value="${key}" ${c.tactic === key ? 'selected' : ''}>${t.name}</option>`).join('')}</select></label>${tacticsMarkup(c)}<label class="form-label">Farming objective<select id="assignment-select">${[['balanced', 'Balanced farming'], ['experience', 'Training · +15% Base EXP'], ['materials', 'Gathering · double materials']].map(([key, label]) => `<option value="${key}" ${c.assignment === key ? 'selected' : ''}>${label}</option>`).join('')}</select></label><div class="detail-row"><span>Assignment · status</span><strong>${c.mapId ? `${MAPS[c.mapId].name} · ${c.status}` : c.status === 'down' ? 'Defeated · camp' : 'Guild camp'}</strong></div><div class="detail-actions">${(st.element || JOB_ROLES[c.job] === 'support') ? '<button data-action="spellbook">Spellbook</button>' : ''}<button data-action="skills">Skills</button><button data-action="attributes">Stats · ${availablePoints(c)} pts</button><button data-action="equipment">Equipment</button>${classBuilds(c.job).length > 1 ? '<button data-action="builds">Build</button>' : ''}<button data-action="advance">Job path</button><button data-action="rename">Rename</button>${c.partyId && !isLeader(state, c) ? '<button data-action="leader" title="Make this adventurer the party leader">Lead party</button>' : ''}</div><p><span style="color:var(--gold)">${st.skill}</span> · ${st.cost} SP · ${c.cast ? `Casting · ${c.cast.remaining.toFixed(1)}s` : c.cooldown > 0 ? c.cooldown.toFixed(1) + 's cooldown' : 'Ready'} · Hit ${Math.round(st.hit * 100)}% · Flee ${Math.round(st.flee * 100)}%<br>${st.element ? ELEMENTS[st.element].name + ' magic · strong against ' + (ELEMENTS[ELEMENTS[st.element].beats]?.name || 'Undead') : st.description || JOBS[c.job].description}</p>`;
   }
   if (content !== inspectorKey) { html('inspector', content); inspectorKey = content; }
 }
@@ -430,6 +430,21 @@ function buildBook() {
   const rows = classBuilds(c.job).map(build => `<section class="build-option ${current?.id === build.id ? 'active' : ''}"><div><span class="eyebrow">${build.style.toUpperCase()} · ${build.rotation}</span><h3>${build.name}</h3><p>Signature: ${build.skills.at(-1)} · ${build.resource}</p><p>${build.skills.join(' · ')}</p></div><button data-build="${build.id}" ${current?.id === build.id || c.mapId || c.status === 'down' ? 'disabled' : ''}>${current?.id === build.id ? 'Active build' : 'Prepare build'}</button></section>`).join('');
   showCharacterModal('skills', c, c.name + '’s combat build', `<p>Builds set the automatic skill rotation and combat behavior. Change builds at camp; your choice is saved with this adventurer.</p>${rows || '<p>This class has no combat build options yet.</p>'}${modalError}`, 'CLASS TRAINING');
 }
+function skills() {
+  const c = selectedCharacters()[0];
+  if (!c || selected.size !== 1) return toast('Select one adventurer to manage skills.');
+  const atCamp = !c.mapId && c.status !== 'down';
+  const entries = skillCatalog(c.job);
+  const rows = entries.map(([id, def]) => {
+    const rank = learnedRank(c, id), next = rank + 1, maxed = rank >= def.maxRank;
+    const locked = !maxed && c.jobLevel < skillUnlockLevel(id, next);
+    const isActive = c.loadout?.at(-1) === id, inLoadout = c.loadout?.includes(id);
+    return `<section class="skill-option ${isActive ? 'active' : ''}"><div><span class="eyebrow">${def.effect.toUpperCase()} · ${def.cost} SP · ${def.cooldown}s CD</span><h3>${def.name} <span class="tiny muted">R${rank}/${def.maxRank}</span></h3><p>${def.description}</p><p class="tiny muted">Unlocks · ${def.unlock.map((lv, i) => `R${i + 1} at Job Lv. ${lv}`).join(' · ')}</p></div><div class="detail-actions"><button data-skill-learn="${id}" ${!atCamp || maxed || locked ? 'disabled' : ''}>${maxed ? 'Maxed' : `Learn R${next}`}</button><button data-skill-active="${id}" ${!atCamp || !inLoadout || isActive ? 'disabled' : ''}>${isActive ? 'Active' : 'Set active'}</button></div></section>`;
+  }).join('');
+  const mode = loadoutMode(c), active = SKILLS[activeSkillId(c)];
+  showModal(c.name + '’s skills', `<p>Learn skills at camp as your Job level rises. Each rank strengthens your skill damage. Choose the active skill and whether skills fire automatically or only when you cast them.</p><div class="loadout-controls"><label class="form-label">Loadout mode<select id="loadout-mode"><option value="auto" ${mode === 'auto' ? 'selected' : ''}>Automatic — fire when useful</option><option value="manual" ${mode === 'manual' ? 'selected' : ''}>Manual — cast them yourself</option></select></label><p class="tiny muted">Active skill · <strong>${active ? active.name : '—'}</strong> · +${skillPower(c)} skill power</p></div><h3>Available skills</h3>${rows || '<p>This job has no learnable skills yet.</p>'}${modalError}`, 'SKILL TRAINING');
+  $('loadout-mode').onchange = event => { if (issue({ type: 'loadout', ids: [c.id], skills: c.loadout, mode: event.target.value }, { quiet: true })) skills(); };
+}
 function fieldGuide() {
   const habitats = { zombie:'payon', skeleton:'payon', poring:'meadow', fabre:'meadow', willow:'forest', scorpion:'morroc', peco:'morroc', baphomet:'arena', phreeoni:'lair' };
   const rows = Object.entries(habitats).map(([id,mapId]) => {
@@ -528,7 +543,7 @@ document.addEventListener('click', event => {
   const action = event.target.closest('[data-action]')?.dataset.action;
   if (action) {
     if (action === 'deploy') deployment(); else if (action === 'camp') camp(); else if (action === 'advance') advanceJob();
-    else if (action === 'spellbook') spellbook(); else if (action === 'builds') buildBook(); else if (action === 'attributes') attributes(); else if (action === 'equipment') equipment(); else if (action === 'rename') rename(); else if (action === 'leader') issue({ type: 'leader' });
+    else if (action === 'spellbook') spellbook(); else if (action === 'skills') skills(); else if (action === 'builds') buildBook(); else if (action === 'attributes') attributes(); else if (action === 'equipment') equipment(); else if (action === 'rename') rename(); else if (action === 'leader') issue({ type: 'leader' });
     else if (action === 'move' || action === 'rally') {
       if (action === 'rally' && MAPS[renderer.mapId].boss) return toast('Choose a farming field to mark a hunting area.');
       $('toast').hidden = true;
@@ -547,6 +562,13 @@ document.addEventListener('click', event => {
   if (attune && issue({ type:'attune',element:attune.dataset.attune },{quiet:true})) spellbook();
   const build = event.target.closest('[data-build]');
   if (build && issue({ type:'build', buildId:build.dataset.build },{quiet:true})) buildBook();
+  const skillLearn = event.target.closest('[data-skill-learn]');
+  if (skillLearn) { const sc = selectedCharacters()[0]; if (sc && issue({ type: 'skill-learn', ids: [sc.id], skillId: skillLearn.dataset.skillLearn }, { quiet: true })) skills(); }
+  const skillActive = event.target.closest('[data-skill-active]');
+  if (skillActive) {
+    const sc = selectedCharacters()[0];
+    if (sc) { const loadout = (sc.loadout || []).filter(x => x !== skillActive.dataset.skillActive); loadout.push(skillActive.dataset.skillActive); if (issue({ type: 'loadout', ids: [sc.id], skills: loadout }, { quiet: true })) skills(); }
+  }
   const field = event.target.closest('[data-guide-map]');
   if (field) { closeModal(); switchMap(field.dataset.guideMap); }
   const bounty = event.target.closest('[data-bounty]');
@@ -686,9 +708,12 @@ let minimapDragging = false;
 const navigateMinimap = (canvas,event) => {
   if (!ready) return;
   const r = canvas.getBoundingClientRect();
-  const world = renderer.minimapToWorld(canvas,
-    (event.clientX - r.left) * (canvas.width / r.width),
-    (event.clientY - r.top) * (canvas.height / r.height));
+  const mx = (event.clientX - r.left) * (canvas.width / r.width);
+  const my = (event.clientY - r.top) * (canvas.height / r.height);
+  // Direct jump: clicking a roster marker centres on that adventurer.
+  const unit = renderer.minimapCharacterAt(canvas, mx, my, state);
+  if (unit) { selected = new Set([unit.id]); inspectorKey = ''; renderer.centerOn(unit); renderer.followId = unit.id; renderUI(); return; }
+  const world = renderer.minimapToWorld(canvas, mx, my);
   renderer.centerOn(world);
   renderUI();
 };
