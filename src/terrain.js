@@ -1158,6 +1158,19 @@ export function sceneryFor(mapId) {
   });
   // A few lone landmark trees just outside the playable edge, so the silhouette
   // is asymmetric and readable at the widest zoom.
+  // A ring of boulders around the plateau edge: the mass that closes the field
+  // off in three dimensions. Placed on the rim's rounded rectangle and seeded by
+  // index, so they never move and never land inside the walkable area.
+  const rimBand = biome.rimBand || 7.5;
+  for (let i = 0; i < 42; i++) {
+    const ang = (i / 42) * Math.PI * 2 + hash2(i, 3, 653) * 0.14;
+    const cx = Math.cos(ang), cy = Math.sin(ang);
+    const k = 1 / Math.max(Math.abs(cx) / (b.x + rimBand), Math.abs(cy) / (b.y + rimBand));
+    const x = cx * k + (hash2(i, 5, 659) - 0.5) * 5;
+    const y = cy * k + (hash2(i, 7, 661) - 0.5) * 5;
+    const id = i % 3 === 0 ? 'rock_cliff_crag' : 'rock_boulder_mossy';
+    add(id, x, y, 0.5 + hash2(i, 11, 673) * 0.75, hash2(i, 13, 677) > 0.5);
+  }
   const edgeLandmarks = biome.props.grove;
   for (let i = 0; i < 5; i++) {
     const h = hash2(i, 17, 881 + mapId.length);
@@ -1264,8 +1277,10 @@ export function paintGround(ctx, mapId, sprites, rect, quality = 1) {
     ctx.restore();
   }
 
-  // 8. Edge wilds: outside the playable bounds the ground turns to broken rock
-  //    and thick growth so the field reads as a clearing, not a slab.
+  // 8. Edge massing: the walkable ground is a plateau with a shadowed lip, a
+  //    rocky rim and a treeline beyond it, so the field reads as a clearing in
+  //    real terrain rather than a slab that stops.
+  paintRim(ctx, sprites, biome, b, rect);
   paintEdgeBand(ctx, sprites, biome, b, rect);
 
   // 9. Decals: seeded, jittered, never on a grid.
@@ -1343,6 +1358,88 @@ function nearRoad(mapId, x, y, width) {
 // thicker scrub, then the fog. Everything here is drawn as overlapping soft
 // blobs whose density follows the distance from the playable edge, so there is
 // no straight line anywhere along the border.
+
+// ---------------------------------------------------------- clearing rim mass
+// A field that simply stops at its edge reads as a flat slab. Instead the walkable
+// ground is a plateau: just outside it a shadowed lip drops away, and beyond that
+// a chunky rock rim rises. Both are authored as nested rounded rectangles, the
+// same geometry the fog uses, so every chunk and the wide overview agree exactly.
+// A point on the plateau's rounded-rect perimeter, parameterised by fraction.
+function pointOnRim(bounds, t) {
+  const x = bounds.x, y = bounds.y, r = Math.min(9 + 26, 30);
+  const w = x * 2, h = y * 2;
+  const straightX = w - 2 * r, straightY = h - 2 * r;
+  const arc = (Math.PI * r) / 2;
+  const per = straightX * 2 + straightY * 2 + arc * 4;
+  let d = (t % 1) * per;
+  const take = (len, from, to) => {
+    if (d > len) { d -= len; return null; }
+    const k = len ? d / len : 0;
+    return { x: from.x + (to.x - from.x) * k, y: from.y + (to.y - from.y) * k };
+  };
+  const TR = { x, y }, TL = { x: -x, y }, BR = { x, y: -y }, BL = { x: -x, y: -y };
+  return take(arc, { x: -x + r, y }, TL) ||            // top edge, right to left
+    take(straightX, { x: -x + r, y }, { x: x - r, y }) ||
+    take(arc, { x: x - r, y }, TR) ||
+    take(straightY, TR, BR) ||
+    take(arc, BR, { x: x, y: -y + r }) ||
+    take(straightX, { x: x, y: -y + r }, BL) ||
+    take(arc, BL, { x: -x, y: -y + r }) ||
+    take(straightY, { x: -x, y: -y + r }, { x: -x, y: y - r }) ||
+    take(arc, { x: -x, y: y - r }, { x: -x + r, y }) ||
+    { x: -x + r, y };
+}
+
+// Appends one ring to the current path (the caller owns beginPath, so two rings
+// can be filled together with the even-odd rule to make an annulus).
+function rimPath(ctx, bounds, d) {
+  const x = -bounds.x - d, y = -bounds.y - d, w = (bounds.x + d) * 2, h = (bounds.y + d) * 2;
+  const r = Math.min(9 + d * 0.55, 30);
+  roundRectPath(ctx, x, y, w, h, r);
+}
+
+function paintRim(ctx, sprites, biome, bounds, rect) {
+  const over = rect.x1 < -bounds.x - 22 && rect.x0 > bounds.x + 22 && rect.y1 < -bounds.y - 22 && rect.y0 > bounds.y + 22;
+  if (over) return;
+  ctx.save();
+  // 1. The drop: outside the walkable plateau the ground is in shadow. Two rings
+  //    give a soft lip rather than a line.
+  const deep = shadeHex(biome.fog, -18);
+  ctx.beginPath();
+  rimPath(ctx, bounds, 0.6);
+  rimPath(ctx, bounds, 13);
+  ctx.fillStyle = deep + '66';
+  ctx.fill('evenodd');
+  // The inner lip is darkest, fading outward so the drop has a gradient.
+  ctx.beginPath();
+  rimPath(ctx, bounds, 0.6);
+  rimPath(ctx, bounds, 4.5);
+  ctx.fillStyle = deep + '55';
+  ctx.fill('evenodd');
+  ctx.restore();
+  // 2. A warm catch of light along the lip. It is drawn in short seeded dashes
+  //    rather than one ring, so the plateau edge looks like broken, eroded
+  //    ground instead of an outlined border.
+  const light = biome.rimLight || shadeHex(biome.gravel, 20);
+  const segs = Math.round((bounds.x + bounds.y) * 2.4);
+  ctx.save();
+  ctx.lineCap = 'round';
+  for (let i = 0; i < segs; i++) {
+    const h = hash2(i, 41, 691);
+    if (h < 0.34) continue;
+    const t0 = (i + 0.1) / segs, t1 = (i + 0.9) / segs;
+    const p0 = pointOnRim(bounds, t0), p1 = pointOnRim(bounds, t1);
+    const d = -0.25 + hash2(i, 43, 697) * 0.55;
+    ctx.beginPath();
+    ctx.moveTo(p0.x + Math.sign(p0.x) * d, p0.y + Math.sign(p0.y) * d);
+    ctx.lineTo(p1.x + Math.sign(p1.x) * d, p1.y + Math.sign(p1.y) * d);
+    ctx.strokeStyle = light + alphaHex(0.1 + hash2(i, 47, 701) * 0.3);
+    ctx.lineWidth = 0.5 + hash2(i, 53, 709) * 1.1;
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function paintEdgeBand(ctx, sprites, biome, bounds, rect) {
   const ext = { x: bounds.x + APRON, y: bounds.y + APRON };
   // Signed distance outside the playable rounded rectangle, in world units.
