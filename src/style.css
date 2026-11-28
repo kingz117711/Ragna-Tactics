@@ -2125,15 +2125,6 @@ select{
 .build-option button { min-width:105px; }
 @media(max-width:520px) { .build-option { grid-template-columns:1fr; } .build-option button { justify-self:start; } }
 
-.character-sheet-button {
-  margin: 6px 0 0;
-  width: 100%;
-  background: #dac39718;
-  color: var(--gold);
-  border-color: #c2a76c66;
-  padding: 9px 12px;
-  text-align: left;
-}
 .character-dialog, .monitor-dialog { width: min(860px, calc(100vw - 24px)); }
 .sheet-tabs {
   display: flex;
@@ -2173,7 +2164,7 @@ select{
 .monitor-unit .monitor-warnings { color: #edb598; margin: 0 0 6px; }
 .monitor-unit .monitor-warnings:empty { display: none; }
 @media (prefers-reduced-motion: no-preference) {
-  .character-sheet-button:not([hidden]), .sheet-page, #monitor-content { animation: panel-arrive .18s ease-out; }
+  .sheet-page, #monitor-content { animation: panel-arrive .18s ease-out; }
 }
 @media (max-width: 620px) {
   .character-dialog, .monitor-dialog { inset: auto 0 0; margin: 0; width: 100%; max-width: none; max-height: 82dvh; padding: 16px; border-radius: 14px 14px 0 0; }

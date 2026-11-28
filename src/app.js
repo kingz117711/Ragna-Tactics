@@ -67,9 +67,6 @@ function renderUI() {
     $('claim-bounty').disabled = state.bounty.kills < bounty.count;
   }
   renderFieldConsole(units.length === 1 ? units[0] : null);
-  const characterButton = $('character-sheet');
-  characterButton.hidden = units.length !== 1;
-  if (units.length === 1) characterButton.textContent = 'Manage ' + units[0].name + ' ↗';
   $('location-count').textContent = Object.keys(MAPS).length + ' locations';
   if (modal.open && $('monitor-content')) updateMonitor();
   if (modal.open && $('character-vitals')) updateCharacterVitals();
@@ -508,7 +505,7 @@ function monitorUnit(c) {
     <div class="monitor-unit-state"><span data-monitor-location></span><span data-monitor-status></span></div>
     <div class="monitor-unit-meters"><span data-monitor-hp></span><span data-monitor-sp></span><span data-monitor-potions></span><span data-monitor-kills></span></div>
     <p class="monitor-warnings" data-monitor-warnings></p>
-    <div class="detail-actions"><button data-world-character="${c.id}">Locate</button><button data-character-page="overview" data-id="${c.id}">Manage</button></div>
+    <div class="detail-actions"><button data-world-character="${c.id}">Locate</button><button data-workspace-unit="${c.id}">Manage</button></div>
   </article>`;
 }
 function updateMonitor() {
@@ -694,6 +691,8 @@ document.addEventListener('click', event => {
   }
   const hotbarButton = event.target.closest('[data-hotbar]');
   if (hotbarButton) { castHotbar(Number(hotbarButton.dataset.hotbar)); return; }
+  const manage = event.target.closest('[data-workspace-unit]');
+  if (manage) { closeModal(); setSelection(manage.dataset.workspaceUnit); setWorkspace(true); return; }
   const monitorView = event.target.closest('[data-monitor-view]');
   if (monitorView) { worldOverview(monitorView.dataset.monitorView); return; }
   const sheetPage = event.target.closest('[data-character-page]');
@@ -805,7 +804,6 @@ $('first-deploy').onclick = () => { selected = new Set(state.characters.map(c =>
 $('dismiss-coach').onclick = () => { coachDismissed = true; renderUI(); };
 $('adventurer-workspace').onclick = () => setWorkspace(!workspaceOpen);
 $('workspace-close').onclick = () => { setWorkspace(false); $('adventurer-workspace').focus(); };
-$('character-sheet').onclick = () => openCharacterPage('overview', selectedCharacters()[0]?.id);
 $('recruit-button').onclick = recruit; $('settings-button').onclick = settings; $('bag-button').onclick = bag; $('guide-button').onclick = fieldGuide; $('bounty-button').onclick = bountyBoard; $('storage-button').onclick = storage; $('world-button').onclick = () => worldOverview();
 $('modal-close').onclick = closeModal;
 $('save-button').onclick = () => { persist(); toast(saveError ? 'Export your guild to preserve progress.' : 'Guild saved.'); };

@@ -582,20 +582,19 @@ test('manage one adventurer from the roster and jump to them from the expanded m
   await page.setViewportSize({width:390,height:844});
   await boot(page);
   await page.locator('#roster [data-character="c1"]').click();
-  await expect(page.locator('#character-sheet')).toContainText('Manage Aren');
-  await page.locator('#character-sheet').click();
-  await expect(page.locator('#character-vitals')).toContainText('Guild camp');
-  for (const tab of ['gear','skills','stats','job']) {
-    await page.locator(`[data-character-page="${tab}"]`).click();
-    await expect(page.locator(`[data-character-page="${tab}"]`)).toHaveAttribute('aria-current','page');
+  await page.locator('#adventurer-workspace').click();
+  await expect(page.locator('#workspace-name')).toHaveText('Aren');
+  for (const tab of ['gear','skills','stats','jobs']) {
+    await page.locator(`[data-workspace-page="${tab}"]`).click();
+    await expect(page.locator(`[data-workspace-page="${tab}"]`)).toHaveAttribute('aria-current','page');
     if (tab === 'skills') {
-      await page.locator('#sheet-auto-skill').uncheck();
+      await page.locator('#workspace-auto').uncheck();
       const saved = await readSave(page);
       expect(saved.characters.map(c=>c.tactics.autoSkill)).toEqual([false,true]);
     }
   }
   await page.screenshot({path:'artifacts/character-sheet-mobile.png'});
-  await page.locator('#modal-close').click();
+  await page.locator('#workspace-close').click();
   await page.locator('#expand-minimap').click();
   await expect(page.locator('#expanded-minimap')).toBeVisible();
   await page.locator('#modal [data-world-character="c2"]').click();
@@ -615,7 +614,8 @@ test('monitor views show field locations, per-character vitals and actionable al
   await page.locator('[data-monitor-view="alerts"]').click();
   await expect(page.locator('[data-monitor-unit]:visible')).toHaveCount(1);
   await page.locator('[data-monitor-unit="c1"]').getByRole('button',{name:'Manage'}).click();
-  await expect(page.locator('#modal-title')).toHaveText('Aren');
+  await expect(page.locator('#modal')).toBeHidden();
+  await expect(page.locator('#workspace-name')).toHaveText('Aren');
 });
 
 test('main-bar workspace promotes one adventurer and compares and sockets individual gear', async ({page})=>{

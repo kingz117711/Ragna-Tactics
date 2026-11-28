@@ -7,7 +7,7 @@ per-character hotbar and cards on Renewal equipment instances.
 
 ## Character management and monitoring
 
-Select one adventurer to reveal Manage in the roster. The sheet groups live
+Select one adventurer and use Character in the main bar. The sheet groups live
 vitals, equipment, skill/build controls, attributes and job advancement.
 The Skills page can toggle automatic skill use for this adventurer independently.
 World Overview now has live field, adventurer and alert views, with actions
