@@ -6,7 +6,7 @@ const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 // Scenery reaches one world unit past the playable bounds, as before.
 const visual = mapId => { const b = mapBounds(mapId); return { x: b.x + 1, y: b.y + 1 }; };
 const CHUNK = 8;          // world units per cached terrain chunk
-const CHUNK_CACHE = 160;  // bounded LRU; covers a full South Prontera view plus margin, ≈40 MB worst case
+const CHUNK_CACHE = 96;  // bounded LRU; >= the largest map's full-view chunk count (meadow ≈63)
 const CELL = 4;           // world units per ground tile cell
 
 // Shared with tests so click→world math always matches the live camera fit.
@@ -45,6 +45,17 @@ function roadDistance(map, x, y) {
   }
   return best;
 }
+// Minimap landmark glyph colours, grouped so the compact map stays readable.
+function landmarkColor(id) {
+  if (/^(house|tower)/.test(id)) return '#dec58e';
+  if (/^tree/.test(id)) return '#8fc76a';
+  if (/(stone|shrine|ruin|tomb)/.test(id)) return '#c7a6e0';
+  if (/^torii/.test(id)) return '#e07a6a';
+  if (/^bridge/.test(id)) return '#6fb6d8';
+  if (/(pier|river_stone|post)/.test(id)) return '#7fd0c0';
+  if (/^rock/.test(id)) return '#b6a98c';
+  return '#b6a98c';
+}
 // The classic winding field road, kept for the older maps.
 function legacyRoadPoints() {
   return [-17, -12, -5, 3, 10, 17].map((y, i) => project(Math.sin(i * 0.8) * 3, y));
@@ -53,7 +64,7 @@ function legacyRoadPoints() {
 export class Renderer {
   constructor(canvas, sprites) {
     this.canvas = canvas; this.ctx = canvas.getContext('2d'); this.sprites = sprites;
-    this.camera = { x: 0, y: 0, zoom: 0.8 }; this.mapId = 'meadow'; this.terrain = new Map(); this.hits = []; this.animations = new Map();
+    this.camera = { x: 0, y: 0, zoom: 0.8 }; this.mapId = 'meadow'; this.terrain = new Map(); this.pinned = new Set(); this.hits = []; this.animations = new Map();
     this.width = 1000; this.height = 650; this.followId = null; this.grid = false;
     this.orderMarks = []; this.renderPositions = new Map(); this.positionTime = null; this.positionMap = null;
     this.reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -112,11 +123,49 @@ export class Renderer {
   chunkCanvas(mapId, cx, cy) {
     const key = `${mapId}:${cx}:${cy}`;
     const cached = this.terrain.get(key);
-    if (cached) { this.terrain.delete(key); this.terrain.set(key, cached); return cached; }
+    if (cached) { this.terrain.delete(key); this.terrain.set(key, cached); this.pinned.add(key); return cached; }
     const cv = this.renderChunk(mapId, cx, cy);
     this.terrain.set(key, cv);
-    while (this.terrain.size > CHUNK_CACHE) this.terrain.delete(this.terrain.keys().next().value);
+    this.pinned.add(key);
+    while (this.terrain.size > CHUNK_CACHE) this.evictChunk();
     return cv;
+  }
+  // Keep on-screen chunks resident; evict off-screen cache entries first so a
+  // pan never thrashes the very chunks the camera is reading.
+  evictChunk() {
+    for (const key of this.terrain.keys()) if (!this.pinned.has(key)) { this.terrain.delete(key); return; }
+    this.terrain.delete(this.terrain.keys().next().value);
+  }
+  // 0 = full detail, 1 = tiles only, 2 = low-detail overview (wide zoom).
+  detailLevel() { const z = this.camera.zoom; return z < 0.5 ? 2 : z < 0.85 ? 1 : 0; }
+  overviewColor(mapId) {
+    return mapId === 'payon' ? '#504859' : ['morroc', 'lair'].includes(mapId) ? '#be9967'
+      : mapId === 'arena' ? '#555b5a' : mapId === 'forest' ? '#436352' : '#6b8959';
+  }
+  // Pin the visible set plus its prefetch ring, and keep chunks already pinned
+  // that still sit within a 2-chunk margin. Replacing the set each frame would
+  // unpin the ring just rendered, letting the bounded cache evict it before the
+  // camera reaches it (pan thrash). Sticky pinning keeps the ring resident.
+  updatePins(keys) {
+    const keep = new Set(keys);
+    const v = visual(this.mapId);
+    for (const key of this.pinned) {
+      const [, cx, cy] = key.split(':');
+      const x = Number(cx) * CHUNK, y = Number(cy) * CHUNK;
+      if (Math.abs(x) <= v.x + 2 * CHUNK && Math.abs(y) <= v.y + 2 * CHUNK) keep.add(key);
+    }
+    this.pinned = keep;
+  }
+  // Render a one-chunk ring around the visible set so pans meet ready canvases.
+  prefetch() {
+    const margin = 1, v = visual(this.mapId), seen = new Set();
+    for (const [cx, cy] of this.visibleChunks()) for (let dy = -margin; dy <= margin; dy++) for (let dx = -margin; dx <= margin; dx++) {
+      const nx = cx + dx, ny = cy + dy;
+      if (Math.abs(nx * CHUNK) > v.x + CHUNK || Math.abs(ny * CHUNK) > v.y + CHUNK) continue;
+      const key = nx + ',' + ny;
+      if (seen.has(key)) continue; seen.add(key);
+      this.chunkCanvas(this.mapId, nx, ny);
+    }
   }
   renderChunk(mapId, cx, cy) {
     const r = this.chunkRect(mapId, cx, cy);
@@ -136,6 +185,7 @@ export class Renderer {
     return cv;
   }
   paintChunkGround(ctx, mapId, r) {
+    const layout = this.sprites.layout?.(mapId);
     const cave = mapId === 'payon', arena = mapId === 'arena', forest = mapId === 'forest';
     const dunes = ['morroc', 'lair'].includes(mapId), meadow = mapId === 'meadow';
     const base = cave ? '#504859' : dunes ? '#be9967' : arena ? '#555b5a' : forest ? '#436352' : '#6b8959';
@@ -144,13 +194,18 @@ export class Renderer {
     // Global ground features are drawn whole inside every chunk clip so they
     // continue seamlessly across chunk borders.
     this.paintGlobalGround(ctx, mapId, r);
-    if (meadow) this.paintTileCells(ctx, mapId, r);
+    const lod = this.detailLevel();
+    if (lod >= 2) return; // Wide zoom: low-detail overview, no per-cell work.
+    if (meadow) this.paintTileCells(ctx, mapId, r, layout);
+    if (lod >= 1) return; // Medium zoom: tiles, no scattered ground specks.
     this.paintGroundDetail(ctx, mapId, r, cave, arena, forest, dunes, meadow);
   }
   paintGlobalGround(ctx, mapId, r) {
     const cave = mapId === 'payon', arena = mapId === 'arena', forest = mapId === 'forest';
     const dunes = ['morroc', 'lair'].includes(mapId), meadow = mapId === 'meadow';
     if (meadow) {
+      const layout = this.sprites.layout?.(mapId);
+      if (layout) { this.paintLayoutGround(ctx, layout); return; }
       const map = MAPS.meadow;
       ctx.lineCap = 'round'; ctx.lineJoin = 'round';
       for (const line of map.road) {
@@ -196,7 +251,27 @@ export class Renderer {
       }
     }
   }
-  paintTileCells(ctx, mapId, r) {
+  // Authored South Prontera overlays: shoreline, branching road, hunting
+  // districts. Drawn whole inside each chunk clip so they stay seamless.
+  paintLayoutGround(ctx, layout) {
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    if (layout.shoreline?.length) {
+      const pts = layout.shoreline.map(([x, y]) => project(x, y));
+      polygon(ctx, pts, '#2c5f782e', '#4a86a877');
+    }
+    for (const road of layout.roads) {
+      const pts = road.points.map(([x, y]) => project(x, y));
+      for (const [width, color] of [[54, '#263e2830'], [38, '#b7b18a'], [26, '#c9c29c']]) {
+        ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+        ctx.strokeStyle = color; ctx.lineWidth = width; ctx.stroke();
+      }
+    }
+    for (const zone of layout.zones) {
+      const p = project(zone.x, zone.y);
+      ellipse(ctx, p.x, p.y, zone.r * Math.SQRT2 * 22, zone.r * Math.SQRT2 * 11, /fabre/i.test(zone.name) ? '#c9d98f0a' : '#d8e9b80a');
+    }
+  }
+  paintTileCells(ctx, mapId, r, layout) {
     const map = MAPS[mapId];
     const terrain = this.sprites.index?.terrain;
     const tiles = terrain?.tiles;
@@ -206,13 +281,22 @@ export class Renderer {
     for (let gy = cy0; gy < cy1; gy++) for (let gx = cx0; gx < cx1; gx++) {
       const wx = gx * CELL + CELL / 2, wy = gy * CELL + CELL / 2;
       let name;
-      if (roadDistance(map, wx, wy) <= 2.1) name = 'dirt_path';
-      else {
-        const zone = (map.zones || []).find(z => Math.hypot(wx - z.x, wy - z.y) <= z.r * 0.9);
-        if (zone) name = zone.kind === 'poring' ? 'grass_blossom' : 'grass_olive';
+      if (layout) {
+        // Authored Tiled layout wins; fall back to the procedural rule only for
+        // cells the layout leaves empty (edges of the authored grid).
+        const col = Math.round((gx * CELL - layout.origin.x) / layout.cell);
+        const row = Math.round((gy * CELL - layout.origin.y) / layout.cell);
+        name = layout.tiles[col + ',' + row] || null;
+      }
+      if (!name) {
+        if (roadDistance(map, wx, wy) <= 2.1) name = 'dirt_path';
         else {
-          const h = chunkSeed(mapId, gx, gy);
-          name = (h % 100) < 68 ? 'grass_blossom' : 'grass_olive';
+          const zone = (map.zones || []).find(z => Math.hypot(wx - z.x, wy - z.y) <= z.r * 0.9);
+          if (zone) name = zone.kind === 'poring' ? 'grass_blossom' : 'grass_olive';
+          else {
+            const h = chunkSeed(mapId, gx, gy);
+            name = (h % 100) < 68 ? 'grass_blossom' : 'grass_olive';
+          }
         }
       }
       const img = this.sprites.tile(name);
@@ -308,6 +392,9 @@ export class Renderer {
     const minX = Math.min(...corners.map(p => p.x)) - 6, maxX = Math.max(...corners.map(p => p.x)) + 6;
     const minY = Math.min(...corners.map(p => p.y)) - 6, maxY = Math.max(...corners.map(p => p.y)) + 6;
     const props = this.sceneryList().filter(p => p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY);
+    // Authored landmarks from the Tiled layout join the placed scenery.
+    const layout = this.sprites.layout?.(this.mapId);
+    if (layout) for (const lm of layout.landmarks) props.push({ id: lm.id, x: lm.x, y: lm.y, scale: lm.scale });
     props.sort((a, b) => a.x + a.y - b.x - b.y);
     for (const prop of props) {
       const rec = terrain.props[prop.id], img = this.sprites.prop(prop.id);
@@ -364,10 +451,24 @@ export class Renderer {
     ctx.save();
     polygon(ctx, boundary);
     ctx.clip();
-    for (const [cx, cy] of this.visibleChunks()) {
-      const cv = this.chunkCanvas(this.mapId, cx, cy);
-      // 1px bleed hides antialiased seams between neighbouring chunk canvases.
-      ctx.drawImage(cv, cv._minX, cv._minY, cv.width + 1, cv.height + 1);
+    const chunks = this.visibleChunks();
+    this.updatePins(chunks.map(([cx, cy]) => this.mapId + ':' + cx + ':' + cy));
+    // Draw one flat overview slab instead of rendering and compositing every
+    // visible chunk canvas when the visible set would exceed the bounded cache
+    // (wide zoom, or a large viewport). This keeps the overview cheap and stops
+    // the cache from thrashing; detail returns as the camera zooms in enough that
+    // the visible set fits within CHUNK_CACHE.
+    if (this.detailLevel() >= 2 || chunks.length > CHUNK_CACHE) {
+      ctx.fillStyle = this.overviewColor(this.mapId);
+      polygon(ctx, boundary);
+      ctx.fill();
+    } else {
+      this.prefetch();
+      for (const [cx, cy] of chunks) {
+        const cv = this.chunkCanvas(this.mapId, cx, cy);
+        // 1px bleed hides antialiased seams between neighbouring chunk canvases.
+        ctx.drawImage(cv, cv._minX, cv._minY, cv.width + 1, cv.height + 1);
+      }
     }
     ctx.restore();
     if (this.grid) {
@@ -494,6 +595,20 @@ export class Renderer {
     const { scale, offX, offY } = this.minimapTransform(canvas);
     return unproject((mx - offX) / scale, (my - offY) / scale);
   }
+  // Hit-test a minimap click against roster markers so any adventurer on the
+  // field can be jumped to directly. Returns the character or null.
+  minimapCharacterAt(canvas, mx, my, s) {
+    const { scale, offX, offY } = this.minimapTransform(canvas);
+    const toMini = (x, y) => { const q = project(x, y); return { x: offX + q.x * scale, y: offY + q.y * scale }; };
+    let nearest = null, best = 9;
+    for (const c of s.characters) {
+      if (c.mapId !== this.mapId) continue;
+      const p = toMini(c.x, c.y);
+      const d = Math.hypot(mx - p.x, my - p.y);
+      if (d < best) { best = d; nearest = c; }
+    }
+    return nearest;
+  }
   drawMinimap(canvas, s, selected) {
     const ctx = canvas.getContext('2d');
     const { scale, offX, offY, b } = this.minimapTransform(canvas);
@@ -504,16 +619,31 @@ export class Renderer {
     ctx.save();
     polygon(ctx, corners); ctx.clip();
     const map = MAPS[this.mapId];
-    for (const zone of map.zones || []) {
-      const c = toMini(zone.x, zone.y);
-      ellipse(ctx, c.x, c.y, zone.r * Math.SQRT2 * 22 * scale, zone.r * Math.SQRT2 * 11 * scale, zone.kind === 'poring' ? '#9ec97f2c' : '#c9d98f26');
+    const layout = this.sprites.layout?.(this.mapId);
+    if (layout?.shoreline?.length) {
+      ctx.beginPath(); layout.shoreline.forEach(([x, y], i) => { const p = toMini(x, y); i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); });
+      ctx.closePath(); ctx.fillStyle = '#2c5f7855'; ctx.fill();
     }
-    if (map.road) {
+    const zones = layout?.zones || map.zones || [];
+    for (const zone of zones) {
+      const c = toMini(zone.x, zone.y);
+      const kind = layout ? /fabre/i.test(zone.name) : zone.kind === 'fabre';
+      ellipse(ctx, c.x, c.y, zone.r * Math.SQRT2 * 22 * scale, zone.r * Math.SQRT2 * 11 * scale, kind ? '#c9d98f26' : '#9ec97f2c');
+    }
+    const roads = layout?.roads || (map.road || []).map(line => ({ points: line }));
+    if (roads.length) {
       ctx.strokeStyle = '#c9c29c99'; ctx.lineWidth = Math.max(1.5, 10 * scale); ctx.lineJoin = 'round';
-      for (const line of map.road) {
+      for (const road of roads) {
         ctx.beginPath();
-        line.forEach(([x, y], i) => { const p = toMini(x, y); i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); });
+        road.points.forEach(([x, y], i) => { const p = toMini(x, y); i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); });
         ctx.stroke();
+      }
+    }
+    if (layout?.landmarks?.length) {
+      for (const lm of layout.landmarks) {
+        const p = toMini(lm.x, lm.y);
+        ctx.fillStyle = landmarkColor(lm.id);
+        ctx.beginPath(); ctx.arc(p.x, p.y, 2.6, 0, Math.PI * 2); ctx.fill();
       }
     }
     if (map.camp) {

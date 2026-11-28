@@ -1,5 +1,5 @@
 // Pure, serializable simulation. No DOM, storage, wall clock, or camera dependencies.
-import { combatJob, REFINEMENT, gearKey, defaultBuild, selectedBuild, ELEMENTS, affinityMultiplier, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, promotionRequirement, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, mapBounds, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, refineSuccessPercent, refineCost, refineSafeLimit, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STATUS, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
+import { combatJob, REFINEMENT, gearKey, defaultBuild, selectedBuild, ELEMENTS, affinityMultiplier, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, promotionRequirement, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, mapBounds, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, refineSuccessPercent, refineCost, refineSafeLimit, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STATUS, STEP, OFFLINE_CAP, baseNeed, jobNeed, SKILLS, activeSkillId, skillPower, loadoutMode, learnedRank, skillUnlockLevel, defaultLoadout } from './data.js';
 
 export function random(state) {
   state.seed = (Math.imul(state.seed, 1664525) + 1013904223) >>> 0;
@@ -44,7 +44,12 @@ export function stats(c) {
   const totalInt = int + gearAttribute('int'), totalDex = dex + gearAttribute('dex'), totalLuk = luk + gearAttribute('luk');
   const element = spellElement(c);
   const build = selectedBuild(c.job, c.buildId);
-  const spell = element ? ELEMENTS[element][combatJob(c.job)] : build?.style === 'support' ? job.skill : build?.skills?.at(-1) || job.skill;
+  // The loadout's active skill is the cast signature for non-elemental jobs;
+  // elemental casters keep their prepared spell. Defaults resolve to the job's
+  // signature skill, so existing builds behave exactly as before.
+  const activeId = element ? null : activeSkillId(c);
+  const activeDef = activeId ? SKILLS[activeId] : null;
+  const spell = element ? ELEMENTS[element][combatJob(c.job)] : activeDef ? activeDef.name : build?.style === 'support' ? job.skill : build?.skills?.at(-1) || job.skill;
   const hit = Math.max(0.65, Math.min(0.99, 0.94 + totalDex * 0.003 + totalLuk * 0.001 + (c.level - 1) * 0.0003));
   const flee = Math.max(0.02, Math.min(0.45, 0.03 + totalAgi * 0.0045 + totalLuk * 0.001));
   const affixes = gear.flatMap(({instance}) => instance?.affixes || []);
@@ -56,8 +61,8 @@ export function stats(c) {
   const extraHp = gear.reduce((sum,{item}) => sum + (item.hp || 0),0) + affix('hp');
   const extraSp = gear.reduce((sum,{item}) => sum + (item.sp || 0),0) + affix('sp');
   const gearRange = Math.max(1,...gear.map(({item}) => item.range || 1)) - 1;
-  return { ...job, element, build, skill:spell, castTime:build?.castTime ?? job.castTime ?? 0, hit, flee,
-    interval:job.interval / (1 + totalAgi / 100 + affix('speed') / 100), skillBonus:totalDex * 2 + affix('skill'), crit:totalLuk / 100 + affix('crit') / 100, regen:0.9 + totalInt * 0.025,
+  return { ...job, element, build, skill:spell, cost:activeDef ? activeDef.cost : job.cost, cooldown:activeDef ? activeDef.cooldown : job.cooldown, castTime:build?.castTime ?? job.castTime ?? 0, hit, flee,
+    interval:job.interval / (1 + totalAgi / 100 + affix('speed') / 100), skillBonus:totalDex * 2 + affix('skill') + skillPower(c), crit:totalLuk / 100 + affix('crit') / 100, regen:0.9 + totalInt * 0.025,
     hp:job.hp + (c.level - 1) * 14 + totalVit * 10 + extraHp,
     atk:Math.round((job.atk + (c.level - 1) * 2 + item.atk + 2 * (c.refine || 0) + gearAtk + totalStr * 2 + (CARDS[c.card]?.atk || 0)) * (1 + (c.buffAtk || 0))),
     def:job.def + Math.floor((c.level - 1) / 3) + item.def + (c.refine || 0) + gearDef + Math.floor(totalVit / 3) + (CARDS[c.card]?.def || 0),
@@ -69,7 +74,7 @@ export function character(id, name, sex = 'm') {
     hp: 100, sp: 49, mapId: null, partyId: null, x: 0, y: 0, home: { x: 0, y: 0 },
     direction: 0, stance: 'idle', status: 'camp', order: 'farm', destination: null, targetId: null,
     cooldown: 0, attackTimer: 0, attackFlash: 0, cast: null, potions: 10, tactic: 'safe', tactics: { ...TACTIC_PRESETS.safe }, equipment: 'training', gear:{},
-    assignment: 'balanced', buildId: null, buffTimer: 0, buffAtk: 0, kills: 0, earned: 0 };
+    assignment: 'balanced', buildId: null, buffTimer: 0, buffAtk: 0, kills: 0, earned: 0, skills: {}, loadout: [], loadoutMode: 'auto' };
 }
 function refreshGearCounts(s) {
   const counts = {};
@@ -98,6 +103,8 @@ export function effectiveTactics(c) {
   const preset = TACTIC_PRESETS[c.tactic] || TACTIC_PRESETS.safe;
   return { ...preset, ...(c.tactics || {}) };
 }
+// A manual loadout suspends automatic skill use regardless of the tactics toggle.
+export function autoSkillEnabled(c) { return loadoutMode(c) !== 'manual' && effectiveTactics(c).autoSkill; }
 export function roleOf(c) { return JOB_ROLES[c.job] || 'frontline'; }
 export function partyOf(s, c) { return c.partyId ? s.parties.find(p => p.id === c.partyId) || null : null; }
 export function leaderOf(s, c) { const p = partyOf(s, c); return p ? s.characters.find(v => v.id === p.leaderId) || null : null; }
@@ -306,6 +313,9 @@ function applyCommand(s, cmd) {
     if (c.jobLevel < requirement.jobLevel) return 'Reach Job Lv. ' + requirement.jobLevel + ' first.';
     if (c.level < requirement.baseLevel) return 'Reach Base Lv. ' + requirement.baseLevel + ' first.';
     c.job = cmd.job; c.jobLevel = 1; c.jobExp = 0; c.buildId = defaultBuild(cmd.job); c.hp = stats(c).hp; c.sp = stats(c).sp;
+    // Skills are job-specific: a new job line resets learned ranks and rebuilds
+    // the loadout from the new line's signature skill (pre-skill saves default).
+    c.skills = {}; c.loadout = defaultLoadout(c); c.loadoutMode = 'auto';
     log(s, c.name + ' became a ' + JOBS[c.job].name + '!'); return null;
   }
   if (cmd.type === 'rename') {
@@ -402,6 +412,36 @@ function applyCommand(s, cmd) {
     if (!build || build.id !== cmd.buildId) return 'Choose a build available to this class.';
     c.buildId = build.id; c.cooldown = 0;
     log(s, c.name + ' prepared the ' + build.name + ' build.'); return null;
+  }
+  if (cmd.type === 'skill-learn') {
+    const c = selected[0];
+    if (selected.length !== 1 || c.mapId || c.status === 'down') return 'Train skills at camp on a recovered adventurer.';
+    const def = SKILLS[cmd.skillId];
+    if (!def || def.job !== c.job) return 'Choose a skill available to this job.';
+    const rank = learnedRank(c, cmd.skillId);
+    if (rank >= def.maxRank) return def.name + ' is already at its highest rank.';
+    const next = rank + 1;
+    if (c.jobLevel < skillUnlockLevel(cmd.skillId, next)) return def.name + ' rank ' + next + ' unlocks at Job Lv. ' + skillUnlockLevel(cmd.skillId, next) + '.';
+    c.skills = { ...(c.skills || {}) };
+    c.skills[cmd.skillId] = next;
+    if (!c.loadout?.includes(cmd.skillId)) c.loadout = [...(c.loadout || defaultLoadout(c)), cmd.skillId];
+    log(s, c.name + ' advanced ' + def.name + ' to rank ' + next + '.'); return null;
+  }
+  if (cmd.type === 'loadout') {
+    const c = selected[0];
+    if (selected.length !== 1 || c.mapId) return 'Configure a loadout at camp.';
+    const skills = Array.isArray(cmd.skills) ? cmd.skills : [];
+    const seen = new Set();
+    for (const id of skills) {
+      const def = SKILLS[id];
+      if (!def || def.job !== c.job || learnedRank(c, id) <= 0 || seen.has(id)) return 'Choose a valid, learned skill order for this job.';
+      seen.add(id);
+    }
+    if (!skills.length) return 'Choose at least one learned skill for the loadout.';
+    if (cmd.mode !== undefined && !['auto', 'manual'].includes(cmd.mode)) return 'Choose automatic or manual loadout mode.';
+    c.loadout = skills;
+    if (cmd.mode !== undefined) c.loadoutMode = cmd.mode;
+    log(s, c.name + ' updated their skill loadout.'); return null;
   }
   if (cmd.type === 'attune') {
     const c = selected[0];
@@ -743,7 +783,7 @@ function tickCharacter(s, c, dt) {
     return;
   }
   const map = s.maps[c.mapId], role = roleOf(c), leader = leaderAvailable(s, c);
-  if (tactics.autoSkill) useSkill(s, c, null);
+  if (autoSkillEnabled(c)) useSkill(s, c, null);
   let target = map.monsters.find(m => m.id === c.targetId && m.hp > 0);
   const pref = tactics.targetPref;
   // Leader assist is a farming behavior only: it must never bypass a manual Hold
@@ -790,7 +830,7 @@ function tickCharacter(s, c, dt) {
     if (distance(before, c) > 0.01) return;
   }
   c.status = 'fighting'; c.stance = c.attackFlash > 0 ? 'attack' : 'idle'; face(c, target);
-  if (tactics.autoSkill) useSkill(s, c, target);
+  if (autoSkillEnabled(c)) useSkill(s, c, target);
   if (target.hp > 0 && c.attackTimer <= 0 && target.mapId === c.mapId && distance(c, target) <= st.range) {
     c.attackTimer = st.interval; c.attackFlash = 0.4; c.stance = 'attack';
     const critical = st.crit > 0 && random(s) < st.crit;

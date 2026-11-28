@@ -75,3 +75,44 @@ test('older guild acquires Payon without changing owned equipment or assignments
   assert.equal(loaded.inventory.equipment.reliquary,0); assert.ok(loaded.maps.payon.monsters.some(m=>m.kind==='skeleton'));
   assert.deepEqual(decodeSave(encodeSave(loaded)).state,loaded);
 });
+
+test('old saves without skills derive a default loadout and rank-less skills', () => {
+  const s = createGame();
+  s.characters[0].jobLevel = 10;
+  command(s, { type: 'promote', ids: ['c1'], job: 'swordsman' });
+  // Simulate a pre-skills v1 character: drop the new fields entirely.
+  delete s.characters[0].skills; delete s.characters[0].loadout; delete s.characters[0].loadoutMode;
+  const restored = decodeSave(encodeSave(s)).state.characters[0];
+  assert.deepEqual(restored.skills, {});
+  assert.deepEqual(restored.loadout, ['bash']);
+  assert.equal(restored.loadoutMode, 'auto');
+});
+
+test('skill ranks and loadouts are validated on load and rejected when invalid', () => {
+  const s = createGame();
+  s.characters[0].jobLevel = 10;
+  command(s, { type: 'promote', ids: ['c1'], job: 'swordsman' });
+  s.characters[0].skills = { bash: 2, fire_bolt: 1 };       // fire_bolt is not a swordsman skill
+  assert.throws(() => decodeSave(encodeSave(s)), /invalid or uses an unsupported format/);
+  s.characters[0].skills = { bash: 9 };                      // rank beyond max
+  assert.throws(() => decodeSave(encodeSave(s)), /invalid or uses an unsupported format/);
+  s.characters[0].skills = { bash: 2 };
+  s.characters[0].loadout = ['bash', 'power_strike'];        // power_strike not learned
+  assert.throws(() => decodeSave(encodeSave(s)), /invalid or uses an unsupported format/);
+  s.characters[0].loadout = ['bash'];
+  s.characters[0].loadoutMode = 'turbo';
+  assert.throws(() => decodeSave(encodeSave(s)), /invalid or uses an unsupported format/);
+});
+
+test('a transcendent job line keeps a valid default loadout after promotion', () => {
+  const s = createGame();
+  Object.assign(s.characters[0], { job: 'wizard', jobLevel: 50, skills: { fire_bolt: 1 }, loadout: ['fire_bolt'] });
+  command(s, { type: 'promote', ids: ['c1'], job: 'highWizard' });
+  const c = s.characters[0];
+  // Skills are job-specific, so promotion resets ranks and rebuilds the loadout.
+  assert.deepEqual(c.skills, {});
+  assert.deepEqual(c.loadout, ['storm_gust']);
+  const restored = decodeSave(encodeSave(s)).state.characters[0];
+  assert.equal(restored.job, 'highWizard');
+  assert.deepEqual(restored.loadout, ['storm_gust']);
+});

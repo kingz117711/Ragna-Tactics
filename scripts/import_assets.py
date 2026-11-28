@@ -16,9 +16,16 @@ DEST = ROOT / 'public' / 'assets'
 MANIFEST = DEST / 'provenance.json'
 REPO = 'KzeR7/Prontera-Grind'
 # Decorative terrain subset: seamless ground tiles and anchored scenery props.
-TILES = ['grass_blossom', 'grass_olive', 'dirt_path']
+# The South Prontera pilot adds grass variety, a dirt road, shoreline water and
+# bank tiles, and readable landmarks. All are byte-identical copies of the pinned
+# Prontera-Grind map-sprites-v2 kit; no pixels are altered.
+TILES = ['grass_blossom', 'grass_olive', 'grass_geffen', 'grass_jade', 'dirt_path',
+         'cliff_rock', 'water_dark_0', 'water_dark_1', 'water_frame_0', 'water_frame_1',
+         'riverbank_wall']
 PROPS = ['tree_tall_cluster', 'tree_sapling', 'tree_bush_bright', 'rock_boulder_mossy',
-         'rock_cliff_crag', 'standing_stone', 'lantern_stone', 'house_prontera']
+         'rock_cliff_crag', 'standing_stone', 'lantern_stone', 'house_prontera',
+         'tree_cherry', 'tree_ancient_large', 'shrine_stone', 'torii_gate',
+         'pier_post', 'river_stone_post', 'bridge_red_arch', 'house_ruin']
 
 
 def fetch(url):

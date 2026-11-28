@@ -2124,3 +2124,13 @@ select{
 .build-option p { color:var(--muted); font-size:12px; }
 .build-option button { min-width:105px; }
 @media(max-width:520px) { .build-option { grid-template-columns:1fr; } .build-option button { justify-self:start; } }
+.loadout-controls { display:flex; flex-wrap:wrap; align-items:flex-end; gap:14px; padding:12px; margin:12px 0; border:1px solid var(--line); border-radius:7px; background:#0f211c22; }
+.loadout-controls .form-label { margin:0; min-width:230px; }
+.loadout-controls .tiny { flex:1; margin:0; }
+.skill-option { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:12px; padding:13px 0; border-top:1px solid #435449; }
+.skill-option.active { color:#f1e6c7; }
+.skill-option h3, .skill-option p { margin:4px 0; }
+.skill-option p { color:var(--muted); font-size:12px; }
+.skill-option .tiny { font-size:10px; }
+.skill-option button { min-width:96px; }
+@media(max-width:520px) { .skill-option { grid-template-columns:1fr; } .skill-option .detail-actions { justify-content:flex-start; } }

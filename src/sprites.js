@@ -28,8 +28,15 @@ export class Sprites {
           this.assets.set('prop-' + name, await image('/assets/' + rec.file));
         }),
       ]);
+      // Authored terrain layouts (baked from Tiled files at build time). These are
+      // purely visual: roads, shoreline, hunting districts and landmarks.
+      this.layouts = new Map();
+      await Promise.all(Object.entries(terrain.layouts || {}).map(async ([mapId, rec]) => {
+        this.layouts.set(mapId, await json('/assets/' + rec.file));
+      }));
     }
   }
+  layout(mapId) { return this.layouts?.get(mapId) || null; }
   tile(name) { return this.assets.get('tile-' + name) || null; }
   prop(name) { return this.assets.get('prop-' + name) || null; }
   heroFrame(job, sex, route, body, hair, bodyIndex, hairIndex) {

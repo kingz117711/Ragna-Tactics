@@ -1,8 +1,11 @@
 import { cp, mkdir, rm } from 'node:fs/promises';
 import { resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+const { convertTerrain } = await import('./convert-terrain.mjs');
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const output = resolve(root, 'dist');
+// Bake the authored Tiled terrain into the runtime layout before copying assets.
+convertTerrain();
 if (output !== root + sep + 'dist') throw new Error('Refusing to clean a path outside the project build directory.');
 await rm(output, { recursive: true, force: true });
 await mkdir(output);
