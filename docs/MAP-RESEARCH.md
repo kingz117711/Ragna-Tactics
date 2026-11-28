@@ -1,16 +1,33 @@
 # Map research — terrain sprite sourcing and South Prontera
 
-Purpose: record where terrain/prop art comes from, what was authored locally, and the
-decisions behind the South Prontera terrain pilot. This is reference material for
-agents that extend maps; the runtime source of truth is `assets-src/*.tmj` plus the
-deterministic converter `scripts/convert-terrain.mjs`.
+Reference for the South Prontera terrain pilot: where terrain/prop art comes from,
+how the layout is authored and built, and how it renders. The runtime source of
+truth is `assets-src/*.tmj` plus the deterministic converter
+`scripts/convert-terrain.mjs`.
+
+## Starting point and visual reference
+
+The game renders angled, sprite-based fields with Canvas 2D. It already has
+map-specific bounds, an 8-world-unit terrain chunk size, a bounded terrain cache,
+map markers and concurrent off-camera simulation. South Prontera bounds are
+±42 by ±32 world units, and it is the best pilot because it already has authored
+landmarks, roads and two independently useful hunting areas. The previous HD
+texture import was reverted; use the current asset manifest as the input inventory.
+
+Ragnarok Origin is the visual reference for continuous roads, layered scenery,
+terrain variety and landmark readability. Build an original composition with
+assets the project has permission to use.
+
+- [Ragnarok Origin game introduction](https://roo-global.gitbook.io/guide/game-introduction)
+- [Gravity's Ragnarok series overview](https://img.gravity.co.kr/GravityUpload/0000/2026/02/13/Gravity%20IR%20Presentation_2025_4Q_EN.pdf)
+- [Prontera-Grind terrain source](https://github.com/KzeR7/Prontera-Grind/tree/f47bf27e3092c385ba050da1cdb2fde4176f5183/Updates/map-sprites-v2/work)
 
 ## Sprite sourcing
 
-The terrain and prop tiles are **imported original art**, pinned to a single upstream
-commit and recorded in `public/assets/provenance.json`. The import path is
-`scripts/import_assets.py`; `npm run assets:verify` re-checks the manifest against the
-files on disk.
+The terrain and prop tiles are **imported original art**, pinned to a single
+upstream commit and recorded in `public/assets/provenance.json`. The import path is
+`scripts/import_assets.py`; `npm run assets:verify` re-checks the manifest against
+the files on disk.
 
 - **Source:** `KzeR7/Prontera-Grind`, PR #8 "Map Kit v2" —
   `Updates/map-sprites-v2/` (a 2048×2048 atlas plus per-asset PNGs: 25 tiles and
@@ -21,7 +38,7 @@ files on disk.
   (grass family), `dirt_path`, `cliff_rock`, `water_dark_0`, `water_dark_1`,
   `water_frame_0`, `water_frame_1`, `riverbank_wall`.
 - **Props imported (16):** the 34-billboard set trimmed to the props placed in
-  South Prontera plus a few standbys: `tree_cherry`, `tree_ancient_large`,
+  South Prontera plus standbys: `tree_cherry`, `tree_ancient_large`,
   `shrine_stone`, `torii_gate`, `pier_post`, `river_stone_post`, `bridge_red_arch`,
   `house_ruin`, and the remaining billboards. Native `anchorX/anchorY/w/h` for every
   prop come from the upstream `_anchors.json` at the pinned commit and are stored in
@@ -85,7 +102,8 @@ Visual layout and gameplay data are kept separate:
   returns as the camera zooms in enough that the visible set fits within 96.
   `paintChunkGround` honors the level; level 2 draws a flat overview color.
 - **Visible-set pinning:** chunks under the viewport are pinned (`this.pinned`) so
-  panning does not thrash them; `evictChunk` respects the bound.
+  panning does not thrash them; `evictChunk` respects the bound. Pinning is sticky so
+  the prefetch ring stays resident across frames.
 - **Prefetch:** `prefetch()` loads chunks just outside the current view so zoom/pan
   feels instant.
 - The minimap extends the compact/expanded view with shoreline, zones, roads,
@@ -108,3 +126,10 @@ Visual layout and gameplay data are kept separate:
   navigation model exists (see `AGENTS.md`).
 - Other terrain families (desert, cave, indoor) are unimported.
 - Terrain layouts beyond South Prontera are not authored yet.
+
+## Reference links
+
+- [Tiled Terrain Sets](https://doc.mapeditor.org/en/latest/manual/terrain/)
+- [Tiled map orientations](https://doc.mapeditor.org/en/latest/manual/maps/)
+- [Tiled infinite maps](https://doc.mapeditor.org/en/latest/manual/using-infinite-maps/) · [Tiled JSON format](https://doc.mapeditor.org/en/stable/reference/json-map-format/)
+- [MDN Canvas optimization](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Optimizing_canvas) · [MDN OffscreenCanvas](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas)

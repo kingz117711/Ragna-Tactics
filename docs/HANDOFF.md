@@ -1,5 +1,16 @@
 # Milestone handoff — 2026-11-27
 
+## Character management and monitoring
+
+Select one adventurer to reveal Manage in the roster. The sheet groups live
+vitals, equipment, skill/build controls, attributes and job advancement.
+The Skills page can toggle automatic skill use for this adventurer independently.
+World Overview now has live field, adventurer and alert views, with actions
+to locate or manage a unit. Expand the minimap for an overview and roster jumps.
+
+The next map milestone is described in MAP-RESEARCH.md and NEXT-AGENT.md.
+MMO-FEATURE-GAPS.md records the current comparison with Renewal and Origin.
+
 ## South Prontera expedition map and single-screen interface
 
 Deploy adventurers to South Prontera. Its camp exit leads to the Poring Meadow and
@@ -191,11 +202,11 @@ and `LD_LIBRARY_PATH` environment settings; this did not change package manifest
 - `npm run build` — passed; the baked terrain layout ships in `dist/assets/terrain/`.
 - `npm run test:build` — passed: exported site boots with two Novices, local assets,
   and no failed requests/runtime errors.
-- `npm run test:browser` — 22/29 pass; the 7 failures are **pre-existing on the
-  baseline** (identical failure set to the unmodified PR #6 merge, confirmed by stash
-  comparison): job-choice preview count, tactics presets reload, world navigation,
-  tab-switch catch-up, Morroc card socketing, guild-split settlement, and refine
-  modal. No new regressions were introduced.
+- `npm run test:browser` — 31/31 pass. After merging the base `codex/foundation`
+  (PR #7 character management/monitoring) into this branch and resolving the
+  conflicts, the full browser suite is green, including the character hub, live
+  monitor, terrain/minimap and skills scenarios. (Before the merge, 7 failures were
+  pre-existing on the PR #6 baseline; PR #7 resolved them.)
 - Screenshots captured in `artifacts/`: `terrain-desktop.png`, `terrain-overview.png`,
   `terrain-closeup.png`, `terrain-phone.png`, `skills-page.png`, `skills-desktop.png`.
   Cold-load and pan metrics in `artifacts/metrics.json`: cold load ≈448 ms, pan

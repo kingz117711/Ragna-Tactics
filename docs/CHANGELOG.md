@@ -149,3 +149,7 @@ Added six camp promotions with native wardrobes, upgraded combat specialties and
   reloads the guild and checks areas, radii, maps and kills), 103 asset files verified,
   static build, and built-site browser check. Screenshots at 1366×768, 1440×900 and
   390×844 were inspected.
+
+## Character management and live monitoring
+
+Added a character sheet, field/roster/alert monitoring, expandable minimap with roster jumps, and the larger-map implementation brief.

@@ -653,17 +653,28 @@ export class Renderer {
     }
     // Visible camera footprint.
     const view = [this.world(0, 0), this.world(this.width, 0), this.world(this.width, this.height), this.world(0, this.height)]
-      .map(p => toMini(clamp(p.x, -b.x, b.x), clamp(p.y, -b.y, b.y)));
+      .map(p => toMini(p.x, p.y));
     polygon(ctx, view, '#ffe9a314', '#f1d99d');
     ctx.restore();
     // Party markers.
-    for (const c of s.characters.filter(c => c.mapId === this.mapId)) {
+    for (const c of s.characters) {
+      if (c.mapId !== this.mapId) continue;
       const p = toMini(c.x, c.y), st = stats(c), wounded = c.hp / st.hp <= 0.3;
       ctx.beginPath(); ctx.arc(p.x, p.y, selected.has(c.id) ? 4.5 : 3.4, 0, Math.PI * 2);
       ctx.fillStyle = wounded ? '#e08b76' : selected.has(c.id) ? '#ffd97a' : '#b8e986';
       ctx.fill();
       ctx.lineWidth = 1.4; ctx.strokeStyle = '#142729'; ctx.stroke();
       if (selected.has(c.id)) { ctx.beginPath(); ctx.arc(p.x, p.y, 7, 0, Math.PI * 2); ctx.strokeStyle = '#ffd97acc'; ctx.stroke(); }
+    }
+    if (canvas.width >= 600) {
+      ctx.font = 'bold 13px system-ui';
+      ctx.textAlign = 'center';
+      for (const [index,c] of s.characters.entries()) {
+        if (c.mapId !== this.mapId) continue;
+        const p = toMini(c.x,c.y);
+        ctx.fillStyle = '#102525'; ctx.fillRect(p.x - 10, p.y - 21, 20, 16);
+        ctx.fillStyle = '#f3d591'; ctx.fillText(index + 1, p.x, p.y - 8);
+      }
     }
     for (const m of s.maps[this.mapId].monsters.filter(m => m.hp > 0 && MAPS[this.mapId].boss)) {
       const p = toMini(m.x, m.y);

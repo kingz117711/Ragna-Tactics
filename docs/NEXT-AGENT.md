@@ -1,11 +1,14 @@
 # Next agent prompt
 
 Continue from the current gameplay PR. Read AGENTS.md, docs/HANDOFF.md,
-docs/MAP-RESEARCH.md, and docs/MMO-FEATURE-GAPS.md.
+docs/MAP-RESEARCH.md, and docs/MMO-FEATURE-GAPS.md. Keep the single-screen desktop
+view and compact phone layout.
 
-The South Prontera terrain pilot and the Skills system are complete and verified
-(terrain layout + LOD rendering + minimap; learnable skills with loadouts). The
-next content milestone is the Endless Tower: build a three-floor Endless Tower
+The South Prontera terrain pilot and the Skills system are complete and verified:
+authored terrain layout + LOD rendering + minimap, and learnable skills with
+loadouts, all behind the provenance manifest and deterministic converter.
+
+The next content milestone is the Endless Tower: build a three-floor Endless Tower
 expedition with distinct fixed waves, a visible floor objective, combat-only
 progression, a final reward and an explicit return to camp. Preserve old saves,
 concurrent maps and active-only boss rules. Use existing native art. Verify floor
