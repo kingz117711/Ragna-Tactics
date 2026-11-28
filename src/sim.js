@@ -1,6 +1,6 @@
 // Pure, serializable simulation. No DOM, storage, wall clock, or camera dependencies.
 import * as GM from './gm.js';
-import { FIRST_JOB_KIT, FIELD_SKILLS, FIELD_SKILL_ALIASES, fieldSkillAvailable, SKILLS, canLearnSkill, skillUnlockLevel, learnedRank, learnedSkillPower, activeSkill, activeSkillId, activeSkillList, activeSlots, ACTIVE_SLOTS, defaultSkills, skillMultiplier, skillPoints, prereqMet, missingPrereqs, learnedPassive, passiveBonus, combatJob, REFINEMENT, gearKey, defaultBuild, selectedBuild, ELEMENTS, affinityMultiplier, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, promotionRequirement, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, mapBounds, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, refineSuccessPercent, refineCost, refineSafeLimit, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STATUS, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
+import { FIRST_JOB_KIT, FIELD_SKILLS, FIELD_SKILL_ALIASES, fieldSkillAvailable, SKILLS, canLearnSkill, skillUnlockLevel, learnedRank, learnedSkillPower, activeSkill, activeSkillId, activeSkillList, activeSlots, ACTIVE_SLOTS, defaultSkills, skillMultiplier, skillPoints, prereqMet, missingPrereqs, learnedPassive, passiveBonus, combatJob, REFINEMENT, gearKey, defaultBuild, selectedBuild, ELEMENTS, affinityMultiplier, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, jobChoices, promotionLevel, promotionRequirement, HUNT_RADII, DEFAULT_HUNT_RADIUS, VERSION, MAPS, mapBounds, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, GEAR_SHOP, gearFitsSlot, GEAR_SETS, gearSetOf, gearSetsFor, ITEMS, refineSuccessPercent, refineCost, refineSafeLimit, TACTICS, TACTIC_PRESETS, TARGET_PREFS, JOB_ROLES, STATUS, STEP, OFFLINE_CAP, baseNeed, jobNeed } from './data.js';
 
 // The elemental spellbook's flourish per element.
 const ELEMENT_FX = { fire: 'fireBall', water: 'frostNova', wind: 'jupitel', earth: 'quake', holy: 'holyLight', ghost: 'soulBlast', poison: 'venom' };
@@ -45,6 +45,26 @@ export function canEquipGear(jobId, itemId, baseLevel = 99) {
   }
   return false;
 }
+// `>`, `>=`, `<`, `<=`, `==` as the combo scripts spell them.
+export function compare(left, op, right) {
+  return op === '>=' ? left >= right : op === '<=' ? left <= right : op === '>' ? left > right
+    : op === '<' ? left < right : left === right;
+}
+// Every gear set the adventurer currently completes. A set counts only when all of its
+// pieces are worn at once, and the gates the upstream combo script carried are honoured
+// (a `Refine ≥ 9` clause is not a bonus at +8). A `Refine` gate names the equipment slot
+// it watches (`EQI_ARMOR`, `EQI_GARMENT`, …), which is the same name the catalog uses.
+export function activeGearSets(c) {
+  const gear = Object.values(c.gear || {}).map(instance => ({ instance, item: itemOfInstance(instance) }))
+    .filter(entry => entry.item);
+  const pieces = gear.map(({ item }) => String(item.roId));
+  return gearSetOf(pieces).filter(set => (set.requires || []).every(rule => {
+    if (rule.on === 'BaseLevel') return compare(c.level || 1, rule.op, rule.value);
+    if (rule.on !== 'Refine') return false;
+    const watched = gear.find(({ item }) => item.slot === rule.slot);
+    return Boolean(watched && compare(watched.instance.refine || 0, rule.op, rule.value));
+  }));
+}
 export function stats(c) {
   const job = JOBS[c.job], item = EQUIPMENT[c.equipment] || EQUIPMENT.training;
   const gear = Object.values(c.gear || {}).map(instance => ({ instance, item:itemOfInstance(instance) })).filter(entry => entry.item);
@@ -74,6 +94,10 @@ export function stats(c) {
   const extraHp = gear.reduce((sum,{item}) => sum + (item.hp || 0),0) + affix('hp');
   const extraSp = gear.reduce((sum,{item}) => sum + (item.sp || 0),0) + affix('sp');
   const gearRange = Math.max(1,...gear.map(({item}) => item.range || 1)) - 1;
+  // Set bonuses from rAthena's own item combinations: flat stats add, percentages scale
+  // the stat they name, and recovery points fold into regen (see scripts/build_gear_sets.py).
+  const sets = activeGearSets(c);
+  const setBonus = key => sets.reduce((sum, set) => sum + (set.bonus[key] || 0), 0);
   const hitFinal = Math.max(0.65, Math.min(0.99, hit + passive.hit));
   const fleeFinal = Math.max(0.02, Math.min(0.45, flee + passive.flee));
   return { ...job, element, build, skill:spell,
@@ -83,15 +107,15 @@ export function stats(c) {
     // the element so the inspector and effects stay consistent.
     skillFx:learned ? learned.fx : element ? ELEMENT_FX[element] || 'bolt' : null,
     castTime:build?.castTime ?? job.castTime ?? 0, hit:hitFinal, flee:fleeFinal,
-    interval:job.interval / (1 + totalAgi / 100 + affix('speed') / 100 + passive.speed), skillBonus:totalDex * 2 + affix('skill') + passive.skill, crit:totalLuk / 100 + affix('crit') / 100 + passive.crit, regen:0.9 + totalInt * 0.025 + passive.regen,
+    interval:job.interval / (1 + totalAgi / 100 + affix('speed') / 100 + passive.speed + setBonus('speed') / 100), skillBonus:totalDex * 2 + affix('skill') + passive.skill, crit:totalLuk / 100 + affix('crit') / 100 + passive.crit + setBonus('crit') / 100, regen:0.9 + totalInt * 0.025 + passive.regen + setBonus('hpRegen') * 0.01,
     // Learned ranks add damage to the trained skill only, never to the class's
     // built-in rotation, so existing build maths stay stable.
     skillPower:learnedSkillPower(c),
-    hp:job.hp + (c.level - 1) * 14 + totalVit * 10 + extraHp + passive.hp,
-    atk:Math.round((job.atk + (c.level - 1) * 2 + item.atk + 2 * (c.refine || 0) + gearAtk + totalStr * 2 + (CARDS[c.card]?.atk || 0) + passive.atk) * (1 + (c.buffAtk || 0))),
-    def:job.def + Math.floor((c.level - 1) / 3) + item.def + (c.refine || 0) + gearDef + Math.floor(totalVit / 3) + (CARDS[c.card]?.def || 0) + passive.def,
-    matk:job.atk + (c.level - 1) * 2 + totalInt * 2 + gearMatk + passive.matk, mdef:gear.reduce((sum,{item}) => sum + (item.mdef || 0),0),
-    blindRes:gear.reduce((sum,{item}) => sum + (item.blindRes || 0),0), sp:45 + c.level * 4 + totalInt * 4 + extraSp + passive.sp, range:job.range + gearRange + passive.range };
+    hp:Math.round((job.hp + (c.level - 1) * 14 + totalVit * 10 + extraHp + setBonus('hp') + passive.hp) * (1 + setBonus('hpPct') / 100)),
+    atk:Math.round((job.atk + (c.level - 1) * 2 + item.atk + 2 * (c.refine || 0) + gearAtk + setBonus('atk') + totalStr * 2 + (CARDS[c.card]?.atk || 0) + passive.atk) * (1 + (c.buffAtk || 0)) * (1 + setBonus('atkPct') / 100)),
+    def:Math.round((job.def + Math.floor((c.level - 1) / 3) + item.def + (c.refine || 0) + gearDef + setBonus('def') + Math.floor(totalVit / 3) + (CARDS[c.card]?.def || 0) + passive.def) * (1 + setBonus('defPct') / 100)),
+    matk:Math.round((job.atk + (c.level - 1) * 2 + totalInt * 2 + gearMatk + setBonus('matk') + passive.matk) * (1 + setBonus('matkPct') / 100)), mdef:gear.reduce((sum,{item}) => sum + (item.mdef || 0),0) + setBonus('mdef'),
+    blindRes:gear.reduce((sum,{item}) => sum + (item.blindRes || 0),0), sp:Math.round((45 + c.level * 4 + totalInt * 4 + extraSp + setBonus('sp') + passive.sp) * (1 + setBonus('spPct') / 100)), range:job.range + gearRange + passive.range };
 }
 export function character(id, name, sex = 'm') {
   return { id, ownerId: 'local-player', name, sex, job: 'novice', level: 1, exp: 0, jobLevel: 1, jobExp: 0,
@@ -256,6 +280,22 @@ export function command(s, cmd) {
   if (result === null) advanceExpeditionGoals(s);
   return result;
 }
+// Merchant price. The client price is the base, but dozens of endgame pieces are listed
+// at a nominal 1-20z in the database (god items, event gear), which would make Asprika
+// cheaper than a Cotton Shirt. When the listed price is clearly a placeholder for the
+// item's stats, price the item from its power and required level instead.
+export function shopPrice(itemId) {
+  const item = GEAR_ITEMS[itemId];
+  if (!item) return Infinity;
+  const listed = item.buy || 0;
+  const power = (item.atk || 0) + (item.matk || 0) + (item.def || 0) + (item.mdef || 0) * 2;
+  const level = Math.max(1, item.equipLevel || 1);
+  // A bounty pays 5-25 Zeny per monster and the guild starts with 150, so the ladder
+  // runs from a few hundred Zeny to a few tens of thousands, not to six figures.
+  const derived = 180 + power * 55 + level * level * 9 + (item.slots || 0) * 400;
+  const base = listed >= Math.max(1000, derived * 0.5) ? listed : Math.max(listed, derived);
+  return Math.max(120, Math.min(48000, Math.round(base * 1.25)));
+}
 export function forgePrice(s, item) {
   return Math.ceil(FORGE[item].zeny * (s.characters.some(c => combatJob(c.job) === 'blacksmith' && !c.mapId && c.hp > 0) ? 0.5 : 1));
 }
@@ -329,6 +369,20 @@ function applyCommand(s, cmd) {
     s.inventory.equipment[cmd.item]++;
     log(s, 'Forged ' + EQUIPMENT[cmd.item].name + '.');
     return null;
+  }
+  if (cmd.type === 'gear-buy') {
+    const item = GEAR_ITEMS[cmd.item];
+    if (!item) return 'Unknown equipment.';
+    if (!GEAR_SHOP.includes(cmd.item)) return 'That equipment is not on the merchant\u2019s list.';
+    const price = shopPrice(cmd.item);
+    if (s.inventory.zeny < price) return `The merchant wants ${price} Zeny for that.`;
+    const buyer = s.characters.find(c => c.id === cmd.id) || s.characters[0];
+    if (!buyer) return 'No adventurer can carry that yet.';
+    if (!canEquipGear(buyer.job, cmd.item, buyer.level)) return 'None of your adventurers can equip that yet.';
+    s.inventory.zeny -= price;
+    const instance = addGearToBag(s, cmd.item);
+    log(s, `Bought ${item.name} for ${price} Zeny.`);
+    return instance ? null : 'The merchant is out of stock.';
   }
   if (!selected.length) return 'Select at least one adventurer.';
   if (cmd.type === 'party') {

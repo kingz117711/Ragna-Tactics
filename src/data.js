@@ -1,6 +1,11 @@
 import { SKILLS } from './skills-catalog.js';
 import { canLearnSkill as canLearnSkillFor } from './skills.js';
 import { RENEWAL_JOBS, BUILD_FAMILIES, STATUS_EFFECTS } from './renewal.js';
+// Generated from rAthena's renewal item database by scripts/build_gear_catalog.py.
+import GEAR_CATALOG from './gear-catalog.json' with { type: 'json' };
+import GEAR_SHOP_KEYS from './gear-shop.json' with { type: 'json' };
+// Generated from rAthena's item combination database by scripts/build_gear_sets.py.
+import GEAR_SET_DATA from './gear-sets.json' with { type: 'json' };
 
 export const HUNT_RADII = [3, 6, 10];
 export const DEFAULT_HUNT_RADIUS = 6;
@@ -253,11 +258,11 @@ export const EQUIPMENT = {
 export const GEAR_SLOTS = { weapon:'Weapon', armor:'Armor', shield:'Shield', head:'Headgear', garment:'Garment', footwear:'Footwear', accessory1:'Accessory I', accessory2:'Accessory II' };
 export function gearFitsSlot(item, slot) { return item?.slot === slot || (item?.slot?.startsWith('accessory') && slot?.startsWith('accessory')); }
 export const GEAR_ITEMS = {
-  knife:{name:'Knife',roId:1201,slot:'weapon',atk:17,weaponLevel:1,range:1,slots:3,weight:40,buy:50,equipLevel:1,refineable:true,classes:['novice','swordsman','mage','archer','merchant','thief','alchemist','assassin','blacksmith','crusader','knight','rogue','hunter','bard','dancer','ninja','kagerou','oboro','soul_linker']},
-  sword:{name:'Sword',roId:1101,slot:'weapon',atk:25,weaponLevel:1,range:1,slots:3,weight:50,buy:100,equipLevel:2,refineable:true,classes:['novice','swordsman','knight','crusader','merchant','thief']},
-  bow:{name:'Bow',roId:1702,slot:'weapon',atk:15,weaponLevel:1,range:5,slots:4,weight:50,buy:1000,equipLevel:4,refineable:true,classes:['archer','hunter','bard','dancer','thief','rogue']},
-  rod:{name:'Rod',roId:1602,slot:'weapon',atk:15,matk:30,weaponLevel:1,range:1,slots:4,weight:40,buy:50,equipLevel:1,refineable:true,classes:['novice','mage','acolyte','monk','priest','sage','soul_linker']},
-  mace:{name:'Club',roId:1501,slot:'weapon',atk:23,weaponLevel:1,range:1,slots:3,weight:70,buy:120,equipLevel:2,refineable:true,classes:['novice','swordsman','acolyte','merchant','knight','crusader','monk','priest','blacksmith','alchemist']},
+  knife:{name:'Knife',roId:1201,slot:'weapon',kind:'Dagger',atk:17,weaponLevel:1,range:1,slots:3,weight:40,buy:50,equipLevel:1,refineable:true,classes:['novice','swordsman','mage','archer','merchant','thief','alchemist','assassin','blacksmith','crusader','knight','rogue','hunter','bard','dancer','ninja','kagerou','oboro','soul_linker']},
+  sword:{name:'Sword',roId:1101,slot:'weapon',kind:'One-Handed Sword',atk:25,weaponLevel:1,range:1,slots:3,weight:50,buy:100,equipLevel:2,refineable:true,classes:['novice','swordsman','knight','crusader','merchant','thief']},
+  bow:{name:'Bow',roId:1702,slot:'weapon',kind:'Bow',atk:15,weaponLevel:1,range:5,slots:4,weight:50,buy:1000,equipLevel:4,refineable:true,classes:['archer','hunter','bard','dancer','thief','rogue']},
+  rod:{name:'Rod',roId:1602,slot:'weapon',kind:'Rod',atk:15,matk:30,weaponLevel:1,range:1,slots:4,weight:40,buy:50,equipLevel:1,refineable:true,classes:['novice','mage','acolyte','monk','priest','sage','soul_linker']},
+  mace:{name:'Club',roId:1501,slot:'weapon',kind:'Mace',atk:23,weaponLevel:1,range:1,slots:3,weight:70,buy:120,equipLevel:2,refineable:true,classes:['novice','swordsman','acolyte','merchant','knight','crusader','monk','priest','blacksmith','alchemist']},
   cotton_shirt:{name:'Cotton Shirt',roId:2301,slot:'armor',def:10,armorLevel:1,slots:0,weight:10,buy:10,refineable:true},
   silk_robe:{name:'Silk Robe',roId:2321,slot:'armor',def:20,mdef:10,armorLevel:1,slots:0,weight:40,buy:8000,refineable:true,classes:['novice','swordsman','mage','acolyte','merchant','knight','crusader','wizard','sage','priest','monk','blacksmith','alchemist','soul_linker']},
   adventurer_suit:{name:'Jacket',roId:2303,slot:'armor',def:15,armorLevel:1,slots:0,weight:20,buy:200,refineable:true},
@@ -275,6 +280,42 @@ export const GEAR_ITEMS = {
   glove:{name:'Glove',roId:2604,slot:'accessory1',dex:2,armorLevel:1,slots:0,weight:10,buy:30000,equipLevel:20,refineable:false,excluded:['novice']},
   ring:{name:'Ring',roId:2601,slot:'accessory2',str:2,armorLevel:1,slots:0,weight:10,buy:30000,equipLevel:20,refineable:false,excluded:['novice']},
 };
+// The wider shop inventory: real Ragnarok Online items whose stats are read
+// straight from rAthena's renewal item database and whose shop icons are the
+// client's own item art (scripts/build_gear_catalog.py + import_equipment_icons.py).
+// Keys stay stable because saves store item ids.
+const CATALOG = typeof GEAR_CATALOG === 'object' ? GEAR_CATALOG : {};
+export const GEAR_ITEMS_CORE = { ...GEAR_ITEMS };
+export const GEAR_SHOP = Array.isArray(GEAR_SHOP_KEYS) ? GEAR_SHOP_KEYS : Object.keys(CATALOG);
+for (const [roId, item] of Object.entries(CATALOG)) {
+  const key = item.key || ('ro_' + roId);
+  if (GEAR_ITEMS[key]) continue;
+  const entry = { ...item, roId: Number(roId) };
+  delete entry.key;
+  GEAR_ITEMS[key] = entry;
+}
+// Gear sets: real Ragnarok Online item combinations (rAthena `item_combos.yml`), kept only
+// when every piece is in this game's catalog and no two pieces share a slot. The bonus
+// numbers are translated from the upstream `bonus` script by scripts/build_gear_sets.py.
+export const GEAR_SETS = Array.isArray(GEAR_SET_DATA?.sets) ? GEAR_SET_DATA.sets : [];
+const SET_BY_ID = new Map(GEAR_SETS.map(set => [set.id, set]));
+const SET_BY_PIECE = new Map();
+for (const set of GEAR_SETS) {
+  for (const item of set.items) {
+    if (!SET_BY_PIECE.has(item)) SET_BY_PIECE.set(item, []);
+    SET_BY_PIECE.get(item).push(set);
+  }
+}
+export function gearSetOf(pieces) {
+  const worn = new Set(pieces.map(String));
+  return GEAR_SETS.filter(set => set.items.every(item => worn.has(item)));
+}
+export function gearSetsFor(itemId) { return SET_BY_PIECE.get(String(itemId)) || []; }
+export function gearSet(id) { return SET_BY_ID.get(id) || null; }
+export function gearIconPath(item) {
+  if (!item?.roId) return null;
+  return '/assets/equipment-icons/' + item.roId + '.png';
+}
 export const GEAR_AFFIXES = {
   mighty:{name:'Mighty',stat:'atk',min:2,max:8,slots:['weapon']},arcane:{name:'Arcane',stat:'matk',min:3,max:10,slots:['weapon','accessory1','accessory2']},
   sturdy:{name:'Sturdy',stat:'def',min:1,max:5,slots:['armor','shield','head','garment','footwear']},vital:{name:'Vital',stat:'hp',min:12,max:55,slots:['armor','shield','head','garment','footwear','accessory1','accessory2']},

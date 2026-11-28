@@ -1,5 +1,42 @@
 # Milestone handoff — 2026-11-28
 
+## Art and the equipment economy
+
+Every one of the 59 jobs now draws its own native client body in both genders:
+the shipped wardrobe covers Novice → transcendent, and `public/assets/wardrobe/classes/`
+(`scripts/import_class_sprites.py`, indexed as `classWardrobe`) covers the other 40,
+including the 4th jobs and the Doram line. Skill icons (161) and item icons (524) are
+genuine client art as well, so nothing on screen is a drawn stand-in any more.
+
+Equipment is no longer a handful of prototypes: `src/gear-catalog.json` holds 524
+icon-backed weapons and armour with real renewal stats, and the guild camp's merchant
+sells a 122-key cross-section of it, grouped by level band. Buying runs through
+`{type:'gear-buy', item:<key>}`; the price is `sim.shopPrice(key)`, derived from the
+item's own shop value. `src/gear-catalog.json` and `src/gear-shop.json` are generated
+by `scripts/build_gear_catalog.py` from rAthena's pinned item database (fetched on
+demand, never committed) — edit the script's curation rules, never the JSON.
+
+Each class also draws the weapon it actually holds. The client keeps a weapon sprite per
+class per weapon type and only animates it during an attack motion, so
+`public/assets/wardrobe/classes/` carries attack-only overlay atlases
+(`weapon-<job>-<sex>-<family>`, 182 client sets pinned in
+`scripts/class-weapon-pins.json`). `src/sprites.js` picks the overlay and the body's swing
+motion from the equipped item's real `kind`, so a Crusader swings a sword, a Sage a book,
+a Gunslinger a revolver, and a Monk punches. Classes without art for the exact type fall
+back the way the client does (two-hander → sword, katar → dagger, …).
+
+Gear sets work the same way: the eight sets in `src/gear-sets.json` are real RO item
+combinations lifted from rAthena's `item_combos.yml` by `scripts/build_gear_sets.py`
+(pinned commit + SHA-256, fetched into `db/` on demand). A set activates only while every
+piece is worn and any refinement gate in the upstream script is met; `sim.activeGearSets()`
+decides, `stats()` applies the bonus, the merchant marks the pieces and the equipment sheet
+lists active and partial sets. The merchant now stocks every set piece, so each set is
+completable. Only bonuses the stat model can honour are kept — the generator drops the rest
+rather than approximating them, which is why the Fallen Angel and Rider combinations (their
+only effects are resistances and recovery this game does not model) are absent.
+
+Next: refine UX around the new catalog, and the merchant's restock/inflation curve.
+
 ## Character skills and skill FX
 
 Skills are trained in the Character panel → **Skills** page. Each class family has

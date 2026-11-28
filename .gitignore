@@ -8,3 +8,7 @@ playwright-report/
 .env
 .env.*
 !.env.example
+__pycache__/
+.cache/
+db/item_db_equip.yml
+db/item_combos.yml

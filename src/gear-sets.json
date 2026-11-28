@@ -1,0 +1,140 @@
+{
+ "source": {
+  "repo": "rathena/rathena",
+  "commit": "6b917c1808cc93c65f27f47079b2c58a11df7c6c",
+  "path": "db/re/item_combos.yml",
+  "sha256": "e244b481bf3c4185e9c088d80d8b391de1d62a53ce7a8af36fb01ccf743c09d4"
+ },
+ "sets": [
+  {
+   "id": "2425+2529",
+   "name": "Black Leather Boots + Rider Insignia",
+   "items": [
+    "2425",
+    "2529"
+   ],
+   "slots": [
+    "footwear",
+    "garment"
+   ],
+   "bonus": {
+    "flee": 10
+   }
+  },
+  {
+   "id": "2425+2530",
+   "name": "Black Leather Boots + Rider Insignia",
+   "items": [
+    "2425",
+    "2530"
+   ],
+   "slots": [
+    "footwear",
+    "garment"
+   ],
+   "bonus": {
+    "flee": 10
+   }
+  },
+  {
+   "id": "2434+2529",
+   "name": "Black Leather Boots + Rider Insignia",
+   "items": [
+    "2434",
+    "2529"
+   ],
+   "slots": [
+    "footwear",
+    "garment"
+   ],
+   "bonus": {
+    "flee": 10
+   }
+  },
+  {
+   "id": "2434+2530",
+   "name": "Black Leather Boots + Rider Insignia",
+   "items": [
+    "2434",
+    "2530"
+   ],
+   "slots": [
+    "footwear",
+    "garment"
+   ],
+   "bonus": {
+    "flee": 10
+   }
+  },
+  {
+   "id": "1628+2535",
+   "name": "Refined Survivor's Rod + Cloak Of Survival",
+   "items": [
+    "1628",
+    "2535"
+   ],
+   "slots": [
+    "weapon",
+    "garment"
+   ],
+   "bonus": {
+    "matkPct": 5
+   },
+   "unmodelled": [
+    "bonus2 bSubEle,Ele_Neutral,25"
+   ]
+  },
+  {
+   "id": "1618+2535",
+   "name": "Survivor's Rod (Dex) + Cloak Of Survival",
+   "items": [
+    "1618",
+    "2535"
+   ],
+   "slots": [
+    "weapon",
+    "garment"
+   ],
+   "bonus": {
+    "matkPct": 5
+   },
+   "unmodelled": [
+    "bonus2 bSubEle,Ele_Neutral,25"
+   ]
+  },
+  {
+   "id": "1620+2535",
+   "name": "Survivor's Rod (Int) + Cloak Of Survival",
+   "items": [
+    "1620",
+    "2535"
+   ],
+   "slots": [
+    "weapon",
+    "garment"
+   ],
+   "bonus": {
+    "matkPct": 5
+   },
+   "unmodelled": [
+    "bonus2 bSubEle,Ele_Neutral,25"
+   ]
+  },
+  {
+   "id": "2424+2528",
+   "name": "Tidal Shoes + Wool Scarf",
+   "items": [
+    "2424",
+    "2528"
+   ],
+   "slots": [
+    "footwear",
+    "garment"
+   ],
+   "bonus": {
+    "hpPct": 10,
+    "hpRegen": 5
+   }
+  }
+ ]
+}

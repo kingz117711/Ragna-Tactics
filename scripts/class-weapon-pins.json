@@ -1,0 +1,4552 @@
+{
+ "kagerou_남_13049": {
+  "folder": "kagerou",
+  "sex": "남",
+  "view": 13049,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/kagerou/kagerou_巢_13049.spr",
+    "blob": "3cc7d1080ddc776606b0011df9b132fa841d942e",
+    "sha256": "9c90cb7c11ab21edf80dda028ebaa27d30607b49b8ad89a6c23a191572c45033",
+    "bytes": 6879
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/kagerou/kagerou_巢_13049.act",
+    "blob": "9f465b690f5f6f9e0eb3e822e619ea15784a83d8",
+    "sha256": "b5269dce3a27303068ea5fd3bf2c6de13dd65be723814f23cdabbadb98f2c8d5",
+    "bytes": 41364
+   }
+  }
+ },
+ "oboro_여_13049": {
+  "folder": "oboro",
+  "sex": "여",
+  "view": 13049,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/oboro/oboro_咯_13049.spr",
+    "blob": "9c15173ac96a9098ab7bb2b2465616437dc5dd59",
+    "sha256": "3d1b61a8c66e7e00eb56208ac219e482db4fad26987a7afdf32dd0c3d18037a4",
+    "bytes": 3971
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/oboro/oboro_咯_13049.act",
+    "blob": "2d5cb7f65668205edd7c248b12a000a77d6e1c9b",
+    "sha256": "e18fcc97caa13aee24664b020ad1fcdb70acc01e8284ab5f85a31467c01aab7c",
+    "bytes": 41236
+   }
+  }
+ },
+ "rebellion_여_13150": {
+  "folder": "rebellion",
+  "sex": "여",
+  "view": 13150,
+  "kind": "Rifle",
+  "family": "gun",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/rebellion/rebellion_咯_13150.spr",
+    "blob": "f0270aca90a5ae954ae79c776d0f266594a5a7d5",
+    "sha256": "50a95afe1a6775d139bd2e6fb860f8e6a95cb95eb24e2c77c70b8ca47882bd09",
+    "bytes": 8695
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/rebellion/rebellion_咯_13150.act",
+    "blob": "9e2d9095e67f3ef4abf3e3756a93e2216fbda4ed",
+    "sha256": "e743a518b3c47ce6bb457a8de0d687cf88d92fbf5731fe990807c8420cf43715",
+    "bytes": 42772
+   }
+  }
+ },
+ "rebellion_남_13150": {
+  "folder": "rebellion",
+  "sex": "남",
+  "view": 13150,
+  "kind": "Rifle",
+  "family": "gun",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/rebellion/rebellion_巢_13150.spr",
+    "blob": "a92af3f0274b4ad5ccbef25af15be767a2573d10",
+    "sha256": "99b853cf2d07680d0293f832729aa1c3c25691a4cc5fafd2da2fa2e6da40d5c9",
+    "bytes": 4219
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/rebellion/rebellion_巢_13150.act",
+    "blob": "8fbf2a1b67deca58dc01741c83aa125abc65770f",
+    "sha256": "4bedc5cba44dc2c923619e40a0c00a27bca46e1937d3c28293f40dd8f4a98877",
+    "bytes": 42772
+   }
+  }
+ },
+ "건너_여_13150": {
+  "folder": "건너",
+  "sex": "여",
+  "view": 13150,
+  "kind": "Rifle",
+  "family": "gun",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扒呈/扒呈_咯_13150.spr",
+    "blob": "f0270aca90a5ae954ae79c776d0f266594a5a7d5",
+    "sha256": "50a95afe1a6775d139bd2e6fb860f8e6a95cb95eb24e2c77c70b8ca47882bd09",
+    "bytes": 8695
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扒呈/扒呈_咯_13150.act",
+    "blob": "9e2d9095e67f3ef4abf3e3756a93e2216fbda4ed",
+    "sha256": "e743a518b3c47ce6bb457a8de0d687cf88d92fbf5731fe990807c8420cf43715",
+    "bytes": 42772
+   }
+  }
+ },
+ "건너_남_13150": {
+  "folder": "건너",
+  "sex": "남",
+  "view": 13150,
+  "kind": "Rifle",
+  "family": "gun",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扒呈/扒呈_巢_13150.spr",
+    "blob": "a92af3f0274b4ad5ccbef25af15be767a2573d10",
+    "sha256": "99b853cf2d07680d0293f832729aa1c3c25691a4cc5fafd2da2fa2e6da40d5c9",
+    "bytes": 4219
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扒呈/扒呈_巢_13150.act",
+    "blob": "8fbf2a1b67deca58dc01741c83aa125abc65770f",
+    "sha256": "4bedc5cba44dc2c923619e40a0c00a27bca46e1937d3c28293f40dd8f4a98877",
+    "bytes": 42772
+   }
+  }
+ },
+ "검사_여_1354": {
+  "folder": "검사",
+  "sex": "여",
+  "view": 1354,
+  "kind": "2hAxe",
+  "family": "axe",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_咯_1354.spr",
+    "blob": "ce81fea2f1acb2659607611bd5cb4d88f8ccca1f",
+    "sha256": "cde7eee1728c0581ef0ce6e1d0db1ec72a09e7fb5264b3584982fc10058ed32f",
+    "bytes": 4162
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_咯_1354.act",
+    "blob": "8a55cda975aa04ba3e4c44e657b6382b7de47316",
+    "sha256": "9afc13fa4916418a0434354bf042a7df1fd252cea05568aa5efee52591a9b045",
+    "bytes": 42900
+   }
+  }
+ },
+ "검사_남_1354": {
+  "folder": "검사",
+  "sex": "남",
+  "view": 1354,
+  "kind": "2hAxe",
+  "family": "axe",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_巢_1354.spr",
+    "blob": "8bbcf4cee3265898dd6110a4e5f593977fbf36e3",
+    "sha256": "af2e679f6a133136b6ed0e765c98445902a692d7010e8d6ac098ea3e2ac4570d",
+    "bytes": 3538
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_巢_1354.act",
+    "blob": "be3e1f22961b5dbf2ce1b29434562ad21161e46f",
+    "sha256": "8f8a657b4b5456fba83329d3f9278b65761dc03c946e14ee7da752557c28b3f4",
+    "bytes": 42836
+   }
+  }
+ },
+ "검사_여_1207": {
+  "folder": "검사",
+  "sex": "여",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_咯_1207.spr",
+    "blob": "cc510be1a1242e3557f4294646dea7393e1bb8f4",
+    "sha256": "a93781741a10387d58da2aed471958c818944bfef903f46982983cf9cc0c8712",
+    "bytes": 2978
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_咯_1207.act",
+    "blob": "6ed403f59b939731bae8905ca9f3673c4f4c8c91",
+    "sha256": "f577ce214d49d8c23cef1351b1268958270ba3c670b59fffd0e958d9ecaf30fe",
+    "bytes": 42900
+   }
+  }
+ },
+ "검사_남_1207": {
+  "folder": "검사",
+  "sex": "남",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_巢_1207.spr",
+    "blob": "a32277f48b4e239d871914940b1b6b20bce71c1c",
+    "sha256": "dc3d0bebea41f8f18c08bcddb6c830f81861be4e80035d5da166f1fb100d110c",
+    "bytes": 2281
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_巢_1207.act",
+    "blob": "eaf155544e4abf8e95281e7d11a624748d10d43e",
+    "sha256": "40f476849148f443fb8aaa8b671cee5503263b9d9fc238d10273e16b08c90a32",
+    "bytes": 42580
+   }
+  }
+ },
+ "검사_여_1504": {
+  "folder": "검사",
+  "sex": "여",
+  "view": 1504,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_咯_1504.spr",
+    "blob": "5aa018bd4526078cd2784954c0fb2de09dab3693",
+    "sha256": "9838997034f96c75ee14d98f3fb0f640d40c59b7a621470058ed10336072ba5a",
+    "bytes": 3790
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_咯_1504.act",
+    "blob": "ad115e50904fe9dbc1e4d7357a46b4e975b6b84a",
+    "sha256": "d370a9dd0e8aa31f370c36e9f505c5b146e594b0131921fa8ca7593e0eb71b5a",
+    "bytes": 42900
+   }
+  }
+ },
+ "검사_남_1504": {
+  "folder": "검사",
+  "sex": "남",
+  "view": 1504,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_巢_1504.spr",
+    "blob": "fd3eee9145b0f44f70839fc687229428afc8c0a5",
+    "sha256": "2a4c83c685bac087897c2a421f01fd80620f48b7a2f8bd4b27289549865e5cfa",
+    "bytes": 2881
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_巢_1504.act",
+    "blob": "d8373e35bb69415827e4be46b80dac3b7d1a7f94",
+    "sha256": "04f8a5d8c631a1de25f736cfdcc68655dee868f28ed1ea193073fbdcaf1f7470",
+    "bytes": 42836
+   }
+  }
+ },
+ "검사_여_1410": {
+  "folder": "검사",
+  "sex": "여",
+  "view": 1410,
+  "kind": "2hSpear",
+  "family": "spear",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_咯_1410.spr",
+    "blob": "4b172401bc2bfe33d085d106904c68a07521bfae",
+    "sha256": "cf7d52971d83e68b417e96a752112281847dc82c4d05b1504f4476baeef7a27d",
+    "bytes": 6499
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_咯_1410.act",
+    "blob": "ecf40427298c35aaf266c877667fbf05692cfc8c",
+    "sha256": "728caab05aa144eef10c5a985b20d8befe084ab36e00812acba6304f7ba120fb",
+    "bytes": 42772
+   }
+  }
+ },
+ "검사_남_1410": {
+  "folder": "검사",
+  "sex": "남",
+  "view": 1410,
+  "kind": "2hSpear",
+  "family": "spear",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_巢_1410.spr",
+    "blob": "ba4f1f89491d71c598364b6a30b6aafd3e850243",
+    "sha256": "809f2b93e8d36a14b2b341b83bc84bb087c6ebba4ee5d68fdac6c27cf9896bde",
+    "bytes": 6695
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_巢_1410.act",
+    "blob": "7f7b08df64343e3201608152bc2ecd5303a4465d",
+    "sha256": "cf15b19a9823127320a36d2a2962e385e18ed5c8eed5051adc6d1477580f0f87",
+    "bytes": 42772
+   }
+  }
+ },
+ "검사_여_1119": {
+  "folder": "검사",
+  "sex": "여",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_咯_1119.spr",
+    "blob": "a4eb609820f6dfa49d39c5e12bda4130b547c049",
+    "sha256": "d736150c80806a05800561804930477c2334eb48769c2389e1eb047ed7cab2d6",
+    "bytes": 2976
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_咯_1119.act",
+    "blob": "516a0e42fb59df467f38ed4a5d435b856831cfea",
+    "sha256": "0e236e93a4c90c7799e0e6c0da0847a776371b62c7b68e22df39208a758f09d9",
+    "bytes": 42900
+   }
+  }
+ },
+ "검사_남_1119": {
+  "folder": "검사",
+  "sex": "남",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_巢_1119.spr",
+    "blob": "7b9c0ac769c29d158f00499ffae15a645d715a8d",
+    "sha256": "01b4914f118098a301283bc128491e385e50bc815ae836d9f29965fd3cf4b80a",
+    "bytes": 2571
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_巢_1119.act",
+    "blob": "91e783444711dab895a226686186bccc5a2c1713",
+    "sha256": "1d4caf952f445e501025055ac73bfc8ebf2ccd7723cd2db8848cada82db22263",
+    "bytes": 42836
+   }
+  }
+ },
+ "검사_여_1116": {
+  "folder": "검사",
+  "sex": "여",
+  "view": 1116,
+  "kind": "2hSword",
+  "family": "twohand",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_咯_1116.spr",
+    "blob": "dd5ff42210c1dfc79ea9eac96d45d34818c8d497",
+    "sha256": "9284b442e08a6af90af3d5d4ac070ce53f4583c186f9ea980504bb44f1c79502",
+    "bytes": 2676
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_咯_1116.act",
+    "blob": "ca20f85e3032f920d9d108b72ea450f8e641db46",
+    "sha256": "debaa9377faf091082cfefe7c82083db684e049651f03329fbc6f1e725caa5fa",
+    "bytes": 42900
+   }
+  }
+ },
+ "검사_남_1116": {
+  "folder": "검사",
+  "sex": "남",
+  "view": 1116,
+  "kind": "2hSword",
+  "family": "twohand",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_巢_1116.spr",
+    "blob": "e6a549e83db5a2afd2dd46004456202a1b367d63",
+    "sha256": "da8df98b5b99d0c0d89de6ad1b1d4b6cb273e44c234a97fea9dd6640950ac3e6",
+    "bytes": 2882
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/八荤/八荤_巢_1116.act",
+    "blob": "3b427287002501426a85e4554fd09def51a12fd4",
+    "sha256": "467f376d222fcd89a684479c66ac00a1de0432f2d37c6452f2dab3a345fa81bf",
+    "bytes": 42836
+   }
+  }
+ },
+ "구페코크루세이더_여_1354": {
+  "folder": "구페코크루세이더",
+  "sex": "여",
+  "view": 1354,
+  "kind": "2hAxe",
+  "family": "axe",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_咯_1354.spr",
+    "blob": "23a04c14e9f8dd65ae682db364cb65783c97fb73",
+    "sha256": "ec69cc29efc4316f83f152a938e311246717d90625f490f95d74544b3927e307",
+    "bytes": 5624
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_咯_1354.act",
+    "blob": "9257150901b12c9e81ebc4159974dbda3378231e",
+    "sha256": "5986fcdb6c9690b2b6d105411a1a16b8eeb8fad3c1bafc762abcce0d7d2a037e",
+    "bytes": 43924
+   }
+  }
+ },
+ "구페코크루세이더_남_1354": {
+  "folder": "구페코크루세이더",
+  "sex": "남",
+  "view": 1354,
+  "kind": "2hAxe",
+  "family": "axe",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_巢_1354.spr",
+    "blob": "3105b2800418b524b1198136cf813c76ce97db1e",
+    "sha256": "424e07afba2c2baa020e6993a720592aa3fdb38a03c09b1895d5abdcabb89b5a",
+    "bytes": 5610
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_巢_1354.act",
+    "blob": "bdfba5c04bac1b7b7ee8b7c3760ec9d2ef0f73db",
+    "sha256": "37ddde084fcab793072965eb9990222752519df1f152e5537280eda406693ba0",
+    "bytes": 40020
+   }
+  }
+ },
+ "구페코크루세이더_여_1207": {
+  "folder": "구페코크루세이더",
+  "sex": "여",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_咯_1207.spr",
+    "blob": "12279643ac63fa52d0508e22aa0064a76a9df1ed",
+    "sha256": "6982fbc36d2719febd68411be20d3773d5be94470d27e54b68b05020eade03c0",
+    "bytes": 3243
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_咯_1207.act",
+    "blob": "785d6de580eb773b38c90319b444eb0f0bd29977",
+    "sha256": "ae86d200bc00a9477917f8864afbfabac9a04006015a32d21615cb81d6051e67",
+    "bytes": 43540
+   }
+  }
+ },
+ "구페코크루세이더_남_1207": {
+  "folder": "구페코크루세이더",
+  "sex": "남",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_巢_1207.spr",
+    "blob": "3c71d7f6a5e08113034ba783f6d58d07c39e7ffd",
+    "sha256": "d7d79fa4dcbd974ab36714152309eb72df42456dbbf56a83346bf14547a4b1cd",
+    "bytes": 3243
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_巢_1207.act",
+    "blob": "e1faa208c3b47b94a79ee809fb7adcc81b5915c3",
+    "sha256": "22d68608dff95fb27997dcb7a2dd9d1e7f79f9e631888c094959b9520f1a4cfa",
+    "bytes": 44372
+   }
+  }
+ },
+ "구페코크루세이더_여_1504": {
+  "folder": "구페코크루세이더",
+  "sex": "여",
+  "view": 1504,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_咯_1504.spr",
+    "blob": "9c0beabfbdd815aa9aaf33ad7f566fd611d02267",
+    "sha256": "32e8eac34c534a960b4dfa98af39281b0817ba9597a6d8fd41cd42b1ce0ed218",
+    "bytes": 4695
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_咯_1504.act",
+    "blob": "ef77d23f3bfdeddbdfc18eaf922e0ff9bb45781b",
+    "sha256": "7fbacdde176cf920fb460377c6a04e8cdbfebe33b2d7538d07db43eababd4a7d",
+    "bytes": 43924
+   }
+  }
+ },
+ "구페코크루세이더_남_1504": {
+  "folder": "구페코크루세이더",
+  "sex": "남",
+  "view": 1504,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_巢_1504.spr",
+    "blob": "9c0beabfbdd815aa9aaf33ad7f566fd611d02267",
+    "sha256": "32e8eac34c534a960b4dfa98af39281b0817ba9597a6d8fd41cd42b1ce0ed218",
+    "bytes": 4695
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_巢_1504.act",
+    "blob": "1fc3be9a1187686cffc4799284e70c49c1af767d",
+    "sha256": "c6b465e600197a240091e69ca71e8568342c5d209bd1e3a1ccdeeec987c72fc5",
+    "bytes": 44372
+   }
+  }
+ },
+ "구페코크루세이더_여_1410": {
+  "folder": "구페코크루세이더",
+  "sex": "여",
+  "view": 1410,
+  "kind": "2hSpear",
+  "family": "spear",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_咯_1410.spr",
+    "blob": "a0c4ec7747f9c68c71b2621cf6155f2b0a68b693",
+    "sha256": "98e77805a9ab96aa2af9213c0b98f3367ca3b23367705ae3659c638dcccf7ab9",
+    "bytes": 1574
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_咯_1410.act",
+    "blob": "6cabe4d89f4f7453b96638ff37ba71583ba3d7b2",
+    "sha256": "fbef597b5f372d0662a77699430ba32eaf928d0b0175a2457197d2d4211a8a90",
+    "bytes": 42772
+   }
+  }
+ },
+ "구페코크루세이더_남_1410": {
+  "folder": "구페코크루세이더",
+  "sex": "남",
+  "view": 1410,
+  "kind": "2hSpear",
+  "family": "spear",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_巢_1410.spr",
+    "blob": "5b3e65d0d5b05bc973f5b27f035fd09e39ac747e",
+    "sha256": "16aabfb19c5042a5fff814dff55202e0e1c7dfcf0b896b5441947ea5df23e442",
+    "bytes": 2145
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_巢_1410.act",
+    "blob": "e763a9c1e68e929a98a91642300af8b35642feef",
+    "sha256": "4019a5c80550f61eef1c83afd09517af56989fa91b3fc780ffbc0ceb287268c4",
+    "bytes": 43476
+   }
+  }
+ },
+ "구페코크루세이더_여_1119": {
+  "folder": "구페코크루세이더",
+  "sex": "여",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_咯_1119.spr",
+    "blob": "6240e22bb245f75ad0a04ba2b7a1051e48a59bae",
+    "sha256": "82f393124fd5d1ab1ccd09ca779ca0ce62f8157f41c611cb523745b6cee49838",
+    "bytes": 3532
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_咯_1119.act",
+    "blob": "53a9df551da45673a7fd3d934681841a9f18cbb3",
+    "sha256": "77923583309dc0334cc7268c84ff141e3b3b0507c880230e4e2bfa5f3ac0e207",
+    "bytes": 43924
+   }
+  }
+ },
+ "구페코크루세이더_남_1119": {
+  "folder": "구페코크루세이더",
+  "sex": "남",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_巢_1119.spr",
+    "blob": "6240e22bb245f75ad0a04ba2b7a1051e48a59bae",
+    "sha256": "82f393124fd5d1ab1ccd09ca779ca0ce62f8157f41c611cb523745b6cee49838",
+    "bytes": 3532
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_巢_1119.act",
+    "blob": "1a06e250a23d8f7c3d266deb5999d8994bbf1e2a",
+    "sha256": "5888297d76a7c529cd806bec193c4943137c41e718a33aaa2f01bc4e55698d4a",
+    "bytes": 44372
+   }
+  }
+ },
+ "구페코크루세이더_여_1116": {
+  "folder": "구페코크루세이더",
+  "sex": "여",
+  "view": 1116,
+  "kind": "2hSword",
+  "family": "twohand",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_咯_1116.spr",
+    "blob": "f64da8af002bb95a9e439ac87e0c2bbf97b3c853",
+    "sha256": "8bfef572d0b001cc2dd55b7062b27abdfe496b8bf6741f4e0fff06a14c47882a",
+    "bytes": 3080
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_咯_1116.act",
+    "blob": "ee067d2256c9092865c05bd4c59eb44fb3c0276b",
+    "sha256": "a42ba4e43c5c13483fcef7c60b0cc8e099353f447949fecda5d0223d749319b4",
+    "bytes": 43924
+   }
+  }
+ },
+ "구페코크루세이더_남_1116": {
+  "folder": "구페코크루세이더",
+  "sex": "남",
+  "view": 1116,
+  "kind": "2hSword",
+  "family": "twohand",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_巢_1116.spr",
+    "blob": "f64da8af002bb95a9e439ac87e0c2bbf97b3c853",
+    "sha256": "8bfef572d0b001cc2dd55b7062b27abdfe496b8bf6741f4e0fff06a14c47882a",
+    "bytes": 3080
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/备其内农风技捞歹/备其内农风技捞歹_巢_1116.act",
+    "blob": "d1a391abb30f7b1d633277ba73f62b75167d8256",
+    "sha256": "366f17255e2f3859c1d2bf4d8243324a0c33363008e4fbef126c72eca3b1b513",
+    "bytes": 44372
+   }
+  }
+ },
+ "궁수_여_1710": {
+  "folder": "궁수",
+  "sex": "여",
+  "view": 1710,
+  "kind": "Bow",
+  "family": "bow",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/泵荐/泵荐_咯_1710.spr",
+    "blob": "c25ffab00b546eee11d35857d9f777b7e5bccc62",
+    "sha256": "c6061fd1c85e8647decd29d2cb226105a6d3c323aefebdb600118ed8bf29b2fc",
+    "bytes": 5018
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/泵荐/泵荐_咯_1710.act",
+    "blob": "772ac55f168c48caa549743a8eced08258bb9fb2",
+    "sha256": "2587f0fc508e739ba728a39089ef021f3f956285bbfc4794a48140c5a5bb1f93",
+    "bytes": 42900
+   }
+  }
+ },
+ "궁수_남_1710": {
+  "folder": "궁수",
+  "sex": "남",
+  "view": 1710,
+  "kind": "Bow",
+  "family": "bow",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/泵荐/泵荐_巢_1710.spr",
+    "blob": "7509148375bcb929e208d43cd1a26aa5e43a3108",
+    "sha256": "04d291e8be3cad2d772c2a16bba8215f79e92a97db4da2b5bab9686481f0f90c",
+    "bytes": 5599
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/泵荐/泵荐_巢_1710.act",
+    "blob": "b55ae57576cc04f2c4d0cac89c2ebec91abe3358",
+    "sha256": "1a307e4ebaa2add6aa1f0d163e72378d655530a7c42fca71c3125e7f5b6fe404",
+    "bytes": 42900
+   }
+  }
+ },
+ "궁수_여_1207": {
+  "folder": "궁수",
+  "sex": "여",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/泵荐/泵荐_咯_1207.spr",
+    "blob": "2888c5794a480e7cf731666e90c8c275d2460d52",
+    "sha256": "52a84e753c88278be59845e705d2c4a0441846c164487699167b14d49693b8bd",
+    "bytes": 2286
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/泵荐/泵荐_咯_1207.act",
+    "blob": "83e90cf765ae4673f6e957704a0693837ec88243",
+    "sha256": "7ab08d6fde9837357224f2beca13079bf85dd25fadad1c06721385d0024c28a0",
+    "bytes": 42772
+   }
+  }
+ },
+ "궁수_남_1207": {
+  "folder": "궁수",
+  "sex": "남",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/泵荐/泵荐_巢_1207.spr",
+    "blob": "90eb8b4e731a99fb541523cd2c99a249a30abbd6",
+    "sha256": "e43dda3b9289a2afdb67a04736a927b8f4218dab216e99334f76ac37d5c5cc61",
+    "bytes": 2156
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/泵荐/泵荐_巢_1207.act",
+    "blob": "13c3d40087e1662b3bda18bdc533918f23203b08",
+    "sha256": "cec4c4600b452c20e1c05fbf66d52901be0cdd877c60e16089fc895b4c44a90d",
+    "bytes": 42772
+   }
+  }
+ },
+ "기사_여_1354": {
+  "folder": "기사",
+  "sex": "여",
+  "view": 1354,
+  "kind": "2hAxe",
+  "family": "axe",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_咯_1354.spr",
+    "blob": "82a1fe0e2077abaf89c84e0b63bb1efdadc7a77b",
+    "sha256": "ad077ee4172c0b2e516be4ab4cb383ab645b7aa5df4a0058fc6618eff4af1198",
+    "bytes": 3982
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_咯_1354.act",
+    "blob": "687e897c6c6f018cc4610c19ae6653ca4a3a499c",
+    "sha256": "e55d4d4e820be11fbf7fdbe63ce7fc90823168430d85aa76987d894ef760571d",
+    "bytes": 39252
+   }
+  }
+ },
+ "기사_남_1354": {
+  "folder": "기사",
+  "sex": "남",
+  "view": 1354,
+  "kind": "2hAxe",
+  "family": "axe",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_巢_1354.spr",
+    "blob": "d08255529c2daef0460ac5cf72f7daf81d7739b1",
+    "sha256": "f6bfff295697dcf0f8187bef71d792510e5ea3304558ca0c05b0d5b1dbcf7df5",
+    "bytes": 4055
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_巢_1354.act",
+    "blob": "3ce0af637b0853f0ef7e8acf81c12131027e8eb5",
+    "sha256": "afd24055640fe1ae524f585af15ccd5b2c751050949238db59ca7be43d542c3e",
+    "bytes": 42836
+   }
+  }
+ },
+ "기사_여_1207": {
+  "folder": "기사",
+  "sex": "여",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_咯_1207.spr",
+    "blob": "fea9c09d855fc234fc89e1589fe660114d8a5e58",
+    "sha256": "f4e78268884c11ff2f6332a0b188206ad46e51e096ebcd681bf7a86a1f064503",
+    "bytes": 2117
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_咯_1207.act",
+    "blob": "53918ff2f57e9c44c373c657d1bbc1a1d273bd2f",
+    "sha256": "1f8871fb20809167089f22b9c8133c4e749dc848559c69589a8ae6b248d43297",
+    "bytes": 42900
+   }
+  }
+ },
+ "기사_남_1207": {
+  "folder": "기사",
+  "sex": "남",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_巢_1207.spr",
+    "blob": "021d7b1ba177d7dfe7b53a165ae8b9d8a98563cd",
+    "sha256": "fe954583e709cd15aedac5043ce1abb483bf8c3bb0e76a501add8f804e5b1b40",
+    "bytes": 2445
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_巢_1207.act",
+    "blob": "6ae44259e65cad76da8a05146fb4781639977cf8",
+    "sha256": "507629c7a80f946ac32262419cdb3f51ceff206b23622126a21f0117ec404b66",
+    "bytes": 42836
+   }
+  }
+ },
+ "기사_여_1504": {
+  "folder": "기사",
+  "sex": "여",
+  "view": 1504,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_咯_1504.spr",
+    "blob": "501b67425f29f27a0cc50f7f3fe6066701eeb1aa",
+    "sha256": "9152f9e98b055c0410475d9cb98bde68a4d447a5d49fb0102148b904b8d5c82d",
+    "bytes": 3315
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_咯_1504.act",
+    "blob": "773d9169b64c2176e2c1f7eff9321657d486da5e",
+    "sha256": "3e366c8799c8aabcbacc3732e2cce92fb639ce0e8f124fe3c0bee2249f9f618d",
+    "bytes": 42900
+   }
+  }
+ },
+ "기사_남_1504": {
+  "folder": "기사",
+  "sex": "남",
+  "view": 1504,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_巢_1504.spr",
+    "blob": "fa852bbd57d2ebce9a1fc9f0401293d4740fa122",
+    "sha256": "d87bdfbb933bcb525b11f9524618a3ae11e3efc4d97df17755c12849b1d39b30",
+    "bytes": 3815
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_巢_1504.act",
+    "blob": "a187c1d8c8719787743f28f44dc5eb3f0394dd17",
+    "sha256": "cba4bca9ddf567625225fd6a2f9725be21e0b250fcdda92923363634a0220282",
+    "bytes": 43732
+   }
+  }
+ },
+ "기사_여_1410": {
+  "folder": "기사",
+  "sex": "여",
+  "view": 1410,
+  "kind": "2hSpear",
+  "family": "spear",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_咯_1410.spr",
+    "blob": "8ce1121883be7d33ba0cd1ec65af35b023d4a6a7",
+    "sha256": "1cd8c8509f90c5508b951cc5dbb6d0bb032b293e93e8c9da34bbe1474d0c102b",
+    "bytes": 5299
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_咯_1410.act",
+    "blob": "477ec1e76b93c814f9f6a7197faaa1ca86e893ca",
+    "sha256": "68f6e2653d4301229c9c7d8d13b319dd7cd73958da6842a9a11f0a7f829ea1cd",
+    "bytes": 42388
+   }
+  }
+ },
+ "기사_남_1410": {
+  "folder": "기사",
+  "sex": "남",
+  "view": 1410,
+  "kind": "2hSpear",
+  "family": "spear",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_巢_1410.spr",
+    "blob": "f7c350541a4e292081d11ff7b618ad289166e7f0",
+    "sha256": "e3aec623e4d65dae49d5b32944cc560a058f2beace56be9efdfbdf0daf439996",
+    "bytes": 4311
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_巢_1410.act",
+    "blob": "8709afab10f76261f8d6a8bc99d9418c265838b1",
+    "sha256": "5f491c38b873e3ed1e6511bd47e42a560d8120749484451fbf931bee640ca9e9",
+    "bytes": 43476
+   }
+  }
+ },
+ "기사_여_1119": {
+  "folder": "기사",
+  "sex": "여",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_咯_1119.spr",
+    "blob": "f352d5aeb5ceb6feddb79b1c32763d007928644c",
+    "sha256": "4bd29c8073da749d1788e4ce4f9e755e06f8d94d8dedbd7e119147afd7d84546",
+    "bytes": 2540
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_咯_1119.act",
+    "blob": "c5229703b13e90556cfc8b5cd8b391f082dd376c",
+    "sha256": "aa73a48276b87a17c9e557efe7e7a027503577dafc6d8a5099df53867cf2f478",
+    "bytes": 42900
+   }
+  }
+ },
+ "기사_남_1119": {
+  "folder": "기사",
+  "sex": "남",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_巢_1119.spr",
+    "blob": "d086f20256af99fe3c1135e37a9c57c82dff9079",
+    "sha256": "c75c61bf9a35dd13ac14e9088bfd8e0072f14615ae10bad7aa6805c74cf16d9b",
+    "bytes": 2828
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_巢_1119.act",
+    "blob": "fabd944597f50af7af9d2e430303e1b2c8376444",
+    "sha256": "8f1b1a509b39e884ddbf7902ee8605a88b104dbde1a10af005e422715fc6adc2",
+    "bytes": 43668
+   }
+  }
+ },
+ "기사_여_1116": {
+  "folder": "기사",
+  "sex": "여",
+  "view": 1116,
+  "kind": "2hSword",
+  "family": "twohand",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_咯_1116.spr",
+    "blob": "93ee408e63b9a3f026001b08f56e7949c8e85166",
+    "sha256": "0b7519d76bcff1efbcf85f7c8d583d694ee0fc0424ffbf219b35b29155ec8fe2",
+    "bytes": 2233
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_咯_1116.act",
+    "blob": "f5dfe80980444d3e2fc0620a9c27281c28d12d3e",
+    "sha256": "446124ec924dc7641d365daf0684daf6f3847dbad355ad16801fb0180d1a297d",
+    "bytes": 42900
+   }
+  }
+ },
+ "기사_남_1116": {
+  "folder": "기사",
+  "sex": "남",
+  "view": 1116,
+  "kind": "2hSword",
+  "family": "twohand",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_巢_1116.spr",
+    "blob": "e806c755af90d4a53175cb1f2e6309fb87b7ccac",
+    "sha256": "0c371edfdc109470ed7c7cf854465e8db44945ea3e7da390712a366b7685f9b5",
+    "bytes": 2694
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/扁荤/扁荤_巢_1116.act",
+    "blob": "5cd70a84b712b89fb8913117ddcd8057aef0b10d",
+    "sha256": "af9940263e7773ec999d3d85a75b359d84793acedf61665347e6ad7c17e6642a",
+    "bytes": 42900
+   }
+  }
+ },
+ "닌자_여_13049": {
+  "folder": "닌자",
+  "sex": "여",
+  "view": 13049,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/囱磊/囱磊_咯_13049.spr",
+    "blob": "bbd8ce71c8080d821f512f33a228f3cf12614f89",
+    "sha256": "dfc5786fd1e412daf6df9dc65d65f4f55ec823108e2c128baaeafdf300a73007",
+    "bytes": 2164
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/囱磊/囱磊_咯_13049.act",
+    "blob": "e28409f7db0d65b14142abd2473a6c8b994d3c2d",
+    "sha256": "5ca4ee16b9f8614b59765b89c6c972709608c20d4e7989a1385bd0af8dffbe64",
+    "bytes": 42324
+   }
+  }
+ },
+ "닌자_남_13049": {
+  "folder": "닌자",
+  "sex": "남",
+  "view": 13049,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/囱磊/囱磊_巢_13049.spr",
+    "blob": "4f0166ca423b675c8d81a794ff8ba9bb8619b8f1",
+    "sha256": "e46539622775f903211dcca9a8b65097de8a25405db218b0224b1418f7ed171b",
+    "bytes": 1511
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/囱磊/囱磊_巢_13049.act",
+    "blob": "eb7edaae7f109a43f2e916daac84c2f798fd372b",
+    "sha256": "5c180192ce8cf533f2cb3cd58ff40b9626f91ed22eb4d4d5fa90347ded6d30df",
+    "bytes": 42068
+   }
+  }
+ },
+ "도둑_여_1710": {
+  "folder": "도둑",
+  "sex": "여",
+  "view": 1710,
+  "kind": "Bow",
+  "family": "bow",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/档迪/档迪_咯_1710.spr",
+    "blob": "7fb4965a2651de8757c0782972d3a26148c03c2d",
+    "sha256": "c1d9e381ce3439130f17a86fcf3f8c6242246d2b9ea588ae1031426bdd5e91a5",
+    "bytes": 3573
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/档迪/档迪_咯_1710.act",
+    "blob": "dfb66d9bcc1a1cdac74937e11498bc2a9e122f9f",
+    "sha256": "8b0728dbbabd7eefefc00ddb5bb795b326e54833403008eacef1580cb70319d9",
+    "bytes": 42772
+   }
+  }
+ },
+ "도둑_남_1710": {
+  "folder": "도둑",
+  "sex": "남",
+  "view": 1710,
+  "kind": "Bow",
+  "family": "bow",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/档迪/档迪_巢_1710.spr",
+    "blob": "aee2173376693a076d8dc268a34c105c29b057ac",
+    "sha256": "c06a95bd713144346fa8a04fd45c57be63b033c504f7feb82c7b9e0922a7bf82",
+    "bytes": 4446
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/档迪/档迪_巢_1710.act",
+    "blob": "8f1d80884e8f51bab436269b929c2aabdba44f5a",
+    "sha256": "382a7dcb563a08e1206d4f958883ced122a61ac70367770ea26ada301b4fd929",
+    "bytes": 42772
+   }
+  }
+ },
+ "도둑_여_1207": {
+  "folder": "도둑",
+  "sex": "여",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/档迪/档迪_咯_1207.spr",
+    "blob": "68451bddc94d69449e95cac352ea6ee5a76a98a8",
+    "sha256": "f45840571b4816ff4fab2aafa6fd07f9505c4a5bb606654bf5b2309ed72d4e5d",
+    "bytes": 2346
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/档迪/档迪_咯_1207.act",
+    "blob": "99c15f4c49df49b5969c055ce7e551f1e9ef0723",
+    "sha256": "75acc43fb8d6f8bf1b19b154cb3351fad5d2ad612d0804a8f64362757d4888d1",
+    "bytes": 42900
+   }
+  }
+ },
+ "도둑_남_1207": {
+  "folder": "도둑",
+  "sex": "남",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/档迪/档迪_巢_1207.spr",
+    "blob": "0f062049eb26107c4b7ebff08b22a2b06a1a7775",
+    "sha256": "b818ea9bdf7d99f12a02821344b2fdb514d02444915940405fdd1dc09a25a882",
+    "bytes": 2919
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/档迪/档迪_巢_1207.act",
+    "blob": "f6606d96e86198db79eb2f9229827cfcae39a8c9",
+    "sha256": "3e3eeb62ede9c2a621f41250646f431e930aa710355470279d3c42a6b5258d90",
+    "bytes": 42580
+   }
+  }
+ },
+ "도둑_여_1119": {
+  "folder": "도둑",
+  "sex": "여",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/档迪/档迪_咯_1119.spr",
+    "blob": "bdd56c0601285506e36f63e1bf7d11d98d32d414",
+    "sha256": "2c798bdbfe33f0ec3ef552855da375dc502adcd880ec9b15c31160bd0114f19c",
+    "bytes": 2076
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/档迪/档迪_咯_1119.act",
+    "blob": "68a68aeb032610bd15c2a5f64db7df5779b945e8",
+    "sha256": "74790d9ae4ffbc89fe23f882721a233294b4ff1b608b917ef33dcd1a035108d6",
+    "bytes": 42900
+   }
+  }
+ },
+ "도둑_남_1119": {
+  "folder": "도둑",
+  "sex": "남",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/档迪/档迪_巢_1119.spr",
+    "blob": "cf2e0976ebb8c967239e4bb33cc12e915abcb7c5",
+    "sha256": "9c182d4f10b89a68d926bc392f58017010175ea6b365dbc1e5932ed881ee22dd",
+    "bytes": 2467
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/档迪/档迪_巢_1119.act",
+    "blob": "08574b955f4efde596b24b491fc6ca93f31309df",
+    "sha256": "eeb0f52cc97baffc23635dec6e0864d2fe21f29834e4edaeb974b8dc5cbc8155",
+    "bytes": 42900
+   }
+  }
+ },
+ "로그_여_1710": {
+  "folder": "로그",
+  "sex": "여",
+  "view": 1710,
+  "kind": "Bow",
+  "family": "bow",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/肺弊/肺弊_咯_1710.spr",
+    "blob": "cc59bad7586f38cd31922f4adfca2dda6f311f69",
+    "sha256": "7f000a43b97411cc972b43326268cd7f828c9e797a6bba92fba288beb1262e88",
+    "bytes": 5772
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/肺弊/肺弊_咯_1710.act",
+    "blob": "ed86e8b427a8568f8a81c8900d7b2417755162f5",
+    "sha256": "fb5283aa72fce12b04be22257b21b82a4365ac795e0e891f2ba142c9363e529e",
+    "bytes": 42068
+   }
+  }
+ },
+ "로그_남_1710": {
+  "folder": "로그",
+  "sex": "남",
+  "view": 1710,
+  "kind": "Bow",
+  "family": "bow",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/肺弊/肺弊_巢_1710.spr",
+    "blob": "78f495a02338832c1a1647d0a87354a8febfb524",
+    "sha256": "0793725fdf89b6da236b59d8dda16b56f5935d87070686d5263ef90c4b77af8c",
+    "bytes": 3501
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/肺弊/肺弊_巢_1710.act",
+    "blob": "2986da14faf325f546dc4be983b8c0ccd855a045",
+    "sha256": "18481e5c5bb020954653bd026360a1881da2b1727efbc12da1caa1287e4439eb",
+    "bytes": 42772
+   }
+  }
+ },
+ "로그_여_1207": {
+  "folder": "로그",
+  "sex": "여",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/肺弊/肺弊_咯_1207.spr",
+    "blob": "b93fa72958ff71fc4afeac0812caebb9f9d45122",
+    "sha256": "59c98f2fad20f92eb6465d23a0725273ebaf588350fe51cc848019b86f59b98c",
+    "bytes": 3521
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/肺弊/肺弊_咯_1207.act",
+    "blob": "34f883f8e950b052b61af87ad6053afd6e6ec118",
+    "sha256": "c70901f0e1e2967334568034679ddde4cfeaf5f1f883517c46e188a35a7da75f",
+    "bytes": 41940
+   }
+  }
+ },
+ "로그_남_1207": {
+  "folder": "로그",
+  "sex": "남",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/肺弊/肺弊_巢_1207.spr",
+    "blob": "9b17017cbd42f9d4ef9aac3bdec2718ec74874b1",
+    "sha256": "74d8b13e99f61750f2b941a8137e8ed5e190ffb2cc4b56285862b116ea68b505",
+    "bytes": 1922
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/肺弊/肺弊_巢_1207.act",
+    "blob": "208c1af392573c6f3954f4c444cfad56ef7f277d",
+    "sha256": "ea7b4ba65559491a7b04640237826887f4635213a8ff0f028f8d39ffd9813c9a",
+    "bytes": 42900
+   }
+  }
+ },
+ "로그_여_1119": {
+  "folder": "로그",
+  "sex": "여",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/肺弊/肺弊_咯_1119.spr",
+    "blob": "212c046fd483aab6a848f5f561e3a07ee85a84c9",
+    "sha256": "f87d2be583c0cd9f06f09cded7c03b3242c5a84efce269e8592bf707b695971e",
+    "bytes": 3492
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/肺弊/肺弊_咯_1119.act",
+    "blob": "e4164e48857679e17cecdb0146510ee083c282ed",
+    "sha256": "04758f8540cfb14ac7140e5ba3b841306eb1adf5524796b5e131e2fdc56a3076",
+    "bytes": 42196
+   }
+  }
+ },
+ "로그_남_1119": {
+  "folder": "로그",
+  "sex": "남",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/肺弊/肺弊_巢_1119.spr",
+    "blob": "8606ad33be4bd6564c182070b034683f8325dbfd",
+    "sha256": "e57e2b4f0165f0039956392021968b57e62778175af62c32f1ed35e34a49283d",
+    "bytes": 2249
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/肺弊/肺弊_巢_1119.act",
+    "blob": "835b12b5eff73459520abc1f4564ef7e2ca5c670",
+    "sha256": "003aacaac8a3f4145b1cc504da4b02e8866838584a8371e7f552e1115645d767",
+    "bytes": 42900
+   }
+  }
+ },
+ "마법사_여_1207": {
+  "folder": "마법사",
+  "sex": "여",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/付过荤/付过荤_咯_1207.spr",
+    "blob": "8e7a3090a313bbaab837e79b23029bc18320b84b",
+    "sha256": "75604e4f1da4bac150803901edf10548f138ed63eb19e4c9b037479ffd8e69de",
+    "bytes": 2121
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/付过荤/付过荤_咯_1207.act",
+    "blob": "ad8d95b6f4463bdc3d103f38bf96ff596f7f4be2",
+    "sha256": "74a6c4989265540be96eb9b19a4c959653b61bf680815d43bf63e53d9ac16b23",
+    "bytes": 42644
+   }
+  }
+ },
+ "마법사_남_1207": {
+  "folder": "마법사",
+  "sex": "남",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/付过荤/付过荤_巢_1207.spr",
+    "blob": "e4fe8317d0bb1052445fe9cf044ee6f5c430519c",
+    "sha256": "826d16bbdb5b4af3cc2aa1b3f75fe3fe03e895cce6fe762710edebf343e62570",
+    "bytes": 1936
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/付过荤/付过荤_巢_1207.act",
+    "blob": "bba8e7b5b829bb84341a30c13d0c4754b1d1b918",
+    "sha256": "0727595fbdc2a73fb81f4d0334a4624d26fcd9c997ad989a30f20de62c174e7a",
+    "bytes": 42132
+   }
+  }
+ },
+ "마법사_여_1610": {
+  "folder": "마법사",
+  "sex": "여",
+  "view": 1610,
+  "kind": "Staff",
+  "family": "rod",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/付过荤/付过荤_咯_1610.spr",
+    "blob": "78ceea8a7344bafb780dd9efa21b5607a3ab47c6",
+    "sha256": "3188e7bcea1e1c25773b08ce3d1825ab1feffe7bf2a484858db834dea6897a54",
+    "bytes": 6346
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/付过荤/付过荤_咯_1610.act",
+    "blob": "b9629c01bf727d5d343e9b161112b7ec9472c9e1",
+    "sha256": "dab2906455d3c6fecf4412bacdfd3d1d2d9f3294c58255d03e9659a184210b8a",
+    "bytes": 43668
+   }
+  }
+ },
+ "마법사_남_1610": {
+  "folder": "마법사",
+  "sex": "남",
+  "view": 1610,
+  "kind": "Staff",
+  "family": "rod",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/付过荤/付过荤_巢_1610.spr",
+    "blob": "38cb7b167e73a7a31958f8a63d30cdcc33d5b371",
+    "sha256": "6f26c88724e57129823bfbe91077a5ed6f3654f8826c13cfdd0303664ae2ba3b",
+    "bytes": 6543
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/付过荤/付过荤_巢_1610.act",
+    "blob": "4cc146fbe4c6826cbd3c333c836ff2841259323c",
+    "sha256": "ceb7a92e9d104879040e32794c6bf207fcdda8bb9095e31fea861115dc1d825a",
+    "bytes": 43412
+   }
+  }
+ },
+ "마법사_여_1472": {
+  "folder": "마법사",
+  "sex": "여",
+  "view": 1472,
+  "kind": "2hStaff",
+  "family": "staff",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/付过荤/付过荤_咯_1472.spr",
+    "blob": "435bf9b52312afb73b2fceae0c7f1fd17f8dacba",
+    "sha256": "69c0caad83a6a3d8f5d9bf18510dfb9de6dbe48db464346cac11a9a4178f88e6",
+    "bytes": 5913
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/付过荤/付过荤_咯_1472.act",
+    "blob": "150de54c1b97afc7a50004d22b9a93ca01f98668",
+    "sha256": "2abfd188b549aedf95f85d8ee08116642e9501d6f4ef2248525f73389f9c8035",
+    "bytes": 43668
+   }
+  }
+ },
+ "마법사_남_1472": {
+  "folder": "마법사",
+  "sex": "남",
+  "view": 1472,
+  "kind": "2hStaff",
+  "family": "staff",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/付过荤/付过荤_巢_1472.spr",
+    "blob": "385bc34b6280eac3afc609012cd84784e3e0b605",
+    "sha256": "52b40ca0bc628c30fb4fd884d8b35985f8f36dbbee5fc1d9bc2da1ea5ceecfda",
+    "bytes": 7373
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/付过荤/付过荤_巢_1472.act",
+    "blob": "50e79ab39b1dc291b6ee93118c5318d9aa14a4bd",
+    "sha256": "d24caa90700bd93c88f596ee4b26f1b4f91f8e67f68956bda623694421cec8fd",
+    "bytes": 43668
+   }
+  }
+ },
+ "몽크_여_1801": {
+  "folder": "몽크",
+  "sex": "여",
+  "view": 1801,
+  "kind": "Knuckle",
+  "family": "knuckle",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/根农/根农_咯_1801.spr",
+    "blob": "c44d5fe023915d642fe5898b9c7070391a945df3",
+    "sha256": "31bda0c892cf98031a57c2cd2ecf3451b3bfdb017e7d6c59e0a38359033a7149",
+    "bytes": 2301
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/根农/根农_咯_1801.act",
+    "blob": "3565ad0dafe58ef71ab74f2629d6ac3ce7c57d78",
+    "sha256": "33923986f8de8136b33e6a654f663bd7232a9d3532b216ee046c915b8459cb06",
+    "bytes": 41620
+   }
+  }
+ },
+ "몽크_남_1801": {
+  "folder": "몽크",
+  "sex": "남",
+  "view": 1801,
+  "kind": "Knuckle",
+  "family": "knuckle",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/根农/根农_巢_1801.spr",
+    "blob": "09a3a94b6c42f0ba153692ff178e49d01d27a238",
+    "sha256": "c9ded5b3dd220f7e1a4611cd9dad544d787cb4afa8df75a307ba16a74ecf48f0",
+    "bytes": 1757
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/根农/根农_巢_1801.act",
+    "blob": "3e150a055c8dbb261027275f59bee87f3feb56b9",
+    "sha256": "160817d9668cc034334cc1052de78faf6a3f71c74026d0cb322f75f5a4a35251",
+    "bytes": 42644
+   }
+  }
+ },
+ "몽크_여_1524": {
+  "folder": "몽크",
+  "sex": "여",
+  "view": 1524,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/根农/根农_咯_1524.spr",
+    "blob": "cb0c27d742153071c21f56436bbbc862fd29dfa6",
+    "sha256": "d89c04f7b9c89d5aef861b1c98dcfba40d8eccc3f170e54fa248fe0b842b99e3",
+    "bytes": 3437
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/根农/根农_咯_1524.act",
+    "blob": "d89d0d2c788799237c5ee743f88d167443c731dd",
+    "sha256": "67894d180786d919dd9ccf7a8d9330d1f179bc57bde8a7a1614438645f5a7b39",
+    "bytes": 42068
+   }
+  }
+ },
+ "몽크_남_1524": {
+  "folder": "몽크",
+  "sex": "남",
+  "view": 1524,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/根农/根农_巢_1524.spr",
+    "blob": "d6d815d5ead15090b5bf3f14a9676ef535102330",
+    "sha256": "394a08cd0f50a100e5440556dad0fd97e7e8c3529a57e48d0723ca51872490fb",
+    "bytes": 3830
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/根农/根农_巢_1524.act",
+    "blob": "efbc162b87326a6661ea5e285ee91a077ebf03d4",
+    "sha256": "9266209d64d79e4ed11d85a8379b366224392f67a4471b4e6d015b119fa15aa2",
+    "bytes": 42452
+   }
+  }
+ },
+ "무희_여_1710": {
+  "folder": "무희",
+  "sex": "여",
+  "view": 1710,
+  "kind": "Bow",
+  "family": "bow",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/公锐/公锐_咯_1710.spr",
+    "blob": "145cf87a1511787f8468a387d80e06d682a95d51",
+    "sha256": "8053ad454faa88c9ba7e8bcf0eba853bdd64e885d4d70482b37b6bfd4466548a",
+    "bytes": 3846
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/公锐/公锐_咯_1710.act",
+    "blob": "9da1dde5d169075007e68a1ccecaeb1995c97714",
+    "sha256": "84725e16912ed9eefbc8673253db3384190ae8cd86d3bdc635acd45e11cdf4be",
+    "bytes": 42772
+   }
+  }
+ },
+ "무희_여_1207": {
+  "folder": "무희",
+  "sex": "여",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/公锐/公锐_咯_1207.spr",
+    "blob": "041f57bd174c34f0f4b67b154c3608e1c7010a83",
+    "sha256": "f9ae1434782f3e2680d9c1a32b933977efb8d2c8d7fb5f9e407fa886b4953b30",
+    "bytes": 2804
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/公锐/公锐_咯_1207.act",
+    "blob": "63a5305d2864f7e20e32f2ec3c41a4c239b4ae6e",
+    "sha256": "eb555c372338015583fe7d4256d4632d22f1f0dd40143f102769c414adedd445",
+    "bytes": 42900
+   }
+  }
+ },
+ "무희_여_1956": {
+  "folder": "무희",
+  "sex": "여",
+  "view": 1956,
+  "kind": "Whip",
+  "family": "whip",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/公锐/公锐_咯_1956.spr",
+    "blob": "87f3fc32680dd3fa19b57a1b3a0510bbf5b0db85",
+    "sha256": "213171df42e27f3a9901b968e47bf8c609c64b11cd3887b137decfa0aca2009a",
+    "bytes": 5912
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/公锐/公锐_咯_1956.act",
+    "blob": "492c79076d1c4a41bede1b9575c88a15752ac727",
+    "sha256": "c75c00fd0c9aaafa9ba51e1471fc58c2eef42c3e49c8ea7d0b1ada37f9ec1e64",
+    "bytes": 42900
+   }
+  }
+ },
+ "바드_남_1710": {
+  "folder": "바드",
+  "sex": "남",
+  "view": 1710,
+  "kind": "Bow",
+  "family": "bow",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/官靛/官靛_巢_1710.spr",
+    "blob": "10d500e8e08ce12ed89e39a637291565676041ea",
+    "sha256": "5946e47927b13f4edb7d6c85b63497fbf46543832192327169eefc234f0c756e",
+    "bytes": 6584
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/官靛/官靛_巢_1710.act",
+    "blob": "858c6c0614c41fb57eb50c0e63e17c456845f852",
+    "sha256": "128c74c5ad58436367ca680341368216d79daf5cd62b63ceba8ebe069e0a60ee",
+    "bytes": 42772
+   }
+  }
+ },
+ "바드_남_1207": {
+  "folder": "바드",
+  "sex": "남",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/官靛/官靛_巢_1207.spr",
+    "blob": "983f16a928a2b99862913ef41e37b343adc21867",
+    "sha256": "241fb87ac3611217e8a27e9fdaea2160be27ab6c67ef77a08c50301cf19e4548",
+    "bytes": 1719
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/官靛/官靛_巢_1207.act",
+    "blob": "24735651ab65eeed21f073ff0a76fb975286714b",
+    "sha256": "19453cd3aff06c20b88aed4866bc08b93124c34a945f9d4881b35b3ce3fc3445",
+    "bytes": 42260
+   }
+  }
+ },
+ "상인_여_1354": {
+  "folder": "상인",
+  "sex": "여",
+  "view": 1354,
+  "kind": "2hAxe",
+  "family": "axe",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/惑牢/惑牢_咯_1354.spr",
+    "blob": "2b62b2896dbecbce86518e4ea54ef4abf476b32f",
+    "sha256": "8fe306c92b83631b40a48b6de2b23100377fc44ef71fc8ddd27f31fc32e70e0c",
+    "bytes": 4503
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/惑牢/惑牢_咯_1354.act",
+    "blob": "bacd6dbec55d5f8fce02ccf7620f95a4a5553964",
+    "sha256": "26826d3021ef9c421c3978109803b485ede98bfe0206cfc5ed03ecff30bf0e01",
+    "bytes": 43732
+   }
+  }
+ },
+ "상인_남_1354": {
+  "folder": "상인",
+  "sex": "남",
+  "view": 1354,
+  "kind": "2hAxe",
+  "family": "axe",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/惑牢/惑牢_巢_1354.spr",
+    "blob": "062713d12d0e991fb259bd41aae1a86e653c1349",
+    "sha256": "570539e5aecec1e51650fc919bbd7e053569f935236e404160388b4d3a75471a",
+    "bytes": 5058
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/惑牢/惑牢_巢_1354.act",
+    "blob": "e000ee5f39e54784b4780b7f3b8e8b04e5e085be",
+    "sha256": "4130fd927790e40fd7f32c1af876b931e142f446827705f36102ee75321a4150",
+    "bytes": 42900
+   }
+  }
+ },
+ "상인_여_1207": {
+  "folder": "상인",
+  "sex": "여",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/惑牢/惑牢_咯_1207.spr",
+    "blob": "9998511fcf9382c86990c11efda072377a09891d",
+    "sha256": "fe4e2c8f365a42b1516aa0c0c992ba3d747db78fe0bd7cf7d093457297934e44",
+    "bytes": 2916
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/惑牢/惑牢_咯_1207.act",
+    "blob": "4adc57dcd20b3bf1d785c79830467ed3146d5288",
+    "sha256": "b3cbf96e199ef0b649adec1cd4a381409503d1757f605300402566dcaf157a8d",
+    "bytes": 42772
+   }
+  }
+ },
+ "상인_남_1207": {
+  "folder": "상인",
+  "sex": "남",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/惑牢/惑牢_巢_1207.spr",
+    "blob": "5c7a5d364a490fca163d37a8765e074d2b3b6691",
+    "sha256": "42b88a87f318e2e53dbb50801fd1bb671655aee61516f39c472d2e970c3e4256",
+    "bytes": 3861
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/惑牢/惑牢_巢_1207.act",
+    "blob": "4ea8dad16a53eef0e5519251e756b85780792d25",
+    "sha256": "96a4076a70d17e282375e2b82561951c0c732ce186fa2edd86a3225219fcf958",
+    "bytes": 42772
+   }
+  }
+ },
+ "상인_여_1504": {
+  "folder": "상인",
+  "sex": "여",
+  "view": 1504,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/惑牢/惑牢_咯_1504.spr",
+    "blob": "f56f33c6eba736c2df5750cebe4d204f2964f70b",
+    "sha256": "701be759e307453ed6d6fc1fab66e1e079caabd405b270434f92568ce9a0130a",
+    "bytes": 5192
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/惑牢/惑牢_咯_1504.act",
+    "blob": "49dc5df3610aa9b732f4741e03b2994eb4922ca2",
+    "sha256": "2c2c5e473273a299f272bdd2d884be28ca03c6bc38f5a15ac34a1f9a78bb1a92",
+    "bytes": 42900
+   }
+  }
+ },
+ "상인_남_1504": {
+  "folder": "상인",
+  "sex": "남",
+  "view": 1504,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/惑牢/惑牢_巢_1504.spr",
+    "blob": "0c2f258b27dc24de13bfa5a24f7fa3b768b4f05c",
+    "sha256": "6e415959a5140b8cace93bc634a4e4cfb5f25d11a81343815e866b00e7bd4fa3",
+    "bytes": 4258
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/惑牢/惑牢_巢_1504.act",
+    "blob": "598de09f3bf023bfd0d305b7ec9e61917ea3f154",
+    "sha256": "7189a444ab65fab7017d0613e35a25fe3ddb0b8a7f6a1e0e1eadbe2288d18077",
+    "bytes": 42900
+   }
+  }
+ },
+ "상인_여_1119": {
+  "folder": "상인",
+  "sex": "여",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/惑牢/惑牢_咯_1119.spr",
+    "blob": "13f3fa4e9078849795bc867ed160d36a110d4948",
+    "sha256": "fb9a9d3b144e74603e55ae7360a4910d600e39879850371b36158ac02550650b",
+    "bytes": 3716
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/惑牢/惑牢_咯_1119.act",
+    "blob": "da2027d2b722ea98cb39738bbcf6459f91ad46eb",
+    "sha256": "9662245750ff6e6ab7a85013ff2feca2bbc2786da19d16bd6bdbe820362ce05f",
+    "bytes": 42900
+   }
+  }
+ },
+ "상인_남_1119": {
+  "folder": "상인",
+  "sex": "남",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/惑牢/惑牢_巢_1119.spr",
+    "blob": "d64301c713e9e24ce01beb2b510f1156b618b1a1",
+    "sha256": "6f7eee7dc4ba1120b61046e5f9648259c7ae98b883cb233d68ecc3dc90ffe76a",
+    "bytes": 3215
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/惑牢/惑牢_巢_1119.act",
+    "blob": "d9c2c33084fa41d296489e6f33a9041e53d45633",
+    "sha256": "3e615f69819efb18b70ed5fefb79350f5977ca370e15e809f80fe135efcd64e8",
+    "bytes": 42900
+   }
+  }
+ },
+ "성직자_여_1553": {
+  "folder": "성직자",
+  "sex": "여",
+  "view": 1553,
+  "kind": "Book",
+  "family": "book",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/己流磊/己流磊_咯_1553.spr",
+    "blob": "89142e67017ea094111496c729a357ea81f10b36",
+    "sha256": "827858ebd8359837a5af2ed4bcc7253f20e6577de6c6b7688a062fc2a73c9c19",
+    "bytes": 6078
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/己流磊/己流磊_咯_1553.act",
+    "blob": "a4bae9df408957e7a69b03d09815ea685ee3f76b",
+    "sha256": "41bbb59905a52556c49168842540cc64c251f60dc8ce07f06f0f936bcb26f888",
+    "bytes": 42772
+   }
+  }
+ },
+ "성직자_남_1554": {
+  "folder": "성직자",
+  "sex": "남",
+  "view": 1554,
+  "kind": "Book",
+  "family": "book",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/己流磊/己流磊_巢_1554.spr",
+    "blob": "39aeb7b64bdd34d98da5e52892fbb9c7948e6dd4",
+    "sha256": "ecea410de49f6634c6361046a4631c2c5623bea996d063c36e999fd1a4e8d5ec",
+    "bytes": 6610
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/己流磊/己流磊_巢_1554.act",
+    "blob": "42913e2b742fa385fec27607cb85ce8ee0ef51d5",
+    "sha256": "a4cf7ec23e650b84593694348364145383b11281fcfbd724772eaf1d0e082eb6",
+    "bytes": 42772
+   }
+  }
+ },
+ "성직자_여_1504": {
+  "folder": "성직자",
+  "sex": "여",
+  "view": 1504,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/己流磊/己流磊_咯_1504.spr",
+    "blob": "41aa44c43192d1d01e08936bfc87cc50140274c3",
+    "sha256": "2cf584492fffd7deb35adf56f2a57a143be5fb930b66ac590c5ee919960128e8",
+    "bytes": 4188
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/己流磊/己流磊_咯_1504.act",
+    "blob": "99a1170fe78797f3e130fc24a20b0ae658c4b1e1",
+    "sha256": "3b8456a2699fad5606f1a3d982fb2d1d3b415c16672b245705609149258dead0",
+    "bytes": 42900
+   }
+  }
+ },
+ "성직자_남_1504": {
+  "folder": "성직자",
+  "sex": "남",
+  "view": 1504,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/己流磊/己流磊_巢_1504.spr",
+    "blob": "266c4b1541f51ca34d79d385bf9f0b1cbe9de746",
+    "sha256": "d21a5813ec435405f53299faf499e4c4a1e07df0a31174d379903c5e7ccf43db",
+    "bytes": 5252
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/己流磊/己流磊_巢_1504.act",
+    "blob": "ee492835c46ffddb76382de7aad0ec64b6c32f0e",
+    "sha256": "18acfaf8c4485637289272fae4239d6f6338b53bf4bb85fdd2e9481caaed8914",
+    "bytes": 42900
+   }
+  }
+ },
+ "성직자_여_1610": {
+  "folder": "성직자",
+  "sex": "여",
+  "view": 1610,
+  "kind": "Staff",
+  "family": "rod",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/己流磊/己流磊_咯_1610.spr",
+    "blob": "3d951bcdf6b4615d8325360475d3441fb3a508eb",
+    "sha256": "3777439c387b12b24dee360ee38aed7b270163f792701ea23ca3686bff9e1036",
+    "bytes": 4112
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/己流磊/己流磊_咯_1610.act",
+    "blob": "db75644974c75f1f03982e62ca8be6223097b35d",
+    "sha256": "f9bd00c301736b16402cbc4dca7e0f4616e60b3b5ccaf8d359641f900ee2d3f7",
+    "bytes": 42900
+   }
+  }
+ },
+ "성직자_남_1610": {
+  "folder": "성직자",
+  "sex": "남",
+  "view": 1610,
+  "kind": "Staff",
+  "family": "rod",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/己流磊/己流磊_巢_1610.spr",
+    "blob": "41bac2e650daa94538a54462f9a9fa5213d3120a",
+    "sha256": "8a339dd0d12911a0dd825d2306a1de998a0efb4defc1c585f9fb1d248ec9eb47",
+    "bytes": 5006
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/己流磊/己流磊_巢_1610.act",
+    "blob": "542e45866b68ef42ceb5e3bbccdaffd8b5900406",
+    "sha256": "be092ecab7e831416c3e0d4a2ae6fef14b664a9700c5593a7a8cfe69d13f23cd",
+    "bytes": 42900
+   }
+  }
+ },
+ "성직자_여_1472": {
+  "folder": "성직자",
+  "sex": "여",
+  "view": 1472,
+  "kind": "2hStaff",
+  "family": "staff",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/己流磊/己流磊_咯_1472.spr",
+    "blob": "a16454592b2a967b3fab339389d36668506848c6",
+    "sha256": "4bca84e48cb631380fe227f8d28cd89158342ed317df3f5aa1faac80aee63d09",
+    "bytes": 4548
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/己流磊/己流磊_咯_1472.act",
+    "blob": "81bcffba05e5cc8afd49213f0e988ddd17bb83d1",
+    "sha256": "c47104aad4ce666c6300e641fc8fae7460246bc5d3894c397152ee1f45e4a492",
+    "bytes": 42900
+   }
+  }
+ },
+ "성직자_남_1472": {
+  "folder": "성직자",
+  "sex": "남",
+  "view": 1472,
+  "kind": "2hStaff",
+  "family": "staff",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/己流磊/己流磊_巢_1472.spr",
+    "blob": "02c5bbd1578df2f3461c4c6b9ab440b2b640c50c",
+    "sha256": "2de88f591cc6da3425c5d29fae19219e5ba3375c9d4b8df699d2e1df33d760a4",
+    "bytes": 4722
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/己流磊/己流磊_巢_1472.act",
+    "blob": "dcbefb5fd506f630823bd6b8e810263ab97f792f",
+    "sha256": "b780bb3029c2e772e17b09a51089aad230236e525251648024eb50c1db34c40f",
+    "bytes": 42900
+   }
+  }
+ },
+ "세이지_여_1550": {
+  "folder": "세이지",
+  "sex": "여",
+  "view": 1550,
+  "kind": "Book",
+  "family": "book",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/技捞瘤/技捞瘤_咯_1550.spr",
+    "blob": "9cefaa230fc4925d508173e686a7348c64852775",
+    "sha256": "d8af517cfde7c7f9ed9776abaed372cba26e86493ccf14ccde588e5c0fc97b87",
+    "bytes": 4336
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/技捞瘤/技捞瘤_咯_1550.act",
+    "blob": "eac487b1f62bb70dd67f9611ad73bbc713f6c3dc",
+    "sha256": "7ff5f9ee78e30a0eb9882a2b6f8dffe464360ea6f2ce01003d16fecef8bbb2dc",
+    "bytes": 42452
+   }
+  }
+ },
+ "세이지_남_1550": {
+  "folder": "세이지",
+  "sex": "남",
+  "view": 1550,
+  "kind": "Book",
+  "family": "book",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/技捞瘤/技捞瘤_巢_1550.spr",
+    "blob": "ae0da24803cc711b6588913f21b592840a48ffd2",
+    "sha256": "c741b0c2452c08e23f6ac5a8e67752ab3f571f67fd5f1ab3e0c72d25b4642d7d",
+    "bytes": 7524
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/技捞瘤/技捞瘤_巢_1550.act",
+    "blob": "466c474565967acca8b6403423b5d7db3eb52ffc",
+    "sha256": "2d5fb5455e125b98eddd3eb73d8143421a724a4f1185a7f945947330929c86a5",
+    "bytes": 42580
+   }
+  }
+ },
+ "세이지_여_1207": {
+  "folder": "세이지",
+  "sex": "여",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/技捞瘤/技捞瘤_咯_1207.spr",
+    "blob": "a508a76a266e9fd112b1bf570db61eeda64e3c0c",
+    "sha256": "8888587b1f9e9265f42aee8bf7b7ee0457016ea3d4d623a41f3b464365334648",
+    "bytes": 3546
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/技捞瘤/技捞瘤_咯_1207.act",
+    "blob": "f6769f7f64f731f2f2219e7b617179d251e4fbb4",
+    "sha256": "54b8715d863bd482e2b0f515d705fdbfe974eaaec8f3a7fcf437c5b2cf9e4a32",
+    "bytes": 42708
+   }
+  }
+ },
+ "세이지_남_1207": {
+  "folder": "세이지",
+  "sex": "남",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/技捞瘤/技捞瘤_巢_1207.spr",
+    "blob": "7a5a1dbaec117bb88a60f1e387ebe040b29dbcc4",
+    "sha256": "e38c99243e91cbdcec9b375b59b823cd9c86bd879f898a1acc613c10f095124a",
+    "bytes": 1899
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/技捞瘤/技捞瘤_巢_1207.act",
+    "blob": "cc82ff48dcbff6792024ccb70ca4dbd25087c1ad",
+    "sha256": "08320033f5bb12e922bcb961b957b207c5a06453c9f2f5cb1e7dec123ce64a05",
+    "bytes": 42900
+   }
+  }
+ },
+ "세이지_여_1610": {
+  "folder": "세이지",
+  "sex": "여",
+  "view": 1610,
+  "kind": "Staff",
+  "family": "rod",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/技捞瘤/技捞瘤_咯_1610.spr",
+    "blob": "272e2790e79f62894eae4fd0bbf0011ea98ab96a",
+    "sha256": "eb6335127feed521b453f033d61fc737e5d441fac7c8a594df1271f88ddbb791",
+    "bytes": 2753
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/技捞瘤/技捞瘤_咯_1610.act",
+    "blob": "b78e66d15732dd957058f071056d07b103133420",
+    "sha256": "3958e91edaecf9042ffb915b887d6c70a0df1241fa51d821df141ad4ff2a4bfc",
+    "bytes": 42772
+   }
+  }
+ },
+ "세이지_남_1610": {
+  "folder": "세이지",
+  "sex": "남",
+  "view": 1610,
+  "kind": "Staff",
+  "family": "rod",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/技捞瘤/技捞瘤_巢_1610.spr",
+    "blob": "a5d555ddf0a59f443411716513ff58940a3c0ff5",
+    "sha256": "75b98efb1caa3d765aef38f2fd280d6937ba74e96cbab8f90c4e4d19ca741b14",
+    "bytes": 4535
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/技捞瘤/技捞瘤_巢_1610.act",
+    "blob": "42bbfdeee4a4afed82b569adb8e3afc1c1d7bd01",
+    "sha256": "2763eaa6cdf3a64b466c197944aa47ec56b4a5dc56a5a346d2dc489aa0412fa1",
+    "bytes": 42772
+   }
+  }
+ },
+ "세이지_여_1472": {
+  "folder": "세이지",
+  "sex": "여",
+  "view": 1472,
+  "kind": "2hStaff",
+  "family": "staff",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/技捞瘤/技捞瘤_咯_1472.spr",
+    "blob": "6c0d6bf8188cac1203afec4f22331c1d3a633c67",
+    "sha256": "eeaadf10dddcb12f9f5be39e02f3ca92c27d81a17fae98907d1bf2dea81ab279",
+    "bytes": 4127
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/技捞瘤/技捞瘤_咯_1472.act",
+    "blob": "0265f2fe06529e88183df222b6de21ba1f23955a",
+    "sha256": "4ac714d6f2b43bbb9a0545f2a3dbc3d757a18cd04057e33186aa36792e3763fd",
+    "bytes": 42772
+   }
+  }
+ },
+ "세이지_남_1472": {
+  "folder": "세이지",
+  "sex": "남",
+  "view": 1472,
+  "kind": "2hStaff",
+  "family": "staff",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/技捞瘤/技捞瘤_巢_1472.spr",
+    "blob": "e01bd03b46f0eff2bbff6487df37dcc0b8cbed95",
+    "sha256": "579b6bea7f9041e3823ccf4ca0db93739c5438cdc34d873d1225c8d803fcb56f",
+    "bytes": 5193
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/技捞瘤/技捞瘤_巢_1472.act",
+    "blob": "1adb8a17e826cf25d795a951bf6be7da26eee980",
+    "sha256": "49f0a266f10c9790103d32c551e0c4f32d00d827528d3786987477b198fd50f9",
+    "bytes": 42772
+   }
+  }
+ },
+ "쉐도우체이서_남_13049": {
+  "folder": "쉐도우체이서",
+  "sex": "남",
+  "view": 13049,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/溅档快眉捞辑/溅档快眉捞辑_巢_13049.spr",
+    "blob": "62a6ec41ee346f57e1ba820c164ddc56500833eb",
+    "sha256": "5512332938c4a564f2cd15998fbfc0a26acb4738e408aff8abaf5386609d6d74",
+    "bytes": 2069
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/溅档快眉捞辑/溅档快眉捞辑_巢_13049.act",
+    "blob": "af1498cd25f1050b942b3e01cf42242c561b8d26",
+    "sha256": "e324e0e731cee71aa93fa7e31d22b9d4117b141a4e2b6d395a2abeee9a542dac",
+    "bytes": 42900
+   }
+  }
+ },
+ "슈퍼노비스_여_1207": {
+  "folder": "슈퍼노비스",
+  "sex": "여",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/酱欺畴厚胶/酱欺畴厚胶_咯_1207.spr",
+    "blob": "d1b5779ee3fc0411c47864d9abbafe0cc9a7504e",
+    "sha256": "09ea7ab64329b428d9d74f288056742a412a9bd26fa7b45a6087a33a78fd7320",
+    "bytes": 2783
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/酱欺畴厚胶/酱欺畴厚胶_咯_1207.act",
+    "blob": "e7944e53eb87e979c7a1f7e0871bf90e92e6b197",
+    "sha256": "45050206c5765bc865f3ec7c5eb660faf6bde826dce8f3a8b423a289ea0b05e6",
+    "bytes": 42772
+   }
+  }
+ },
+ "슈퍼노비스_남_1207": {
+  "folder": "슈퍼노비스",
+  "sex": "남",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/酱欺畴厚胶/酱欺畴厚胶_巢_1207.spr",
+    "blob": "3eabacb50d4c8cd5bb4ba5cc29afd0009ab7148d",
+    "sha256": "6886cb5b059d0383ec1c487fa68cc3de584aa34e3f8f1adeab8351efd4f53239",
+    "bytes": 2511
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/酱欺畴厚胶/酱欺畴厚胶_巢_1207.act",
+    "blob": "c5b1b89354a2c697043c5f5633a643ba5f3ace15",
+    "sha256": "1976adb2c42c7145732a165fa067ccf56438a27a776e0bc85ae7e5c552e3fb57",
+    "bytes": 42900
+   }
+  }
+ },
+ "신페코크루세이더_여_1354": {
+  "folder": "신페코크루세이더",
+  "sex": "여",
+  "view": 1354,
+  "kind": "2hAxe",
+  "family": "axe",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_咯_1354.spr",
+    "blob": "cb6f9cf1a3197379359332781d07920297c09d45",
+    "sha256": "a3f854cae5e8775e7f8ab7122761aa17781bbcb582e5ec7976769b55b98c94ae",
+    "bytes": 5610
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_咯_1354.act",
+    "blob": "317425bfa9f1d5ae528e5566d44c98a3438dc8ff",
+    "sha256": "14e313b8174b872eb9287fd88ade3993ea065b9ecfdcc82cf983728b7e2012b2",
+    "bytes": 43668
+   }
+  }
+ },
+ "신페코크루세이더_남_1354": {
+  "folder": "신페코크루세이더",
+  "sex": "남",
+  "view": 1354,
+  "kind": "2hAxe",
+  "family": "axe",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_巢_1354.spr",
+    "blob": "23a04c14e9f8dd65ae682db364cb65783c97fb73",
+    "sha256": "ec69cc29efc4316f83f152a938e311246717d90625f490f95d74544b3927e307",
+    "bytes": 5624
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_巢_1354.act",
+    "blob": "3df1b2e1b936c06346edce456d618b6e932a83ee",
+    "sha256": "fedf2b598aa0ee939bf8d750eb94f2489566d7a36c0960c57873fad8c47d2750",
+    "bytes": 40020
+   }
+  }
+ },
+ "신페코크루세이더_여_1207": {
+  "folder": "신페코크루세이더",
+  "sex": "여",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_咯_1207.spr",
+    "blob": "3c71d7f6a5e08113034ba783f6d58d07c39e7ffd",
+    "sha256": "d7d79fa4dcbd974ab36714152309eb72df42456dbbf56a83346bf14547a4b1cd",
+    "bytes": 3243
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_咯_1207.act",
+    "blob": "df11aeec9b82f1c17f497fdcf2a7236f061bd3bf",
+    "sha256": "186697b3c0d81b76b20148b0c6b2e5558f8eb9d92cc175a3964c71a8bf9f5174",
+    "bytes": 43668
+   }
+  }
+ },
+ "신페코크루세이더_남_1207": {
+  "folder": "신페코크루세이더",
+  "sex": "남",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_巢_1207.spr",
+    "blob": "3c71d7f6a5e08113034ba783f6d58d07c39e7ffd",
+    "sha256": "d7d79fa4dcbd974ab36714152309eb72df42456dbbf56a83346bf14547a4b1cd",
+    "bytes": 3243
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_巢_1207.act",
+    "blob": "d3024a425adef0e2f38d638ae03da2fac945b317",
+    "sha256": "0a7b8559825c5998a13330cf9aaf790aef21141490cdb4d5eda6744f024836c4",
+    "bytes": 43668
+   }
+  }
+ },
+ "신페코크루세이더_여_1529": {
+  "folder": "신페코크루세이더",
+  "sex": "여",
+  "view": 1529,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_咯_1529.spr",
+    "blob": "7336cf92f88a976899be894b039324e0689e49b1",
+    "sha256": "4775561fa5ed1c79db3f753c646fe2316071740cd47f59ceaa684ada54516441",
+    "bytes": 3468
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_咯_1529.act",
+    "blob": "fa5ed50176f70df633e22dd8bc617514f7698749",
+    "sha256": "bc6de8c9b4ceecc529e3fc44f943abb78762b492dd13e019d850fc44377722f4",
+    "bytes": 43668
+   }
+  }
+ },
+ "신페코크루세이더_남_1504": {
+  "folder": "신페코크루세이더",
+  "sex": "남",
+  "view": 1504,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_巢_1504.spr",
+    "blob": "9c0beabfbdd815aa9aaf33ad7f566fd611d02267",
+    "sha256": "32e8eac34c534a960b4dfa98af39281b0817ba9597a6d8fd41cd42b1ce0ed218",
+    "bytes": 4695
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_巢_1504.act",
+    "blob": "c504d1f6a12ebbb329222684ad8da01f700e777a",
+    "sha256": "9d040a38ab0b50cb337798de888bd208634a22a415e12082665f1be498448f17",
+    "bytes": 43668
+   }
+  }
+ },
+ "신페코크루세이더_여_1410": {
+  "folder": "신페코크루세이더",
+  "sex": "여",
+  "view": 1410,
+  "kind": "2hSpear",
+  "family": "spear",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_咯_1410.spr",
+    "blob": "4576cd1836802307c3054a7d689a5ad37d39b409",
+    "sha256": "e32c4cc3059f7d91ce42bce1336741f3e0a3ef80af28fb0e03c0e0b0c1a94a43",
+    "bytes": 1590
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_咯_1410.act",
+    "blob": "fde52a9903d85b5d29fa7f8975a0d14c2b4abc48",
+    "sha256": "89baebf66bb6a942adfee9b40e67f18349e7fc3fb65fc9aa1ef879d21aa4d6cd",
+    "bytes": 42772
+   }
+  }
+ },
+ "신페코크루세이더_남_1410": {
+  "folder": "신페코크루세이더",
+  "sex": "남",
+  "view": 1410,
+  "kind": "2hSpear",
+  "family": "spear",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_巢_1410.spr",
+    "blob": "52fc94d2382cc7aa8fd1bcac959b88b5503e4eba",
+    "sha256": "4366fcf4c9ac157aa6c6f6e1d06e5d741371216e1acb2f757b6353125134c76c",
+    "bytes": 1596
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_巢_1410.act",
+    "blob": "e4ca9118181a5241a272b99ce52cfb79a054b7b1",
+    "sha256": "e89f60286813addbc5cdf80792d1d589600f6b40164d3e8965d6985f1c6e0218",
+    "bytes": 42772
+   }
+  }
+ },
+ "신페코크루세이더_여_1119": {
+  "folder": "신페코크루세이더",
+  "sex": "여",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_咯_1119.spr",
+    "blob": "6240e22bb245f75ad0a04ba2b7a1051e48a59bae",
+    "sha256": "82f393124fd5d1ab1ccd09ca779ca0ce62f8157f41c611cb523745b6cee49838",
+    "bytes": 3532
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_咯_1119.act",
+    "blob": "b144280f53a28d30b54c5255b50a5938e92c88de",
+    "sha256": "4d87470c0800c7d56dbe9d5cf78bbc8059348ab1f418ce54145a314fb83c20ad",
+    "bytes": 43668
+   }
+  }
+ },
+ "신페코크루세이더_남_1119": {
+  "folder": "신페코크루세이더",
+  "sex": "남",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_巢_1119.spr",
+    "blob": "6240e22bb245f75ad0a04ba2b7a1051e48a59bae",
+    "sha256": "82f393124fd5d1ab1ccd09ca779ca0ce62f8157f41c611cb523745b6cee49838",
+    "bytes": 3532
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_巢_1119.act",
+    "blob": "483b2d568f0f59f11733e8c458de08e0f6e38c87",
+    "sha256": "dfc77ebd0dea1a3e8a94a433e5231f4b60d9f04b8e6476f0557b1f310497533b",
+    "bytes": 43668
+   }
+  }
+ },
+ "신페코크루세이더_여_1116": {
+  "folder": "신페코크루세이더",
+  "sex": "여",
+  "view": 1116,
+  "kind": "2hSword",
+  "family": "twohand",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_咯_1116.spr",
+    "blob": "f64da8af002bb95a9e439ac87e0c2bbf97b3c853",
+    "sha256": "8bfef572d0b001cc2dd55b7062b27abdfe496b8bf6741f4e0fff06a14c47882a",
+    "bytes": 3080
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_咯_1116.act",
+    "blob": "0170825003988a81c6d3a57e373faf3f7f1f46de",
+    "sha256": "9d575e751acec1fa6d679f3472c68625a11b3597f869ee018a1b448251f36be0",
+    "bytes": 43668
+   }
+  }
+ },
+ "신페코크루세이더_남_1116": {
+  "folder": "신페코크루세이더",
+  "sex": "남",
+  "view": 1116,
+  "kind": "2hSword",
+  "family": "twohand",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_巢_1116.spr",
+    "blob": "f64da8af002bb95a9e439ac87e0c2bbf97b3c853",
+    "sha256": "8bfef572d0b001cc2dd55b7062b27abdfe496b8bf6741f4e0fff06a14c47882a",
+    "bytes": 3080
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/脚其内农风技捞歹/脚其内农风技捞歹_巢_1116.act",
+    "blob": "1dd783c38759ed9a532b283647ba764313690c4d",
+    "sha256": "be5568224fbd93f2749bbf577f7d4ba37249a0211601850cf228c28deaf47482",
+    "bytes": 43668
+   }
+  }
+ },
+ "어세신_여_1238": {
+  "folder": "어세신",
+  "sex": "여",
+  "view": 1238,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/绢技脚/绢技脚_咯_1238.spr",
+    "blob": "3e0fd3c5804e33a5aba9a293b50522ffb26044cb",
+    "sha256": "bd777779a3eeefbaf890bf4918ae21f4de61dd4a843f8c3aa9ef1aa0c9566333",
+    "bytes": 2171
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/绢技脚/绢技脚_咯_1238.act",
+    "blob": "8873d2d686c1354515ab6e70a1e12be47116ac6a",
+    "sha256": "24d3624800b3ea1005c28ae3797890584eb9e461571a5d0995a042fd94fa163d",
+    "bytes": 42324
+   }
+  }
+ },
+ "어세신_남_1238": {
+  "folder": "어세신",
+  "sex": "남",
+  "view": 1238,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/绢技脚/绢技脚_巢_1238.spr",
+    "blob": "34e690d3c3f22f6b2a1f5ead35c82bc3ba933120",
+    "sha256": "f90414c0cddce4a6656caaf3666d9a51f1602fcecfc2f6a9dbd1622c8de223b7",
+    "bytes": 1914
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/绢技脚/绢技脚_巢_1238.act",
+    "blob": "725666a3b3dc043f0a6eeefa8a41dddd09bf286e",
+    "sha256": "9ac4905d491d658e77c2ebbb222738679e820eb26e0cb06da371172c31147908",
+    "bytes": 42388
+   }
+  }
+ },
+ "어세신_여_1119": {
+  "folder": "어세신",
+  "sex": "여",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/绢技脚/绢技脚_咯_1119.spr",
+    "blob": "0dd0ff71fa66b5cc7057f5b2a184cc9e2019731d",
+    "sha256": "53498eeb8a88da7756e08d822b78a471f04466ca362717c71e2e2e133db0116e",
+    "bytes": 2310
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/绢技脚/绢技脚_咯_1119.act",
+    "blob": "75308fbb117f7f0a50e34ecc42e99e220dbffefc",
+    "sha256": "b53be8f75c6bd7096c1432e0cc0b4fa3087471504c2c3abd5035987c86a4a9dc",
+    "bytes": 42900
+   }
+  }
+ },
+ "어세신_남_1119": {
+  "folder": "어세신",
+  "sex": "남",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/绢技脚/绢技脚_巢_1119.spr",
+    "blob": "709887efc84b227326ed588ccc87e99ec60092a3",
+    "sha256": "f991ba76b1952fd654223ebf89639a54d3558b7ac303d1ea14835530732a0c48",
+    "bytes": 1935
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/绢技脚/绢技脚_巢_1119.act",
+    "blob": "bff0393f163beb777bd780359b947507e3ffd4f4",
+    "sha256": "c65fa696261639e6d32f5f7b09b4b635b20fe7af9e2a76e5dded53c60d5463fa",
+    "bytes": 42388
+   }
+  }
+ },
+ "연금술사_여_1354": {
+  "folder": "연금술사",
+  "sex": "여",
+  "view": 1354,
+  "kind": "2hAxe",
+  "family": "axe",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/楷陛贱荤/楷陛贱荤_咯_1354.spr",
+    "blob": "74975e33a2a8a5b45637ea71c811799d870de671",
+    "sha256": "608cbe1d819bbbb0de765c3aec0080205c325171d9040c069964118f1c47f5bc",
+    "bytes": 3633
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/楷陛贱荤/楷陛贱荤_咯_1354.act",
+    "blob": "e437d5bbf88bb346c0e870bc1a828312267cecc9",
+    "sha256": "28e33cbe0eea68cc0672049d76b70d64987d0dbd8c12ffacac62c905c1572c15",
+    "bytes": 42708
+   }
+  }
+ },
+ "연금술사_남_1354": {
+  "folder": "연금술사",
+  "sex": "남",
+  "view": 1354,
+  "kind": "2hAxe",
+  "family": "axe",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/楷陛贱荤/楷陛贱荤_巢_1354.spr",
+    "blob": "3b16450a52136293b6f66eefcecbbbaf307e9f47",
+    "sha256": "e30ea0e160eb748011173a8ef1a04e3a7e975f05ebe8d807bab5792153ef2e92",
+    "bytes": 4621
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/楷陛贱荤/楷陛贱荤_巢_1354.act",
+    "blob": "0448696b03dead273066f56ebe1b78ad352a5a20",
+    "sha256": "905d122af0c5e2bcd158156183f838c9314163c996d77bfbef01b9b37da88bff",
+    "bytes": 42772
+   }
+  }
+ },
+ "연금술사_여_1207": {
+  "folder": "연금술사",
+  "sex": "여",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/楷陛贱荤/楷陛贱荤_咯_1207.spr",
+    "blob": "75c43ba986fdb4ca6092d1333e4641c33cb44307",
+    "sha256": "58df29add5b9101bcbccc4587ba19b1d19adb607e961d762000fb06e80ec266b",
+    "bytes": 3747
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/楷陛贱荤/楷陛贱荤_咯_1207.act",
+    "blob": "8fd784b367025849557394af70923a5de902879d",
+    "sha256": "777e648ea6f5335025d7decb9121d9e9c525307867ef29f1273eb1929abc6d52",
+    "bytes": 43604
+   }
+  }
+ },
+ "연금술사_남_1207": {
+  "folder": "연금술사",
+  "sex": "남",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/楷陛贱荤/楷陛贱荤_巢_1207.spr",
+    "blob": "19d322be232eb95995f13f1882f629759bea7cdf",
+    "sha256": "c6292b05658cca195891d833af47ff9db7d5230ab7b8791c4b947bdaa64d08e3",
+    "bytes": 3531
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/楷陛贱荤/楷陛贱荤_巢_1207.act",
+    "blob": "cf0f398fce82eac12dd6704ea7e0b4de7403fd7a",
+    "sha256": "1afe154f6a7008d7acca8dc265f5da738344682a4da4550f0f49135c5f6dd29b",
+    "bytes": 42900
+   }
+  }
+ },
+ "연금술사_여_1504": {
+  "folder": "연금술사",
+  "sex": "여",
+  "view": 1504,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/楷陛贱荤/楷陛贱荤_咯_1504.spr",
+    "blob": "783e02bb3b91c1740def0a919bd00b581b11b9d3",
+    "sha256": "2329e5f7bc6d001a698cf757f85dcd187df7fa31b815e174b7f376b53fee5725",
+    "bytes": 3108
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/楷陛贱荤/楷陛贱荤_咯_1504.act",
+    "blob": "4c7b1e0386734e2b41f09e978c37b92d2ed74b83",
+    "sha256": "22363869774b5ddfc985d28458c5397f8b622455edfbed9b90c71ab95b592a02",
+    "bytes": 43412
+   }
+  }
+ },
+ "연금술사_남_1504": {
+  "folder": "연금술사",
+  "sex": "남",
+  "view": 1504,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/楷陛贱荤/楷陛贱荤_巢_1504.spr",
+    "blob": "adcd1e1b74a63d60b4b153ac0267d3e8b2a429bf",
+    "sha256": "cd3d7d157f6f6d92c034aa4ec6b19dbca71ef5be486f5a148cb4f8efafa742cb",
+    "bytes": 4041
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/楷陛贱荤/楷陛贱荤_巢_1504.act",
+    "blob": "8d5d9e64977e3a48871eb89d0f6b72e41b7b3690",
+    "sha256": "307cc4b96f902e85dd3d8da68cb3ab16d25f4aea410e0db857bc6e92f78d1827",
+    "bytes": 42772
+   }
+  }
+ },
+ "연금술사_여_1119": {
+  "folder": "연금술사",
+  "sex": "여",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/楷陛贱荤/楷陛贱荤_咯_1119.spr",
+    "blob": "73d2969f5f29a34a0b74e26bb75bc1b59af21090",
+    "sha256": "c60f0eac5bf4865a5d76ec07e43013dab3ae970b483c31b723c65d9385bc18c5",
+    "bytes": 2594
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/楷陛贱荤/楷陛贱荤_咯_1119.act",
+    "blob": "76c8aba27114c9543b4b5cf9e1a49933864cb950",
+    "sha256": "67e9725e39bd2c398e8f5e1d7716b3d41b7a098f9994693318fba09cef9a93ae",
+    "bytes": 43412
+   }
+  }
+ },
+ "연금술사_남_1119": {
+  "folder": "연금술사",
+  "sex": "남",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/楷陛贱荤/楷陛贱荤_巢_1119.spr",
+    "blob": "a85085059a3266fe8c6a7301d49f3af98ac172fa",
+    "sha256": "bdd84bc755e22a9d2273dd2373102e0039bb49b58702d98875b27a28935714a3",
+    "bytes": 3358
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/楷陛贱荤/楷陛贱荤_巢_1119.act",
+    "blob": "c315594c03f4a0fbb8f8b3eb43087ffedabbae79",
+    "sha256": "5870a8c15218800f8fff0116912689a69f3c471063d4ce5765730d0128997100",
+    "bytes": 42772
+   }
+  }
+ },
+ "위저드_여_1207": {
+  "folder": "위저드",
+  "sex": "여",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/困历靛/困历靛_咯_1207.spr",
+    "blob": "b79f263fbd780da994ca34d420beb7357fb6ee27",
+    "sha256": "287435f3e8818d8116568f60ac9b72ee1319dc130fe9a2754fcb58f591cb7679",
+    "bytes": 1934
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/困历靛/困历靛_咯_1207.act",
+    "blob": "a832f15413feb483cbc5b9c0a3e170bd0577b869",
+    "sha256": "af406833cb1bc3aca3a8333be2f945cdb60eacef7747e172b7d8a26a0962ba54",
+    "bytes": 41300
+   }
+  }
+ },
+ "위저드_남_1207": {
+  "folder": "위저드",
+  "sex": "남",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/困历靛/困历靛_巢_1207.spr",
+    "blob": "e039d25caed449c42ae01a63b1cfd54e401d7e3b",
+    "sha256": "b01550761449f967814ccfa440f8c21bf760774b1079b7828e9e49b1f3194a29",
+    "bytes": 2513
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/困历靛/困历靛_巢_1207.act",
+    "blob": "bb9690a902dcf4f665910152c1055610f250f014",
+    "sha256": "d5673d87d8d18752f3f78537aa0100f0deaff4238c6ebdd2b5a3d3d06d64a0e0",
+    "bytes": 42580
+   }
+  }
+ },
+ "위저드_여_1610": {
+  "folder": "위저드",
+  "sex": "여",
+  "view": 1610,
+  "kind": "Staff",
+  "family": "rod",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/困历靛/困历靛_咯_1610.spr",
+    "blob": "278cc0acef3747218cf2d3f6a61999f35927c8dd",
+    "sha256": "81037dee8482fec2ba8aced7fec21212245cb9a1d30d215af5dc577acce114a1",
+    "bytes": 3782
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/困历靛/困历靛_咯_1610.act",
+    "blob": "c084a0da0a2f2723a0e1e4db25b0380a8ee1eda3",
+    "sha256": "2eb048630c2c17f50fcd77ed3f8a72e994019649808977e350c5499c934658a2",
+    "bytes": 42068
+   }
+  }
+ },
+ "위저드_남_1610": {
+  "folder": "위저드",
+  "sex": "남",
+  "view": 1610,
+  "kind": "Staff",
+  "family": "rod",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/困历靛/困历靛_巢_1610.spr",
+    "blob": "3ba034d60908b2859d764dc3b934294a920a3ca0",
+    "sha256": "3f0bcfc4f6168809855f270afc5ef2cd358e3cfaa47aa69a3a9d803f1ef90492",
+    "bytes": 3557
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/困历靛/困历靛_巢_1610.act",
+    "blob": "066d4fa262d0927ce83cd1f8fe24625aada5f3a6",
+    "sha256": "d6f528458d322b088ed33faf35a84b42b06607a37f388293bc36ba4fa7bcbdd1",
+    "bytes": 42900
+   }
+  }
+ },
+ "위저드_여_1472": {
+  "folder": "위저드",
+  "sex": "여",
+  "view": 1472,
+  "kind": "2hStaff",
+  "family": "staff",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/困历靛/困历靛_咯_1472.spr",
+    "blob": "2c3bed465fc902370a899d2af2e5ff81b34b1743",
+    "sha256": "2819bc51aad550b261ca2c21383d0e8f8cadd1c85c48efb410c0f7ffe75e6c11",
+    "bytes": 5557
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/困历靛/困历靛_咯_1472.act",
+    "blob": "d0a6da6c9ec6fc24866491d8cbe6b98fae4e0104",
+    "sha256": "36406f6b65bbff42ee17db4ecd2511f2816cd5dfccb8af015fc5ae74a6d94527",
+    "bytes": 42068
+   }
+  }
+ },
+ "위저드_남_1472": {
+  "folder": "위저드",
+  "sex": "남",
+  "view": 1472,
+  "kind": "2hStaff",
+  "family": "staff",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/困历靛/困历靛_巢_1472.spr",
+    "blob": "923a05a59ee2705fb1fa314c81a3e0c5cf666376",
+    "sha256": "ff2d09eaf2addac465b4abaafa187543a334b6ffd35a151fbe9eeb22510dc05c",
+    "bytes": 4804
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/困历靛/困历靛_巢_1472.act",
+    "blob": "06fc3b840f4ad94c9c3cf0cb42399aca54121830",
+    "sha256": "a252eb274798678363962b4e4e6746904a5001e68fc893560c96a53583e44c67",
+    "bytes": 42900
+   }
+  }
+ },
+ "제철공_여_1354": {
+  "folder": "제철공",
+  "sex": "여",
+  "view": 1354,
+  "kind": "2hAxe",
+  "family": "axe",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/力枚傍/力枚傍_咯_1354.spr",
+    "blob": "5dacc49feb8712d8e1cac1309b41fcde46f87b79",
+    "sha256": "1edfd6cf8dd218f9ea41c96a21611908c5f90052b267c827dde1ad7705424f15",
+    "bytes": 4637
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/力枚傍/力枚傍_咯_1354.act",
+    "blob": "eedc24aed2826ac9c1793cc256454c33dfb1b201",
+    "sha256": "e75223fba9dbc8e8b1f79bc490b064a7ad4124d2dd211b8b989463b37fe9fbf2",
+    "bytes": 42772
+   }
+  }
+ },
+ "제철공_남_1354": {
+  "folder": "제철공",
+  "sex": "남",
+  "view": 1354,
+  "kind": "2hAxe",
+  "family": "axe",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/力枚傍/力枚傍_巢_1354.spr",
+    "blob": "41c9b6211a7ffb1b11c48c91457d4ebfd762c0ca",
+    "sha256": "267bbd1b88b9b32013a45f91f55820a2320077057599ba11da6f2e3db0cf464f",
+    "bytes": 4634
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/力枚傍/力枚傍_巢_1354.act",
+    "blob": "ca07b41b7639e6e1a28c9a103405f1048e4195c8",
+    "sha256": "efd699dde4f99fe2eca62af519cb978ec447f68cf096e201032301947dc30dfb",
+    "bytes": 42772
+   }
+  }
+ },
+ "제철공_여_1207": {
+  "folder": "제철공",
+  "sex": "여",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/力枚傍/力枚傍_咯_1207.spr",
+    "blob": "abea203c43155739444af1b5384ada648281b16b",
+    "sha256": "d28a4de51bbee559ac6bbb2ae054cc86f5953f267c9ad40a1e88bd913dccf6a5",
+    "bytes": 3539
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/力枚傍/力枚傍_咯_1207.act",
+    "blob": "88868a54be24bb7136ec08cb3c3777f8ac5854dd",
+    "sha256": "d9bcadb8ec744ed8a4248c6773c3e732a7d5d28677d17e8e5e29cfb9f1447486",
+    "bytes": 42900
+   }
+  }
+ },
+ "제철공_남_1207": {
+  "folder": "제철공",
+  "sex": "남",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/力枚傍/力枚傍_巢_1207.spr",
+    "blob": "0aa6229e784a799f2bda9b3d741bdc5a890fb779",
+    "sha256": "3275ef6c06d0a856d1b355b304d944a71090c1ff8a5467647c66e238288e6f05",
+    "bytes": 1608
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/力枚傍/力枚傍_巢_1207.act",
+    "blob": "40dc560c3a88e912cd7ad324cedd66288e24bb15",
+    "sha256": "42e9b68c5e14142f55a872635b939cf1e0a1fae4906a1de9104fa98ff7c4da07",
+    "bytes": 42900
+   }
+  }
+ },
+ "제철공_여_1504": {
+  "folder": "제철공",
+  "sex": "여",
+  "view": 1504,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/力枚傍/力枚傍_咯_1504.spr",
+    "blob": "ee4d388460daf3fa78ddd29ab5a69dae82f3dbb4",
+    "sha256": "69734337e74bdb9b8dae887a1168e684d2fa2bf71166fdf02fda630b554eef18",
+    "bytes": 3644
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/力枚傍/力枚傍_咯_1504.act",
+    "blob": "ab076049e05e841dd5a6529535d0430c47db2792",
+    "sha256": "c7d598c3d16609bc48e99f3c9e3188638a3db55dab6abf35423b2e3297fe58ab",
+    "bytes": 42580
+   }
+  }
+ },
+ "제철공_남_1504": {
+  "folder": "제철공",
+  "sex": "남",
+  "view": 1504,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/力枚傍/力枚傍_巢_1504.spr",
+    "blob": "a46d7ad5d8b06d316dab44038472295d7576b36d",
+    "sha256": "d214691ffdd3168e099a8a4c9f88c3c5f32e810641886eb9af2319ecd1f62400",
+    "bytes": 2528
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/力枚傍/力枚傍_巢_1504.act",
+    "blob": "bd4ae0bb0b146aea2784ea1e1b3ffe8462fb58db",
+    "sha256": "418cf7cf454f1b3ff1f99f55e1329034dc9cdd708159bc13c4b28878c3674503",
+    "bytes": 42580
+   }
+  }
+ },
+ "제철공_여_1119": {
+  "folder": "제철공",
+  "sex": "여",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/力枚傍/力枚傍_咯_1119.spr",
+    "blob": "e975bcc430b782e501c492fcb0594cfe1a97c2dc",
+    "sha256": "331e76a36afdfb74879d11f56b178e4cdc5ebdb874bcb615c50f6902c16f1965",
+    "bytes": 3288
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/力枚傍/力枚傍_咯_1119.act",
+    "blob": "a8d17b3f76ef0f0a02b81a23b9d8e737d8532e6e",
+    "sha256": "24a6daff46c82da636dec17e4b84693d448806c8e480ea123e83dcfe621e3e54",
+    "bytes": 42708
+   }
+  }
+ },
+ "제철공_남_1119": {
+  "folder": "제철공",
+  "sex": "남",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/力枚傍/力枚傍_巢_1119.spr",
+    "blob": "4569f5c7a3db8a7a083be17e29319b672b94caa9",
+    "sha256": "a2a780471458e74c20df22676014b79a250efe89d3f9fe741d3504fb7a8fc781",
+    "bytes": 2613
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/力枚傍/力枚傍_巢_1119.act",
+    "blob": "5345092bec1bf01b7f5b54cbc321df7803330b4f",
+    "sha256": "fdef3e58ef7451356f576e43941d905139f6231c2956abc34343f79e3b9a49bf",
+    "bytes": 42708
+   }
+  }
+ },
+ "초보자_여_1207": {
+  "folder": "초보자",
+  "sex": "여",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/檬焊磊/檬焊磊_咯_1207.spr",
+    "blob": "d1b5779ee3fc0411c47864d9abbafe0cc9a7504e",
+    "sha256": "09ea7ab64329b428d9d74f288056742a412a9bd26fa7b45a6087a33a78fd7320",
+    "bytes": 2783
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/檬焊磊/檬焊磊_咯_1207.act",
+    "blob": "e7944e53eb87e979c7a1f7e0871bf90e92e6b197",
+    "sha256": "45050206c5765bc865f3ec7c5eb660faf6bde826dce8f3a8b423a289ea0b05e6",
+    "bytes": 42772
+   }
+  }
+ },
+ "초보자_남_1207": {
+  "folder": "초보자",
+  "sex": "남",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/檬焊磊/檬焊磊_巢_1207.spr",
+    "blob": "3eabacb50d4c8cd5bb4ba5cc29afd0009ab7148d",
+    "sha256": "6886cb5b059d0383ec1c487fa68cc3de584aa34e3f8f1adeab8351efd4f53239",
+    "bytes": 2511
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/檬焊磊/檬焊磊_巢_1207.act",
+    "blob": "c5b1b89354a2c697043c5f5633a643ba5f3ace15",
+    "sha256": "1976adb2c42c7145732a165fa067ccf56438a27a776e0bc85ae7e5c552e3fb57",
+    "bytes": 42900
+   }
+  }
+ },
+ "초보자_여_16039": {
+  "folder": "초보자",
+  "sex": "여",
+  "view": 16039,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/檬焊磊/檬焊磊_咯_16039.spr",
+    "blob": "c1f3acc05f2835d278b4a4765f93ce635f33e12e",
+    "sha256": "6ab87e678fb101b77c468458e69adde39aa2fa2d0acb980e81956f2be58c7ccb",
+    "bytes": 2610
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/檬焊磊/檬焊磊_咯_16039.act",
+    "blob": "3186c518b9eea0f371392c7774316608901cd974",
+    "sha256": "662d63519c323d51a22953e3e188a7341c16fad851b9867c182714105cbdf44a",
+    "bytes": 42644
+   }
+  }
+ },
+ "초보자_남_16039": {
+  "folder": "초보자",
+  "sex": "남",
+  "view": 16039,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/檬焊磊/檬焊磊_巢_16039.spr",
+    "blob": "bac4f10f3866c72ace0190684d7e7e801ee524c3",
+    "sha256": "58babe48a9c3c6d0b1eaab4a82e28814cb518b4dd76639519ce93702cef5d42f",
+    "bytes": 3595
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/檬焊磊/檬焊磊_巢_16039.act",
+    "blob": "1d8d299e2ca6ff76a4338bd60b0cd6226e3b7d72",
+    "sha256": "44672c3a11a4c53e5d48b9b6d4eddec97727aefbc126e361619bb973e58e459b",
+    "bytes": 42892
+   }
+  }
+ },
+ "크루세이더_여_1354": {
+  "folder": "크루세이더",
+  "sex": "여",
+  "view": 1354,
+  "kind": "2hAxe",
+  "family": "axe",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_咯_1354.spr",
+    "blob": "da6dc3712752566c22aac30f3b87fdab674ebebc",
+    "sha256": "b60c2efc1906cbfd917dcb1e29caca18ab6c32985c99ba6ce3eec250bedeb41a",
+    "bytes": 5079
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_咯_1354.act",
+    "blob": "f16e686520b0873209b5914a44052539549d81d6",
+    "sha256": "0471f99659c852f68178c35d264102d632857aabb3faa425e375d1ab767809bc",
+    "bytes": 43540
+   }
+  }
+ },
+ "크루세이더_남_1354": {
+  "folder": "크루세이더",
+  "sex": "남",
+  "view": 1354,
+  "kind": "2hAxe",
+  "family": "axe",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_巢_1354.spr",
+    "blob": "e9a59e4b2fc7631a5b3aad6b10de1d4ca1286870",
+    "sha256": "7aa9838fc055d4486b8427c345dacc03db8ee47aaa809accb86a03bb11d827c4",
+    "bytes": 3136
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_巢_1354.act",
+    "blob": "5b1448f15ec34b27f74f7a515875cadf00fa2baa",
+    "sha256": "a1508e0f1ba0afef0ed1dd4e806571cb72cd592678dbc5cbdeee05ae064aef3c",
+    "bytes": 42516
+   }
+  }
+ },
+ "크루세이더_여_1207": {
+  "folder": "크루세이더",
+  "sex": "여",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_咯_1207.spr",
+    "blob": "538cb74ecbc037b47a7f7ec63da9a19cd5a5d0d5",
+    "sha256": "9a47f7e9e22e38e462d5919bb9afe45eece2c5da1f68c5bc17c625d0ec79e410",
+    "bytes": 3425
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_咯_1207.act",
+    "blob": "dd08bd6ff91c423188fcc790df54dd444da9a2c3",
+    "sha256": "1761cd7aac11f0da2c82d7b81365585d7ece573672c5d605c9595b39eb3427b1",
+    "bytes": 43540
+   }
+  }
+ },
+ "크루세이더_남_1207": {
+  "folder": "크루세이더",
+  "sex": "남",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_巢_1207.spr",
+    "blob": "9640aecbe193eb7ba004b2235d889a7db3707c8e",
+    "sha256": "84e9fe000d452e146fb50198a2cdfef79255aaabf052634ccab34258fc3a447e",
+    "bytes": 2346
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_巢_1207.act",
+    "blob": "1a48871f9cea6d071bc009e2b4e04a56753b0f34",
+    "sha256": "b6e186f5dae3d966b059bbdedb7f4d525f351e73229339d5c70cc967f74588d7",
+    "bytes": 42516
+   }
+  }
+ },
+ "크루세이더_여_1504": {
+  "folder": "크루세이더",
+  "sex": "여",
+  "view": 1504,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_咯_1504.spr",
+    "blob": "d80604bb2cb59885d4dd63ef13f401aa760e90b6",
+    "sha256": "6ed17b468f21061ccaf89605f988318e3e17c927bcdd342de3f2c3cd17994421",
+    "bytes": 4483
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_咯_1504.act",
+    "blob": "758a69d94510cef46f0f08ec09653d9e59c47818",
+    "sha256": "aecf9ba9a129df7fd673f7ab70aee52be5033cc2b7baf95b508dbc46aeff50f0",
+    "bytes": 43540
+   }
+  }
+ },
+ "크루세이더_남_1504": {
+  "folder": "크루세이더",
+  "sex": "남",
+  "view": 1504,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_巢_1504.spr",
+    "blob": "cf3214b31d4bcfdcfebe253cdc582863f191b5cb",
+    "sha256": "768e42ea3cb2d7f447d3d416e8c7ca3d1a6505a1bc8d0325026194cf1bdf69c3",
+    "bytes": 3031
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_巢_1504.act",
+    "blob": "9c537d371c9851bee11d4295ee258ef9161e887e",
+    "sha256": "d2c3ef268d6acaf56ec87f8fb9d6715ed562f3f63953ac4537392fc63fa0bcf3",
+    "bytes": 42516
+   }
+  }
+ },
+ "크루세이더_여_1410": {
+  "folder": "크루세이더",
+  "sex": "여",
+  "view": 1410,
+  "kind": "2hSpear",
+  "family": "spear",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_咯_1410.spr",
+    "blob": "4d85a251578a202c7ea0dae3d2f3427d2af3dc6c",
+    "sha256": "497768971cdc36d260a7734f22842aa8cdb777571f1913a8b6e5c55e531b2aee",
+    "bytes": 3136
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_咯_1410.act",
+    "blob": "7c40bbf13d26d8c9890c28cad985d2f43e672c36",
+    "sha256": "8ff83e7bb508b2c007678a47b9498a6e32765fe7669da037fccb368e84c70a8e",
+    "bytes": 42772
+   }
+  }
+ },
+ "크루세이더_남_1410": {
+  "folder": "크루세이더",
+  "sex": "남",
+  "view": 1410,
+  "kind": "2hSpear",
+  "family": "spear",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_巢_1410.spr",
+    "blob": "7a45eb5155fcb4617543aba0dde6f4fa27056594",
+    "sha256": "789fdf35c017ac2868e54cabf61d6eeabb65408ddadcf1248eea9a623d144cfd",
+    "bytes": 4479
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_巢_1410.act",
+    "blob": "f1cc0083f3be6b57ced48a2dccf841002cf4282a",
+    "sha256": "f9f1b4aa47bc4b2ee99595bde856ba4fca713841dd2ce5164f47f997d12682c9",
+    "bytes": 42388
+   }
+  }
+ },
+ "크루세이더_여_1119": {
+  "folder": "크루세이더",
+  "sex": "여",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_咯_1119.spr",
+    "blob": "495937c6ac05a4eadf560a84cae943807d1faa69",
+    "sha256": "b3132e0a0c470a59f6948e2f34a9261c9342e4b1131e2a5659747925781aecb1",
+    "bytes": 4050
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_咯_1119.act",
+    "blob": "47f738565ececcec387ee1102554cfefdbe3b351",
+    "sha256": "63169ab29ea725f543e2cb56028aa8b4d65d400f076716448008f203dc5d5307",
+    "bytes": 43540
+   }
+  }
+ },
+ "크루세이더_남_1119": {
+  "folder": "크루세이더",
+  "sex": "남",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_巢_1119.spr",
+    "blob": "b68d945d6f4e3efe65186095273f8aad947ebd72",
+    "sha256": "adb80cb4f749ce7b084c0687e2d89d409c2f6abcf5210835c127b356c9893bb7",
+    "bytes": 2282
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_巢_1119.act",
+    "blob": "7edfd3c9224abbad16801c21b4c9a9000989cbf8",
+    "sha256": "40bd74f3007a38b66c2b453961754f4dded3a7686a0090e2b8e1cbdaa3c725a4",
+    "bytes": 42516
+   }
+  }
+ },
+ "크루세이더_여_1116": {
+  "folder": "크루세이더",
+  "sex": "여",
+  "view": 1116,
+  "kind": "2hSword",
+  "family": "twohand",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_咯_1116.spr",
+    "blob": "a63110d5ff8aee56dbc8d9a8c34a53571de8dab1",
+    "sha256": "bcfe651301cb95e485b7d2ec2c922262e7e693b65a0ed02247ea9df617b828c3",
+    "bytes": 3346
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_咯_1116.act",
+    "blob": "01fbfe7ec4b8d42724a7a5aec749ac9f75d1a556",
+    "sha256": "459015dfb4958ecb3e88ad9d37d44e1bc4b3ddd366df962bec67929d91d39ae9",
+    "bytes": 43540
+   }
+  }
+ },
+ "크루세이더_남_1116": {
+  "folder": "크루세이더",
+  "sex": "남",
+  "view": 1116,
+  "kind": "2hSword",
+  "family": "twohand",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_巢_1116.spr",
+    "blob": "9e04fcf1227db2efaa4668e6e372061065da8d32",
+    "sha256": "ca33584743bde54e992fd4d1a316ab9d8fcffe5c7590b01391a750197603c8e6",
+    "bytes": 2088
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/农风技捞歹/农风技捞歹_巢_1116.act",
+    "blob": "16a4835a356b0cb971de8dbb9d23c8027e956241",
+    "sha256": "ede111777e40d66e641a75857451077ed309157bdbfa708193492fdf8d29e548",
+    "bytes": 42516
+   }
+  }
+ },
+ "페코페코_기사_여_1354": {
+  "folder": "페코페코_기사",
+  "sex": "여",
+  "view": 1354,
+  "kind": "2hAxe",
+  "family": "axe",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_咯_1354.spr",
+    "blob": "b1bfa532f9924118c3916563f55d4b0064f9f85e",
+    "sha256": "16341b63a3acce3708d4a762cf769e12619eefc4b876d244959ad2f62afc5eee",
+    "bytes": 3350
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_咯_1354.act",
+    "blob": "d36cf54ffb5d6d5a0ed878d06995a5576229a5f9",
+    "sha256": "6e2dcb23e84b022e40635eb554ba8f49e9a2655d25e0ae87539d64ced0f9a621",
+    "bytes": 42708
+   }
+  }
+ },
+ "페코페코_기사_남_1354": {
+  "folder": "페코페코_기사",
+  "sex": "남",
+  "view": 1354,
+  "kind": "2hAxe",
+  "family": "axe",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_巢_1354.spr",
+    "blob": "c065d20107fa4c07ac73aad6490771cac59b6ca3",
+    "sha256": "91d8f903afca5bec6bd161dd7aeba92ad4b20b545ab7e9c938e39909be4eda0b",
+    "bytes": 3350
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_巢_1354.act",
+    "blob": "affcb0a925cc8daa15297e8ffe1cfa0f17e009f8",
+    "sha256": "87f88224e76c4ee2d256ebd1f3652bc3d3b051721adf25c74732f64bdbb643c0",
+    "bytes": 42708
+   }
+  }
+ },
+ "페코페코_기사_여_1207": {
+  "folder": "페코페코_기사",
+  "sex": "여",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_咯_1207.spr",
+    "blob": "b83759da711d45491a93625bfcaedc5e5f983036",
+    "sha256": "35e25b1770cae8db0ce981db8b9f1263b026b455fdf204f6d8aeba68b909400d",
+    "bytes": 2181
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_咯_1207.act",
+    "blob": "63b488c8994b85a3098aa5942988359bedffc962",
+    "sha256": "5318c4eb86b2eb2d3046355b914fba01193809512226ebaf508bf5e57d2dab3c",
+    "bytes": 42388
+   }
+  }
+ },
+ "페코페코_기사_남_1207": {
+  "folder": "페코페코_기사",
+  "sex": "남",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_巢_1207.spr",
+    "blob": "b83759da711d45491a93625bfcaedc5e5f983036",
+    "sha256": "35e25b1770cae8db0ce981db8b9f1263b026b455fdf204f6d8aeba68b909400d",
+    "bytes": 2181
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_巢_1207.act",
+    "blob": "192501d5f4b36a4d6921f6a86f0beb90a071f7f7",
+    "sha256": "5c8caeba41129199b3406fd3ecf9d8464b7d5b3a6b9328420ab44894a7a35485",
+    "bytes": 42388
+   }
+  }
+ },
+ "페코페코_기사_여_1504": {
+  "folder": "페코페코_기사",
+  "sex": "여",
+  "view": 1504,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_咯_1504.spr",
+    "blob": "5de6eac5faa7750802e512afe7cf1a3b1a534263",
+    "sha256": "51510c7be6add0695a912157efef9d24ba9c2b4f69de8745e9644f18873d374d",
+    "bytes": 2901
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_咯_1504.act",
+    "blob": "324b9a49f599b405955bfeca0529106db0af7bae",
+    "sha256": "91de105b2431ff478977755cb8b07d8742a6a98ffa32c9e7baf0c000570bb4b8",
+    "bytes": 42388
+   }
+  }
+ },
+ "페코페코_기사_남_1504": {
+  "folder": "페코페코_기사",
+  "sex": "남",
+  "view": 1504,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_巢_1504.spr",
+    "blob": "5de6eac5faa7750802e512afe7cf1a3b1a534263",
+    "sha256": "51510c7be6add0695a912157efef9d24ba9c2b4f69de8745e9644f18873d374d",
+    "bytes": 2901
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_巢_1504.act",
+    "blob": "d82340fbfa9173985e8bda48bb129b3006da7942",
+    "sha256": "28f3b833a77261a9d25bd9f9860fc127466e2882fa7738d3d232460ad66b3ce5",
+    "bytes": 42388
+   }
+  }
+ },
+ "페코페코_기사_여_1410": {
+  "folder": "페코페코_기사",
+  "sex": "여",
+  "view": 1410,
+  "kind": "2hSpear",
+  "family": "spear",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_咯_1410.spr",
+    "blob": "71629f4e4b05c037a9665810495a226c792d9107",
+    "sha256": "26dcbc59fe033a223da9b3fb2ec80c032e68a57457be4e5e416b8bf6bbc531f1",
+    "bytes": 3375
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_咯_1410.act",
+    "blob": "c5e2a43d7de833c81567d58b9392f4b33bbb322e",
+    "sha256": "0b963223b52aa687df8fba7196e54663414e411de2f016fdd99bb1ca24122a29",
+    "bytes": 42068
+   }
+  }
+ },
+ "페코페코_기사_남_1410": {
+  "folder": "페코페코_기사",
+  "sex": "남",
+  "view": 1410,
+  "kind": "2hSpear",
+  "family": "spear",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_巢_1410.spr",
+    "blob": "cc5468e8c72e9f4d917ad75767c7985b5af84bdb",
+    "sha256": "992f74e2cf49839603475d7ad8423ca1fb321e6ad256e09d778294c9b06a30eb",
+    "bytes": 3890
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_巢_1410.act",
+    "blob": "2763ee522c47bb44ae854d57c6b8652eebe5ad0f",
+    "sha256": "37531e15991254d48f164a17d08ab330237013eb51c08995d7585fc8fa62e751",
+    "bytes": 42068
+   }
+  }
+ },
+ "페코페코_기사_여_1119": {
+  "folder": "페코페코_기사",
+  "sex": "여",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_咯_1119.spr",
+    "blob": "f78fa5052b1cd619e31a2a0611b3a130830823a8",
+    "sha256": "049ea551e13bfddf32722ed6712104d3c800e2946287a43cd0aa31fe8d951642",
+    "bytes": 2631
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_咯_1119.act",
+    "blob": "00a4d7d637b32876cd75bab17893669a88103b10",
+    "sha256": "5ab25b2b5dc20cb455a7496297437f6dc741dd4d9d9478fadda44a8df06d72a3",
+    "bytes": 42708
+   }
+  }
+ },
+ "페코페코_기사_남_1119": {
+  "folder": "페코페코_기사",
+  "sex": "남",
+  "view": 1119,
+  "kind": "1hSword",
+  "family": "sword",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_巢_1119.spr",
+    "blob": "5fec90bd545c2a94b0ca0a1f5d9840febb81a950",
+    "sha256": "d4df13425402f073697dbeb036f42f33aee8b55e2f844afd904c20184c4359c0",
+    "bytes": 2470
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_巢_1119.act",
+    "blob": "164535560d728e0203d11c59f2102ffd8db0df31",
+    "sha256": "3eab7c90490352f05dc13b0f2d101b74c19ed19258862505d6419bd66d617e38",
+    "bytes": 42708
+   }
+  }
+ },
+ "페코페코_기사_여_1116": {
+  "folder": "페코페코_기사",
+  "sex": "여",
+  "view": 1116,
+  "kind": "2hSword",
+  "family": "twohand",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_咯_1116.spr",
+    "blob": "1894f3719d4a3d17ffe1caa83b2249a5beac279c",
+    "sha256": "928b63d7ca2feabc678dd1f4abc3c3be33b36e05f6fd893b4d9fb62552ced43c",
+    "bytes": 2223
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_咯_1116.act",
+    "blob": "4185a81e3d25c6e73bc17e460bb828d370aa11bc",
+    "sha256": "4a87800d6217a6a5173802f67a8c8d31cd01e004bc508825d24d38c2c4975237",
+    "bytes": 42708
+   }
+  }
+ },
+ "페코페코_기사_남_1116": {
+  "folder": "페코페코_기사",
+  "sex": "남",
+  "view": 1116,
+  "kind": "2hSword",
+  "family": "twohand",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_巢_1116.spr",
+    "blob": "1894f3719d4a3d17ffe1caa83b2249a5beac279c",
+    "sha256": "928b63d7ca2feabc678dd1f4abc3c3be33b36e05f6fd893b4d9fb62552ced43c",
+    "bytes": 2223
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/其内其内_扁荤/其内其内_扁荤_巢_1116.act",
+    "blob": "e9b4367f97b7480ff04dd830284366fb5aaf9546",
+    "sha256": "88ef998f6ae74ed1967e0448ee62854f8b2a4d549f3bc3c19ca1e2b24961a26c",
+    "bytes": 42708
+   }
+  }
+ },
+ "프리스트_여_1553": {
+  "folder": "프리스트",
+  "sex": "여",
+  "view": 1553,
+  "kind": "Book",
+  "family": "book",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/橇府胶飘/橇府胶飘_咯_1553.spr",
+    "blob": "89142e67017ea094111496c729a357ea81f10b36",
+    "sha256": "827858ebd8359837a5af2ed4bcc7253f20e6577de6c6b7688a062fc2a73c9c19",
+    "bytes": 6078
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/橇府胶飘/橇府胶飘_咯_1553.act",
+    "blob": "a4bae9df408957e7a69b03d09815ea685ee3f76b",
+    "sha256": "41bbb59905a52556c49168842540cc64c251f60dc8ce07f06f0f936bcb26f888",
+    "bytes": 42772
+   }
+  }
+ },
+ "프리스트_남_1553": {
+  "folder": "프리스트",
+  "sex": "남",
+  "view": 1553,
+  "kind": "Book",
+  "family": "book",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/橇府胶飘/橇府胶飘_巢_1553.spr",
+    "blob": "c9b3553b607b355dd08f344667a3cfd3b11aec4f",
+    "sha256": "9e02c3c466b6c8263942bfbac8140a4e6be4b04c927d8faa527b079c967ac588",
+    "bytes": 6667
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/橇府胶飘/橇府胶飘_巢_1553.act",
+    "blob": "99a93096d9b2daac10b1be6fdd5477aabafe7ab9",
+    "sha256": "a439943c4509bf8b65cbb849e5bf91141c162ab28fb4c9e3215a9eab14187440",
+    "bytes": 42772
+   }
+  }
+ },
+ "프리스트_여_1504": {
+  "folder": "프리스트",
+  "sex": "여",
+  "view": 1504,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/橇府胶飘/橇府胶飘_咯_1504.spr",
+    "blob": "a16d2867c704d570c3bd1ff2248ffc0c4a1d3503",
+    "sha256": "e4bcc62023df066fb491a7f31cec47afb78a0b0856f873c4a3e10257f326b6bc",
+    "bytes": 4805
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/橇府胶飘/橇府胶飘_咯_1504.act",
+    "blob": "6fa2bc63acf49cf0d09cf503b09de0e68ae1db0b",
+    "sha256": "2e52849115fdbe75c6d52d0e01cf5957bad59438bfbf763ac8d34cedb17c831a",
+    "bytes": 42900
+   }
+  }
+ },
+ "프리스트_남_1504": {
+  "folder": "프리스트",
+  "sex": "남",
+  "view": 1504,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/橇府胶飘/橇府胶飘_巢_1504.spr",
+    "blob": "3a41068a47a5446da1117de507ff12b10842b5e9",
+    "sha256": "8c995a95bcf590ca53a4f10ec9f029b1e664e7bf47c0920fda69d89e34cf5787",
+    "bytes": 4969
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/橇府胶飘/橇府胶飘_巢_1504.act",
+    "blob": "ce0e7e6f3d73535548a1d872407a879aeae253b9",
+    "sha256": "580176dd327d7ed000dbfc10c8ab3bf0fd14c6e6e2e4c3b61df6b32be3e612f9",
+    "bytes": 42900
+   }
+  }
+ },
+ "프리스트_여_1610": {
+  "folder": "프리스트",
+  "sex": "여",
+  "view": 1610,
+  "kind": "Staff",
+  "family": "rod",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/橇府胶飘/橇府胶飘_咯_1610.spr",
+    "blob": "972b0504164dc813830b79d788e1fc523fc1c5e4",
+    "sha256": "331edd5f9a0167c070f14ff1cf17d08b71700dbd70270ff5cf4399d660cb899e",
+    "bytes": 4094
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/橇府胶飘/橇府胶飘_咯_1610.act",
+    "blob": "5709a7ff3c96ac8f17d92641920ad715267ae236",
+    "sha256": "bbbece4697e0fd02b91962862e315eabfb2da33bf0472a4ed391363b0721ed7e",
+    "bytes": 42900
+   }
+  }
+ },
+ "프리스트_남_1610": {
+  "folder": "프리스트",
+  "sex": "남",
+  "view": 1610,
+  "kind": "Staff",
+  "family": "rod",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/橇府胶飘/橇府胶飘_巢_1610.spr",
+    "blob": "c968dcd882877ddb276a9a88ff9b171da961b6d9",
+    "sha256": "3672e2cb9b65ce23cab13cad038d3383d2e3ddea05a577ba8e4126b1395d2d38",
+    "bytes": 5055
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/橇府胶飘/橇府胶飘_巢_1610.act",
+    "blob": "342780597f422d52fe1e0c15c50de437e73103bb",
+    "sha256": "2dd47e7c7596325ddce1b86642fbf1f79b1667d7b59ad7ed57bb21c1d907711b",
+    "bytes": 42900
+   }
+  }
+ },
+ "프리스트_여_1472": {
+  "folder": "프리스트",
+  "sex": "여",
+  "view": 1472,
+  "kind": "2hStaff",
+  "family": "staff",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/橇府胶飘/橇府胶飘_咯_1472.spr",
+    "blob": "e77adce6bdf8f6fe5edadf52638aa8d658b16acc",
+    "sha256": "1fc85bfc9fb005761dc94698569255083b7ec6e9d6485f1a0126fc956fd55480",
+    "bytes": 3949
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/橇府胶飘/橇府胶飘_咯_1472.act",
+    "blob": "8aa4c61ffd33c1757af405303940fcad88a25429",
+    "sha256": "4d7b23478cfd22d33a160f0966a7a268e836040cf5b0abe7946275881ad38141",
+    "bytes": 42900
+   }
+  }
+ },
+ "프리스트_남_1472": {
+  "folder": "프리스트",
+  "sex": "남",
+  "view": 1472,
+  "kind": "2hStaff",
+  "family": "staff",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/橇府胶飘/橇府胶飘_巢_1472.spr",
+    "blob": "9b1c132dd11b30e8813560d0817190c41e3540c2",
+    "sha256": "9d8cddfb2a7511a133d8e31c565fafdefacc392d67ee0c12bbcc63dd234729ea",
+    "bytes": 5632
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/橇府胶飘/橇府胶飘_巢_1472.act",
+    "blob": "35c425d34f2957d12ded61f44a9163916dccf2ba",
+    "sha256": "226f73b29dd038619d220399c49bc40a281f05500a200d679becb1a549f9b237",
+    "bytes": 42900
+   }
+  }
+ },
+ "헌터_여_1710": {
+  "folder": "헌터",
+  "sex": "여",
+  "view": 1710,
+  "kind": "Bow",
+  "family": "bow",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/清磐/清磐_咯_1710.spr",
+    "blob": "d6d23b8936efd1520bb209103724627cc100d7ad",
+    "sha256": "6d9d303ebab52896958d50c84c3063a6b661e484e47c0aa67458c9f85b13c3d3",
+    "bytes": 2751
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/清磐/清磐_咯_1710.act",
+    "blob": "ca5f4529cb22ce0d2a6948e7edc730d8d733a54b",
+    "sha256": "e36f991c793866d06361f6073548e39783792c50c77b6c60861f46a9fd843aab",
+    "bytes": 42772
+   }
+  }
+ },
+ "헌터_남_1710": {
+  "folder": "헌터",
+  "sex": "남",
+  "view": 1710,
+  "kind": "Bow",
+  "family": "bow",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/清磐/清磐_巢_1710.spr",
+    "blob": "a328089229ca0ab5a6b80e46c5305e461dd10969",
+    "sha256": "b2dccc3d66ee005ab73469c1bfee3a2132504677fac3882d3164cf63e13c7ac6",
+    "bytes": 3754
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/清磐/清磐_巢_1710.act",
+    "blob": "18b83e6ae7ace20fc305de2a416c9c49e126327f",
+    "sha256": "72f5072bdc1b1da37e6e08e375a86ec7b793b863a64400e97984de2bde86af14",
+    "bytes": 42772
+   }
+  }
+ },
+ "헌터_여_1207": {
+  "folder": "헌터",
+  "sex": "여",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/清磐/清磐_咯_1207.spr",
+    "blob": "b2ec81bc4035ea59b1509cb21d74e7461f9ff7ff",
+    "sha256": "07886554c4faea7a89fb81b2f494938715f7bd5dc5a64e6377b5e902d0ec06a5",
+    "bytes": 1623
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/清磐/清磐_咯_1207.act",
+    "blob": "d52ddba4892fcbfb43aa8e8be7dbf6b8bb35321d",
+    "sha256": "1deb3eaa59240c0db3f4218462b529a0320633a18534ae3da2e65dc4495a1d12",
+    "bytes": 42324
+   }
+  }
+ },
+ "헌터_남_1207": {
+  "folder": "헌터",
+  "sex": "남",
+  "view": 1207,
+  "kind": "Dagger",
+  "family": "dagger",
+  "files": {
+   "spr": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/清磐/清磐_巢_1207.spr",
+    "blob": "2e797865975de7549ab851fc2cbe329380a2491e",
+    "sha256": "0d93ec61a7bac8c84d6e5e9e4651379187959bf121f3f3c3c0d29d472576923f",
+    "bytes": 1699
+   },
+   "act": {
+    "repo": "linhan85/rAthenaCN_LeeClient",
+    "ref": "bc268afe2d9686a8d61c87d1821e0c75d1b6431d",
+    "path": "data/sprite/牢埃练/清磐/清磐_巢_1207.act",
+    "blob": "2f49c722f81a418b8a1c0b9a3199dcaaad08722f",
+    "sha256": "b5de7dd329f673056bbcefe70cc1f0e98afb8e60d41e882dce344de1a75cf2f5",
+    "bytes": 42068
+   }
+  }
+ },
+ "태권소년_남_클럽": {
+  "folder": "태권소년",
+  "sex": "남",
+  "view": 0,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "rAthena-Thailand/ClientROThailand",
+    "ref": "6f91cbd1df3b94f3e4ea27c6eeb63a4b9f319e96",
+    "path": "Client-2025-06-04/Pre-Renewal/data/sprite/ÀÎ°£Á·/ÅÂ±Ç¼Ò³â/ÅÂ±Ç¼Ò³â_³²_Å¬·´.spr",
+    "blob": "6f3ede6f853b4157870d0888c3d960f761c77cdd",
+    "sha256": "0b458200ae2627222cb196a718154958b7bd9bd84ccd14734e829c8016231bb6",
+    "bytes": 5392
+   },
+   "act": {
+    "repo": "rAthena-Thailand/ClientROThailand",
+    "ref": "6f91cbd1df3b94f3e4ea27c6eeb63a4b9f319e96",
+    "path": "Client-2025-06-04/Pre-Renewal/data/sprite/ÀÎ°£Á·/ÅÂ±Ç¼Ò³â/ÅÂ±Ç¼Ò³â_³²_Å¬·´.act",
+    "blob": "6052907cca7bd366d4e57a08e318aa724e5b7e81",
+    "sha256": "7b567644611ae0c28132985f6efec1b1852ca7a2de59dac3fd70688619e18b50",
+    "bytes": 30932
+   }
+  }
+ },
+ "태권소년_여_클럽": {
+  "folder": "태권소년",
+  "sex": "여",
+  "view": 0,
+  "kind": "Mace",
+  "family": "mace",
+  "files": {
+   "spr": {
+    "repo": "rAthena-Thailand/ClientROThailand",
+    "ref": "6f91cbd1df3b94f3e4ea27c6eeb63a4b9f319e96",
+    "path": "Client-2025-06-04/Pre-Renewal/data/sprite/ÀÎ°£Á·/ÅÂ±Ç¼Ò³â/ÅÂ±Ç¼Ò³â_¿©_Å¬·´.spr",
+    "blob": "13706ed73633cac0ae78b01d0017d11e03cfe978",
+    "sha256": "54bde9b9858a62d377c91ed3a9fec4a65bd0101d5a8e77d3d104472047663bda",
+    "bytes": 7215
+   },
+   "act": {
+    "repo": "rAthena-Thailand/ClientROThailand",
+    "ref": "6f91cbd1df3b94f3e4ea27c6eeb63a4b9f319e96",
+    "path": "Client-2025-06-04/Pre-Renewal/data/sprite/ÀÎ°£Á·/ÅÂ±Ç¼Ò³â/ÅÂ±Ç¼Ò³â_¿©_Å¬·´.act",
+    "blob": "afa1d3acf0beb8a8a3a25de268f05dd4f8a7bc84",
+    "sha256": "1e1dbcdf28e54aece7e358ce7e6c4c983af6064c43f919bfdf3bbe55c1ad93e1",
+    "bytes": 30292
+   }
+  }
+ }
+}

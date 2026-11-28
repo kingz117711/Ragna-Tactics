@@ -1,6 +1,6 @@
-import { FIELD_SKILLS, fieldSkillAvailable, SKILLS, skillCatalog, learnedRank, learnedSkillPower, activeSkillId, skillPoints, activeSlots, ACTIVE_SLOTS, prereqMet, missingPrereqs, skillFamily, STATUS, jobLineage, combatJob, REFINEMENT, ORE_INFO, gearVariant, AFFINITIES, ELEMENTS, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, promotionRequirement, classBuilds, selectedBuild, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, gearFitsSlot, ITEMS, refineCost, refineSuccessPercent, refineSafeLimit, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
-import { availablePoints, forgePrice, command, tick, stats, rosterLimit, engaged, effectiveTactics, isLeader, canEquipGear } from './sim.js';
-import { FX_LABELS, skillRow, learnedSkillRows, skillSummary, skillTree, buildCards, rotationStrip, skillIcon } from './skills-ui.js';
+import { FIELD_SKILLS, fieldSkillAvailable, SKILLS, skillCatalog, learnedRank, learnedSkillPower, activeSkillId, skillPoints, activeSlots, ACTIVE_SLOTS, prereqMet, missingPrereqs, skillFamily, STATUS, jobLineage, combatJob, REFINEMENT, ORE_INFO, gearVariant, AFFINITIES, ELEMENTS, spellElement, BOUNTIES, ATTRIBUTES, ATTRIBUTE_CAP, CARDS, FORGE, promotionLevel, promotionRequirement, classBuilds, selectedBuild, jobChoices, HUNT_RADII, DEFAULT_HUNT_RADIUS, MAPS, JOBS, MONSTERS, EQUIPMENT, GEAR_ITEMS, GEAR_AFFIXES, GEAR_SLOTS, GEAR_SHOP, gearIconPath, gearFitsSlot, GEAR_SETS, gearSetsFor, ITEMS, refineCost, refineSuccessPercent, refineSafeLimit, TACTICS, TARGET_PREFS, JOB_ROLES, ROLE_LABELS, STEP, baseNeed, jobNeed } from './data.js';
+import { availablePoints, forgePrice, shopPrice, command, tick, stats, rosterLimit, engaged, effectiveTactics, isLeader, canEquipGear, activeGearSets } from './sim.js';
+import { FX_LABELS, skillRow, learnedSkillRows, skillSummary, skillTree, buildCards, rotationStrip, skillIcon, setSkillIconRoutes } from './skills-ui.js';
 import { SAVE_KEY, loadGame, saveGame, encodeSave, decodeSave } from './persistence.js';
 import { Sprites } from './sprites.js';
 import { Renderer } from './renderer.js';
@@ -230,8 +230,74 @@ function deployment(destinationId = renderer.mapId) {
   showModal('Where will you venture?', `<p>Deploy ${units.map(c => esc(c.name)).join(', ')} instantly. Linked party members travel together. Viewing a map does not move your characters.</p><button type="button" class="atlas-back" data-open-atlas="deployment">Browse the world atlas ↗</button><form id="deployment-form"><div class="modal-grid">${Object.values(MAPS).map(m => `<label class="choice-card"><input type="radio" name="destination" value="${m.id}" ${m.id === destinationId ? 'checked' : ''}><span class="tiny"> ${m.tier}</span><strong>${m.name}</strong><p>${m.id === 'meadow' ? 'Poring and Fabre. A gentle start for Novices.' : m.id === 'forest' ? 'Willow. Tougher enemies, better EXP, and Resin.' : m.id === 'payon' ? 'Zombies close slowly while Archer Skeletons fire from range. Prepare Holy magic.' : m.id === 'morroc' ? 'Scorpions strike hard. Peco Pecos quickly close distance. Both drop socket cards.' : m.id === 'lair' ? 'Phreeoni. Gather for Sand Pact, scatter for Sinkhole. Guaranteed MVP card.' : 'Baphomet. Bring at least two first-job adventurers. Manual dodging recommended.'}</p></label>`).join('')}</div>${modalError}<div class="modal-footer"><span>In combat? Retreat to camp before redeploying.</span><button type="submit" class="primary">Begin expedition <span>↗</span></button></div></form>`, 'PLAN AN EXPEDITION');
   $('deployment-form').onsubmit = event => { event.preventDefault(); const mapId = new FormData(event.currentTarget).get('destination'); if (issue({ type: 'deploy', mapId }, { close: true, quiet: true })) { coachDismissed = true; switchMap(mapId); toast('Expedition started. Your adventurers will farm automatically.'); } };
 }
+// The camp merchant sells a curated slice of the real Ragnarok Online equipment
+// catalog (src/gear-catalog.json + src/gear-shop.json); every row shows the
+// client's own item icon.
+let shopSlot = 'weapon';
+function shopPriceLabel(key) { return number(shopPrice(key)) + 'z'; }
+// Set bonuses come out of rAthena's combo scripts as flat stats and percentages; show them
+// with the same names the item lines use so the added value is readable at a glance.
+const SET_STAT_LABELS = { atk: 'ATK', matk: 'MATK', def: 'DEF', mdef: 'MDEF', hp: 'Max HP', sp: 'Max SP',
+  flee: 'Flee', hit: 'HIT', crit: 'Crit', speed: 'ASPD', str: 'STR', agi: 'AGI', vit: 'VIT', int: 'INT',
+  dex: 'DEX', luk: 'LUK', hpRegen: 'HP recovery', spRegen: 'SP recovery', atkPct: 'ATK', matkPct: 'MATK',
+  defPct: 'DEF', mdefPct: 'MDEF', hpPct: 'Max HP', spPct: 'Max SP', fleePct: 'Flee', critPct: 'Crit',
+  speedPct: 'ASPD', aspdPct: 'ASPD', hitPct: 'HIT' };
+function setBonusText(set) {
+  return Object.entries(set.bonus || {}).map(([key, value]) =>
+    `${SET_STAT_LABELS[key] || key} ${key.endsWith('Pct') ? `+${value}%` : `${value > 0 ? '+' : ''}${value}`}`).join(' · ');
+}
+// Upstream grants some effects this game has no model for (elemental resistance, perfect
+// dodge, cast delay). Say so next to the modelled part rather than dropping it silently.
+function setUnmodelledText(set) {
+  const count = (set.unmodelled || []).length;
+  if (!count) return '';
+  return `+${count === 1 ? '1 effect' : `${count} effects`} this game does not model`;
+}
+function setGatesText(set) {
+  return (set.requires || []).map(rule => rule.on === 'Refine'
+    ? `${GEAR_SLOTS[rule.slot] || rule.slot} refine +${rule.value}`
+    : `Base Lv. ${rule.op}${rule.value}`).join(' · ');
+}
+// One line per set an item belongs to, naming the other pieces it needs.
+function gearSetLines(item) {
+  return gearSetsFor(item?.roId).map(set => {
+    const others = set.items.filter(id => String(id) !== String(item.roId))
+      .map(id => GEAR_ITEMS[Object.keys(GEAR_ITEMS).find(key => GEAR_ITEMS[key].roId === Number(id))]?.name || `#${id}`);
+    return `<small class="set-line">Set: ${esc(set.name)} — needs ${esc(others.join(', '))} · ${esc(setBonusText(set))}${setUnmodelledText(set) ? ` ${esc(setUnmodelledText(set))}` : ''}${setGatesText(set) ? ` (${esc(setGatesText(set))})` : ''}</small>`;
+  }).join('');
+}
+// The stock is a curated cross-section of the whole game, from starter knives to
+// endgame armour, so it is grouped into the same level bands the curation used
+// instead of one long list where the cheap and the 70+ gear sit side by side.
+const SHOP_BANDS = [[0, 15, 'Base Lv. 1–15'], [16, 40, 'Base Lv. 16–40'], [41, 70, 'Base Lv. 41–70'], [71, 999, 'Base Lv. 71+']];
+function shopBand(item) { return SHOP_BANDS.findIndex(([low, high]) => (item.equipLevel || 0) >= low && (item.equipLevel || 0) <= high); }
+function shopStock() {
+  const stock = GEAR_SHOP.map(key => GEAR_ITEMS[key]).filter(item => item && item.slot === shopSlot);
+  return SHOP_BANDS.map((band, index) => ({ band, items: stock.filter(item => shopBand(item) === index) }))
+    .filter(group => group.items.length);
+}
+function shop() {
+  const slots = [...new Set(GEAR_SHOP.map(key => GEAR_ITEMS[key]?.slot).filter(Boolean))];
+  if (!slots.includes(shopSlot)) shopSlot = slots[0] || 'weapon';
+  const groups = shopStock();
+  const eligible = state.characters.filter(c => !c.mapId);
+  const row = item => {
+    const key = Object.keys(GEAR_ITEMS).find(id => GEAR_ITEMS[id] === item); // shop keys are item ids
+    const fits = eligible.filter(c => canEquipGear(c.job, key, c.level));
+    const icon = gearIconPath(item);
+    return `<article class="shop-item ${fits.length ? '' : 'locked'}">
+      ${icon ? `<img class="shop-icon" src="${esc(icon)}" alt="" width="32" height="32" loading="lazy">` : '<span class="shop-icon"></span>'}
+      <div class="shop-body"><strong>${esc(item.name)}</strong>
+      <small>${esc(item.kind)} · ${item.slot === 'weapon' ? `ATK ${item.atk || 0}${item.matk ? ` · MATK ${item.matk}` : ''}` : `DEF ${item.def || 0}`}${item.slots ? ` · ${item.slots} slot${item.slots === 1 ? '' : 's'}` : ''}${item.equipLevel ? ` · Base Lv. ${item.equipLevel}` : ''}</small>
+      <small>${fits.length ? 'Fit: ' + esc(fits.slice(0, 3).map(c => c.name).join(', ')) + (fits.length > 3 ? '…' : '') : 'No adventurer at camp can equip this yet.'}</small>${gearSetLines(item)}</div>
+      <button data-shop-buy="${esc(key)}" ${fits.length && state.inventory.zeny >= shopPrice(key) ? '' : 'disabled'}>${shopPriceLabel(key)}</button>
+    </article>`;
+  };
+  const grid = groups.map(({ band, items }) => `<section class="shop-band"><h3>${esc(band[2])}</h3><div class="shop-grid">${items.map(row).join('')}</div></section>`).join('');
+  showModal('Camp merchant', `<p>Genuine Ragnarok Online equipment, priced from its own shop value. Bought gear goes to shared storage and is equipped from an adventurer's sheet at camp.</p><p class="shop-purse">Guild funds · ${number(state.inventory.zeny)} Zeny</p><div class="shop-tabs">${slots.map(slot => `<button data-shop-slot="${slot}" class="${slot === shopSlot ? 'is-on' : ''}">${esc(GEAR_SLOTS[slot])}</button>`).join('')}</div>${grid || '<p>No stock in this slot.</p>'}${modalError}`, 'GUILD CAMP · MERCHANT');
+}
 function camp() {
-  showModal('Back at the guild camp.', `<p>Recover and change jobs here. Deployed adventurers must retreat before they can use camp services.</p>${state.characters.map(c => `<div class="camp-unit"><img src="${sprites.portrait(c)}" alt=""><div><strong>${esc(c.name)} · ${JOBS[c.job].name}</strong><p>${c.mapId ? `At ${MAPS[c.mapId].name}${engaged(state, c) ? ' · In combat' : ''}` : c.status === 'down' ? 'Defeated · recovery needed' : `At camp · ${c.potions} potions`}</p></div><button data-camp-unit="${c.id}" data-service="${c.mapId ? 'retreat' : c.status !== 'down' && c.jobLevel >= promotionLevel(c.job) && c.level >= promotionRequirement(c.job).baseLevel ? 'advance' : 'recover'}">${c.mapId ? 'Recall' : c.status !== 'down' && c.jobLevel >= promotionLevel(c.job) && c.level >= promotionRequirement(c.job).baseLevel ? 'Choose job' : 'Recover'}</button></div>`).join('')}<div class="camp-actions"><button data-modal-action="recover-all">Recover at camp</button><button data-modal-action="supply-all">Refill camp potions · 2z each</button></div><p style="margin-top:15px">Recovery is free in this foundation. Refills bring each character to ten potions. Each potion restores 65 HP automatically below 45% HP.</p>${modalError}`);
+  showModal('Back at the guild camp.', `<p>Recover and change jobs here. Deployed adventurers must retreat before they can use camp services.</p>${state.characters.map(c => `<div class="camp-unit"><img src="${sprites.portrait(c)}" alt=""><div><strong>${esc(c.name)} · ${JOBS[c.job].name}</strong><p>${c.mapId ? `At ${MAPS[c.mapId].name}${engaged(state, c) ? ' · In combat' : ''}` : c.status === 'down' ? 'Defeated · recovery needed' : `At camp · ${c.potions} potions`}</p></div><button data-camp-unit="${c.id}" data-service="${c.mapId ? 'retreat' : c.status !== 'down' && c.jobLevel >= promotionLevel(c.job) && c.level >= promotionRequirement(c.job).baseLevel ? 'advance' : 'recover'}">${c.mapId ? 'Recall' : c.status !== 'down' && c.jobLevel >= promotionLevel(c.job) && c.level >= promotionRequirement(c.job).baseLevel ? 'Choose job' : 'Recover'}</button></div>`).join('')}<div class="camp-actions"><button data-modal-action="recover-all">Recover at camp</button><button data-modal-action="supply-all">Refill camp potions · 2z each</button><button data-modal-action="shop">Visit the merchant</button></div><p style="margin-top:15px">Recovery is free in this foundation. Refills bring each character to ten potions. Each potion restores 65 HP automatically below 45% HP.</p>${modalError}`);
 }
 const characterPages = [
   ['overview', 'Overview'], ['gear', 'Equipment'], ['skills', 'Skills'], ['stats', 'Stats'], ['job', 'Job path'],
@@ -521,9 +587,28 @@ function gearLoadout(c) {
   return `<div class="gear-sheet">${Object.entries(GEAR_SLOTS).map(([slot,label])=>{
     const equipped=c.gear[slot],item=equipped?GEAR_ITEMS[equipped.itemId]:null;
     const bag=(state.inventory.gearItems||[]).filter(instance=>gearFitsSlot(GEAR_ITEMS[instance.itemId],slot)&&canEquipGear(c.job,instance.itemId,c.level));
-    const rows=bag.map(instance=>{const base=GEAR_ITEMS[instance.itemId],worn=equipped?.uid===instance.uid;return `<div class="gear-choice"><span class="gear-ro-id">${base.roId}</span><div><strong>${esc(gearInstanceTitle(instance))}</strong><small>${esc(gearBaseDetails(base))}${gearAffixText(instance)?` · ${esc(gearAffixText(instance))}`:''}</small>${refineAction(instance,c.mapId||worn)}</div><button data-gear-equip="${instance.itemId}" data-gear-uid="${esc(instance.uid)}" data-slot="${slot}" ${c.mapId||worn?'disabled':''}>${worn?'Worn':'Equip'}</button></div>`;}).join('');
-    return `<section class="gear-slot"><div class="gear-slot-heading"><span class="eyebrow">${esc(label)}</span><strong>${equipped?esc(gearInstanceTitle(equipped)):'Empty'}</strong>${item?`<span class="gear-stat-line">${esc(gearBaseDetails(item))}${gearAffixText(equipped)?` · ${esc(gearAffixText(equipped))}`:''}</span>${refineAction(equipped,c.mapId)}<button class="text-button" data-gear-unequip="${slot}" ${c.mapId?'disabled':''}>Unequip</button>`:''}</div><div class="gear-choices">${rows||'<p class="muted">No eligible item instances in the bag.</p>'}</div></section>`;
-  }).join('')}</div>`;
+    const rows=bag.map(instance=>{const base=GEAR_ITEMS[instance.itemId],worn=equipped?.uid===instance.uid;return `<div class="gear-choice">${gearIconPath(base)?`<img class="gear-icon" src="${esc(gearIconPath(base))}" alt="" width="24" height="24" loading="lazy">`:''}<div><strong>${esc(gearInstanceTitle(instance))}</strong><small>${esc(gearBaseDetails(base))}${gearAffixText(instance)?` · ${esc(gearAffixText(instance))}`:''}</small>${refineAction(instance,c.mapId||worn)}</div><button data-gear-equip="${instance.itemId}" data-gear-uid="${esc(instance.uid)}" data-slot="${slot}" ${c.mapId||worn?'disabled':''}>${worn?'Worn':'Equip'}</button></div>`;}).join('');
+    return `<section class="gear-slot"><div class="gear-slot-heading"><span class="eyebrow">${esc(label)}</span>${item&&gearIconPath(item)?`<img class="gear-icon" src="${esc(gearIconPath(item))}" alt="" width="24" height="24" loading="lazy">`:''}<strong>${equipped?esc(gearInstanceTitle(equipped)):'Empty'}</strong>${item?`<span class="gear-stat-line">${esc(gearBaseDetails(item))}${gearAffixText(equipped)?` · ${esc(gearAffixText(equipped))}`:''}</span>${refineAction(equipped,c.mapId)}<button class="text-button" data-gear-unequip="${slot}" ${c.mapId?'disabled':''}>Unequip</button>`:''}</div><div class="gear-choices">${rows||'<p class="muted">No eligible item instances in the bag.</p>'}</div></section>`;
+  }).join('')}${gearSetSummary(c)}</div>`;
+}
+// The sets a character is wearing right now, and what each still needs. Sets are the only
+// place this game grants a bonus for wearing a *combination*, so it must be visible.
+function gearSetSummary(c) {
+  const active = activeGearSets(c);
+  const partial = GEAR_SETS.filter(set => !active.includes(set)
+    && Object.keys(c.gear || {}).some(slot => set.slots.includes(slot)
+      && set.items.includes(String(GEAR_ITEMS[c.gear[slot]?.itemId]?.roId))));
+  if (!active.length && !partial.length) return '';
+  const row = (set, done) => {
+    const missing = set.items.filter(id => String(id) !== String(0)).map(id => {
+      const key = Object.keys(GEAR_ITEMS).find(k => GEAR_ITEMS[k].roId === Number(id));
+      return GEAR_ITEMS[key]?.name || `#${id}`;
+    });
+    return `<div class="gear-set ${done ? 'is-active' : ''}"><strong>${esc(set.name)}</strong>
+      <small>${done ? 'Active' : 'Incomplete'} · ${esc(setBonusText(set))}${setUnmodelledText(set) ? ` · ${esc(setUnmodelledText(set))}` : ''}${setGatesText(set) ? ` · ${esc(setGatesText(set))}` : ''}</small>
+      <small>${missing.map(name => `<span>${esc(name)}</span>`).join(' + ')}</small></div>`;
+  };
+  return `<section class="gear-sets"><h4>Gear sets</h4>${active.map(set => row(set, true)).join('')}${partial.map(set => row(set, false)).join('')}</section>`;
 }
 function cardRows(character) {
   return Object.entries(CARDS).map(([id, card]) => {
@@ -683,7 +768,7 @@ function bag() {
     const { item, card, rank } = gearVariant(key);
     return `<div class="inventory-row"><div><strong>${rank ? '+' + rank + ' ' : ''}${EQUIPMENT[item].name}${card ? ' · ' + CARDS[card].name : ''}</strong><p>${EQUIPMENT[item].description}</p></div><span>×${number(count)}</span></div>`;
   }).join('');
-  const gearInstances=(state.inventory.gearItems||[]).map(instance=>`<div class="inventory-row"><div><strong>${esc(gearInstanceTitle(instance))}</strong><p>${esc(GEAR_SLOTS[GEAR_ITEMS[instance.itemId].slot])} · RO #${GEAR_ITEMS[instance.itemId].roId}${gearAffixText(instance)?` · ${esc(gearAffixText(instance))}`:''}</p></div>${refineAction(instance,selectedCharacters().length!==1||selectedCharacters()[0].mapId)}</div>`).join('')||'<p>No slot equipment stored.</p>';
+  const gearInstances=(state.inventory.gearItems||[]).map(instance=>`<div class="inventory-row">${gearIconPath(GEAR_ITEMS[instance.itemId])?`<img class="gear-icon" src="${esc(gearIconPath(GEAR_ITEMS[instance.itemId]))}" alt="" width="24" height="24" loading="lazy">`:''}<div><strong>${esc(gearInstanceTitle(instance))}</strong><p>${esc(GEAR_SLOTS[GEAR_ITEMS[instance.itemId].slot])} · RO #${GEAR_ITEMS[instance.itemId].roId}${gearAffixText(instance)?` · ${esc(gearAffixText(instance))}`:''}</p></div>${refineAction(instance,selectedCharacters().length!==1||selectedCharacters()[0].mapId)}</div>`).join('')||'<p>No slot equipment stored.</p>';
   const refineOres=['phracon','emveretarcon','oridecon','elunium','bradium','carnium'].map(id=>`<div class="inventory-row"><div><strong>${ITEMS[id].name}</strong></div><span>×${number(state.inventory.items[id]||0)}</span></div>`).join('');
   const refineExchanges=[['oridecon','bradium'],['elunium','carnium']].map(([from,to])=>`<div class="inventory-row"><div><strong>${ITEMS[to].name}</strong><p>3 ${ITEMS[from].name} + 50,000 Zeny</p></div><button data-refine-convert="${from}" data-refine-to="${to}" ${selectedCharacters().length!==1||selectedCharacters()[0].mapId||(state.inventory.items[from]||0)<3||state.inventory.zeny<50000?'disabled':''}>Exchange</button></div>`).join('');
   const materialNames = new Set([...Object.keys(state.inventory.materials), ...Object.keys(ORE_INFO)]);
@@ -934,6 +1019,13 @@ document.addEventListener('click', event => {
   if (field) { closeModal(); switchMap(field.dataset.guideMap); }
   const bounty = event.target.closest('[data-bounty]');
   if (bounty && issue({type:'bounty-' + bounty.dataset.bounty,id:bounty.dataset.id},{quiet:true})) bountyBoard();
+  const shopSlotButton = event.target.closest('[data-shop-slot]');
+  if (shopSlotButton) { shopSlot = shopSlotButton.dataset.shopSlot; shop(); }
+  const shopBuy = event.target.closest('[data-shop-buy]');
+  if (shopBuy) {
+    const key = shopBuy.dataset.shopBuy;
+    if (issue({ type: 'gear-buy', item: key })) { shop(); toast(`${GEAR_ITEMS[key].name} added to shared storage.`); }
+  }
   const forge = event.target.closest('[data-forge]');
   if (forge && issue({ type: 'forge', item: forge.dataset.forge }, { quiet: true })) { storage(); toast('Forged equipment added to shared storage.'); }
   const gearEquip=event.target.closest('[data-gear-equip]');if(gearEquip&&issue({type:'gear-equip',slot:gearEquip.dataset.slot,item:gearEquip.dataset.gearEquip,uid:gearEquip.dataset.gearUid},{quiet:true}))equipment();
@@ -955,6 +1047,7 @@ document.addEventListener('click', event => {
   if (modalAction === 'import') $('import-file').click();
   if (modalAction === 'save') { persist(); toast(saveError ? 'Save unavailable. Export a backup instead.' : 'Your guild is saved on this device.'); }
   if (modalAction === 'gm') { closeModal(); toggleGm(true); showGm(); }
+  if (modalAction === 'shop') shop();
   if (modalAction === 'reset') showModal('Begin another story?', '<p>This replaces the guild saved on this device. Export your current guild first if you want to keep it.</p><div class="modal-footer"><button data-modal-action="export">Export current guild</button><button data-modal-action="reset-confirm" class="danger-button">Replace with a new guild</button></div>');
   if (modalAction === 'reset-confirm') { localStorage.removeItem(SAVE_KEY); location.reload(); }
 });
@@ -1179,7 +1272,11 @@ async function start() {
   try {
     writable = await acquireWriter();
     if (!writable) { failure('Your guild is already open in another tab. Close that tab, then reload this one to continue.'); return; }
-    sprites = new Sprites(); await sprites.init(); renderer = new Renderer(canvas, sprites); Object.assign(renderer, displaySettings);
+    sprites = new Sprites(); await sprites.init();
+    // Real RO skill icons come from the import manifest; a missing route leaves
+    // that skill on its procedural tile rather than an empty box.
+    setSkillIconRoutes(sprites.index.skillIcons);
+    renderer = new Renderer(canvas, sprites); Object.assign(renderer, displaySettings);
     let loaded;
     try { loaded = loadGame(localStorage); } catch (err) { failure(err.message, true); return; }
     state = loaded.state; await settle(loaded.elapsed);
