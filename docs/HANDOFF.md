@@ -1,5 +1,44 @@
 # Milestone handoff — 2026-11-27
 
+## South Prontera expedition map and single-screen interface
+
+Deploy adventurers to South Prontera. Its camp exit leads to the Poring Meadow and
+the separate Fabre Thicket. Click the minimap or press Find to reach an adventurer.
+Pan by dragging, zoom with the buttons or the wheel, and right-click ground to move.
+Set a hunting area per character (Hunt area or Centre on unit). Choosing a map
+or hunting area changes where the character farms, and the camera never pauses
+or changes other teams' results.
+
+Desktop keeps the roster, map switcher and command bar on screen. Equipment, jobs,
+stats, storage, bounties and the field guide open as panels. Phones use roster
+portraits, a horizontal map strip and bottom sheets. Panels keep selection and
+camera position when they open and close. Reduced-motion users get no panel or
+order animation.
+
+Rules to keep: redeploying starts a fresh expedition and clears the old hunting area.
+Redeploying or switching maps while in a fight is refused; retreat to camp first.
+Terrain is decorative and has no collision yet. The chunk cache is bounded at 96 and
+must stay at least as large as the largest map's full-view chunk count (meadow ≈63).
+
+Open gaps: no authored South Prontera layout exists upstream, so the layout is
+procedural. Other terrain families (sand, water, cliff, bridge) are unimported. There
+is no navigation or collision model. The Eddga import is not present in this
+workspace, and the Endless Tower task in NEXT-AGENT.md is now deferred.
+
+## Transcendent jobs
+
+At second Job Lv. 50, advance at camp to Lord Knight, High Priest, High Wizard,
+Whitesmith, Sniper or Assassin Cross. This direct advancement keeps Base level,
+personal attributes, prepared elements, gear, cards and refinement. Each line
+has native male and female body art and an upgraded combat specialty.
+
+## Equipment refinement
+
+Open Equipment at camp with field gear equipped. Each successful refinement adds
+2 attack and 1 defense, up to +3. Emveretarcon drops from Zombies and Archer
+Skeletons. Stored gear keeps its rank when a card is added, removed or replaced.
+The inventory groups identical item, card and rank combinations.
+
 ## Payon Cave
 
 Hunt slow Zombies and ranged Archer Skeletons. Acolytes and Priests can prepare

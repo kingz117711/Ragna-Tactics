@@ -10,4 +10,7 @@ await cp(resolve(root, 'index.html'), resolve(output, 'index.html'));
 await cp(resolve(root, 'src'), resolve(output, 'src'), { recursive: true });
 await cp(resolve(root, 'public/assets'), resolve(output, 'assets'), { recursive: true });
 await cp(resolve(root, 'ASSET-CREDITS.md'), resolve(output, 'ASSET-CREDITS.md'));
-console.log('Built dist/: index.html, source modules, local assets, and asset credits.');
+await cp(resolve(root, 'licenses'), resolve(output, 'licenses'), { recursive:true });
+await mkdir(resolve(output,'docs'),{recursive:true});
+await cp(resolve(root,'docs/RENEWAL-SYSTEM.md'),resolve(output,'docs/RENEWAL-SYSTEM.md'));
+console.log('Built dist/: index, modules, local assets, asset credits, and third-party notices.');

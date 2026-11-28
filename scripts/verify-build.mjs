@@ -6,7 +6,9 @@ import assert from 'node:assert/strict';
 import { chromium } from '@playwright/test';
 const root = resolve('dist');
 const files = await readdir(root);
-assert.deepEqual(files.sort(), ['ASSET-CREDITS.md', 'assets', 'index.html', 'src'].sort());
+assert.deepEqual(files.sort(), ['ASSET-CREDITS.md','assets','docs','index.html','licenses','src'].sort());
+assert.ok((await readdir(resolve(root,'licenses'))).includes('rathena-GPL-3.0.txt'));
+assert.ok((await readFile(resolve(root,'docs/RENEWAL-SYSTEM.md'),'utf8')).includes('iRO Renewal'));
 const mime = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.webp': 'image/webp' };
 const server = createServer(async (req, res) => {
   try {
