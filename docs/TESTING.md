@@ -29,7 +29,7 @@ and failover, concurrent maps, party EXP, equipment transfers, retreat/defeat,
 boss rewards, deterministic results, exact offline/live parity, four-hour cap,
 legacy tactics defaults, corrupt-save recovery, and invalid import rejection.
 
-Asset verification is offline. It checks all 67 original files against pinned
+Asset verification is offline. It checks all 91 original files against pinned
 hashes/lengths and checks the derived runtime index against original catalogs.
 Build emits only runtime files/assets and credits in `dist/`, excluding repo
 metadata, test tools, secrets, and development documentation.
@@ -53,7 +53,14 @@ six-hour absence capped at four hours, hidden-tab checkpoint retention, and mobi
 camp/additive-selection controls. Tests construct their own save fixtures in isolated
 browser contexts. There are no production cheat buttons or global state hooks.
 
-Screenshots: `artifacts/foundation-desktop.png`, `foundation-boss.png`,
+South Prontera scenarios: two hunting areas kept across a map switch, a guild reload
+that checks areas, radii, maps and kills, minimap navigation with Find, the phone
+details sheet, and no page scrolling at 1366×768, 1440×900 and 390×844.
+Playwright test timeouts use `test.setTimeout()` inside the test body. The options
+object form is ignored.
+
+Screenshots: `artifacts/viewport-1366x768.png`, `viewport-1440x900.png`,
+`viewport-390x844.png`, and `artifacts/foundation-desktop.png`, `foundation-boss.png`,
 `foundation-mobile.png`, and `world-overview.png`. Inspect them after visual changes;
 these were refreshed and inspected on 2026-11-27. They are ignored by git. The
 [CI template](ci/README.md) uploads them when enabled. A skipped run is not a pass.

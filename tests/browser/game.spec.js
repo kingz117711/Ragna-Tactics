@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { createGame, gainExp } from '../../src/sim.js';
 import { encodeSave } from '../../src/persistence.js';
+import { fitZoom, project } from '../../src/renderer.js';
 const boot = async page => { await page.goto('/'); await expect(page.locator('#loading')).toBeHidden({ timeout: 20000 }); };
 test('hunt orders work by touch and respect reduced motion', async ({ browser, baseURL }) => {
   const context = await browser.newContext({ hasTouch: true, reducedMotion: 'reduce', viewport: { width: 390, height: 844 }, baseURL });
@@ -12,7 +13,8 @@ test('hunt orders work by touch and respect reduced motion', async ({ browser, b
     await page.locator('[data-action="rally"]').tap();
     await expect(page.locator('[data-action="rally"]')).toHaveAttribute('aria-pressed', 'true');
     await page.getByLabel('Radius').selectOption('3');
-    await page.locator('#battlefield').tap({ position: { x: 195, y: 240 } });
+    // Open ground above the order hint (which carries the interactive hunt tools).
+    await page.locator('#battlefield').tap({ position: { x: 195, y: 120 } });
     await expect(page.locator('#order-hint')).toBeHidden();
     expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).state.characters.every(c => c.farmRadius === 3))).toBe(true);
     await page.locator('[data-action="rally"]').tap();
@@ -177,7 +179,8 @@ test('move, hold, focus, retreat, resume, multi-map overview and character navig
   const saved = () => page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).state);
   await page.locator('[data-character="c1"]').click();
   const box = await page.locator('#battlefield').boundingBox();
-  const scale = Math.max(0.35, Math.min(1.15, box.width / 1510, (box.height - 100) / 800));
+  // Click→world must mirror the renderer's own fit for South Prontera's bounds.
+  const scale = fitZoom('meadow', box.width, box.height);
   const clickWorld = async (x, y, hitOffset = -15) => page.locator('#battlefield').click({ position: {
     x: box.width / 2 + (x - y) * 22 * scale,
     y: box.height / 2 + 20 + (x + y) * 11 * scale + hitOffset * scale,
@@ -247,6 +250,48 @@ test('closing a hidden tab preserves the checkpoint time for offline rewards', a
   const closingCheckpoint = await page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).savedAt);
   expect(closingCheckpoint).toBe(hiddenCheckpoint);
 });
+test('switching tabs catches up live simulation silently, including active boss fights', async ({ page }) => {
+  const s = createGame();
+  const { command } = await import('../../src/sim.js');
+  command(s, { type: 'deploy', ids: ['c1', 'c2'], mapId: 'arena' });
+  await page.addInitScript(raw => localStorage.setItem('ragna-tactics:save:v1', raw), encodeSave(s));
+  await boot(page);
+  const before = await readSave(page);
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  const hiddenCheckpoint = await page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).savedAt);
+  await page.clock.setFixedTime(new Date(hiddenCheckpoint + 12_000));
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect.poll(async () => (await readSave(page)).time, { timeout: 30000 }).toBeGreaterThan(before.time + 10);
+  await expect(page.locator('#modal')).toBeHidden();
+  const after = await readSave(page);
+  expect(after.maps.arena.bossTimer).not.toBe(before.maps.arena.bossTimer);
+  expect(after.journal.some(entry => /Away report/.test(entry.message))).toBe(false);
+});
+test('the guild bag exposes equipment, personal Red Potions, refinement ores, and camp restock', async ({ page }) => {
+  const s = createGame(); s.inventory.zeny = 150;
+  s.inventory.materials = { Emveretarcon: 2, Oridecon: 1, Elunium: 1 };
+  s.inventory.equipment.iron = 1; s.characters[0].potions = 5;
+  await page.addInitScript(raw => localStorage.setItem('ragna-tactics:save:v1', raw), encodeSave(s));
+  await boot(page); await page.locator('#bag-button').click();
+  await expect(page.locator('#modal-title')).toHaveText('Guild bag');
+  await expect(page.locator('#modal')).toContainText('Oridecon');
+  await expect(page.locator('#modal')).toContainText('Elunium');
+  await expect(page.locator('#modal')).toContainText('Red Potion · Aren');
+  await page.locator('[data-bag-restock="c1"]').click();
+  await expect.poll(async () => { const s = await readSave(page); return [s.characters[0].potions, s.inventory.zeny]; }).toEqual([10, 140]);
+  await page.locator('[data-bag-equipment]').click();
+  await expect(page.locator('#modal-title')).toContainText('equipment');
+  await page.locator('[data-equip="iron"]').click();
+  await page.locator('[data-refine="1"]').click();
+  await expect(page.locator('#modal')).toContainText('+1 Iron armament');
+});
+
 test('mobile camp access and additive selection stay available without a keyboard', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 }); await boot(page);
   await page.getByRole('button', { name: 'Manage guild camp' }).click(); await expect(page.locator('#modal-title')).toContainText('guild camp');
@@ -351,7 +396,7 @@ test('prepare elemental magic and use the field guide to find a weak target', as
 });
 
 test('settle a split guild, craft the Payon ward, prepare Holy magic and deploy', async ({page}) => {
-  const s=createGame(), {command,stats}=await import('../../src/sim.js');
+  const s=createGame(1), {command,stats}=await import('../../src/sim.js');
   for (const [i,c] of s.characters.entries()) {
     c.job=i?'hunter':'priest'; c.assignment='materials'; c.level=45; c.hp=stats(c).hp; c.sp=stats(c).sp;
     command(s,{type:'deploy',ids:[c.id],mapId:i?'morroc':'payon'});
@@ -374,4 +419,156 @@ test('settle a split guild, craft the Payon ward, prepare Holy magic and deploy'
   await page.locator('#battlefield').screenshot({path:'artifacts/payon-cave.png'});
   await page.setViewportSize({width:390,height:844});
   await page.locator('#battlefield').screenshot({path:'artifacts/payon-mobile.png'});
+});
+
+test('refine equipped gear at camp and inspect the next material cost',async({page})=>{
+  const s=createGame(); s.characters[0].equipment='guard'; s.inventory.materials.Emveretarcon=2;
+  await page.addInitScript(raw=>{if(!localStorage.length)localStorage.setItem('ragna-tactics:save:v1',raw);},encodeSave(s));
+  await boot(page); await page.locator('[data-character="c1"]').first().click();
+  await page.locator('[data-action="equipment"]').click(); await page.locator('[data-refine="1"]').click();
+  await expect(page.locator('#modal h3')).toContainText('+1 Guard insignia');
+  await expect(page.locator('[data-refine="2"]')).toBeDisabled();
+  await page.locator('#modal').screenshot({path:'artifacts/refinement.png'});
+});
+
+test('advance to High Wizard and retain the equipped elemental spell',async({page})=>{
+  const s=createGame();Object.assign(s.characters[0],{job:'wizard',jobLevel:50,element:'earth'});
+  await page.addInitScript(raw=>{if(!localStorage.length)localStorage.setItem('ragna-tactics:save:v1',raw);},encodeSave(s));
+  await boot(page);await page.locator('#job-notice').click();await page.locator('[data-camp-unit="c1"]').click();
+  await page.locator('[value="highWizard"]').check();
+  await page.locator('#modal').screenshot({path:'artifacts/transcendent.png'});
+  await page.locator('#job-form button.primary').click();await page.locator('[data-action="spellbook"]').click();
+  await expect(page.locator('[data-attune="earth"]')).toHaveText('Prepared');
+  await page.reload();await expect(page.locator('.character-card').first()).toContainText('High Wizard');
+});
+
+// ---------------------------------------------------------------- milestone: larger maps + single-screen interface
+
+const readSave = page => page.evaluate(() => JSON.parse(localStorage.getItem('ragna-tactics:save:v1')).state);
+const clickWorld = async (page, x, y) => {
+  const box = await page.locator('#battlefield').boundingBox();
+  const zoom = fitZoom('meadow', box.width, box.height);
+  const p = project(x, y);
+  await page.locator('#battlefield').click({ position: { x: box.width / 2 + p.x * zoom, y: box.height / 2 + 20 + p.y * zoom } });
+};
+
+test('South Prontera holds two separate hunting areas and both teams keep farming across a map switch', { timeout: 120000 }, async ({ page }) => {
+  test.setTimeout(120000);
+  const errors = []; page.on('pageerror', e => errors.push(e.message));
+  await boot(page);
+  await page.getByRole('button', { name: 'Plan your first expedition' }).click();
+  await page.locator('#deployment-form button.primary').click();
+  await expect(page.locator('#map-population')).toContainText('2 adventurers');
+  // Aren hunts the Poring Meadow (radius 3), Lyra the Fabre Thicket (radius 10).
+  await page.locator('[data-character="c1"]').click();
+  await page.locator('[data-action="rally"]').click();
+  await page.getByLabel('Radius').selectOption('3');
+  await clickWorld(page, -25, 17);
+  await expect.poll(async () => (await readSave(page)).characters[0].farmRadius).toBe(3);
+  await page.locator('[data-character="c2"]').click();
+  await page.locator('[data-action="rally"]').click();
+  await page.getByLabel('Radius').selectOption('10');
+  await clickWorld(page, 23, 8);
+  await expect.poll(async () => (await readSave(page)).characters[1].farmRadius).toBe(10);
+  const areas = await readSave(page);
+  // Click→world has sub-pixel rounding; the areas must be the intended spots.
+  expect(Math.hypot(areas.characters[0].farmCenter.x + 25, areas.characters[0].farmCenter.y - 17)).toBeLessThan(1);
+  expect(Math.hypot(areas.characters[1].farmCenter.x - 23, areas.characters[1].farmCenter.y - 8)).toBeLessThan(1);
+  expect(areas.characters[0].farmCenter).not.toEqual(areas.characters[1].farmCenter);
+  // Send Lyra to Willow Wood; Aren must keep farming the meadow unattended.
+  // (Redeploying out of an active fight is refused — retreat to camp first.)
+  await page.locator('[data-character="c2"]').click();
+  await page.locator('[data-action="retreat"]').click();
+  await expect.poll(async () => (await readSave(page)).characters[1].mapId, { timeout: 20000 }).toBeNull();
+  await page.locator('[data-character="c2"]').click();
+  await page.locator('[data-action="deploy"]').click();
+  await page.locator('input[value="forest"]').check();
+  await expect(page.locator('input[value="forest"]')).toBeChecked();
+  await page.locator('#deployment-form button.primary').click();
+  await expect.poll(async () => (await readSave(page)).characters[1].mapId).toBe('forest');
+  await expect.poll(async () => (await readSave(page)).characters[0].kills, { timeout: 25000 }).toBeGreaterThan(0);
+  await expect.poll(async () => (await readSave(page)).characters[1].kills, { timeout: 30000 }).toBeGreaterThan(0);
+  const after = await readSave(page);
+  expect(Math.hypot(after.characters[0].farmCenter.x + 25, after.characters[0].farmCenter.y - 17)).toBeLessThan(1);
+  expect(after.characters[0].farmRadius).toBe(3);
+  expect(after.characters[1].mapId).toBe('forest');
+  // Reload the guild: hunting areas, radii, map assignments and kills must persist.
+  await page.reload(); await expect(page.locator('#loading')).toBeHidden();
+  const reloaded = await readSave(page);
+  expect(reloaded.characters[0].farmRadius).toBe(3);
+  expect(Math.hypot(reloaded.characters[0].farmCenter.x + 25, reloaded.characters[0].farmCenter.y - 17)).toBeLessThan(1);
+  // Redeploying starts a fresh expedition, so Lyra's Thicket area was cleared on deploy (by design).
+  expect(reloaded.characters[1].farmRadius).toBeUndefined();
+  expect(reloaded.characters[1].mapId).toBe('forest');
+  expect(reloaded.characters[0].kills).toBeGreaterThanOrEqual(after.characters[0].kills);
+  expect(errors).toEqual([]);
+});
+
+test('minimap click navigates the camera and Find cycles to an adventurer', async ({ page }) => {
+  await boot(page);
+  await page.getByRole('button', { name: 'Plan your first expedition' }).click();
+  await page.locator('#deployment-form button.primary').click();
+  await expect(page.locator('#map-population')).toContainText('2 adventurers');
+  const label0 = await page.locator('#minimap').getAttribute('aria-label');
+  expect(label0).toContain('Minimap of South Prontera');
+  expect(label0).toContain('Camera centred at');
+  expect(label0).toContain('Aren');
+  expect(label0).toContain('Lyra');
+  const box = await page.locator('#minimap').boundingBox();
+  await page.locator('#minimap').click({ position: { x: box.width * 0.78, y: box.height * 0.25 } });
+  await expect.poll(() => page.locator('#minimap').getAttribute('aria-label')).not.toBe(label0);
+  const label1 = await page.locator('#minimap').getAttribute('aria-label');
+  expect(label1).toContain('Camera centred at');
+  await page.locator('#find-unit').click();
+  await expect(page.locator('.character-card.selected')).toHaveCount(1);
+  const label2 = await page.locator('#minimap').getAttribute('aria-label');
+  expect(label2).not.toBe(label1);
+  expect(label2).toContain('Camera centred at');
+});
+
+test('phone details sheet and panels open and close without losing selection or camera', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await boot(page);
+  await page.locator('[data-character="c1"]').click();
+  // Unit positions tick in the label; only the camera fragment must be stable.
+  const cameraPart = async () => (await page.locator('#minimap').getAttribute('aria-label')).match(/Camera centred at -?\d+, -?\d+/)[0];
+  const camera0 = await cameraPart();
+  await page.locator('#detail-toggle').click();
+  await expect(page.locator('#detail-toggle')).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.locator('#detail-stack')).toBeVisible();
+  await page.locator('[data-action="equipment"]').click();
+  await expect(page.locator('#modal')).toBeVisible();
+  await page.locator('#modal-close').click();
+  await expect(page.locator('.character-card.selected')).toHaveCount(1);
+  await page.locator('#stack-close').click();
+  await expect(page.locator('#detail-toggle')).toHaveAttribute('aria-expanded', 'false');
+  await expect.poll(cameraPart).toBe(camera0);
+  const overflow = await page.evaluate(() => document.documentElement.scrollHeight - document.documentElement.clientHeight);
+  expect(overflow).toBeLessThanOrEqual(0);
+});
+
+test('single-screen layout at every acceptance viewport never scrolls the page', async ({ page }) => {
+  for (const [w, h] of [[1366, 768], [1440, 900], [390, 844]]) {
+    await page.setViewportSize({ width: w, height: h });
+    await boot(page);
+    if (w === 1366) {
+      await page.locator('#first-deploy').click();
+      await page.locator('#deployment-form button.primary').click();
+    }
+    await expect(page.locator('#map-population')).toContainText('2 adventurers');
+    const metrics = await page.evaluate(() => ({
+      vertical: document.documentElement.scrollHeight - document.documentElement.clientHeight,
+      horizontal: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      field: (() => { const r = document.querySelector('.battlefield').getBoundingClientRect(); return r.width * r.height; })(),
+      roster: (() => { const r = document.querySelector('.roster-panel').getBoundingClientRect(); return r.width * r.height; })(),
+      sidebar: (() => { const r = document.querySelector('.sidebar').getBoundingClientRect(); return r.width * r.height; })(),
+      fieldVisible: document.querySelector('.battlefield').getBoundingClientRect().height,
+    }));
+    expect(metrics.vertical, `page scrolls vertically at ${w}x${h}`).toBeLessThanOrEqual(0);
+    expect(metrics.horizontal, `page scrolls horizontally at ${w}x${h}`).toBeLessThanOrEqual(0);
+    expect(metrics.fieldVisible, `battlefield too small at ${w}x${h}`).toBeGreaterThanOrEqual(300);
+    expect(metrics.field, `battlefield not largest at ${w}x${h}`).toBeGreaterThan(metrics.roster);
+    expect(metrics.field, `battlefield not largest at ${w}x${h}`).toBeGreaterThan(metrics.sidebar);
+    await page.screenshot({ path: `artifacts/viewport-${w}x${h}.png` });
+  }
 });

@@ -1,18 +1,66 @@
-import { RENEWAL_JOBS, SKILL_TREES, SKILL_INDEX, JOB_BUILDS, jobCap, jobRequirement } from './renewal.js';
-export { RENEWAL_JOBS, SKILL_TREES, SKILL_INDEX, JOB_BUILDS, jobCap, jobRequirement };
+import { RENEWAL_JOBS, BUILD_FAMILIES, STATUS_EFFECTS } from './renewal.js';
+
 export const HUNT_RADII = [3, 6, 10];
 export const DEFAULT_HUNT_RADIUS = 6;
 export const VERSION = 1;
 export const STEP = 0.1;
 export const OFFLINE_CAP = 4 * 60 * 60;
+// RO fields span broad, connected hunting grounds rather than small combat pads.
+// Coordinates are game-world units; source-map names in MAP-RESEARCH.md are visual references.
 export const MAPS = {
-  meadow: { id: 'meadow', name: 'South Prontera', subtitle: 'A quiet beginning', tier: 'FIELD · LV 1–4', color: '#91b27d', monster: 'poring', count: 8, radius: 16 },
-  forest: { id: 'forest', name: 'Willow Wood', subtitle: 'Beyond the familiar paths', tier: 'FIELD · LV 4–8', color: '#698a7b', monster: 'willow', count: 7, radius: 16 },
-  payon: { id: 'payon', name: 'Payon Cave', subtitle: 'Lanterns beneath the eastern ridge', tier: 'DUNGEON · LV 12–18', color: '#a49bb9', monster: 'zombie', count: 8, radius: 16 },
-  morroc: { id: 'morroc', name: 'Morroc Dunes', subtitle: 'The southern caravan road', tier: 'FIELD · LV 8–14', color: '#cba976', monster: 'scorpion', count: 8, radius: 16 },
-  arena: { id: 'arena', boss: true, name: 'The Broken Sanctuary', subtitle: 'Something stirs beneath the ruins', tier: 'BOSS · PARTY RECOMMENDED', color: '#807e95', monster: 'baphomet', count: 1, radius: 16 },
+  meadow: {
+    id: 'meadow', name: 'South Prontera', subtitle: 'A quiet beginning', tier: 'FIELD · LV 1–4', color: '#91b27d', monster: 'poring', count: 12, radius: 16,
+    bounds: { x: 42, y: 32 }, terrain: { base: 'grass_olive', accent: 'grass_blossom', path: 'dirt_path', edge: 'cliff_rock' },
+    camp: { x: -35, y: 26 }, deploy: { x: -27, y: 19 },
+    zones: [
+      { kind: 'poring', x: -25, y: 17, r: 12, label: 'Poring Meadow' },
+      { kind: 'fabre', x: 23, y: 8, r: 12, label: 'Fabre Thicket' },
+    ],
+    road: [
+      [[-35, 26], [-31, 21], [-25, 17], [-12, 13], [1, 11], [14, 9], [23, 8]],
+      [[1, 11], [4, 3], [3, -7], [6, -18], [10, -29]],
+      [[-12, 13], [-20, 6], [-25, -4], [-28, -15]],
+    ],
+    scenery: {
+      border: ['tree_tall_cluster', 'tree_sapling', 'tree_bush_bright'],
+      props: [
+        { id: 'house_prontera', x: -39, y: 28 },
+        { id: 'lantern_stone', x: -33, y: 23 },
+        { id: 'lantern_stone', x: -37, y: 29 },
+        { id: 'standing_stone', x: 1, y: 13 },
+        { id: 'tree_bush_bright', x: -18, y: 5 },
+        { id: 'tree_bush_bright', x: -5, y: 1 },
+        { id: 'tree_bush_bright', x: 18, y: 18 },
+        { id: 'tree_sapling', x: -20, y: -2 },
+        { id: 'tree_sapling', x: -11, y: 20 },
+        { id: 'rock_boulder_mossy', x: 30, y: 2 },
+        { id: 'rock_boulder_mossy', x: 15, y: 22 },
+        { id: 'rock_cliff_crag', x: 34, y: 12 },
+        { id: 'tree_tall_cluster', x: 36, y: 4, scale: 0.95 },
+        { id: 'tree_tall_cluster', x: 8, y: 25, scale: 0.9 },
+        { id: 'tree_tall_cluster', x: -25, y: -20, scale: 1.05 },
+      ],
+    },
+  },
+  forest: {
+    id: 'forest', name: 'Willow Wood', subtitle: 'Beyond the familiar paths', tier: 'FIELD · LV 4–8', color: '#698a7b', monster: 'willow', count: 7, radius: 16,
+    bounds: { x: 32, y: 27 }, terrain: { base: 'grass_forest', accent: 'grass_olive', path: 'dirt_payon', edge: 'cliff_rock' },
+    road: [[[-29, 22], [-16, 10], [-4, 2], [8, -6], [29, -23]]],
+    scenery: {
+      border: ['tree_tall_cluster', 'tree_bush_bright'],
+      props: [
+        { id: 'tree_tall_cluster', x: -20, y: -12, scale: 1.05 }, { id: 'tree_tall_cluster', x: 18, y: -17 },
+        { id: 'tree_tall_cluster', x: 24, y: 12, scale: 0.95 }, { id: 'tree_tall_cluster', x: -17, y: 20, scale: 1.1 },
+        { id: 'tree_bush_bright', x: 15, y: -3 }, { id: 'tree_bush_bright', x: -22, y: 7 },
+      ],
+    },
+  },
+  payon: { id: 'payon', name: 'Payon Cave', subtitle: 'Lanterns beneath the eastern ridge', tier: 'DUNGEON · LV 12–18', color: '#a49bb9', monster: 'zombie', count: 8, radius: 16, bounds: { x: 29, y: 27 }, terrain: { base: 'ruin_cobble', accent: 'cliff_rock', path: 'dirt_payon', edge: 'cliff_rock' }, road: [[[-26, 20], [-12, 12], [-3, 1], [10, -8], [26, -19]]], scenery: { border: ['rock_cliff_crag', 'rock_boulder_mossy'] } },
+  morroc: { id: 'morroc', name: 'Morroc Dunes', subtitle: 'The southern caravan road', tier: 'FIELD · LV 8–14', color: '#cba976', monster: 'scorpion', count: 8, radius: 16, bounds: { x: 33, y: 27 }, terrain: { base: 'sand', accent: 'sand_dark', path: 'dirt_path', edge: 'cliff_sand' }, road: [[[-30, 22], [-17, 13], [-4, 4], [10, -5], [29, -21]]], scenery: { border: ['rock_boulder_mossy', 'rock_cliff_crag'] } },
+  arena: { id: 'arena', boss: true, name: 'The Broken Sanctuary', subtitle: 'Something stirs beneath the ruins', tier: 'BOSS · PARTY RECOMMENDED', color: '#807e95', monster: 'baphomet', count: 1, radius: 16, bounds: { x: 22, y: 20 }, terrain: { base: 'ruin_cobble', accent: 'cliff_rock', path: 'ruin_cobble', edge: 'cliff_rock' }, scenery: { border: ['standing_stone', 'rock_cliff_crag'] } },
 };
-MAPS.lair = { id: 'lair', boss: true, name: 'Sandsea Hollow', subtitle: 'Beneath the caravan road', tier: 'MVP · LV 18+', color: '#c38667', monster: 'phreeoni', count: 1, radius: 16 };
+MAPS.lair = { id: 'lair', boss: true, name: 'Sandsea Hollow', subtitle: 'Beneath the caravan road', tier: 'MVP · LV 18+', color: '#c38667', monster: 'phreeoni', count: 1, radius: 16, bounds: { x: 25, y: 23 }, terrain: { base: 'sand_dark', accent: 'sand', path: 'sand', edge: 'cliff_sand' }, scenery: { border: ['rock_cliff_crag', 'rock_boulder_mossy'] } };
+export const mapBounds = mapId => MAPS[mapId]?.bounds || { x: 15, y: 15 };
 export const JOBS = {
   novice: { name: 'Novice', native: 0, role: 'A new beginning', hp: 100, atk: 10, def: 1, range: 1.8, speed: 3.1, interval: 1.05, skill: 'First Aid', cost: 8, cooldown: 10, description: 'Recover your own HP. Learn the basics before choosing a path.' },
   swordsman: { name: 'Swordsman', native: 1, role: 'Frontline · protection', hp: 180, atk: 17, def: 5, range: 1.9, speed: 3.1, interval: 1.05, skill: 'Bash', cost: 7, cooldown: 5, description: 'A heavy strike that draws enemy attention.' },
@@ -30,27 +78,84 @@ const secondJobs = {
   hunter: { parent: 'archer', native: 11, name: 'Hunter', hp: 155, atk: 22, def: 3, range: 8, skill: 'Blitz Beat', description: 'Your falcon strikes the target and up to two nearby enemies.', splash: 4, cost: 12 },
   assassin: { parent: 'thief', native: 12, name: 'Assassin', hp: 165, atk: 23, def: 4, skill: 'Sonic Blow', description: 'Burst down a single foe. Deals extra damage below half health.', cost: 12 },
 };
-for (const [id, job] of Object.entries(secondJobs)) JOBS[id] = { ...JOBS[job.parent], ...job, tier: 2 };
+for (const [id, job] of Object.entries(secondJobs)) JOBS[id] = { ...JOBS[job.parent], ...job };
+const transcendent = {
+  lordKnight: { parent:'knight', native:4008, name:'Lord Knight', hp:325, atk:34, def:12, splash:5, skill:'Spiral Pierce', description:'A sweeping spear strike draws enemies within five tiles.' },
+  highPriest: { parent:'priest', native:4009, name:'High Priest', hp:220, atk:22, def:6, skill:'High Sanctuary', description:'Group healing also restores 5 SP to each injured ally.' },
+  highWizard: { parent:'wizard', native:4010, name:'High Wizard', hp:172, atk:39, def:3, splash:5.5, description:'Amplified elemental spells hit a wider area and stagger foes.' },
+  whitesmith: { parent:'blacksmith', native:4011, name:'Whitesmith', hp:265, atk:32, def:9, skill:'Cart Termination', description:'An empowered hammer strike staggers enemies for three seconds. Retains the camp forge discount.' },
+  sniper: { parent:'hunter', native:4012, name:'Sniper', hp:195, atk:31, def:5, range:9, skill:'Falcon Assault', description:'Your falcon strikes the target and up to four nearby enemies.' },
+  assassinCross: { parent:'assassin', native:4013, name:'Assassin Cross', hp:225, atk:31, def:6, skill:'Soul Breaker', description:'A finishing strike deals five times attack to enemies below half HP.' },
+};
+for (const [id, job] of Object.entries(transcendent)) JOBS[id] = { ...JOBS[job.parent], ...job, mastery: job.parent, tier: 'transcendent', jobLevelCap: 50 };
 for (const [id, job] of Object.entries(RENEWAL_JOBS)) {
-  if (JOBS[id]) {
-    JOBS[id] = { ...JOBS[id], parent: job.parent, tier: job.tier, family: job.kit, role: JOBS[id].role || job.role, spriteNative: JOBS[id].native };
-    continue;
-  }
-  const parent = JOBS[job.parent];
-  JOBS[id] = { ...parent, name: job.name, parent: job.parent, tier: job.tier, family: job.kit,
-    role: job.role, spriteNative: parent.spriteNative ?? parent.native,
-    hp: parent.hp + 24 * (job.tier - 1), atk: parent.atk + 5 * (job.tier - 1),
-    def: parent.def + Math.floor((job.tier - 1) * 1.5),
-    skill: SKILL_TREES[id][0].name, description: `${job.name} · ${job.role} specialist.`,
-    cost: parent.cost ?? 10, cooldown: parent.cooldown ?? 6 };
+  const base = JOBS[job.parent];
+  JOBS[id] = { ...base, ...job, parent: job.parent, jobLevelCap: job.tier.includes('Third') || job.tier === 'third' ? 70 : 50,
+    mastery: job.tier === 'transcendent' ? job.parent : undefined };
 }
+const CLASS_FAMILY_FOR_JOB = {
+  knight:'knight', lordKnight:'knight', runeKnight:'knight', crusader:'crusader', paladin:'crusader', royalGuard:'crusader',
+  wizard:'wizard', highWizard:'wizard', warlock:'wizard', sage:'sage', professor:'sage', sorcerer:'sage',
+  hunter:'hunter', sniper:'hunter', ranger:'hunter', bard:'bard', clown:'bard', minstrel:'bard', dancer:'dancer', gypsy:'dancer', wanderer:'dancer',
+  priest:'priest', highPriest:'priest', archBishop:'priest', monk:'monk', champion:'monk', sura:'monk',
+  blacksmith:'blacksmith', whitesmith:'blacksmith', mechanic:'blacksmith', alchemist:'alchemist', creator:'alchemist', genetic:'alchemist',
+  assassin:'assassin', assassinCross:'assassin', guillotineCross:'assassin', rogue:'rogue', stalker:'rogue', shadowChaser:'rogue',
+};
 for (const [id, job] of Object.entries(JOBS)) {
-  if (id !== 'novice' && !job.parent) { job.parent = 'novice'; job.tier ??= 1; }
-  job.spriteNative ??= job.native;
+  if (!job.tier) job.tier = id === 'novice' ? 'novice' : job.parent ? 'second' : 'first';
+  if (!job.jobLevelCap) job.jobLevelCap = id === 'novice' ? 10 : 50;
+  if (!job.family) job.family = CLASS_FAMILY_FOR_JOB[id] || (job.parent ? JOBS[job.parent]?.family || job.parent : id);
 }
-export function promotionLevel(job) { return jobRequirement(job).jobLevel; }
+export const CLASS_BUILDS = BUILD_FAMILIES;
+export const STATUS = STATUS_EFFECTS;
+export const BASE_CLASS_PROFILE = {
+  novice: { hp:100, atk:10, def:1, range:2, speed:3, interval:1.2, skill:'First Aid', cost:8, cooldown:10, description:'A flexible start; choose a role through job advancement.' },
+  knight: { hp:250, atk:25, def:8, range:2, speed:3.1, interval:1.05, skill:'Pierce', cost:11, cooldown:5, description:'A durable melee striker who can draw monster focus.' },
+  crusader: { hp:245, atk:22, def:12, range:2, speed:2.9, interval:1.15, skill:'Shield Charge', cost:12, cooldown:6, description:'A shield-bearing frontline protector.' },
+  wizard: { hp:135, atk:29, def:2, range:6, speed:3, interval:1.5, skill:'Storm Gust', cost:16, cooldown:6, splash:4, description:'Elemental area spells with cast windows and crowd control.' },
+  sage: { hp:155, atk:21, def:4, range:6, speed:3, interval:1.4, skill:'Dispell', cost:12, cooldown:6, description:'Elemental control and team enchantments.' },
+  hunter: { hp:155, atk:22, def:3, range:8, speed:3.4, interval:.9, skill:'Focused Arrow Strike', cost:12, cooldown:5, splash:3, description:'Bow, traps, and falcon options.' },
+  bard: { hp:145, atk:20, def:4, range:7, speed:3.2, interval:1, skill:'Arrow Vulcan', cost:12, cooldown:6, description:'Ranged damage and party songs.' },
+  dancer: { hp:145, atk:20, def:4, range:7, speed:3.2, interval:1, skill:'Slinging Arrow', cost:12, cooldown:6, description:'Ranged control and party dances.' },
+  priest: { hp:175, atk:16, def:4, range:4, speed:3.1, interval:1.1, skill:'Heal', cost:15, cooldown:5, description:'Healing, cleansing, buffs, and Holy damage.' },
+  monk: { hp:195, atk:25, def:6, range:2, speed:3.4, interval:.9, skill:'Raging Trifecta Blow', cost:12, cooldown:5, description:'Spirit-sphere combos and powerful finishers.' },
+  blacksmith: { hp:210, atk:23, def:6, range:2, speed:3, interval:1.1, skill:'Cart Termination', cost:11, cooldown:6, splash:2.5, description:'Heavy melee strikes, weapon buffs, and crafting.' },
+  alchemist: { hp:200, atk:20, def:7, range:3, speed:2.9, interval:1.2, skill:'Acid Demonstration', cost:14, cooldown:7, description:'Companion support, potions, and reagent attacks.' },
+  assassin: { hp:165, atk:23, def:4, range:2, speed:4, interval:.75, skill:'Sonic Blow', cost:12, cooldown:5, description:'Fast melee burst and poison pressure.' },
+  rogue: { hp:165, atk:20, def:4, range:6, speed:3.5, interval:.9, skill:'Triangle Shot', cost:10, cooldown:5, description:'Bow kiting, copied skills, and disruptive debuffs.' },
+};
+for (const [id, definition] of Object.entries(RENEWAL_JOBS)) {
+  Object.assign(JOBS[id], BASE_CLASS_PROFILE[definition.family] || {}, definition);
+  JOBS[id].parent = definition.parent;
+  JOBS[id].jobLevelCap = definition.tier.includes('Third') || definition.tier === 'third' ? 70 : 50;
+  if (definition.tier === 'transcendent') JOBS[id].mastery = definition.parent;
+  else delete JOBS[id].mastery;
+}
+const FAMILY_COMBAT_JOB = { knight:'knight', crusader:'crusader', wizard:'wizard', sage:'sage', hunter:'hunter', bard:'bard', dancer:'dancer', priest:'priest', monk:'monk', blacksmith:'blacksmith', alchemist:'alchemist', assassin:'assassin', rogue:'rogue' };
+export function combatJob(job) { return JOBS[job]?.combat || JOBS[job]?.mastery || FAMILY_COMBAT_JOB[JOBS[job]?.family] || job; }
+export function classBuilds(job) { return CLASS_BUILDS[JOBS[job]?.family] || CLASS_BUILDS[job] || []; }
+export function defaultBuild(job) { return classBuilds(job)[0]?.id || null; }
+export function selectedBuild(job, buildId) { return classBuilds(job).find(build => build.id === buildId) || classBuilds(job)[0] || null; }
+export function promotionRequirement(job) {
+  const tier = JOBS[job]?.tier;
+  if (tier === 'novice') return { jobLevel:10, baseLevel:1 };
+  if (tier === 'first' || tier === 'expanded') return { jobLevel:40, baseLevel:1 };
+  if (tier === 'transcendent') return { jobLevel:50, baseLevel:99 };
+  if (tier === 'second' || tier === 'expandedSecond') return { jobLevel:50, baseLevel:1 };
+  if (tier === 'third' || tier === 'expandedThird') return { jobLevel:50, baseLevel:99 };
+  return { jobLevel:Infinity, baseLevel:Infinity };
+}
+export function promotionLevel(job) { return promotionRequirement(job).jobLevel; }
+export function jobLineage(job) {
+  const path = [];
+  while (job && job !== 'novice') {
+    path.unshift(JOBS[job].name);
+    job = JOBS[job].parent;
+  }
+  return ['Novice', ...path];
+}
 export function jobChoices(job) {
-  return Object.entries(JOBS).filter(([id, data]) => id !== 'novice' && data.parent === job);
+  return Object.entries(JOBS).filter(([id, data]) => id !== 'novice' && (data.parent || 'novice') === job);
 }
 export const FORGE = {
   reliquary: { zeny:240, materials:{ 'Decayed Nail':8, 'Skel-Bone':5, 'Peco Feather':4 } },
@@ -78,9 +183,10 @@ export const ELEMENTS = {
 };
 export const AFFINITIES = { zombie:'undead', skeleton:'undead', poring:'water', fabre:'earth', willow:'earth', peco:'fire', scorpion:'fire', phreeoni:'wind', baphomet:'neutral' };
 export function spellElement(c) {
-  if (c.job === 'acolyte' || c.job === 'priest') return c.element === 'holy' ? 'holy' : null;
-  if (c.job !== 'mage' && c.job !== 'wizard') return null;
-  return c.element || (c.job === 'mage' ? 'fire' : 'water');
+  const job = combatJob(c.job);
+  if (job === 'acolyte' || job === 'priest') return c.element === 'holy' ? 'holy' : null;
+  if (job !== 'mage' && job !== 'wizard') return null;
+  return c.element || (job === 'mage' ? 'fire' : 'water');
 }
 export function affinityMultiplier(element, kind) {
   if (!element) return 1;
@@ -108,91 +214,72 @@ export const CARDS = {
   scorpion: { name: 'Scorpion Card', description: '+6 ATK', atk: 6, def: 0 },
   peco: { name: 'Peco Peco Card', description: '+4 DEF', atk: 0, def: 4 },
 };
-export const EQUIPMENT = {
-  reliquary: { name:'Payon reliquary', atk:3, def:6, description:'+3 attack · +6 defense · a feather-bound ward from Payon Cave.' },
-  dune: { name: 'Caravan brooch', atk: 6, def: 2, description: '+6 attack · +2 defense · forged from Morroc and Willow Wood materials.' },
-  training: { name: 'Training weapon', atk: 0, def: 0, description: 'A dependable first companion.' },
-  iron: { name: 'Iron armament', atk: 5, def: 0, description: '+5 attack · suitable for every first job.' },
-  guard: { name: 'Guard insignia', atk: 1, def: 3, description: '+1 attack · +3 defense.' },
-  sanctuary: { name: 'Sanctuary relic', atk: 9, def: 2, description: '+9 attack · +2 defense · earned from Baphomet.' },
+export const ORE_INFO = {
+  Emveretarcon: { description: 'Payon refinement ore used for the first three ranks.' },
+  Elunium: { description: 'A defensive refinement ore found in Payon Cave.' },
+  Oridecon: { description: 'A weapon refinement ore found in Payon Cave.' },
 };
-export const GEAR_SLOTS = {
-  weapon: 'Weapon', armor: 'Armor', shield: 'Shield', head: 'Headgear',
-  garment: 'Garment', footwear: 'Footwear', accessory1: 'Accessory I', accessory2: 'Accessory II',
-};
-export function gearFitsSlot(item, slot) {
-  return item?.slot === slot || (item?.slot?.startsWith('accessory') && slot?.startsWith('accessory'));
+export const REFINEMENT = [null,
+  { material: 'Emveretarcon', ore: 2, zeny: 60 },
+  { material: 'Emveretarcon', ore: 4, zeny: 140 },
+  { material: 'Emveretarcon', ore: 7, zeny: 300 },
+  { material: null, ore: 1, zeny: 500 },
+  { material: null, ore: 2, zeny: 900 },
+];
+export function gearKey(item, card, rank) {
+  if (rank) return item + '/' + (card || '') + '/' + rank;
+  return card ? item + '/' + card : item;
 }
+export function gearVariant(key) {
+  const [item, card, rank] = key.split('/');
+  return { item, card:card || null, rank:rank === undefined ? 0 : Number(rank) };
+}
+export const EQUIPMENT = {
+  reliquary: { name:'Payon reliquary', atk:3, def:6, refineMaterial:'Elunium', description:'+3 attack · +6 defense · a feather-bound ward from Payon Cave.' },
+  dune: { name: 'Caravan brooch', atk: 6, def: 2, refineMaterial:'Oridecon', description: '+6 attack · +2 defense · forged from Morroc and Willow Wood materials.' },
+  training: { name: 'Training weapon', atk: 0, def: 0, description: 'A dependable first companion.' },
+  iron: { name: 'Iron armament', atk: 5, def: 0, refineMaterial:'Oridecon', description: '+5 attack · suitable for every first job.' },
+  guard: { name: 'Guard insignia', atk: 1, def: 3, refineMaterial:'Elunium', description: '+1 attack · +3 defense.' },
+  sanctuary: { name: 'Sanctuary relic', atk: 9, def: 2, refineMaterial:'Oridecon', description: '+9 attack · +2 defense · earned from Baphomet.' },
+};
+// Curated Renewal equipment records; item base values are sourced from the pinned rAthena data snapshot.
+export const GEAR_SLOTS = { weapon:'Weapon', armor:'Armor', shield:'Shield', head:'Headgear', garment:'Garment', footwear:'Footwear', accessory1:'Accessory I', accessory2:'Accessory II' };
+export function gearFitsSlot(item, slot) { return item?.slot === slot || (item?.slot?.startsWith('accessory') && slot?.startsWith('accessory')); }
 export const GEAR_ITEMS = {
-  // Base fields (ATK, MATK, DEF, weapon/armor level, slots, weight and prices) follow
-  // rAthena's Renewal item_db_equip.yml snapshot. Game-only affixes are rolled separately.
-  knife: { name:'Knife', roId:1201, slot:'weapon', atk:17, def:0, weaponLevel:1, range:1, slots:3, weight:40, buy:50, equipLevel:1, refineable:true, classes:['novice','swordsman','mage','archer','merchant','thief','alchemist','assassin','blacksmith','crusader','knight','rogue','hunter','bard','dancer','ninja','kagerou','oboro','soul_linker'] },
-  sword: { name:'Sword', roId:1101, slot:'weapon', atk:25, def:0, weaponLevel:1, range:1, slots:3, weight:50, buy:100, equipLevel:2, refineable:true, classes:['novice','swordsman','knight','crusader','merchant','thief'] },
-  bow: { name:'Bow', roId:1702, slot:'weapon', atk:15, def:0, weaponLevel:1, slots:4, range:5, weight:50, buy:1000, equipLevel:4, refineable:true, classes:['archer','hunter','bard','dancer','thief','rogue'] },
-  rod: { name:'Rod', roId:1602, slot:'weapon', atk:15, matk:30, def:0, weaponLevel:1, range:1, slots:4, weight:40, buy:50, equipLevel:1, refineable:true, classes:['novice','mage','acolyte','monk','priest','sage','soul_linker'] },
-  mace: { name:'Club', roId:1501, slot:'weapon', atk:23, def:0, weaponLevel:1, range:1, slots:3, weight:70, buy:120, equipLevel:2, refineable:true, classes:['novice','swordsman','acolyte','merchant','knight','crusader','monk','priest','blacksmith','alchemist'] },
-  cotton_shirt: { name:'Cotton Shirt', roId:2301, slot:'armor', atk:0, def:10, armorLevel:1, slots:0, weight:10, buy:10, refineable:true },
-  silk_robe: { name:'Silk Robe', roId:2321, slot:'armor', atk:0, def:20, mdef:10, armorLevel:1, slots:0, weight:40, buy:8000, refineable:true, classes:['novice','swordsman','mage','acolyte','merchant','knight','crusader','wizard','sage','priest','monk','blacksmith','alchemist','soul_linker'] },
-  adventurer_suit: { name:'Jacket', roId:2303, slot:'armor', atk:0, def:15, armorLevel:1, slots:0, weight:20, buy:200, refineable:true },
-  full_plate: { name:'Chain Mail', roId:2314, slot:'armor', atk:0, def:55, armorLevel:1, slots:0, weight:330, buy:65000, refineable:true, classes:['swordsman','knight','crusader','merchant'] },
-  guard: { name:'Guard', roId:2101, slot:'shield', atk:0, def:20, armorLevel:1, slots:0, weight:30, buy:500, refineable:true },
-  buckler: { name:'Guard', roId:2102, slot:'shield', atk:0, def:20, armorLevel:1, slots:1, weight:30, buy:500, refineable:true },
-  cap: { name:'Sunglasses', roId:2201, slot:'head', atk:0, def:0, blindRes:5, armorLevel:1, slots:0, weight:10, buy:5000, refineable:false },
-  circlet: { name:'Gemmed Sallet', roId:2230, slot:'head', atk:0, def:8, mdef:3, armorLevel:1, slots:0, weight:50, buy:50000, refineable:true, classes:['swordsman','merchant','thief','knight','crusader','assassin','rogue','blacksmith','alchemist'] },
-  hood: { name:'Hood', roId:2501, slot:'garment', atk:0, def:4, armorLevel:1, slots:0, weight:20, buy:1000, refineable:true },
-  muffler: { name:'Muffler', roId:2503, slot:'garment', atk:0, def:8, armorLevel:1, slots:0, weight:40, buy:5000, refineable:true },
-  sandal: { name:'Sandals', roId:2401, slot:'footwear', atk:0, def:5, armorLevel:1, slots:0, weight:20, buy:400, refineable:true },
-  boots: { name:'Shoes', roId:2403, slot:'footwear', atk:0, def:10, armorLevel:1, slots:0, weight:40, buy:3500, refineable:true },
-  clip: { name:'Clip', roId:2607, slot:'accessory1', atk:0, def:0, sp:10, armorLevel:1, slots:1, weight:10, buy:30000, refineable:false },
-  rosary: { name:'Rosary', roId:2608, slot:'accessory2', atk:0, def:0, mdef:5, luk:2, armorLevel:1, slots:0, weight:10, buy:15000, equipLevel:20, refineable:false, excluded:['novice'] },
-  glove: { name:'Glove', roId:2604, slot:'accessory1', atk:0, def:0, dex:2, armorLevel:1, slots:0, weight:10, buy:30000, equipLevel:20, refineable:false, excluded:['novice'] },
-  ring: { name:'Ring', roId:2601, slot:'accessory2', atk:0, def:0, str:2, armorLevel:1, slots:0, weight:10, buy:30000, equipLevel:20, refineable:false, excluded:['novice'] },
+  knife:{name:'Knife',roId:1201,slot:'weapon',atk:17,weaponLevel:1,range:1,slots:3,weight:40,buy:50,equipLevel:1,refineable:true,classes:['novice','swordsman','mage','archer','merchant','thief','alchemist','assassin','blacksmith','crusader','knight','rogue','hunter','bard','dancer','ninja','kagerou','oboro','soul_linker']},
+  sword:{name:'Sword',roId:1101,slot:'weapon',atk:25,weaponLevel:1,range:1,slots:3,weight:50,buy:100,equipLevel:2,refineable:true,classes:['novice','swordsman','knight','crusader','merchant','thief']},
+  bow:{name:'Bow',roId:1702,slot:'weapon',atk:15,weaponLevel:1,range:5,slots:4,weight:50,buy:1000,equipLevel:4,refineable:true,classes:['archer','hunter','bard','dancer','thief','rogue']},
+  rod:{name:'Rod',roId:1602,slot:'weapon',atk:15,matk:30,weaponLevel:1,range:1,slots:4,weight:40,buy:50,equipLevel:1,refineable:true,classes:['novice','mage','acolyte','monk','priest','sage','soul_linker']},
+  mace:{name:'Club',roId:1501,slot:'weapon',atk:23,weaponLevel:1,range:1,slots:3,weight:70,buy:120,equipLevel:2,refineable:true,classes:['novice','swordsman','acolyte','merchant','knight','crusader','monk','priest','blacksmith','alchemist']},
+  cotton_shirt:{name:'Cotton Shirt',roId:2301,slot:'armor',def:10,armorLevel:1,slots:0,weight:10,buy:10,refineable:true},
+  silk_robe:{name:'Silk Robe',roId:2321,slot:'armor',def:20,mdef:10,armorLevel:1,slots:0,weight:40,buy:8000,refineable:true,classes:['novice','swordsman','mage','acolyte','merchant','knight','crusader','wizard','sage','priest','monk','blacksmith','alchemist','soul_linker']},
+  adventurer_suit:{name:'Jacket',roId:2303,slot:'armor',def:15,armorLevel:1,slots:0,weight:20,buy:200,refineable:true},
+  full_plate:{name:'Chain Mail',roId:2314,slot:'armor',def:55,armorLevel:1,slots:0,weight:330,buy:65000,refineable:true,classes:['swordsman','knight','crusader','merchant']},
+  guard:{name:'Guard',roId:2101,slot:'shield',def:20,armorLevel:1,slots:0,weight:30,buy:500,refineable:true},
+  buckler:{name:'Guard',roId:2102,slot:'shield',def:20,armorLevel:1,slots:1,weight:30,buy:500,refineable:true},
+  cap:{name:'Sunglasses',roId:2201,slot:'head',blindRes:5,armorLevel:1,slots:0,weight:10,buy:5000,refineable:false},
+  circlet:{name:'Gemmed Sallet',roId:2230,slot:'head',def:8,mdef:3,armorLevel:1,slots:0,weight:50,buy:50000,refineable:true,classes:['swordsman','merchant','thief','knight','crusader','assassin','rogue','blacksmith','alchemist']},
+  hood:{name:'Hood',roId:2501,slot:'garment',def:4,armorLevel:1,slots:0,weight:20,buy:1000,refineable:true},
+  muffler:{name:'Muffler',roId:2503,slot:'garment',def:8,armorLevel:1,slots:0,weight:40,buy:5000,refineable:true},
+  sandal:{name:'Sandals',roId:2401,slot:'footwear',def:5,armorLevel:1,slots:0,weight:20,buy:400,refineable:true},
+  boots:{name:'Shoes',roId:2403,slot:'footwear',def:10,armorLevel:1,slots:0,weight:40,buy:3500,refineable:true},
+  clip:{name:'Clip',roId:2607,slot:'accessory1',sp:10,armorLevel:1,slots:1,weight:10,buy:30000,refineable:false},
+  rosary:{name:'Rosary',roId:2608,slot:'accessory2',mdef:5,luk:2,armorLevel:1,slots:0,weight:10,buy:15000,equipLevel:20,refineable:false,excluded:['novice']},
+  glove:{name:'Glove',roId:2604,slot:'accessory1',dex:2,armorLevel:1,slots:0,weight:10,buy:30000,equipLevel:20,refineable:false,excluded:['novice']},
+  ring:{name:'Ring',roId:2601,slot:'accessory2',str:2,armorLevel:1,slots:0,weight:10,buy:30000,equipLevel:20,refineable:false,excluded:['novice']},
 };
 export const GEAR_AFFIXES = {
-  mighty: { name:'Mighty', stat:'atk', min:2, max:8, slots:['weapon'] },
-  arcane: { name:'Arcane', stat:'matk', min:3, max:10, slots:['weapon','accessory1','accessory2'] },
-  sturdy: { name:'Sturdy', stat:'def', min:1, max:5, slots:['armor','shield','head','garment','footwear'] },
-  vital: { name:'Vital', stat:'hp', min:12, max:55, slots:['armor','shield','head','garment','footwear','accessory1','accessory2'] },
-  focused: { name:'Focused', stat:'crit', min:1, max:4, slots:['weapon','head','accessory1','accessory2'] },
-  swift: { name:'Swift', stat:'speed', min:1, max:4, slots:['weapon','garment','footwear','accessory1','accessory2'] },
-  wise: { name:'Wise', stat:'sp', min:8, max:30, slots:['head','armor','accessory1','accessory2'] },
-  keen: { name:'Keen', stat:'skill', min:2, max:8, slots:['weapon','head','accessory1','accessory2'] },
+  mighty:{name:'Mighty',stat:'atk',min:2,max:8,slots:['weapon']},arcane:{name:'Arcane',stat:'matk',min:3,max:10,slots:['weapon','accessory1','accessory2']},
+  sturdy:{name:'Sturdy',stat:'def',min:1,max:5,slots:['armor','shield','head','garment','footwear']},vital:{name:'Vital',stat:'hp',min:12,max:55,slots:['armor','shield','head','garment','footwear','accessory1','accessory2']},
+  focused:{name:'Focused',stat:'crit',min:1,max:4,slots:['weapon','head','accessory1','accessory2']},swift:{name:'Swift',stat:'speed',min:1,max:4,slots:['weapon','garment','footwear','accessory1','accessory2']},
+  wise:{name:'Wise',stat:'sp',min:8,max:30,slots:['head','armor','accessory1','accessory2']},keen:{name:'Keen',stat:'skill',min:2,max:8,slots:['weapon','head','accessory1','accessory2']},
 };
-export const REFINE_SAFE_LIMIT = { 1:7, 2:6, 3:5, 4:4, armor:4 };
-const NORMAL_REFINE_RATES = {
-  1:[0,100,100,100,100,100,100,100,60,40,19],
-  2:[0,100,100,100,100,100,100,60,40,20,19],
-  3:[0,100,100,100,100,100,60,50,20,20,19],
-  4:[0,100,100,100,60,40,40,20,20,9],
-  armor:[0,100,100,100,100,60,40,40,20,20,9],
-};
-export function refineSafeLimit(item) { return item?.slot === 'weapon' ? REFINE_SAFE_LIMIT[item.weaponLevel] ?? 4 : REFINE_SAFE_LIMIT.armor; }
-export function refineSuccessPercent(item, currentRefine) {
-  const target = currentRefine + 1;
-  if (!item?.refineable || target > 20 || target < 1) return 0;
-  if (target <= 10) return NORMAL_REFINE_RATES[item.slot === 'weapon' ? item.weaponLevel : 'armor']?.[target] ?? 0;
-  const level = item.slot === 'weapon' ? item.weaponLevel : 'armor';
-  if (target <= 14) return level === 4 || level === 'armor' ? 8 : 18;
-  if (target <= 18) return level === 4 || level === 'armor' ? 7 : 17;
-  return level === 4 || level === 'armor' ? 5 : 15;
-}
-export function refineCost(item, currentRefine) {
-  if (currentRefine >= 10) return { zeny:100000, material:item.slot === 'weapon' ? 'bradium' : 'carnium', amount:1 };
-  if (item.slot !== 'weapon') return { zeny:2000, material:'elunium', amount:1 };
-  const costs = { 1:[50,'phracon'], 2:[200,'emveretarcon'], 3:[5000,'oridecon'], 4:[20000,'oridecon'] };
-  const [zeny, material] = costs[item.weaponLevel] || costs[4];
-  return { zeny, material, amount:1 };
-}
-export const ITEMS = {
-  red_potion: { name:'Red Potion', type:'consumable', description:'Recover HP when used.', effect:'hp', amount:65, roId:501 },
-  blue_potion: { name:'Blue Potion', type:'consumable', description:'Recover SP when used.', effect:'sp', amount:45, roId:505 },
-  phracon: { name:'Phracon', type:'refining ore', description:'Refine a Weapon Lv. 1.', roId:1010 },
-  emveretarcon: { name:'Emveretarcon', type:'refining ore', description:'Refine a Weapon Lv. 2.', roId:1011 },
-  oridecon: { name:'Oridecon', type:'refining ore', description:'Refine Weapon Lv. 3 and 4.', roId:984 },
-  elunium: { name:'Elunium', type:'refining ore', description:'Refine armor and armor-slot equipment.', roId:985 },
-  bradium: { name:'Bradium', type:'refining ore', description:'Refine weapons from +10 onward.', roId:6224 },
-  carnium: { name:'Carnium', type:'refining ore', description:'Refine armor from +10 onward.', roId:6223 },
-};
+export const REFINE_SAFE_LIMIT = {1:7,2:6,3:5,4:4,armor:4};
+const NORMAL_REFINE_RATES = {1:[0,100,100,100,100,100,100,100,60,40,19],2:[0,100,100,100,100,100,100,60,40,20,19],3:[0,100,100,100,100,100,60,50,20,20,19],4:[0,100,100,100,60,40,40,20,20,9],armor:[0,100,100,100,100,60,40,40,20,20,9]};
+export function refineSafeLimit(item){return item?.slot==='weapon'?REFINE_SAFE_LIMIT[item.weaponLevel]??4:REFINE_SAFE_LIMIT.armor;}
+export function refineSuccessPercent(item,currentRefine){const target=currentRefine+1;if(!item?.refineable||target>20||target<1)return 0;if(target<=10)return NORMAL_REFINE_RATES[item.slot==='weapon'?item.weaponLevel:'armor']?.[target]??0;const level=item.slot==='weapon'?item.weaponLevel:'armor';if(target<=14)return level===4||level==='armor'?8:18;if(target<=18)return level===4||level==='armor'?7:17;return level===4||level==='armor'?5:15;}
+export function refineCost(item,currentRefine){if(currentRefine>=10)return{zeny:100000,material:item.slot==='weapon'?'bradium':'carnium',amount:1};if(item.slot!=='weapon')return{zeny:2000,material:'elunium',amount:1};const costs={1:[50,'phracon'],2:[200,'emveretarcon'],3:[5000,'oridecon'],4:[20000,'oridecon']};const[zeny,material]=costs[item.weaponLevel]||costs[4];return{zeny,material,amount:1};}
+export const ITEMS = { red_potion:{name:'Red Potion',type:'consumable',description:'Recover HP when used.',effect:'hp',amount:65,roId:501},blue_potion:{name:'Blue Potion',type:'consumable',description:'Recover SP when used.',effect:'sp',amount:45,roId:505},phracon:{name:'Phracon',type:'refining ore',roId:1010},emveretarcon:{name:'Emveretarcon',type:'refining ore',roId:1011},oridecon:{name:'Oridecon',type:'refining ore',roId:984},elunium:{name:'Elunium',type:'refining ore',roId:985},bradium:{name:'Bradium',type:'refining ore',roId:6224},carnium:{name:'Carnium',type:'refining ore',roId:6223}};
 export const TACTICS = {
   safe: { name: 'Safe farming', retreat: 0.22, skill: true },
   aggressive: { name: 'Aggressive', retreat: 0.1, skill: true },
@@ -215,7 +302,8 @@ export const JOB_ROLES = {
   mage: 'ranged', archer: 'ranged', acolyte: 'support',
 };
 for (const [id, job] of Object.entries(secondJobs)) JOB_ROLES[id] = JOB_ROLES[job.parent];
-for (const [id, job] of Object.entries(RENEWAL_JOBS)) JOB_ROLES[id] = job.role;
+for (const [id, job] of Object.entries(transcendent)) JOB_ROLES[id] = JOB_ROLES[job.parent];
+for (const [id, job] of Object.entries(RENEWAL_JOBS)) JOB_ROLES[id] = job.role === 'support' ? 'support' : job.role === 'ranged' ? 'ranged' : 'frontline';
 export const ROLE_LABELS = {
   frontline: 'Frontline — approaches and engages',
   ranged: 'Ranged — keeps attack distance',
